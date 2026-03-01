@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@chargily/chargily-pay": "^2.1.0",
     "@clerk/nextjs": "^6.39.0",
     "@convex-dev/auth": "^0.0.91",
     "convex": "^1.32.0",

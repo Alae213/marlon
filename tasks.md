@@ -144,20 +144,20 @@
 ## Phase 6: Billing & Payments (Week 8-9)
 
 ### 6.1 Billing State Machine
-- [ ] Implement trial → locked → active status transitions
-- [ ] Add order counting per 30-day rolling window
-- [ ] Create payment expiry handling
+- [x] Implement trial → locked → active status transitions
+- [x] Add order counting per 30-day rolling window
+- [x] Create payment expiry handling
 
 ### 6.2 Locked State Behavior
-- [ ] Mask customer data in orders page (show ***)
-- [ ] Disable action buttons when locked
-- [ ] Add unlock overlay message with Pay Now button
+- [x] Mask customer data in orders page (show ***)
+- [x] Disable action buttons when locked
+- [x] Add unlock overlay message with Pay Now button
 
 ### 6.3 Chargily Integration
-- [ ] Create payment action (Convex → Chargily API)
-- [ ] Build checkout redirect flow
-- [ ] Implement webhook handler for payment confirmation
-- [ ] Update store status on successful payment
+- [x] Create payment action (Convex → Chargily API)
+- [x] Build checkout redirect flow
+- [x] Implement webhook handler for payment confirmation
+- [x] Update store status on successful payment
 
 ---
 
