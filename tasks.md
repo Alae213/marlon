@@ -164,15 +164,15 @@
 ## Phase 7: Integrations (Week 9-10)
 
 ### 7.1 Delivery API Integration
-- [ ] Implement ZR Express API integration
-- [ ] Implement Yalidine API integration
-- [ ] Create bulk "Send to Delivery" action
-- [ ] Handle tracking number updates
-- [ ] Add fallback for manual status change
+- [x] Implement ZR Express API integration
+- [x] Implement Yalidine API integration
+- [x] Create bulk "Send to Delivery" action
+- [x] Handle tracking number updates
+- [x] Add fallback for manual status change
 
 ### 7.2 Real-time Updates
-- [ ] Configure Convex subscriptions for live updates
-- [ ] Implement order notifications
+- [x] Configure Convex subscriptions for live updates
+- [x] Implement order notifications
 - [ ] Add store dashboard real-time sync
 
 ---
