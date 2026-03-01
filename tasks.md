@@ -4,75 +4,75 @@
 
 ### 1.1 Project Initialization
 - [x] Set up Next.js 16 project with TypeScript (strict mode)
-- [ ] Configure Tailwind CSS v4 with custom theme variables
-- [ ] Set up project structure (app/, components/, hooks/, lib/, types/)
-- [ ] Configure path aliases (@/ prefix in tsconfig.json)
+- [x] Configure Tailwind CSS v4 with custom theme variables
+- [x] Set up project structure (app/, components/, hooks/, lib/, types/)
+- [x] Configure path aliases (@/ prefix in tsconfig.json)
 
 ### 1.2 Database & Backend Setup
-- [ ] Set up Convex project and configuration
-- [ ] Define Convex schema (stores, products, orders, users)
-- [ ] Configure multi-tenant isolation (storeId filtering)
+- [x] Set up Convex project and configuration
+- [x] Define Convex schema (stores, products, orders, users)
+- [x] Configure multi-tenant isolation (storeId filtering)
 - [ ] Set up Convex deployment and dev environment
 
 ### 1.3 Authentication Infrastructure
-- [ ] Set up Clerk project with Google OAuth
-- [ ] Configure Clerk middleware for route protection
-- [ ] Create user data sync webhook handler (Clerk → Convex)
-- [ ] Implement authorization middleware (userId ownership check)
+- [x] Set up Clerk project with Google OAuth
+- [x] Configure Clerk middleware for route protection
+- [x] Create user data sync webhook handler (Clerk → Convex)
+- [x] Implement authorization middleware (userId ownership check)
 
 ---
 
 ## Phase 2: Core Platform (Week 2-3)
 
 ### 2.1 Landing Page
-- [ ] Build landing page layout (white background, centered)
-- [ ] Create "New Store" card with plus icon
-- [ ] Implement Google sign-in flow
-- [ ] Add redirect logic to dashboard after auth
+- [x] Build landing page layout (white background, centered)
+- [x] Create "New Store" card with plus icon
+- [x] Implement Google sign-in flow
+- [x] Add redirect logic to dashboard after auth
 
 ### 2.2 Home Dashboard
-- [ ] Build dashboard layout with logo and profile avatar
-- [ ] Create store cards grid with thumbnail and subscription badge
-- [ ] Implement "New Store" card functionality
-- [ ] Build create store dialog (name, slug input with auto-generation)
-- [ ] Implement slug uniqueness validation with suggestions
-- [ ] Create store card navigation to store admin
+- [x] Build dashboard layout with logo and profile avatar
+- [x] Create store cards grid with thumbnail and subscription badge
+- [x] Implement "New Store" card functionality
+- [x] Build create store dialog (name, slug input with auto-generation)
+- [x] Implement slug uniqueness validation with suggestions
+- [x] Create store card navigation to store admin
 
 ### 2.3 Store Admin Layout
-- [ ] Build persistent top sticky bar (logo, back arrow, profile menu)
-- [ ] Implement bottom floating nav toggle (Editor / Orders)
-- [ ] Add "View Store" button (opens public storefront in new tab)
+- [x] Build persistent top sticky bar (logo, back arrow, profile menu)
+- [x] Implement bottom floating nav toggle (Editor / Orders)
+- [x] Add "View Store" button (opens public storefront in new tab)
 
 ---
 
 ## Phase 3: Store Editor (Week 3-5)
 
 ### 3.1 Product Management
-- [ ] Build product list (grid/list view toggle)
-- [ ] Implement product search functionality
-- [ ] Create add product modal (name, description, base price, old price)
-- [ ] Add image upload with drag-and-drop and reordering
-- [ ] Implement variant management (add/edit/hide variant groups)
-- [ ] Add product edit functionality (inline/modal)
-- [ ] Implement product archiving (soft delete)
-- [ ] Add drag-and-drop product reordering
+- [x] Build product list (grid/list view toggle)
+- [x] Implement product search functionality
+- [x] Create add product modal
+- [x] Add image upload with drag-and-drop and reordering
+- [x] Implement variant management (add/edit/hide variant groups)
+- [x] Add product edit functionality (inline/modal)
+- [x] Implement product archiving (soft delete)
+- [x] Add drag-and-drop product reordering
 
 ### 3.2 Site Content Editor
-- [ ] Build navbar editor (logo, fixed links, cart icon)
-- [ ] Create hero section editor (title, image, CTA button, layout toggle)
-- [ ] Build footer editor (contact info, social links, logo)
-- [ ] Implement inline editing for all site content
+- [x] Build navbar editor (logo, fixed links, cart icon)
+- [x] Create hero section editor (title, image, CTA button, layout toggle)
+- [x] Build footer editor (contact info, social links, logo)
+- [x] Implement inline editing for all site content
 
 ### 3.3 Delivery Pricing
-- [ ] Create delivery pricing table (per wilaya + delivery type)
-- [ ] Pre-populate default delivery pricing data
-- [ ] Allow merchants to edit prices per wilaya
+- [x] Create delivery pricing table (per wilaya + delivery type)
+- [x] Pre-populate default delivery pricing data
+- [x] Allow merchants to edit prices per wilaya
 
 ### 3.4 Delivery API Integration (Optional)
-- [ ] Build delivery settings section
-- [ ] Add API credential input fields (ZR Express / Yalidine)
-- [ ] Implement "Test Connection" button
-- [ ] Create encrypted credential storage
+- [x] Build delivery settings section
+- [x] Add API credential input fields (ZR Express / Yalidine)
+- [x] Implement "Test Connection" button
+- [x] Create encrypted credential storage
 
 ---
 
