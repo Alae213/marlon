@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Plus, Grid3X3, List, MoreVertical, Image, Edit, Archive } from "lucide-react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
+import { Search, Plus, Grid3X3, List, MoreVertical, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
@@ -9,48 +10,48 @@ import { Modal } from "@/components/core/modal";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
 import { Spinner } from "@/components/core/spinner";
+import { ImageUploader } from "@/components/image-cropper";
 
-const MOCK_PRODUCTS = [
-  {
-    id: "1",
-    name: "قميص رجالي قطني",
-    description: "قميص قطني 100%، متوفر بألوان متعددة",
-    basePrice: 2500,
-    oldPrice: 3000,
-    images: [],
-    isArchived: false,
-    sortOrder: 0,
-  },
-  {
-    id: "2",
-    name: "حذاء رياضي",
-    description: "حذاء رياضي مريح للرياضة واليوميات",
-    basePrice: 4500,
-    oldPrice: null,
-    images: [],
-    isArchived: false,
-    sortOrder: 1,
-  },
-  {
-    id: "3",
-    name: "حقيبة ظهر",
-    description: "حقيبة ظهر كبيرة للدراسة والسفر",
-    basePrice: 3200,
-    oldPrice: 3800,
-    images: [],
-    isArchived: false,
-    sortOrder: 2,
-  },
-];
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  oldPrice: number | null;
+  images: string[];
+  isArchived: boolean;
+  sortOrder: number;
+}
 
 export default function ProductsPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [products] = useState(MOCK_PRODUCTS);
+  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Load products from localStorage
+  useEffect(() => {
+    const savedProducts = localStorage.getItem(`marlon_products_${slug}`);
+    if (savedProducts) {
+      setProducts(JSON.parse(savedProducts));
+    }
+    setIsLoading(false);
+  }, [slug]);
+
+  // Save products to localStorage when changed
+  const saveProducts = (newProducts: Product[]) => {
+    setProducts(newProducts);
+    localStorage.setItem(`marlon_products_${slug}`, JSON.stringify(newProducts));
+  };
 
   const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
+    p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+    !p.isArchived
   );
 
   const formatPrice = (price: number) => {
@@ -59,6 +60,32 @@ export default function ProductsPage() {
       currency: 'DZD',
       minimumFractionDigits: 0,
     }).format(price);
+  };
+
+  const handleAddProduct = (product: Product) => {
+    const newProducts = [...products, product];
+    saveProducts(newProducts);
+  };
+
+  const handleToggleArchive = (productId: string) => {
+    const newProducts = products.map(p => 
+      p.id === productId ? { ...p, isArchived: !p.isArchived } : p
+    );
+    saveProducts(newProducts);
+  };
+
+  const handleDeleteProduct = (productId: string) => {
+    const newProducts = products.filter(p => p.id !== productId);
+    saveProducts(newProducts);
+    setDeletingProductId(null);
+  };
+
+  const handleUpdateProduct = (updatedProduct: Product) => {
+    const newProducts = products.map(p => 
+      p.id === updatedProduct.id ? updatedProduct : p
+    );
+    saveProducts(newProducts);
+    setEditingProduct(null);
   };
 
   return (
@@ -110,7 +137,7 @@ export default function ProductsPage() {
 
         {filteredProducts.length === 0 ? (
           <EmptyState
-            icon={<Image className="w-8 h-8 text-zinc-400" />}
+            icon={<ImageIcon className="w-8 h-8 text-zinc-400" />}
             title="لا توجد منتجات"
             description="ابدأ بإضافة أول منتج لمتجرك"
             action={
@@ -135,7 +162,7 @@ export default function ProductsPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <Image className="w-12 h-12 text-zinc-300" />
+                    <ImageIcon className="w-12 h-12 text-zinc-300" />
                   )}
                 </div>
                 
@@ -155,9 +182,57 @@ export default function ProductsPage() {
                   </div>
                 </div>
 
-                <button className="absolute top-2 end-2 p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity">
-                  <MoreVertical className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                </button>
+                {/* Hover Actions */}
+                <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingProduct(product); }}
+                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                    title="تعديل"
+                  >
+                    <Edit className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(product.id); }}
+                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                    title={product.isArchived ? "تفعيل" : "تعطيل"}
+                  >
+                    {product.isArchived ? (
+                      <Eye className="w-4 h-4 text-green-600" />
+                    ) : (
+                      <EyeOff className="w-4 h-4 text-amber-600" />
+                    )}
+                  </button>
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(product.id); }}
+                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    title="حذف"
+                  >
+                    <Trash2 className="w-4 h-4 text-red-500" />
+                  </button>
+                </div>
+
+                {/* Delete Confirmation */}
+                {deletingProductId === product.id && (
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
+                    <div className="text-center p-4">
+                      <p className="text-white font-medium mb-3">حذف المنتج؟</p>
+                      <div className="flex gap-2 justify-center">
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(null); }}
+                          className="px-3 py-1.5 bg-white text-zinc-900 rounded-lg text-sm"
+                        >
+                          إلغاء
+                        </button>
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProduct(product.id); }}
+                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm"
+                        >
+                          حذف
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
@@ -176,7 +251,7 @@ export default function ProductsPage() {
                       className="w-full h-full object-cover rounded-xl"
                     />
                   ) : (
-                    <Image className="w-6 h-6 text-zinc-300" />
+                    <ImageIcon className="w-6 h-6 text-zinc-300" />
                   )}
                 </div>
                 
@@ -220,18 +295,56 @@ export default function ProductsPage() {
         title="إضافة منتج جديد"
         size="lg"
       >
-        <ProductForm onClose={() => setIsAddModalOpen(false)} />
+        <ProductForm onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddProduct} />
+      </Modal>
+
+      <Modal
+        isOpen={!!editingProduct}
+        onClose={() => setEditingProduct(null)}
+        title="تعديل المنتج"
+        size="lg"
+      >
+        {editingProduct && (
+          <ProductForm 
+            product={editingProduct}
+            onClose={() => setEditingProduct(null)} 
+            onSubmit={(updated) => {
+              handleUpdateProduct(updated);
+              setEditingProduct(null);
+            }} 
+          />
+        )}
       </Modal>
     </div>
   );
 }
 
-function ProductForm({ onClose }: { onClose: () => void }) {
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [basePrice, setBasePrice] = useState("");
-  const [oldPrice, setOldPrice] = useState("");
-  const [images, setImages] = useState<string[]>([]);
+function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: Product) => void }) {
+  const [name, setName] = useState(product?.name || "");
+  const [description, setDescription] = useState(product?.description || "");
+  const [basePrice, setBasePrice] = useState(product?.basePrice?.toString() || "");
+  const [oldPrice, setOldPrice] = useState(product?.oldPrice?.toString() || "");
+  const [images, setImages] = useState<string[]>(product?.images || []);
+
+  const isEditing = !!product;
+
+  const handleSubmit = () => {
+    if (!name || !basePrice) return;
+    
+    const productData: Product = {
+      id: product?.id || `product_${Date.now()}`,
+      name,
+      description,
+      basePrice: parseInt(basePrice),
+      oldPrice: oldPrice ? parseInt(oldPrice) : null,
+      images,
+      isArchived: product?.isArchived || false,
+      sortOrder: product?.sortOrder || 0,
+    };
+    
+    onSubmit(productData);
+    onClose();
+  };
 
   return (
     <div className="space-y-5">
@@ -271,15 +384,10 @@ function ProductForm({ onClose }: { onClose: () => void }) {
         <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
           صور المنتج
         </label>
-        <div className="border-2 border-dashed border-zinc-200 dark:border-zinc-700 rounded-xl p-8 text-center hover:border-[#00853f] hover:bg-[#00853f]/5 transition-colors cursor-pointer">
-          <Image className="w-10 h-10 mx-auto mb-3 text-zinc-300" />
-          <p className="text-sm text-zinc-500 mb-1">
-            اسحب وأفلت الصور هنا
-          </p>
-          <p className="text-xs text-zinc-400">
-            أو انقر للتصفح
-          </p>
-        </div>
+        <ImageUploader
+          images={images}
+          onImagesChange={setImages}
+        />
       </div>
 
       <div className="flex gap-3 pt-2">
@@ -287,14 +395,11 @@ function ProductForm({ onClose }: { onClose: () => void }) {
           إلغاء
         </Button>
         <Button 
-          onClick={() => {
-            console.log("Adding product:", { name, description, basePrice, oldPrice, images });
-            onClose();
-          }} 
+          onClick={handleSubmit}
           disabled={!name || !basePrice}
           className="flex-1"
         >
-          إضافة المنتج
+          {isEditing ? "حفظ التغييرات" : "إضافة المنتج"}
         </Button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { Save, TestTube, Eye, EyeOff, Package } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
@@ -27,20 +28,64 @@ interface DeliveryPricing {
   officeDelivery: number;
 }
 
-const MOCK_DELIVERY_PRICING: DeliveryPricing[] = WILAYAS.map(wilaya => ({
-  wilaya: wilaya.value,
-  homeDelivery: Math.floor(Math.random() * 1500) + 500,
-  officeDelivery: Math.floor(Math.random() * 1000) + 400,
-}));
-
 export default function SettingsPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
   const [activeTab, setActiveTab] = useState("delivery");
-  const [deliveryPricing, setDeliveryPricing] = useState<DeliveryPricing[]>(MOCK_DELIVERY_PRICING);
+  const [deliveryPricing, setDeliveryPricing] = useState<DeliveryPricing[]>([]);
   const [showApiKeys, setShowApiKeys] = useState(false);
   const [apiKeys, setApiKeys] = useState({
     zrExpress: "",
     yalidine: "",
   });
+  const [storeName, setStoreName] = useState("");
+  const [storePhone, setStorePhone] = useState("");
+  const [storeWilaya, setStoreWilaya] = useState("");
+  const [storeAddress, setStoreAddress] = useState("");
+
+  // Load settings from localStorage
+  useEffect(() => {
+    // Load delivery pricing
+    const savedPricing = localStorage.getItem(`marlon_delivery_${slug}`);
+    if (savedPricing) {
+      setDeliveryPricing(JSON.parse(savedPricing));
+    } else {
+      // Initialize with default values
+      const defaultPricing = WILAYAS.map(wilaya => ({
+        wilaya: wilaya.value,
+        homeDelivery: 600,
+        officeDelivery: 400,
+      }));
+      setDeliveryPricing(defaultPricing);
+    }
+
+    // Load store info
+    const savedStore = localStorage.getItem(`marlon_stores_${slug}`);
+    if (savedStore) {
+      const store = JSON.parse(savedStore);
+      setStoreName(store.name || "");
+      setStorePhone(store.phone || "");
+      setStoreWilaya(store.wilaya || "");
+      setStoreAddress(store.address || "");
+    }
+  }, [slug]);
+
+  // Save delivery pricing
+  const saveDeliveryPricing = (pricing: DeliveryPricing[]) => {
+    setDeliveryPricing(pricing);
+    localStorage.setItem(`marlon_delivery_${slug}`, JSON.stringify(pricing));
+  };
+
+  // Save store info
+  const saveStoreInfo = () => {
+    const store = {
+      name: storeName,
+      phone: storePhone,
+      wilaya: storeWilaya,
+      address: storeAddress,
+    };
+    localStorage.setItem(`marlon_stores_${slug}`, JSON.stringify(store));
+  };
 
   const tabs = [
     { id: "delivery", label: "أسعار التوصيل" },
@@ -58,11 +103,16 @@ export default function SettingsPage() {
     );
   };
 
+  const handleSave = () => {
+    saveDeliveryPricing(deliveryPricing);
+    saveStoreInfo();
+  };
+
   return (
     <div className="max-w-5xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">الإعدادات</h1>
-        <Button>
+        <Button onClick={handleSave}>
           <Save className="w-5 h-5" />
           حفظ التغييرات
         </Button>
@@ -188,26 +238,34 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Input
                 label="اسم المتجر"
-                defaultValue="متجري الأول"
+                value={storeName}
+                onChange={(e) => setStoreName(e.target.value)}
+                placeholder="متجري الأول"
               />
               <Input
                 label="رابط المتجر"
-                defaultValue="my-store"
+                value={slug}
                 disabled
               />
               <Input
                 label="رقم الهاتف"
                 type="tel"
+                value={storePhone}
+                onChange={(e) => setStorePhone(e.target.value)}
                 placeholder="0551 23 45 67"
               />
               <Select
                 label="الولاية"
                 options={WILAYAS}
+                value={storeWilaya}
+                onChange={(e) => setStoreWilaya(e.target.value)}
                 placeholder="اختر الولاية"
               />
               <div className="md:col-span-2">
                 <Input
                   label="العنوان"
+                  value={storeAddress}
+                  onChange={(e) => setStoreAddress(e.target.value)}
                   placeholder="العنوان التفصيلي..."
                 />
               </div>

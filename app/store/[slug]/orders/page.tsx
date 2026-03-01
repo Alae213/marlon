@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useParams } from "next/navigation";
 import { 
   Search, 
   Download, 
@@ -17,215 +18,31 @@ import {
   XCircle,
   AlertCircle,
   ArrowUpDown,
-  MessageSquare
+  MessageSquare,
+  FileText,
+  Plus
 } from "lucide-react";
 import { SlideOver, Badge, Button } from "@/components/core";
+import { cleanupLockedStoreOrders } from "@/lib/locked-store-cleanup";
+import { LockedData } from "@/components/locked-overlay";
+import { useBilling, BillingProvider } from "@/contexts/billing-context";
+import type { 
+  SortField, 
+  SortDirection, 
+  Order, 
+  CallLog, 
+  AdminNote 
+} from "@/lib/orders-types";
+import { 
+  STATUS_LABELS, 
+  CALL_OUTCOME_LABELS, 
+  STATUS_TRANSITIONS,
+  DELIVERY_TYPE_LABELS 
+} from "@/lib/orders-types";
 
-interface OrderItem {
-  id: string;
-  name: string;
-  quantity: number;
-  price: number;
-  variant?: string;
-}
-
-interface CallLog {
-  id: string;
-  timestamp: number;
-  outcome: "answered" | "no_answer" | "wrong_number" | "refused";
-  notes?: string;
-}
-
-interface AuditEntry {
-  id: string;
-  timestamp: number;
-  action: string;
-  details: string;
-}
-
-interface Order {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  customerPhone: string;
-  customerWilaya: string;
-  customerCommune: string;
-  customerAddress: string;
-  items: OrderItem[];
-  subtotal: number;
-  deliveryCost: number;
-  total: number;
-  status: "new" | "confirmed" | "packaged" | "shipped" | "succeeded" | "canceled" | "blocked" | "hold";
-  deliveryType: "home" | "office" | "stop_desk";
-  trackingNumber?: string;
-  notes?: string;
-  createdAt: number;
-  updatedAt: number;
-  callLog: CallLog[];
-  auditTrail: AuditEntry[];
-}
-
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "1",
-    orderNumber: "ORD-001",
-    customerName: "أحمد محمد",
-    customerPhone: "0551 23 45 67",
-    customerWilaya: "الجزائر",
-    customerCommune: "الجزائر الوسطى",
-    customerAddress: "شارع جديد، عمارة 5، شقة 12",
-    items: [
-      { id: "1", name: "سماعة بلوتوث", quantity: 1, price: 2500, variant: "أسود" },
-      { id: "2", name: "كفر حماية", quantity: 2, price: 1000, variant: "شفاف" },
-    ],
-    subtotal: 4500,
-    deliveryCost: 0,
-    total: 4500,
-    status: "new",
-    deliveryType: "home",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    callLog: [],
-    auditTrail: [
-      { id: "1", timestamp: Date.now(), action: "created", details: "تم إنشاء الطلب" },
-    ],
-  },
-  {
-    id: "2",
-    orderNumber: "ORD-002",
-    customerName: "سارة علي",
-    customerPhone: "0661 98 76 54",
-    customerWilaya: "وهران",
-    customerCommune: "وهران",
-    customerAddress: "حي الصباح، رقم 15",
-    items: [
-      { id: "3", name: "ساعة ذكية", quantity: 1, price: 3200 },
-    ],
-    subtotal: 3200,
-    deliveryCost: 500,
-    total: 3700,
-    status: "confirmed",
-    deliveryType: "office",
-    createdAt: Date.now() - 86400000,
-    updatedAt: Date.now() - 43200000,
-    callLog: [
-      { id: "1", timestamp: Date.now() - 43200000, outcome: "answered", notes: "أكد العميل الطلب" },
-    ],
-    auditTrail: [
-      { id: "1", timestamp: Date.now() - 86400000, action: "created", details: "تم إنشاء الطلب" },
-      { id: "2", timestamp: Date.now() - 43200000, action: "status_change", details: "تم تأكيد الطلب" },
-    ],
-  },
-  {
-    id: "3",
-    orderNumber: "ORD-003",
-    customerName: "كريم يوسف",
-    customerPhone: "0770 11 22 33",
-    customerWilaya: "قسنطينة",
-    customerCommune: "قسنطينة",
-    customerAddress: "الطريق الوطني رقم 5",
-    items: [
-      { id: "4", name: "لابتوب", quantity: 1, price: 6800 },
-    ],
-    subtotal: 6800,
-    deliveryCost: 600,
-    total: 7400,
-    status: "shipped",
-    deliveryType: "home",
-    trackingNumber: "ZR-2024-001234",
-    createdAt: Date.now() - 172800000,
-    updatedAt: Date.now() - 86400000,
-    callLog: [],
-    auditTrail: [
-      { id: "1", timestamp: Date.now() - 172800000, action: "created", details: "تم إنشاء الطلب" },
-      { id: "2", timestamp: Date.now() - 129600000, action: "status_change", details: "تم تأكيد الطلب" },
-      { id: "3", timestamp: Date.now() - 86400000, action: "status_change", details: "تم الشحن" },
-    ],
-  },
-  {
-    id: "4",
-    orderNumber: "ORD-004",
-    customerName: "فاطمة الزهراء",
-    customerPhone: "0698 44 55 66",
-    customerWilaya: "باتنة",
-    customerCommune: "باتنة",
-    customerAddress: "حي الشهيد، بلوك ب",
-    items: [
-      { id: "5", name: "keyboard ميكانيكي", quantity: 1, price: 4500, variant: "أحمر" },
-    ],
-    subtotal: 4500,
-    deliveryCost: 450,
-    total: 4950,
-    status: "packaged",
-    deliveryType: "stop_desk",
-    createdAt: Date.now() - 259200000,
-    updatedAt: Date.now() - 172800000,
-    callLog: [],
-    auditTrail: [],
-  },
-  {
-    id: "5",
-    orderNumber: "ORD-005",
-    customerName: "ياسين bouteldja",
-    customerPhone: "0555 77 88 99",
-    customerWilaya: "تيبازة",
-    customerCommune: "تيارت",
-    customerAddress: "شارع الاستقلال",
-    items: [
-      { id: "6", name: "ماوس لاسلكي", quantity: 2, price: 1500 },
-    ],
-    subtotal: 3000,
-    deliveryCost: 400,
-    total: 3400,
-    status: "succeeded",
-    deliveryType: "home",
-    trackingNumber: "YL-2024-005678",
-    createdAt: Date.now() - 432000000,
-    updatedAt: Date.now() - 259200000,
-    callLog: [],
-    auditTrail: [],
-  },
-];
-
-const STATUS_LABELS: Record<string, { label: string; variant: "info" | "warning" | "success" | "danger" | "default" }> = {
-  new: { label: "جديد", variant: "info" },
-  confirmed: { label: "مؤكد", variant: "warning" },
-  packaged: { label: "مُعبأ", variant: "default" },
-  shipped: { label: "مُشحن", variant: "info" },
-  succeeded: { label: "مُنجز", variant: "success" },
-  canceled: { label: "ملغى", variant: "danger" },
-  blocked: { label: "محجوب", variant: "danger" },
-  hold: { label: "معلق", variant: "warning" },
-};
-
-const STATUS_TRANSITIONS: Record<string, string[]> = {
-  new: ["confirmed", "canceled", "hold"],
-  confirmed: ["packaged", "canceled", "hold"],
-  packaged: ["shipped", "canceled", "hold"],
-  shipped: ["succeeded", "canceled", "hold"],
-  succeeded: [],
-  canceled: [],
-  blocked: ["new"],
-  hold: ["new", "canceled"],
-};
-
-const DELIVERY_TYPE_LABELS: Record<string, string> = {
-  home: "توصيل للمنزل",
-  office: "توصيل للمكتب",
-  stop_desk: "نقطة استلام",
-};
-
-const CALL_OUTCOME_LABELS: Record<CallLog["outcome"], { label: string; icon: React.ReactNode }> = {
-  answered: { label: "تم الرد", icon: <Phone className="w-4 h-4" /> },
-  no_answer: { label: "لا رد", icon: <PhoneOff className="w-4 h-4" /> },
-  wrong_number: { label: "رقم خطأ", icon: <AlertCircle className="w-4 h-4" /> },
-  refused: { label: "رفض", icon: <XCircle className="w-4 h-4" /> },
-};
-
-type SortField = "date" | "total" | "status";
-type SortDirection = "asc" | "desc";
-
-export default function OrdersPage() {
+function OrdersContent({ slug }: { slug: string }) {
+  const params = useParams();
+  const { isLocked } = useBilling();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
@@ -234,20 +51,36 @@ export default function OrdersPage() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [callOutcome, setCallOutcome] = useState<CallLog["outcome"] | null>(null);
   const [callNotes, setCallNotes] = useState("");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [showAuditTrail, setShowAuditTrail] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [showAddNote, setShowAddNote] = useState(false);
+
+  // Load orders from localStorage
+  useEffect(() => {
+    const loadOrders = async () => {
+      // Run cleanup for locked store orders older than 20 days
+      await cleanupLockedStoreOrders(slug);
+      
+      const savedOrders = localStorage.getItem(`marlon_orders_${slug}`);
+      if (savedOrders) {
+        setOrders(JSON.parse(savedOrders));
+      }
+    };
+    loadOrders();
+  }, [slug]);
+
+  // Save orders to localStorage when changed
+  const saveOrders = (newOrders: Order[]) => {
+    setOrders(newOrders);
+    localStorage.setItem(`marlon_orders_${slug}`, JSON.stringify(newOrders));
+  };
 
   const filteredOrders = useMemo(() => {
-    let orders = [...MOCK_ORDERS];
+    let filtered = [...orders];
     
-    const matchesSearch = 
-      searchQuery === "" ||
-      orders.some(order => 
-        order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customerPhone.includes(searchQuery)
-      );
-    
-    if (!matchesSearch) {
-      orders = orders.filter(order =>
+    if (searchQuery) {
+      filtered = filtered.filter(order =>
         order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.customerName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         order.customerPhone.includes(searchQuery)
@@ -255,13 +88,13 @@ export default function OrdersPage() {
     }
 
     if (statusFilter !== "all") {
-      orders = orders.filter(order => order.status === statusFilter);
+      filtered = filtered.filter(order => order.status === statusFilter);
     }
 
     if (dateFilter !== "all") {
       const now = Date.now();
       const dayMs = 86400000;
-      orders = orders.filter(order => {
+      filtered = filtered.filter(order => {
         switch (dateFilter) {
           case "today":
             return order.createdAt > now - dayMs;
@@ -275,7 +108,7 @@ export default function OrdersPage() {
       });
     }
 
-    orders.sort((a, b) => {
+    filtered.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
         case "date":
@@ -291,10 +124,10 @@ export default function OrdersPage() {
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
-    return orders;
-  }, [searchQuery, statusFilter, dateFilter, sortField, sortDirection]);
+    return filtered;
+  }, [orders, searchQuery, statusFilter, dateFilter, sortField, sortDirection]);
 
-  const newOrdersCount = MOCK_ORDERS.filter(o => o.status === "new").length;
+  const newOrdersCount = orders.filter(o => o.status === "new").length;
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ar-DZ', {
@@ -322,20 +155,26 @@ export default function OrdersPage() {
 
   const handleStatusChange = (newStatus: string) => {
     if (!selectedOrder) return;
-    setSelectedOrder({
+    const statusKey = newStatus as Order["status"];
+    const updatedOrder: Order = {
       ...selectedOrder,
-      status: newStatus as Order["status"],
+      status: statusKey,
       updatedAt: Date.now(),
       auditTrail: [
         ...selectedOrder.auditTrail,
         {
           id: String(Date.now()),
           timestamp: Date.now(),
-          action: "status_change",
-          details: `تم تغيير الحالة إلى ${STATUS_LABELS[newStatus]?.label || newStatus}`,
+          action: "status_change" as const,
+          details: `تم تغيير الحالة إلى ${STATUS_LABELS[statusKey]?.label || newStatus}`,
         },
       ],
-    });
+    };
+    setSelectedOrder(updatedOrder);
+    
+    // Persist to localStorage
+    const updatedOrders = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+    saveOrders(updatedOrders);
   };
 
   const handleAddCallLog = () => {
@@ -346,7 +185,7 @@ export default function OrdersPage() {
       outcome: callOutcome,
       notes: callNotes || undefined,
     };
-    setSelectedOrder({
+    const updatedOrder: Order = {
       ...selectedOrder,
       callLog: [...selectedOrder.callLog, newCallLog],
       auditTrail: [
@@ -354,13 +193,50 @@ export default function OrdersPage() {
         {
           id: String(Date.now()),
           timestamp: Date.now(),
-          action: "call",
+          action: "call" as const,
           details: `مكالمة: ${CALL_OUTCOME_LABELS[callOutcome].label}${callNotes ? ` - ${callNotes}` : ""}`,
         },
       ],
-    });
+    };
+    setSelectedOrder(updatedOrder);
+    
+    // Persist to localStorage
+    const updatedOrders = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+    saveOrders(updatedOrders);
+    
     setCallOutcome(null);
     setCallNotes("");
+  };
+
+  const handleAddAdminNote = () => {
+    if (!selectedOrder || !newNote.trim()) return;
+    const note: AdminNote = {
+      id: String(Date.now()),
+      text: newNote,
+      timestamp: Date.now(),
+      merchantId: "current_user", // In real app, get from Clerk
+    };
+    const updatedOrder: Order = {
+      ...selectedOrder,
+      adminNotes: [...(selectedOrder.adminNotes || []), note],
+      auditTrail: [
+        ...selectedOrder.auditTrail,
+        {
+          id: String(Date.now()),
+          timestamp: Date.now(),
+          action: "admin_note" as const,
+          details: `إضافة ملاحظة: ${newNote.substring(0, 50)}${newNote.length > 50 ? "..." : ""}`,
+        },
+      ],
+    };
+    setSelectedOrder(updatedOrder);
+    
+    // Persist to localStorage
+    const updatedOrders = orders.map(o => o.id === updatedOrder.id ? updatedOrder : o);
+    saveOrders(updatedOrders);
+    
+    setNewNote("");
+    setShowAddNote(false);
   };
 
   const SortIcon = ({ field }: { field: SortField }) => {
@@ -473,16 +349,20 @@ export default function OrdersPage() {
                   </td>
                   <td className="px-4 py-4">
                     <div>
-                      <p className="font-medium text-zinc-900 dark:text-zinc-50">
-                        {order.customerName}
-                      </p>
-                      <p className="text-sm text-zinc-500">
-                        {order.customerPhone}
-                      </p>
+                      <LockedData fallback="***">
+                        <p className="font-medium text-zinc-900 dark:text-zinc-50">
+                          {order.customerName}
+                        </p>
+                        <p className="text-sm text-zinc-500">
+                          {order.customerPhone}
+                        </p>
+                      </LockedData>
                     </div>
                   </td>
                   <td className="px-4 py-4 text-zinc-600 dark:text-zinc-400">
-                    {order.customerWilaya}
+                    <LockedData fallback="***">
+                      {order.customerWilaya}
+                    </LockedData>
                   </td>
                   <td className="px-4 py-4 font-medium text-zinc-900 dark:text-zinc-50">
                     {formatPrice(order.total)}
@@ -529,16 +409,20 @@ export default function OrdersPage() {
                   <User className="w-4 h-4" />
                   <span className="text-sm">العميل</span>
                 </div>
-                <p className="font-medium text-zinc-900 dark:text-zinc-50">{selectedOrder.customerName}</p>
-                <p className="text-sm text-zinc-500">{selectedOrder.customerPhone}</p>
+                <LockedData fallback="***">
+                  <p className="font-medium text-zinc-900 dark:text-zinc-50">{selectedOrder.customerName}</p>
+                  <p className="text-sm text-zinc-500">{selectedOrder.customerPhone}</p>
+                </LockedData>
               </div>
               <div className="p-4 rounded-xl bg-zinc-50 dark:bg-zinc-800">
                 <div className="flex items-center gap-2 text-zinc-500 mb-2">
                   <MapPin className="w-4 h-4" />
                   <span className="text-sm">العنوان</span>
                 </div>
-                <p className="text-sm text-zinc-900 dark:text-zinc-50">{selectedOrder.customerWilaya}</p>
-                <p className="text-sm text-zinc-500">{selectedOrder.customerCommune}</p>
+                <LockedData fallback="***">
+                  <p className="text-sm text-zinc-900 dark:text-zinc-50">{selectedOrder.customerWilaya}</p>
+                  <p className="text-sm text-zinc-500">{selectedOrder.customerCommune}</p>
+                </LockedData>
               </div>
             </div>
 
@@ -677,8 +561,103 @@ export default function OrdersPage() {
               </div>
             )}
 
+            {/* GAP 6: Universal Action Buttons - Always visible */}
             <div className="space-y-3">
               <h3 className="font-medium text-zinc-900 dark:text-zinc-50">الإجراءات</h3>
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAddNote(true)}
+                >
+                  <Plus className="w-4 h-4" />
+                  إضافة ملاحظة
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowAuditTrail(!showAuditTrail)}
+                >
+                  <FileText className="w-4 h-4" />
+                  سجل التغييرات
+                </Button>
+              </div>
+            </div>
+
+            {/* Admin Notes Section */}
+            {showAddNote && (
+              <div className="p-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800">
+                <p className="text-sm font-medium text-zinc-900 dark:text-zinc-50 mb-3">إضافة ملاحظة_internal</p>
+                <textarea
+                  value={newNote}
+                  onChange={(e) => setNewNote(e.target.value)}
+                  placeholder="ملاحظة خاصة (لا تظهر للعميل)..."
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-sm resize-none"
+                  rows={3}
+                />
+                <div className="flex gap-2 mt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowAddNote(false)}
+                    className="flex-1"
+                  >
+                    إلغاء
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleAddAdminNote}
+                    disabled={!newNote.trim()}
+                    className="flex-1"
+                  >
+                    حفظ
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* GAP 5: Admin Notes Display */}
+            {selectedOrder.adminNotes && selectedOrder.adminNotes.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4" />
+                  الملاحظات ({selectedOrder.adminNotes.length})
+                </h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedOrder.adminNotes.slice().reverse().map((note) => (
+                    <div key={note.id} className="p-3 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                      <p className="text-sm text-zinc-900 dark:text-zinc-50">{note.text}</p>
+                      <p className="text-xs text-zinc-400 mt-1">{formatDate(note.timestamp)}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* GAP 6: Audit Trail (Conditional) */}
+            {showAuditTrail && selectedOrder.auditTrail.length > 0 && (
+              <div className="space-y-3">
+                <h3 className="font-medium text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
+                  سجل التغييرات
+                </h3>
+                <div className="space-y-2 max-h-40 overflow-y-auto">
+                  {selectedOrder.auditTrail.slice().reverse().map((entry) => (
+                    <div key={entry.id} className="flex items-start gap-3 text-sm">
+                      <CheckCircle className="w-4 h-4 text-zinc-400 mt-0.5 flex-shrink-0" />
+                      <div>
+                        <p className="text-zinc-900 dark:text-zinc-50">{entry.details}</p>
+                        <p className="text-xs text-zinc-400">{formatDate(entry.timestamp)}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Status-specific Actions */}
+            <div className="space-y-3">
+              <h3 className="font-medium text-zinc-900 dark:text-zinc-50">تغيير الحالة</h3>
               <div className="flex flex-wrap gap-2">
                 {STATUS_TRANSITIONS[selectedOrder.status]?.map((status) => (
                   <Button
@@ -702,5 +681,17 @@ export default function OrdersPage() {
         )}
       </SlideOver>
     </div>
+  );
+}
+
+// Wrapper component that provides billing context
+export default function OrdersPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
+  
+  return (
+    <BillingProvider storeSlug={slug}>
+      <OrdersContent slug={slug} />
+    </BillingProvider>
   );
 }

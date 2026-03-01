@@ -4,8 +4,9 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { ExternalLink, Store } from "lucide-react";
+import { BillingProvider } from "@/contexts/billing-context";
 
-export default function StoreAdminLayout({
+function StoreAdminContent({
   children,
 }: {
   children: React.ReactNode;
@@ -95,5 +96,20 @@ export default function StoreAdminLayout({
         </div>
       </nav>
     </div>
+  );
+}
+
+export default function StoreAdminLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const params = useParams();
+  const slug = params?.slug as string;
+
+  return (
+    <BillingProvider storeSlug={slug}>
+      <StoreAdminContent>{children}</StoreAdminContent>
+    </BillingProvider>
   );
 }

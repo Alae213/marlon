@@ -13,9 +13,7 @@ import { Badge, Card, CardHeader, CardTitle, CardContent } from "@/components/co
 import { useBilling } from "@/contexts/billing-context";
 import { PaymentModal } from "@/components/payment-modal";
 
-const MOCK_STORE_NAME = "متجري";
-
-export function BillingSection() {
+export function BillingSection({ storeName = "متجري" }: { storeName?: string }) {
   const { 
     storeStatus, 
     orderCount, 
@@ -177,7 +175,7 @@ export function BillingSection() {
       <PaymentModal 
         isOpen={isPaymentModalOpen} 
         onClose={closePaymentModal}
-        storeName={MOCK_STORE_NAME}
+        storeName={storeName}
       />
     </div>
   );

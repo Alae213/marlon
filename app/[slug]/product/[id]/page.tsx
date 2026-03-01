@@ -1,31 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import Image from "next/image";
-import { ArrowRight, Minus, Plus, ShoppingCart, Heart, Check, MapPin } from "lucide-react";
+import { ArrowRight, Minus, Plus, ShoppingCart, Heart, Check, MapPin, Package, Zap } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
+import { handleSubscriptionExpiryOnOrder } from "@/lib/locked-store-cleanup";
 
-const MOCK_PRODUCT = {
-  id: "1",
-  name: "سماعة بلوتوث عالية الجودة",
-  description: "استمتع بصوت عالي الجودة مع سماعتنا البلوتوثية المتقدمة. بطارية تدوم طويلاً، تصميم مريح للأذن، وتقنية إلغاء الضوضاء.",
-  price: 2500,
-  images: [
-    "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&h=800&fit=crop",
-    "https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop",
-  ],
-  inStock: true,
-  variants: [
-    { name: "اللون", options: ["أسود", "أبيض", "أزرق"] },
-    { name: "السعة", options: ["64GB", "128GB", "256GB"] },
-  ],
-};
+interface Product {
+  id: string;
+  name: string;
+  description: string;
+  basePrice: number;
+  oldPrice: number | null;
+  images: string[];
+  isArchived: boolean;
+  variants?: { name: string; options: string[] }[];
+}
 
 const WILAYAS = [
   "الجزائر", "وهران", "قسنطينة", "باتنة", "تيبازة", "تبارت", "مستغانم",
-  "بسكرة", "تل党支部书记", "عنابة", "سكيكدة", "عقبة", "بجاية", "béja",
+  "بسكرة", "عنابة", "سكيكدة", "عقبة", "بجاية",
 ];
 
 const formatPrice = (price: number) => {
@@ -36,30 +32,55 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-export default function ProductPage({ params }: { params: { id: string } }) {
+export default function ProductPage({ params }: { params: { slug: string; id: string } }) {
+  const { slug, id } = params;
+  const [product, setProduct] = useState<Product | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
   const [wilaya, setWilaya] = useState("");
   const [commune, setCommune] = useState("");
   const [phone, setPhone] = useState("");
-  const [name, setName] = useState("");
+  const [customerName, setCustomerName] = useState("");
   const [address, setAddress] = useState("");
+  const [deliveryType, setDeliveryType] = useState<"home" | "office" | "stop_desk">("home");
+  const [isBuyNowMode, setIsBuyNowMode] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
   const { addItem } = useCart();
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
+
+  // Load product from localStorage
+  useEffect(() => {
+    const savedProducts = localStorage.getItem(`marlon_products_${slug}`);
+    if (savedProducts) {
+      const products: Product[] = JSON.parse(savedProducts);
+      const found = products.find(p => p.id === id);
+      if (found) {
+        setProduct(found);
+      }
+      // Get related products (exclude current, show up to 4)
+      const related = products
+        .filter(p => p.id !== id && !p.isArchived)
+        .slice(0, 4);
+      setRelatedProducts(related);
+    }
+  }, [slug, id]);
 
   const handleVariantSelect = (variantName: string, option: string) => {
     setSelectedVariants(prev => ({ ...prev, [variantName]: option }));
   };
 
   const handleAddToCart = () => {
+    if (!product) return;
     const variantString = Object.values(selectedVariants).join(" - ");
     addItem({
-      id: `${MOCK_PRODUCT.id}-${Date.now()}`,
-      productId: MOCK_PRODUCT.id,
-      name: MOCK_PRODUCT.name,
-      price: MOCK_PRODUCT.price,
+      id: `${product.id}-${Date.now()}`,
+      productId: product.id,
+      name: product.name,
+      price: product.basePrice,
       quantity,
-      image: MOCK_PRODUCT.images[0],
+      image: product.images?.[0] || "",
       variant: variantString || undefined,
     });
     setQuantity(1);
@@ -70,69 +91,132 @@ export default function ProductPage({ params }: { params: { id: string } }) {
     return phoneRegex.test(phone.replace(/\s/g, ""));
   };
 
-  const isFormValid = name && isValidPhone(phone) && wilaya && address;
+  const isFormValid = customerName && isValidPhone(phone) && wilaya && address;
+
+  const handleBuyNow = () => {
+    if (!product || !isFormValid) return;
+
+    // Handle subscription expiry - this will revert expired stores to trial
+    handleSubscriptionExpiryOnOrder(slug);
+
+    // Create order directly
+    const newOrderNumber = "ORD-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+    const variantString = Object.values(selectedVariants).join(" - ");
+    
+    const newOrder = {
+      id: `order_${Date.now()}`,
+      orderNumber: newOrderNumber,
+      customerName,
+      customerPhone: phone,
+      customerWilaya: wilaya,
+      customerCommune: commune,
+      customerAddress: address,
+      items: [{
+        id: `item_${Date.now()}`,
+        name: product.name,
+        quantity,
+        price: product.basePrice,
+        variant: variantString || undefined,
+      }],
+      subtotal: product.basePrice * quantity,
+      deliveryCost: 600, // Default delivery cost - in real app, fetch from store settings
+      total: (product.basePrice * quantity) + 600,
+      status: "new" as const,
+      deliveryType,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      callLog: [],
+      auditTrail: [{
+        id: `audit_${Date.now()}`,
+        timestamp: Date.now(),
+        action: "created",
+        details: "تم إنشاء الطلب عبر الشراء المباشر"
+      }],
+      adminNotes: [],
+    };
+
+    // Save to localStorage
+    const existingOrders = JSON.parse(localStorage.getItem(`marlon_orders_${slug}`) || "[]");
+    localStorage.setItem(`marlon_orders_${slug}`, JSON.stringify([newOrder, ...existingOrders]));
+
+    setOrderNumber(newOrderNumber);
+    setOrderPlaced(true);
+  };
+
+  if (!product) {
+    return (
+      <div className="max-w-6xl mx-auto px-4 py-8 text-center">
+        <Package className="w-16 h-16 text-zinc-300 mx-auto mb-4" />
+        <p className="text-zinc-500">المنتج غير موجود</p>
+        <Link href={`/${slug}`} className="text-[#00853f] hover:underline mt-2 inline-block">
+          العودة للرئيسية
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       <nav className="flex items-center gap-2 text-sm text-zinc-500 mb-6">
-        <Link href="/marlon" className="hover:text-zinc-900 dark:hover:text-zinc-50">
+        <Link href={`/${slug}`} className="hover:text-zinc-900 dark:hover:text-zinc-50">
           الرئيسية
         </Link>
         <ArrowRight className="w-4 h-4" />
         <span className="text-zinc-900 dark:text-zinc-50">المنتجات</span>
         <ArrowRight className="w-4 h-4" />
-        <span className="text-zinc-900 dark:text-zinc-50 truncate">{MOCK_PRODUCT.name}</span>
+        <span className="text-zinc-900 dark:text-zinc-50 truncate">{product.name}</span>
       </nav>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="space-y-4">
           <div className="relative aspect-square bg-zinc-100 dark:bg-zinc-800 rounded-2xl overflow-hidden">
-            <Image
-              src={MOCK_PRODUCT.images[selectedImage]}
-              alt={MOCK_PRODUCT.name}
-              fill
-              className="object-cover"
-            />
-            {!MOCK_PRODUCT.inStock && (
-              <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                <span className="bg-red-500 text-white px-4 py-2 rounded-full font-medium">
-                  غير متوفر
-                </span>
+            {product.images && product.images.length > 0 ? (
+              <Image
+                src={product.images[selectedImage]}
+                alt={product.name}
+                fill
+                className="object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Package className="w-20 h-20 text-zinc-300" />
               </div>
             )}
           </div>
-          <div className="flex gap-3 overflow-x-auto pb-2">
-            {MOCK_PRODUCT.images.map((image, index) => (
-              <button
-                key={index}
-                onClick={() => setSelectedImage(index)}
-                className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors ${
-                  selectedImage === index
-                    ? "border-[#00853f]"
-                    : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
-                }`}
-              >
-                <Image
-                  src={image}
-                  alt={`${MOCK_PRODUCT.name} ${index + 1}`}
-                  fill
-                  className="object-cover"
-                />
-              </button>
-            ))}
-          </div>
+          {product.images && product.images.length > 0 && (
+            <div className="flex gap-3 overflow-x-auto pb-2">
+              {product.images.map((image: string, index: number) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`relative w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border-2 transition-colors ${
+                    selectedImage === index
+                      ? "border-[#00853f]"
+                      : "border-transparent hover:border-zinc-300 dark:hover:border-zinc-600"
+                  }`}
+                >
+                  <Image
+                    src={image}
+                    alt={`${product.name} ${index + 1}`}
+                    fill
+                    className="object-cover"
+                  />
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="space-y-6">
           <div>
             <h1 className="text-2xl md:text-3xl font-bold text-zinc-900 dark:text-zinc-50 mb-4">
-              {MOCK_PRODUCT.name}
+              {product.name}
             </h1>
             <div className="flex items-center gap-4 mb-4">
               <span className="text-3xl font-bold text-[#00853f]">
-                {formatPrice(MOCK_PRODUCT.price)}
+                {formatPrice(product.basePrice)}
               </span>
-              {MOCK_PRODUCT.inStock && (
+              {!product.isArchived && (
                 <span className="flex items-center gap-1 text-green-600 text-sm">
                   <Check className="w-4 h-4" />
                   متوفر
@@ -140,17 +224,17 @@ export default function ProductPage({ params }: { params: { id: string } }) {
               )}
             </div>
             <p className="text-zinc-600 dark:text-zinc-400 leading-relaxed">
-              {MOCK_PRODUCT.description}
+              {product.description}
             </p>
           </div>
 
-          {MOCK_PRODUCT.variants.map((variant) => (
+          {product.variants && product.variants.map((variant) => (
             <div key={variant.name}>
               <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-3">
                 {variant.name}
               </label>
               <div className="flex flex-wrap gap-2">
-                {variant.options.map((option) => (
+                {variant.options.map((option: string) => (
                   <button
                     key={option}
                     onClick={() => handleVariantSelect(variant.name, option)}
@@ -191,104 +275,94 @@ export default function ProductPage({ params }: { params: { id: string } }) {
           <div className="flex gap-3">
             <button
               onClick={handleAddToCart}
-              disabled={!MOCK_PRODUCT.inStock}
+              disabled={product.isArchived}
               className="flex-1 h-14 bg-[#00853f] text-white rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-[#007537] disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
               إضافة للسلة
+            </button>
+            <button
+              onClick={handleBuyNow}
+              disabled={!isFormValid || product.isArchived}
+              className="flex-1 h-14 bg-zinc-900 text-white rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-zinc-800 disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
+            >
+              <Zap className="w-5 h-5" />
+              شراء الآن
             </button>
             <button className="w-14 h-14 border border-zinc-200 dark:border-zinc-700 rounded-2xl flex items-center justify-center hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors">
               <Heart className="w-5 h-5 text-zinc-400" />
             </button>
           </div>
 
-          <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6 space-y-4">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-              معلومات التوصيل
-            </h3>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm text-zinc-500 mb-2">الولاية</label>
-                <select
-                  value={wilaya}
-                  onChange={(e) => {
-                    setWilaya(e.target.value);
-                    setCommune("");
-                  }}
-                  className="w-full h-11 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#00853f]"
-                >
-                  <option value="">اختر الولاية</option>
-                  {WILAYAS.map((w) => (
-                    <option key={w} value={w}>{w}</option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm text-zinc-500 mb-2">البلدية</label>
-                <input
-                  type="text"
-                  value={commune}
-                  onChange={(e) => setCommune(e.target.value)}
-                  placeholder="أدخل البلدية"
-                  className="w-full h-11 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#00853f]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm text-zinc-500 mb-2">العنوان بالتفصيل</label>
-              <textarea
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="الحي، رقم المنزل، رقم الشقة..."
-                rows={2}
-                className="w-full px-4 py-3 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#00853f] resize-none"
-              />
-            </div>
-          </div>
-
-          <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6 space-y-4">
-            <h3 className="font-semibold text-zinc-900 dark:text-zinc-50">
-              معلومات الطلب
-            </h3>
-            
-            <div>
-              <label className="block text-sm text-zinc-500 mb-2">الاسم الكامل</label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="أدخل اسمك الكامل"
-                className="w-full h-11 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#00853f]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm text-zinc-500 mb-2">رقم الهاتف</label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="0551 23 45 67"
-                className="w-full h-11 px-4 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:ring-[#00853f]"
-              />
-              {!isValidPhone(phone) && phone.length > 0 && (
-                <p className="text-red-500 text-sm mt-1">
-                  يرجى إدخال رقم هاتف صحيح (مثال: 0551 23 45 67)
+          {/* Order Placed Confirmation */}
+          {orderPlaced && (
+            <div className="border-t border-zinc-200 dark:border-zinc-700 pt-6">
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Check className="w-8 h-8 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+                  تم استلام طلبك بنجاح!
+                </h3>
+                <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+                  رقم الطلب: <span className="font-mono font-bold">{orderNumber}</span>
                 </p>
-              )}
+                <p className="text-sm text-zinc-500 mb-6">
+                  سنقوم بالاتصال بك قريباً لتأكيد الطلب
+                </p>
+                <Link
+                  href={`/${slug}`}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-[#00853f] text-white rounded-xl font-medium hover:bg-[#007537] transition-colors"
+                >
+                  متابعة التسوق
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </div>
             </div>
-
-            <button
-              disabled={!isFormValid}
-              className="w-full h-14 bg-[#00853f] text-white rounded-2xl font-medium flex items-center justify-center gap-2 hover:bg-[#007537] disabled:bg-zinc-300 disabled:cursor-not-allowed transition-colors"
-            >
-              طلب الآن - {formatPrice(MOCK_PRODUCT.price * quantity)}
-            </button>
-          </div>
+          )}
         </div>
       </div>
+
+      {/* GAP 9: Related Products Section */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-6">
+            منتجات مشابهة
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map((relatedProduct) => (
+              <Link
+                key={relatedProduct.id}
+                href={`/${slug}/product/${relatedProduct.id}`}
+                className="group bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-[#00853f] hover:shadow-lg transition-all duration-200"
+              >
+                <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                  {relatedProduct.images && relatedProduct.images.length > 0 ? (
+                    <Image
+                      src={relatedProduct.images[0]}
+                      alt={relatedProduct.name}
+                      fill
+                      className="object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  ) : (
+                    <Package className="w-12 h-12 text-zinc-300" />
+                  )}
+                </div>
+                <div className="p-4">
+                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50 mb-1 line-clamp-2 group-hover:text-[#00853f] transition-colors">
+                    {relatedProduct.name}
+                  </h3>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-[#00853f]">
+                      {formatPrice(relatedProduct.basePrice)}
+                    </span>
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
