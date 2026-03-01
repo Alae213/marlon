@@ -5,6 +5,7 @@ export { Select } from "./select";
 export { Badge } from "./badge";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./card";
 export { Modal } from "./modal";
+export { SlideOver } from "./slide-over";
 export { Tabs } from "./tabs";
 export { EmptyState } from "./empty-state";
 export { Spinner, PageLoader } from "./spinner";

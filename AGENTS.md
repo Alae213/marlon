@@ -55,7 +55,8 @@ import { formatPrice } from "../utils/format";
 
 ### Styling
 
-· Tailwind CSS v4 exclusively - no inline style={} unless dynamic values_require it.
+- **Icons**: Always use Lucide icons library (`lucide-react`). Never create custom icons from scratch.
+- Tailwind CSS v4 exclusively - no inline style={} unless dynamic values_require it.
 . Global CSS variables defined in app/globals.css using @theme inline block.
 . Dark mode: use dark: variant (respects prefers-color-scheme).
 . RTL: this is an Arabic-first app. Use logical properties (ps-4, pe-4, ms-auto,

@@ -79,37 +79,37 @@
 ## Phase 4: Orders Management (Week 5-6)
 
 ### 4.1 Order List
-- [ ] Build Notion-style orders table
-- [ ] Implement filters (status, date range)
-- [ ] Add search by order ID or customer name
-- [ ] Implement sorting (date, total, status)
-- [ ] Add notification dot for new orders
+- [x] Build Notion-style orders table
+- [x] Implement filters (status, date range)
+- [x] Add search by order ID or customer name
+- [x] Implement sorting (date, total, status)
+- [x] Add notification dot for new orders
 
 ### 4.2 Order Status Machine
-- [ ] Implement status transitions (new → confirmed → packaged → shipped → succeeded)
-- [ ] Add status badges with colors
-- [ ] Handle edge transitions (canceled, blocked, hold)
+- [x] Implement status transitions (new → confirmed → packaged → shipped → succeeded)
+- [x] Add status badges with colors
+- [x] Handle edge transitions (canceled, blocked, hold)
 
 ### 4.3 Order Detail Panel
-- [ ] Build right-side order detail panel
-- [ ] Implement inline editing for customer info
-- [ ] Add product list with quantity editing
-- [ ] Create delivery type and cost display
-- [ ] Build order timeline (status change log)
+- [x] Build right-side order detail panel
+- [x] Implement inline editing for customer info
+- [x] Add product list with quantity editing
+- [x] Create delivery type and cost display
+- [x] Build order timeline (status change log)
 
 ### 4.4 Call Log
-- [ ] Implement call attempt counter
-- [ ] Create call outcomes workflow (Answered, No Answer, Wrong Number, Refused)
-- [ ] Add timestamp tracking per attempt
+- [x] Implement call attempt counter
+- [x] Create call outcomes workflow (Answered, No Answer, Wrong Number, Refused)
+- [x] Add timestamp tracking per attempt
 
 ### 4.5 Context-Aware Actions
-- [ ] Implement action buttons based on order status
-- [ ] Add "Send to Delivery Company" bulk action
-- [ ] Build tracking number display
+- [x] Implement action buttons based on order status
+- [x] Add "Send to Delivery Company" bulk action
+- [x] Build tracking number display
 
 ### 4.6 Audit Trail
-- [ ] Create immutable changelog system
-- [ ] Log status changes, call attempts, notes, edits
+- [x] Create immutable changelog system
+- [x] Log status changes, call attempts, notes, edits
 
 ---
 
