@@ -116,28 +116,28 @@
 ## Phase 5: Public Storefront (Week 6-8)
 
 ### 5.1 Catalog Page
-- [ ] Build fixed navbar (logo, links, cart icon)
-- [ ] Implement hero section from site content
-- [ ] Create product grid with images, names, prices
-- [ ] Add product card hover effects
+- [x] Build fixed navbar (logo, links, cart icon)
+- [x] Implement hero section from site content
+- [x] Create product grid with images, names, prices
+- [x] Add product card hover effects
 
 ### 5.2 Product Detail Page
-- [ ] Build image gallery with carousel
-- [ ] Implement variant selector buttons
-- [ ] Add quantity selector
-- [ ] Create order form with validation (Algerian phone format)
-- [ ] Implement wilaya/commune dependent dropdowns
+- [x] Build image gallery with carousel
+- [x] Implement variant selector buttons
+- [x] Add quantity selector
+- [x] Create order form with validation (Algerian phone format)
+- [x] Implement wilaya/commune dependent dropdowns
 
 ### 5.3 Cart & Checkout
-- [ ] Build cart sidebar with item management
-- [ ] Implement quantity adjustment and remove functionality
-- [ ] Create checkout popup with delivery cost calculation
-- [ ] Add order summary (subtotal, delivery, total)
-- [ ] Implement COD payment flow
+- [x] Build cart sidebar with item management
+- [x] Implement quantity adjustment and remove functionality
+- [x] Create checkout popup with delivery cost calculation
+- [x] Add order summary (subtotal, delivery, total)
+- [x] Implement COD payment flow
 
 ### 5.4 Order Confirmation
-- [ ] Build confirmation page with order ID
-- [ ] Add "Continue Shopping" button
+- [x] Build confirmation page with order ID
+- [x] Add "Continue Shopping" button
 
 ---
 
