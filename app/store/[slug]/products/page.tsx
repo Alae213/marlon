@@ -1,58 +1,64 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useParams } from "next/navigation";
-import { Search, Plus, Grid3X3, List, MoreVertical, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2 } from "lucide-react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { Search, Plus, Grid3X3, List, MoreVertical, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
 import { Modal } from "@/components/core/modal";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
-import { Spinner } from "@/components/core/spinner";
 import { ImageUploader } from "@/components/image-cropper";
+import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 
 interface Product {
-  id: string;
+  _id: Id<"products">;
+  _creationTime: number;
   name: string;
-  description: string;
+  description?: string;
   basePrice: number;
-  oldPrice: number | null;
-  images: string[];
-  isArchived: boolean;
-  sortOrder: number;
+  oldPrice?: number;
+  images?: string[];
+  category?: string;
+  variants?: any[];
+  isArchived?: boolean;
+  sortOrder?: number;
+  createdAt?: number;
+  updatedAt?: number;
 }
 
-export default function ProductsPage() {
-  const params = useParams();
-  const slug = params?.slug as string;
+function ProductsContent({ storeId }: { storeId: string }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
-  const [products, setProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
-  // Load products from localStorage
-  useEffect(() => {
-    const savedProducts = localStorage.getItem(`marlon_products_${slug}`);
-    if (savedProducts) {
-      setProducts(JSON.parse(savedProducts));
-    }
-    setIsLoading(false);
-  }, [slug]);
-
-  // Save products to localStorage when changed
-  const saveProducts = (newProducts: Product[]) => {
-    setProducts(newProducts);
-    localStorage.setItem(`marlon_products_${slug}`, JSON.stringify(newProducts));
-  };
-
-  const filteredProducts = products.filter(p => 
-    p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-    !p.isArchived
+  // Get products from Convex
+  const products = useQuery(
+    api.products.getProducts,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
+
+  // Mutations
+  const createProduct = useMutation(api.products.createProduct);
+  const updateProduct = useMutation(api.products.updateProduct);
+  const archiveProduct = useMutation(api.products.archiveProduct);
+  const unarchiveProduct = useMutation(api.products.unarchiveProduct);
+
+  const isLoading = !products;
+
+  const filteredProducts = useMemo(() => {
+    if (!products) return [];
+    return products.filter(p => 
+      p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
+      !p.isArchived
+    );
+  }, [products, searchQuery]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ar-DZ', {
@@ -62,30 +68,53 @@ export default function ProductsPage() {
     }).format(price);
   };
 
-  const handleAddProduct = (product: Product) => {
-    const newProducts = [...products, product];
-    saveProducts(newProducts);
+  const handleAddProduct = async (product: Omit<Product, "_id" | "isArchived" | "sortOrder">) => {
+    try {
+      await createProduct({
+        storeId: storeId as Id<"stores">,
+        name: product.name,
+        description: product.description || undefined,
+        basePrice: product.basePrice,
+        oldPrice: product.oldPrice || undefined,
+        images: product.images,
+      });
+    } catch (error) {
+      console.error("Failed to create product:", error);
+    }
   };
 
-  const handleToggleArchive = (productId: string) => {
-    const newProducts = products.map(p => 
-      p.id === productId ? { ...p, isArchived: !p.isArchived } : p
-    );
-    saveProducts(newProducts);
+  const handleToggleArchive = async (productId: string, currentStatus?: boolean) => {
+    try {
+      if (currentStatus) {
+        await unarchiveProduct({ productId: productId as Id<"products"> });
+      } else {
+        await archiveProduct({ productId: productId as Id<"products"> });
+      }
+    } catch (error) {
+      console.error("Failed to toggle archive:", error);
+    }
+  };
+
+  const handleUpdateProduct = async (product: Product) => {
+    try {
+      await updateProduct({
+        productId: product._id,
+        name: product.name,
+        description: product.description || undefined,
+        basePrice: product.basePrice,
+        oldPrice: product.oldPrice || undefined,
+        images: product.images,
+      });
+      setEditingProduct(null);
+    } catch (error) {
+      console.error("Failed to update product:", error);
+    }
   };
 
   const handleDeleteProduct = (productId: string) => {
-    const newProducts = products.filter(p => p.id !== productId);
-    saveProducts(newProducts);
+    // Note: Hard delete not implemented in Convex (soft delete only)
+    // For now, just close the modal
     setDeletingProductId(null);
-  };
-
-  const handleUpdateProduct = (updatedProduct: Product) => {
-    const newProducts = products.map(p => 
-      p.id === updatedProduct.id ? updatedProduct : p
-    );
-    saveProducts(newProducts);
-    setEditingProduct(null);
   };
 
   return (
@@ -151,7 +180,7 @@ export default function ProductsPage() {
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-[#00853f] hover:shadow-lg transition-all duration-200"
               >
                 <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
@@ -185,14 +214,22 @@ export default function ProductsPage() {
                 {/* Hover Actions */}
                 <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditingProduct(product); }}
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      e.stopPropagation(); 
+                      setEditingProduct({ 
+                        ...product, 
+                        images: product.images || [],
+                        isArchived: product.isArchived ?? false
+                      }); 
+                    }}
                     className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                     title="تعديل"
                   >
                     <Edit className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
                   </button>
                   <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(product.id); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(product._id, product.isArchived); }}
                     className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
                     title={product.isArchived ? "تفعيل" : "تعطيل"}
                   >
@@ -203,7 +240,7 @@ export default function ProductsPage() {
                     )}
                   </button>
                   <button
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(product.id); }}
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(product._id); }}
                     className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="حذف"
                   >
@@ -212,7 +249,7 @@ export default function ProductsPage() {
                 </div>
 
                 {/* Delete Confirmation */}
-                {deletingProductId === product.id && (
+                {deletingProductId === product._id && (
                   <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
                     <div className="text-center p-4">
                       <p className="text-white font-medium mb-3">حذف المنتج؟</p>
@@ -224,7 +261,7 @@ export default function ProductsPage() {
                           إلغاء
                         </button>
                         <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProduct(product.id); }}
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProduct(product._id); }}
                           className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm"
                         >
                           حذف
@@ -240,7 +277,7 @@ export default function ProductsPage() {
           <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
             {filteredProducts.map((product) => (
               <div
-                key={product.id}
+                key={product._id}
                 className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
               >
                 <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0">
@@ -276,10 +313,16 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="flex items-center gap-1">
-                  <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+                  <button 
+                    onClick={() => setEditingProduct(product)}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                  >
                     <Edit className="w-4 h-4 text-zinc-500" />
                   </button>
-                  <button className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors">
+                  <button 
+                    onClick={() => handleToggleArchive(product._id, product.isArchived)}
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                  >
                     <Archive className="w-4 h-4 text-zinc-500" />
                   </button>
                 </div>
@@ -319,7 +362,7 @@ export default function ProductsPage() {
   );
 }
 
-function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: Product) => void }) {
+function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: any) => void }) {
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
   const [basePrice, setBasePrice] = useState(product?.basePrice?.toString() || "");
@@ -331,15 +374,12 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
   const handleSubmit = () => {
     if (!name || !basePrice) return;
     
-    const productData: Product = {
-      id: product?.id || `product_${Date.now()}`,
+    const productData = {
       name,
       description,
       basePrice: parseInt(basePrice),
-      oldPrice: oldPrice ? parseInt(oldPrice) : null,
+      oldPrice: oldPrice ? parseInt(oldPrice) : undefined,
       images,
-      isArchived: product?.isArchived || false,
-      sortOrder: product?.sortOrder || 0,
     };
     
     onSubmit(productData);
@@ -403,5 +443,45 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
         </Button>
       </div>
     </div>
+  );
+}
+
+// Main page component - fetches storeId from slug
+export default function ProductsPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
+  
+  // Get store by slug
+  const store = useQuery(
+    api.stores.getStoreBySlug,
+    slug ? { slug } : "skip"
+  );
+  
+  const storeId = store?._id;
+  
+  // Show loading state
+  if (!store && slug) {
+    return (
+      <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00853f]" />
+      </div>
+    );
+  }
+  
+  // No store found
+  if (!storeId) {
+    return (
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 text-center">
+          <p className="text-zinc-500">المتجر غير موجود</p>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <RealtimeProvider storeId={storeId}>
+      <ProductsContent storeId={storeId} />
+    </RealtimeProvider>
   );
 }

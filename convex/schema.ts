@@ -81,6 +81,25 @@ export default defineSchema({
     lastCallAt: v.optional(v.number()),
     trackingNumber: v.optional(v.string()),
     notes: v.optional(v.string()),
+    // Extended fields for order management
+    callLog: v.optional(v.array(v.object({
+      id: v.string(),
+      timestamp: v.number(),
+      outcome: v.string(),
+      notes: v.optional(v.string()),
+    }))),
+    adminNotes: v.optional(v.array(v.object({
+      id: v.string(),
+      text: v.string(),
+      timestamp: v.number(),
+      merchantId: v.string(),
+    }))),
+    auditTrail: v.optional(v.array(v.object({
+      id: v.string(),
+      timestamp: v.number(),
+      action: v.string(),
+      details: v.string(),
+    }))),
     timeline: v.optional(v.array(v.object({
       status: v.string(),
       timestamp: v.number(),

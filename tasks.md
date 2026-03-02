@@ -12,7 +12,7 @@
 - [x] Set up Convex project and configuration
 - [x] Define Convex schema (stores, products, orders, users)
 - [x] Configure multi-tenant isolation (storeId filtering)
-- [ ] Set up Convex deployment and dev environment
+- [x] Set up Convex deployment and dev environment
 
 ### 1.3 Authentication Infrastructure
 - [x] Set up Clerk project with Google OAuth

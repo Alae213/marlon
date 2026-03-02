@@ -1,6 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Webhook } from "svix";
 import { WebhookEvent } from "@clerk/nextjs/server";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
+
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+if (!convexUrl) {
+  throw new Error("Missing NEXT_PUBLIC_CONVEX_URL");
+}
+const convex = new ConvexHttpClient(convexUrl);
 
 export async function POST(req: NextRequest) {
   const webhookSecret = process.env.CLERK_WEBHOOK_SECRET;
@@ -30,12 +38,24 @@ export async function POST(req: NextRequest) {
     const email = email_addresses?.[0]?.email_address;
     const phone = phone_numbers?.[0]?.phone_number;
 
-    console.log("User webhook received:", { id, email, first_name, last_name, phone });
+    if (id && email) {
+      await convex.mutation(api.users.syncUser, {
+        clerkId: id,
+        email,
+        firstName: first_name || undefined,
+        lastName: last_name || undefined,
+        phone: phone || undefined,
+      });
+    }
   }
 
   if (eventType === "user.deleted") {
     const { id } = msg.data;
-    console.log("User deleted:", { id });
+    if (id) {
+      await convex.mutation(api.users.deleteUser, {
+        clerkId: id,
+      });
+    }
   }
 
   return NextResponse.json({ message: "Webhook processed" }, { status: 200 });

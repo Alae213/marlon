@@ -56,7 +56,7 @@ import { formatPrice } from "../utils/format";
 ### Styling
 
 - **Icons**: Always use Lucide icons library (`lucide-react`). Never create custom icons from scratch.
-- Tailwind CSS v4 exclusively - no inline style={} unless dynamic values_require it.
+ Tailwind CSS v4 exclusively - no inline style={} unless dynamic values_require it.
 . Global CSS variables defined in app/globals.css using @theme inline block.
 . Dark mode: use dark: variant (respects prefers-color-scheme).
 . RTL: this is an Arabic-first app. Use logical properties (ps-4, pe-4, ms-auto,
@@ -120,7 +120,7 @@ try {
 
 ```
 app/          # Next.js App Router pages
-components/   # React components (ui/, features/)
+components/   # React components
 hooks/        # Custom React hooks
 lib/          # Utility functions
 types/        # TypeScript type definitions
@@ -136,7 +136,7 @@ types/        # TypeScript type definitions
 ### Authentication (Clerk)
 
 - Use Clerk for authentication (Google OAuth only per PRD)
-- Protect routes with middleware
+- Protect routes with proxy
 - Always verify user ownership for store access
 
 ### Database (Convex)

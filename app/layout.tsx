@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Arabic, Noto_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
+import { ConvexClientProvider } from "@/components/convex-client-provider";
 import "./globals.css";
 
 const notoSans = Noto_Sans({
@@ -29,11 +30,13 @@ export default function RootLayout({
   if (isClerkConfigured && publishableKey) {
     return (
       <ClerkProvider publishableKey={publishableKey}>
-        <html lang="ar" dir="rtl">
-          <body className={`${notoSans.variable} ${notoSansArabic.variable} antialiased`}>
-            {children}
-          </body>
-        </html>
+        <ConvexClientProvider>
+          <html lang="ar" dir="rtl">
+            <body className={`${notoSans.variable} ${notoSansArabic.variable} antialiased`}>
+              {children}
+            </body>
+          </html>
+        </ConvexClientProvider>
       </ClerkProvider>
     );
   }
@@ -41,7 +44,9 @@ export default function RootLayout({
   return (
     <html lang="ar" dir="rtl">
       <body className={`${notoSans.variable} ${notoSansArabic.variable} antialiased`}>
-        {children}
+        <ConvexClientProvider>
+          {children}
+        </ConvexClientProvider>
       </body>
     </html>
   );

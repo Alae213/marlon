@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "convex:dev": "npx convex dev",
+    "convex:deploy": "npx convex deploy",
+    "convex:codegen": "npx convex codegen"
   },
   "dependencies": {
     "@chargily/chargily-pay": "^2.1.0",

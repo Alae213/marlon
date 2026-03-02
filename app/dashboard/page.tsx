@@ -3,17 +3,22 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { 
   Plus, 
   Store, 
   ExternalLink, 
   Settings, 
   Package,
-  ShoppingCart,
   X,
-  Loader2
+  Loader2,
+  Wifi,
+  WifiOff,
+  Bell
 } from "lucide-react";
-import { Button, Input, Card } from "@/components/core";
+import { Button, Input } from "@/components/core";
+import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 
 interface StoreData {
   _id: string;
@@ -94,12 +99,19 @@ function StoreCard({ store }: { store: StoreData }) {
 function CreateStoreModal({ isOpen, onClose, onSuccess }: { 
   isOpen: boolean; 
   onClose: () => void;
-  onSuccess: (store: StoreData) => void;
- }) {
+  onSuccess: () => void;
+}) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  const { user } = useUser();
+  const createStore = useMutation(api.stores.createStore);
+  const slugAvailable = useQuery(
+    api.stores.isSlugAvailable, 
+    slug ? { slug } : "skip"
+  );
 
   const generateSlug = (inputName: string) => {
     return inputName
@@ -135,30 +147,39 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
       return;
     }
     
+    if (!user) {
+      setError("يرجى تسجيل الدخول أولاً");
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Create store and persist to localStorage
-    setTimeout(() => {
-      const newStore: StoreData = {
-        _id: `store_${Date.now()}`,
+    try {
+      // Check if slug is available
+      const isAvailable = await slugAvailable;
+      if (!isAvailable) {
+        setError("هذا الرابط مستخدم من قبل. يرجى اختيار رابط آخر");
+        setIsLoading(false);
+        return;
+      }
+      
+      // Create store in Convex
+      await createStore({
+        ownerId: user.id,
         name,
         slug,
-        orderCount: 0,
-        status: "active",
-        subscription: "trial",
         description: "",
-      };
-      
-      // Save to localStorage for persistence
-      const existingStores = JSON.parse(localStorage.getItem("marlon_stores") || "[]");
-      localStorage.setItem("marlon_stores", JSON.stringify([newStore, ...existingStores]));
+      });
       
       setIsLoading(false);
-      onSuccess(newStore);
+      onSuccess();
       onClose();
       setName("");
       setSlug("");
-    }, 500);
+    } catch (err) {
+      setError("حدث خطأ أثناء إنشاء المتجر. يرجى المحاولة مرة أخرى");
+      setIsLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -249,23 +270,31 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   );
 }
 
-export default function DashboardPage() {
+function DashboardContent() {
   const { user, isLoaded } = useUser();
-  const [stores, setStores] = useState<StoreData[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const { isConnected, newOrdersCount, newNotifications } = useRealtime();
 
-  // Load stores from localStorage on mount
-  useEffect(() => {
-    const savedStores = localStorage.getItem("marlon_stores");
-    if (savedStores) {
-      setStores(JSON.parse(savedStores));
-    }
-  }, []);
+  // Get user stores from Convex
+  const stores = useQuery(
+    api.stores.getUserStores,
+    user ? { userId: user.id } : "skip"
+  );
 
-  const handleCreateStore = (newStore: StoreData) => {
-    const updatedStores = [newStore, ...stores];
-    setStores(updatedStores);
-    localStorage.setItem("marlon_stores", JSON.stringify(updatedStores));
+  // Convert Convex stores to StoreData format
+  const storesData: StoreData[] = stores?.map((store: any) => ({
+    _id: store._id,
+    name: store.name,
+    slug: store.slug,
+    description: store.description,
+    logo: store.logo,
+    orderCount: store.orderCount || 0,
+    status: store.status || "active",
+    subscription: store.subscription || "trial",
+  })) || [];
+
+  const handleCreateStore = () => {
+    // Store will be automatically updated via Convex subscription
   };
 
   if (!isLoaded) {
@@ -291,18 +320,49 @@ export default function DashboardPage() {
           </p>
         </div>
         
-        <SignedIn>
-          <div className="flex items-center gap-3">
-            <UserButton 
-              afterSignOutUrl="/"
-              appearance={{
-                elements: {
-                  avatarBox: "w-10 h-10 rounded-xl"
-                }
-              }}
-            />
+        <div className="flex items-center gap-3">
+          {/* Real-time connection status */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+            {isConnected ? (
+              <>
+                <Wifi className="w-4 h-4 text-green-500" />
+                <span className="text-sm text-zinc-600 dark:text-zinc-400">متصل</span>
+              </>
+            ) : (
+              <>
+                <WifiOff className="w-4 h-4 text-zinc-400" />
+                <span className="text-sm text-zinc-400">غير متصل</span>
+              </>
+            )}
           </div>
-        </SignedIn>
+          
+          {/* Notifications */}
+          {newNotifications.length > 0 && (
+            <div className="relative">
+              <div className="absolute -top-1 -end-1 w-3 h-3 bg-red-500 rounded-full animate-pulse" />
+              <div className="p-2 bg-amber-50 dark:bg-amber-900/20 rounded-lg border border-amber-200 dark:border-amber-800">
+                <Bell className="w-4 h-4 text-amber-600" />
+              </div>
+            </div>
+          )}
+          
+          <SignedIn>
+            <div className="flex items-center gap-3">
+              <Button onClick={() => setIsCreateModalOpen(true)}>
+                <Plus className="w-5 h-5" />
+                متجر جديد
+              </Button>
+              <UserButton 
+                afterSignOutUrl="/"
+                appearance={{
+                  elements: {
+                    avatarBox: "w-10 h-10 rounded-xl"
+                  }
+                }}
+              />
+            </div>
+          </SignedIn>
+        </div>
       </div>
 
       <SignedOut>
@@ -310,14 +370,14 @@ export default function DashboardPage() {
           <div className="w-16 h-16 bg-[#00853f]/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <Store className="w-8 h-8 text-[#00853f]" />
           </div>
-          <h2 className="text-xl font-semibold text-zinc-900 dark:text-zinc-50 mb-2">
-            تسجيل الدخول مطلوب
+          <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+            مرحباً بك في مارلون
           </h2>
-          <p className="text-zinc-500 dark:text-zinc-400 mb-6 max-w-sm mx-auto">
-            يرجى تسجيل الدخول للوصول إلى لوحة التحكم وإدارة متاجرك
+          <p className="text-zinc-500 dark:text-zinc-400 mb-6">
+            سجل دخولك لإنشاء وإدارة متاجرك الإلكترونية
           </p>
           <SignInButton mode="modal">
-            <Button className="mx-auto">
+            <Button>
               تسجيل الدخول
             </Button>
           </SignInButton>
@@ -343,12 +403,12 @@ export default function DashboardPage() {
           </button>
 
           {/* Store Cards */}
-          {stores.map((store) => (
+          {storesData.map((store) => (
             <StoreCard key={store._id} store={store} />
           ))}
         </div>
 
-        {stores.length === 0 && (
+        {storesData.length === 0 && (
           <div className="text-center py-12">
             <Package className="w-12 h-12 text-zinc-300 dark:text-zinc-600 mx-auto mb-4" />
             <p className="text-zinc-500 dark:text-zinc-400">
@@ -364,5 +424,15 @@ export default function DashboardPage() {
         onSuccess={handleCreateStore}
       />
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  const { user } = useUser();
+  
+  return (
+    <RealtimeProvider userId={user?.id}>
+      <DashboardContent />
+    </RealtimeProvider>
   );
 }

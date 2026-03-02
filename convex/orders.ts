@@ -14,6 +14,19 @@ export const getOrders = query({
   },
 });
 
+// Real-time subscription to store orders
+export const subscribeToStoreOrders = query({
+  args: { storeId: v.id("stores") },
+  handler: async (ctx, args) => {
+    const orders = await ctx.db
+      .query("orders")
+      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
+      .order("desc")
+      .collect();
+    return orders;
+  },
+});
+
 // Get a single order by ID
 export const getOrder = query({
   args: { orderId: v.id("orders") },
@@ -242,6 +255,45 @@ export const updateOrderNotes = mutation({
     await ctx.db.patch(args.orderId, {
       notes: args.notes,
       updatedAt: Date.now(),
+    });
+
+    return args.orderId;
+  },
+});
+
+// Add admin note to order
+export const addAdminNote = mutation({
+  args: {
+    orderId: v.id("orders"),
+    text: v.string(),
+    merchantId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
+    const now = Date.now();
+    const adminNotes = order.adminNotes || [];
+    adminNotes.push({
+      id: `note_${now}`,
+      text: args.text,
+      timestamp: now,
+      merchantId: args.merchantId,
+    });
+
+    const timeline = order.timeline || [];
+    timeline.push({
+      status: "admin_note",
+      timestamp: now,
+      note: `إضافة ملاحظة: ${args.text.substring(0, 30)}${args.text.length > 30 ? "..." : ""}`,
+    });
+
+    await ctx.db.patch(args.orderId, {
+      adminNotes,
+      timeline,
+      updatedAt: now,
     });
 
     return args.orderId;

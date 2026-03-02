@@ -26,6 +26,25 @@ export const getUserStores = query({
   },
 });
 
+// Real-time subscription to user stores (for dashboard)
+export const subscribeToUserStores = query({
+  args: { userId: v.optional(v.string()) },
+  handler: async (ctx, args) => {
+    if (!args.userId || args.userId === undefined) {
+      // If no userId provided, return all stores (for admin dashboard)
+      const stores = await ctx.db.query("stores").order("desc").collect();
+      return stores;
+    }
+    
+    const stores = await ctx.db
+      .query("stores")
+      .withIndex("ownerId", (q) => q.eq("ownerId", args.userId as string))
+      .order("desc")
+      .collect();
+    return stores;
+  },
+});
+
 // Get a single store by ID
 export const getStore = query({
   args: { storeId: v.id("stores") },
