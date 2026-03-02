@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { ExternalLink, Store } from "lucide-react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { BillingProvider } from "@/contexts/billing-context";
 
 function StoreAdminContent({
@@ -12,48 +14,49 @@ function StoreAdminContent({
   children: React.ReactNode;
 }) {
   const params = useParams();
-  const slug = params?.slug as string;
+  const userId = params?.userId as string;
+  const storeId = params?.storeId as string; // This is actually the store slug
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex flex-col">
-      <header className="sticky top-0 z-50 bg-white dark:bg-zinc-900 border-b border-zinc-200 dark:border-zinc-800">
-        <div className="flex items-center justify-between h-16 px-6">
-          <div className="flex items-center gap-4">
+    <div className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex flex-col">
+      <header className="sticky top-0 z-50 bg-white dark:bg-[#0a0a0a] border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="flex items-center justify-between h-16 px-8">
+          <div className="flex items-center gap-6">
             <Link 
-              href="/dashboard"
-              className="flex items-center gap-2 text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50 transition-colors"
+              href={`/${userId}`}
+              className="flex items-center gap-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa] transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
-              <span className="text-sm font-medium">لوحة التحكم</span>
+              <span className="text-sm">لوحة التحكم</span>
             </Link>
             
-            <div className="w-px h-6 bg-zinc-200 dark:bg-zinc-700" />
+            <div className="w-px h-5 bg-[#e5e5e5] dark:bg-[#404040]" />
             
             <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[#00853f] flex items-center justify-center">
-                <Store className="w-5 h-5 text-white" />
+              <div className="w-7 h-7 bg-[#171717] dark:bg-[#fafafa] flex items-center justify-center">
+                <Store className="w-4 h-4 text-white dark:text-[#171717]" />
               </div>
-              <span className="font-semibold text-zinc-900 dark:text-zinc-50">متجري</span>
+              <span className="font-normal text-[#171717] dark:text-[#fafafa]">{storeId}</span>
             </div>
           </div>
           
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <Link
-              href={`/${slug}`}
+              href={`/${storeId}`}
               target="_blank"
-              className="flex items-center gap-2 px-4 py-2 rounded-xl border border-zinc-200 dark:border-zinc-700 text-zinc-600 dark:text-zinc-400 text-sm font-medium hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 text-sm text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#fafafa] transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
               عرض المتجر
             </Link>
             
             <UserButton 
-              afterSignOutUrl="/dashboard"
+              afterSignOutUrl="/"
               appearance={{
                 elements: {
-                  avatarBox: "w-9 h-9"
+                  avatarBox: "w-8 h-8"
                 }
               }}
             />
@@ -61,22 +64,22 @@ function StoreAdminContent({
         </div>
       </header>
       
-      <main className="flex-1 p-6 pb-24 md:pb-6">
+      <main className="flex-1 p-8 pb-28 md:pb-8">
         {children}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-zinc-900 border-t border-zinc-200 dark:border-zinc-800 md:hidden z-40">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white dark:bg-[#0a0a0a] border-t border-[#e5e5e5] dark:border-[#262626] md:hidden z-40">
         <div className="flex items-center justify-around h-16">
           <Link 
-            href={`/store/${slug}/products`}
-            className="flex flex-col items-center gap-1 text-zinc-500"
+            href={`/${userId}/${storeId}/products`}
+            className="flex flex-col items-center gap-1 text-[#737373]"
           >
             <Store className="w-5 h-5" />
             <span className="text-xs">المنتجات</span>
           </Link>
           <Link 
-            href={`/store/${slug}/orders`}
-            className="flex flex-col items-center gap-1 text-zinc-500"
+            href={`/${userId}/${storeId}/orders`}
+            className="flex flex-col items-center gap-1 text-[#737373]"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -84,8 +87,8 @@ function StoreAdminContent({
             <span className="text-xs">الطلبات</span>
           </Link>
           <Link 
-            href={`/store/${slug}/settings`}
-            className="flex flex-col items-center gap-1 text-zinc-500"
+            href={`/${userId}/${storeId}/settings`}
+            className="flex flex-col items-center gap-1 text-[#737373]"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -105,10 +108,25 @@ export default function StoreAdminLayout({
   children: React.ReactNode;
 }) {
   const params = useParams();
-  const slug = params?.slug as string;
+  const userId = params?.userId as string;
+  const storeSlug = params?.storeId as string; // This is actually the store slug
+
+  // Get store by slug to get storeId for BillingProvider
+  const store = useQuery(
+    api.stores.getStoreBySlug,
+    storeSlug ? { slug: storeSlug } : "skip"
+  );
+
+  // Redirect if userId doesn't match store owner
+  const router = useRouter();
+  
+  if (store && store.ownerId !== userId) {
+    router.push(`/${userId}`);
+    return null;
+  }
 
   return (
-    <BillingProvider storeSlug={slug}>
+    <BillingProvider storeSlug={storeSlug} storeId={store?._id}>
       <StoreAdminContent>{children}</StoreAdminContent>
     </BillingProvider>
   );

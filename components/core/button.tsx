@@ -7,17 +7,17 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  primary: "bg-[#00853f] text-white hover:bg-[#007537] disabled:bg-[#00853f]/50",
-  secondary: "bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 hover:bg-zinc-800 disabled:opacity-50",
-  outline: "border border-zinc-200 dark:border-zinc-700 text-zinc-700 dark:text-zinc-300 hover:bg-zinc-50 dark:hover:bg-zinc-800 disabled:opacity-50",
-  ghost: "text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 disabled:opacity-50",
-  danger: "bg-red-500 text-white hover:bg-red-600 disabled:bg-red-500/50",
+  primary: "bg-[#171717] text-[#fafafa] hover:bg-[#404040] disabled:bg-[#a3a3a3] disabled:text-[#737373]",
+  secondary: "bg-[#f5f5f5] text-[#171717] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#404040] disabled:opacity-40",
+  outline: "border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#171717] disabled:opacity-40",
+  ghost: "text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#171717] disabled:opacity-40",
+  danger: "bg-[#dc2626] text-[#fafafa] hover:bg-[#b91c1c] disabled:bg-[#fca5a5]",
 };
 
 const sizeStyles = {
-  sm: "h-9 px-3 text-sm rounded-lg",
-  md: "h-11 px-5 text-sm rounded-xl",
-  lg: "h-14 px-6 text-base rounded-xl",
+  sm: "h-9 px-4 text-sm",
+  md: "h-10 px-6 text-sm",
+  lg: "h-12 px-8 text-base",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`inline-flex items-center justify-center gap-2 font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-[#00853f] focus:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading && (

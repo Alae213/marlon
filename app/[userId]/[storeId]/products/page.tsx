@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Search, Plus, Grid3X3, List, MoreVertical, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
@@ -13,6 +13,7 @@ import { Modal } from "@/components/core/modal";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
 import { ImageUploader } from "@/components/image-cropper";
+import { InlineVariantEditor } from "@/components/inline-variant-editor";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 
 interface Product {
@@ -38,13 +39,11 @@ function ProductsContent({ storeId }: { storeId: string }) {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
 
-  // Get products from Convex
   const products = useQuery(
     api.products.getProducts,
     storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
 
-  // Mutations
   const createProduct = useMutation(api.products.createProduct);
   const updateProduct = useMutation(api.products.updateProduct);
   const archiveProduct = useMutation(api.products.archiveProduct);
@@ -112,53 +111,51 @@ function ProductsContent({ storeId }: { storeId: string }) {
   };
 
   const handleDeleteProduct = (productId: string) => {
-    // Note: Hard delete not implemented in Convex (soft delete only)
-    // For now, just close the modal
     setDeletingProductId(null);
   };
 
   return (
     <div className="max-w-6xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">المنتجات</h1>
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
         <Button onClick={() => setIsAddModalOpen(true)}>
-          <Plus className="w-5 h-5" />
+          <Plus className="w-4 h-4" />
           إضافة منتج
         </Button>
       </div>
 
       <Card padding="none">
-        <div className="p-4 border-b border-zinc-200 dark:border-zinc-800">
+        <div className="p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
           <div className="flex items-center gap-4">
             <div className="flex-1">
               <Input
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="البحث في المنتجات..."
-                icon={<Search className="w-5 h-5" />}
+                icon={<Search className="w-4 h-4" />}
               />
             </div>
             
-            <div className="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-xl">
+            <div className="flex items-center gap-1 p-0.5 bg-[#f5f5f5] dark:bg-[#171717]">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 transition-colors ${
                   viewMode === "grid" 
-                    ? "bg-white dark:bg-zinc-700 text-[#00853f] shadow-sm" 
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50"
+                    ? "bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa]" 
+                    : "text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa]"
                 }`}
               >
-                <Grid3X3 className="w-5 h-5" />
+                <Grid3X3 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`p-2 transition-colors ${
                   viewMode === "list" 
-                    ? "bg-white dark:bg-zinc-700 text-[#00853f] shadow-sm" 
-                    : "text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-50"
+                    ? "bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa]" 
+                    : "text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa]"
                 }`}
               >
-                <List className="w-5 h-5" />
+                <List className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -166,12 +163,12 @@ function ProductsContent({ storeId }: { storeId: string }) {
 
         {filteredProducts.length === 0 ? (
           <EmptyState
-            icon={<ImageIcon className="w-8 h-8 text-zinc-400" />}
+            icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
             title="لا توجد منتجات"
             description="ابدأ بإضافة أول منتج لمتجرك"
             action={
               <Button onClick={() => setIsAddModalOpen(true)}>
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
                 إضافة منتج
               </Button>
             }
@@ -181,9 +178,9 @@ function ProductsContent({ storeId }: { storeId: string }) {
             {filteredProducts.map((product) => (
               <div
                 key={product._id}
-                className="group relative bg-white dark:bg-zinc-900 rounded-2xl border border-zinc-200 dark:border-zinc-800 overflow-hidden hover:border-[#00853f] hover:shadow-lg transition-all duration-200"
+                className="group relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200"
               >
-                <div className="aspect-square bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center">
+                <div className="aspect-square bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center">
                   {product.images?.[0] ? (
                     <img 
                       src={product.images[0]} 
@@ -191,27 +188,26 @@ function ProductsContent({ storeId }: { storeId: string }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <ImageIcon className="w-12 h-12 text-zinc-300" />
+                    <ImageIcon className="w-8 h-8 text-[#d4d4d4]" />
                   )}
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50 mb-1 line-clamp-2">
+                  <h3 className="font-normal text-[#171717] dark:text-[#fafafa] mb-2 line-clamp-2">
                     {product.name}
                   </h3>
                   <div className="flex items-center gap-2">
-                    <span className="font-bold text-[#00853f]">
+                    <span className="font-medium text-[#171717] dark:text-[#fafafa]">
                       {formatPrice(product.basePrice)}
                     </span>
                     {product.oldPrice && (
-                      <span className="text-sm text-zinc-400 line-through">
+                      <span className="text-sm text-[#a3a3a3] line-through">
                         {formatPrice(product.oldPrice)}
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Hover Actions */}
                 <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={(e) => { 
@@ -223,46 +219,45 @@ function ProductsContent({ storeId }: { storeId: string }) {
                         isArchived: product.isArchived ?? false
                       }); 
                     }}
-                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
                     title="تعديل"
                   >
-                    <Edit className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
+                    <Edit className="w-4 h-4 text-[#525252]" />
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(product._id, product.isArchived); }}
-                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-zinc-100 dark:hover:bg-zinc-700 transition-colors"
+                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
                     title={product.isArchived ? "تفعيل" : "تعطيل"}
                   >
                     {product.isArchived ? (
-                      <Eye className="w-4 h-4 text-green-600" />
+                      <Eye className="w-4 h-4 text-[#16a34a]" />
                     ) : (
-                      <EyeOff className="w-4 h-4 text-amber-600" />
+                      <EyeOff className="w-4 h-4 text-[#d97706]" />
                     )}
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(product._id); }}
-                    className="p-2 bg-white/90 dark:bg-zinc-800/90 rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#fee2e2] dark:hover:bg-[#7f1d1d]/20 transition-colors"
                     title="حذف"
                   >
-                    <Trash2 className="w-4 h-4 text-red-500" />
+                    <Trash2 className="w-4 h-4 text-[#dc2626]" />
                   </button>
                 </div>
 
-                {/* Delete Confirmation */}
                 {deletingProductId === product._id && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
+                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                     <div className="text-center p-4">
-                      <p className="text-white font-medium mb-3">حذف المنتج؟</p>
+                      <p className="text-white font-normal mb-3">حذف المنتج؟</p>
                       <div className="flex gap-2 justify-center">
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(null); }}
-                          className="px-3 py-1.5 bg-white text-zinc-900 rounded-lg text-sm"
+                          className="px-3 py-1.5 bg-white text-[#171717] text-sm"
                         >
                           إلغاء
                         </button>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProduct(product._id); }}
-                          className="px-3 py-1.5 bg-red-500 text-white rounded-lg text-sm"
+                          className="px-3 py-1.5 bg-[#dc2626] text-white text-sm"
                         >
                           حذف
                         </button>
@@ -274,39 +269,39 @@ function ProductsContent({ storeId }: { storeId: string }) {
             ))}
           </div>
         ) : (
-          <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
+          <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
             {filteredProducts.map((product) => (
               <div
                 key={product._id}
-                className="flex items-center gap-4 p-4 hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors"
+                className="flex items-center gap-4 p-4 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors"
               >
-                <div className="w-16 h-16 rounded-xl bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center flex-shrink-0">
                   {product.images?.[0] ? (
                     <img 
                       src={product.images[0]} 
                       alt={product.name}
-                      className="w-full h-full object-cover rounded-xl"
+                      className="w-full h-full object-cover"
                     />
                   ) : (
-                    <ImageIcon className="w-6 h-6 text-zinc-300" />
+                    <ImageIcon className="w-5 h-5 text-[#d4d4d4]" />
                   )}
                 </div>
                 
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50 truncate">
+                  <h3 className="font-normal text-[#171717] dark:text-[#fafafa] truncate">
                     {product.name}
                   </h3>
-                  <p className="text-sm text-zinc-500 truncate">
+                  <p className="text-sm text-[#737373] truncate">
                     {product.description}
                   </p>
                 </div>
                 
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-[#00853f]">
+                  <span className="font-medium text-[#171717] dark:text-[#fafafa]">
                     {formatPrice(product.basePrice)}
                   </span>
                   {product.oldPrice && (
-                    <span className="text-sm text-zinc-400 line-through">
+                    <span className="text-sm text-[#a3a3a3] line-through">
                       {formatPrice(product.oldPrice)}
                     </span>
                   )}
@@ -315,15 +310,15 @@ function ProductsContent({ storeId }: { storeId: string }) {
                 <div className="flex items-center gap-1">
                   <button 
                     onClick={() => setEditingProduct(product)}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
                   >
-                    <Edit className="w-4 h-4 text-zinc-500" />
+                    <Edit className="w-4 h-4 text-[#737373]" />
                   </button>
                   <button 
                     onClick={() => handleToggleArchive(product._id, product.isArchived)}
-                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+                    className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
                   >
-                    <Archive className="w-4 h-4 text-zinc-500" />
+                    <Archive className="w-4 h-4 text-[#737373]" />
                   </button>
                 </div>
               </div>
@@ -363,16 +358,30 @@ function ProductsContent({ storeId }: { storeId: string }) {
 }
 
 function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: any) => void }) {
+  const convertToEditorFormat = (variants?: any[]) => {
+    if (!variants || variants.length === 0) return [];
+    return variants.map(v => ({
+      name: v.name,
+      variants: v.options || []
+    }));
+  };
+  
   const [name, setName] = useState(product?.name || "");
   const [description, setDescription] = useState(product?.description || "");
   const [basePrice, setBasePrice] = useState(product?.basePrice?.toString() || "");
   const [oldPrice, setOldPrice] = useState(product?.oldPrice?.toString() || "");
   const [images, setImages] = useState<string[]>(product?.images || []);
+  const [variants, setVariants] = useState<any[]>(convertToEditorFormat(product?.variants));
 
   const isEditing = !!product;
 
   const handleSubmit = () => {
     if (!name || !basePrice) return;
+    
+    const convertedVariants = variants.length > 0 ? variants.map(group => ({
+      name: group.name,
+      options: group.variants || []
+    })) : undefined;
     
     const productData = {
       name,
@@ -380,6 +389,7 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
       basePrice: parseInt(basePrice),
       oldPrice: oldPrice ? parseInt(oldPrice) : undefined,
       images,
+      variants: convertedVariants,
     };
     
     onSubmit(productData);
@@ -421,12 +431,22 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+        <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
           صور المنتج
         </label>
         <ImageUploader
           images={images}
           onImagesChange={setImages}
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
+          الخيارات (مثل: المقاس، اللون)
+        </label>
+        <InlineVariantEditor
+          variants={variants}
+          onChange={setVariants}
         />
       </div>
 
@@ -446,12 +466,10 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
   );
 }
 
-// Main page component - fetches storeId from slug
 export default function ProductsPage() {
   const params = useParams();
-  const slug = params?.slug as string;
+  const slug = params?.storeId as string; // storeId param contains the slug
   
-  // Get store by slug
   const store = useQuery(
     api.stores.getStoreBySlug,
     slug ? { slug } : "skip"
@@ -459,21 +477,19 @@ export default function ProductsPage() {
   
   const storeId = store?._id;
   
-  // Show loading state
   if (!store && slug) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#00853f]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[#171717] dark:text-[#fafafa]" />
       </div>
     );
   }
   
-  // No store found
   if (!storeId) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-zinc-200 dark:border-zinc-800 p-12 text-center">
-          <p className="text-zinc-500">المتجر غير موجود</p>
+        <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] p-12 text-center">
+          <p className="text-[#737373]">المتجر غير موجود</p>
         </div>
       </div>
     );

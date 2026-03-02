@@ -24,22 +24,22 @@ export function SlideOver({ isOpen, onClose, title, children, size = "md" }: Sli
   return (
     <Fragment>
       <div 
-        className="fixed inset-0 z-50 bg-black/30 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 z-50 bg-black/30 transition-opacity"
         onClick={onClose}
       />
-      <div className={`fixed inset-y-0 end-0 z-50 w-full ${sizeStyles[size]} bg-white dark:bg-zinc-900 shadow-2xl animate-in slide-in-from-end duration-300 overflow-y-auto`}>
-        <div className="sticky top-0 flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800 bg-white/80 dark:bg-zinc-900/80 backdrop-blur-sm">
+      <div className={`fixed inset-y-0 end-0 z-50 w-full ${sizeStyles[size]} bg-white dark:bg-[#0a0a0a] shadow-2xl animate-in slide-in-from-end duration-300 overflow-y-auto`}>
+        <div className="sticky top-0 flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626] bg-white/80 dark:bg-[#0a0a0a]/80 backdrop-blur-sm">
           {title && (
-            <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">{title}</h2>
+            <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">{title}</h2>
           )}
           <button
             onClick={onClose}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-xl transition-colors ms-auto"
+            className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors ms-auto"
           >
-            <X className="w-5 h-5 text-zinc-400" />
+            <X className="w-5 h-5 text-[#737373]" />
           </button>
         </div>
-        <div className="p-4">
+        <div className="p-6">
           {children}
         </div>
       </div>

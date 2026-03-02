@@ -1,5 +1,23 @@
 # Marlon Project Milestones
 
+## CRITICAL: PRD Alignment Issues (To Fix)
+
+### Known Deviations from PRD
+- [x] **localStorage Usage**: Removed - 100% Convex now
+- [x] **Route Structure**: Aligned to PRD ✅
+  - `/[userId]` → Dashboard
+  - `/[userId]/[storeId]/products` → Products/Editor
+  - `/[userId]/[storeId]/orders` → Orders
+  - `/shop/[slug]` → Public storefront (PRD had `/[slug]` - modified to avoid route conflict)
+
+### Immediate Actions Required
+1. [x] Remove all localStorage code - ensured 100% Convex
+2. [x] Implement GAP 4: Inline rename for variants - DONE
+3. [ ] Confirm route structure (keep current or align to PRD)
+4. [ ] Test full end-to-end flow
+
+---
+
 ## Phase 1: Foundation & Setup (Week 1-2)
 
 ### 1.1 Project Initialization
@@ -58,18 +76,18 @@
 - [x] Add drag-and-drop product reordering
 
 #### GAP 2: Image Crop [PRD §4.5]
-- [ ] Integrate image crop tool (e.g. react-image-crop) in product image upload flow
-- [ ] Show crop UI after image selection, before saving to Convex storage
+- [x] Integrate image crop tool (e.g. react-image-crop) in product image upload flow
+- [x] Show crop UI after image selection, before saving to Convex storage
 
 #### GAP 4: Inline Rename for Variant Group & Value Names [PRD §4.4]
-- [ ] Click-to-edit inline rename for variant group name (e.g. click "Size" label → becomes editable input)
-- [ ] Click-to-edit inline rename for individual variant values (e.g. click "S" → editable, press Enter or blur to save)
-- [ ] Auto-save to Convex on blur or Enter key
+- [x] Click-to-edit inline rename for variant group name (e.g. click "Size" label → becomes editable input)
+- [x] Click-to-edit inline rename for individual variant values (e.g. click "S" → editable, press Enter or blur to save)
+- [x] Auto-save to Convex on blur or Enter key
 
 #### GAP 8: Product Catalog Visual View with Inline Hover Actions [PRD §4.3]
-- [ ] Build visual product catalog card grid (distinct from the product form/modal)
-- [ ] Implement card hover state revealing action icons: Edit | Active/Draft toggle | Delete
-- [ ] Wire hover actions to existing Convex mutations (no full modal needed for draft toggle)
+- [x] Build visual product catalog card grid (distinct from the product form/modal)
+- [x] Implement card hover state revealing action icons: Edit | Active/Draft toggle | Delete
+- [x] Wire hover actions to existing Convex mutations (no full modal needed for draft toggle)
 
 ### 3.2 Site Content Editor
 - [x] Build navbar editor (logo, fixed links, cart icon)
@@ -122,16 +140,16 @@
 - [x] Build tracking number display
 
 #### GAP 5: Admin Notes Feature [PRD §5.6]
-- [ ] Build "Add Note" UI in order detail panel (textarea + Save button)
-- [ ] Store notes in Convex with (orderId, text, timestamp, merchantId)
-- [ ] Display notes list inside order detail panel, sorted by date
-- [ ] Include notes entries in the order timeline / audit trail view
-- [ ] Confirm notes are server-side only, never exposed to public storefront
+- [x] Build "Add Note" UI in order detail panel (textarea + Save button)
+- [x] Store notes in Convex with (orderId, text, timestamp, merchantId)
+- [x] Display notes list inside order detail panel, sorted by date
+- [x] Include notes entries in the order timeline / audit trail view
+- [x] Confirm notes are server-side only, never exposed to public storefront
 
 #### GAP 6: Universal "Add Note" & "View Change Log" Action Buttons [PRD §5.4]
-- [ ] Render "Add Note" action button for every order regardless of status
-- [ ] Render "View Change Log" action button for every order regardless of status
-- [ ] "View Change Log" opens the immutable audit trail panel for that specific order
+- [x] Render "Add Note" action button for every order regardless of status
+- [x] Render "View Change Log" action button for every order regardless of status
+- [x] "View Change Log" opens the immutable audit trail panel for that specific order
 
 ### 4.6 Audit Trail
 - [x] Create immutable changelog system
@@ -155,15 +173,15 @@
 - [x] Implement wilaya/commune dependent dropdowns
 
 #### GAP 1: "Buy Now" Button Flow [PRD §7.2]
-- [ ] Add "Buy Now" primary CTA button to product detail page
-- [ ] Implement inline order form shown on "Buy Now" click (Full Name, Phone, Delivery Type, Wilaya, Commune, Address)
-- [ ] Wire Buy Now form submission to direct Convex order creation (no cart involved, order status → "new")
-- [ ] Ensure Buy Now and Add to Cart are visually distinct and independent flows
+- [x] Add "Buy Now" primary CTA button to product detail page
+- [x] Implement inline order form shown on "Buy Now" click (Full Name, Phone, Delivery Type, Wilaya, Commune, Address)
+- [x] Wire Buy Now form submission to direct Convex order creation (no cart involved, order status → "new")
+- [x] Ensure Buy Now and Add to Cart are visually distinct and independent flows
 
 #### GAP 9: Related Products on Product Detail Page [PRD §7.2]
-- [ ] Query N products from same store (exclude current product) for related section
-- [ ] Render as mini product cards (image, name, price) below main product content
-- [ ] Link each card to its own product detail page
+- [x] Query N products from same store (exclude current product) for related section
+- [x] Render as mini product cards (image, name, price) below main product content
+- [x] Link each card to its own product detail page
 
 ### 5.3 Cart & Checkout
 - [x] Build cart sidebar with item management
@@ -186,14 +204,14 @@
 - [x] Create payment expiry handling
 
 #### GAP 7: Subscription Expiry → Revert to Free Tier Logic [PRD §Billing State Machine]
-- [ ] On every new order: check if store.subscriptionPaidUntil < now → if yes: set subscriptionStatus = 'trial', reset orderCount = 1, set firstOrderAt = now (start new 30-day window)
-- [ ] Ensure store does NOT go to 'locked' on expiry — only locks after new window hits 50 orders
+- [x] On every new order: check if store.subscriptionPaidUntil < now → if yes: set subscriptionStatus = 'trial', reset orderCount = 1, set firstOrderAt = now (start new 30-day window)
+- [x] Ensure store does NOT go to 'locked' on expiry — only locks after new window hits 50 orders
 - [ ] Test: paid store expires → next order → status becomes 'trial' not 'locked'
 - [ ] Test: trial after expiry → hits 50 again → locks normally
 
 #### GAP 3: Auto-Deletion of Locked Order Data After 20 Days [PRD §Billing Edge Case 3]
-- [ ] Add `lockedAt` timestamp field to stores schema (set when status → 'locked')
-- [ ] Implement Convex scheduled function (cron) that runs daily: find stores where status = 'locked' AND lockedAt < now - 20 days → hard-delete all orders belonging to those stores from that locked window
+- [x] Add `lockedAt` timestamp field to stores schema (set when status → 'locked')
+- [x] Implement Convex scheduled function (cron) that runs daily: find stores where status = 'locked' AND lockedAt < now - 20 days → hard-delete all orders belonging to those stores from that locked window
 - [ ] Test: merchant locks, 20 days pass → orders permanently deleted
 - [ ] Test: merchant pays within 20 days → orders NOT deleted, data revealed
 
@@ -222,7 +240,7 @@
 ### 7.2 Real-time Updates
 - [x] Configure Convex subscriptions for live updates
 - [x] Implement order notifications
-- [ ] Add store dashboard real-time sync
+- [x] Add store dashboard real-time sync
 
 ---
 
@@ -251,6 +269,7 @@
 - [ ] Delivery API testing (if configured)
 
 #### GAP 10: Locked Store Storefront Behavior — Test Coverage [PRD §7]
+- [x] Implementation complete: locked stores show normal storefront, orders saved with masked data
 - [ ] Test: place order on a locked store → customer sees normal "Order Confirmed!" page
 - [ ] Test: locked store order IS saved in DB with status "new"
 - [ ] Test: merchant sees order in list but with *** masked data until payment

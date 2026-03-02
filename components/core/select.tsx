@@ -12,17 +12,17 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+          <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
             {label}
           </label>
         )}
         <select
           ref={ref}
-          className={`w-full h-11 px-4 rounded-xl border ${
+          className={`w-full h-11 px-4 border ${
             error 
-              ? "border-red-500 focus:ring-red-500" 
-              : "border-zinc-200 dark:border-zinc-700 focus:ring-[#00853f]"
-          } bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-50 focus:outline-none focus:ring-2 focus:border-transparent transition-all disabled:bg-zinc-100 dark:disabled:bg-zinc-900 disabled:cursor-not-allowed ${className}`}
+              ? "border-[#dc2626]" 
+              : "border-[#e5e5e5] dark:border-[#404040]"
+          } bg-white dark:bg-[#171717] text-[#171717] dark:text-[#fafafa] focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa] transition-colors disabled:bg-[#f5f5f5] dark:disabled:bg-[#0a0a0a] disabled:cursor-not-allowed ${className}`}
           {...props}
         >
           {placeholder && (
@@ -37,7 +37,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           ))}
         </select>
         {error && (
-          <p className="mt-1.5 text-sm text-red-500">{error}</p>
+          <p className="mt-1.5 text-sm text-[#dc2626]">{error}</p>
         )}
       </div>
     );

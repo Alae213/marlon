@@ -5,14 +5,14 @@ interface SpinnerProps {
 
 const sizeStyles = {
   sm: "w-4 h-4",
-  md: "w-8 h-8",
-  lg: "w-12 h-12",
+  md: "w-6 h-6",
+  lg: "w-8 h-8",
 };
 
 export function Spinner({ size = "md", className = "" }: SpinnerProps) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <div className={`${sizeStyles[size]} border-4 border-[#00853f]/20 border-t-[#00853f] rounded-full animate-spin`} />
+      <div className={`${sizeStyles[size]} border-2 border-[#e5e5e5] dark:border-[#404040] border-t-[#171717] dark:border-t-[#fafafa] rounded-full animate-spin`} />
     </div>
   );
 }

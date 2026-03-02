@@ -1,7 +1,9 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { getStoreBySlug } from "@/lib/locked-store-cleanup";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 type StoreStatus = "trial" | "active" | "locked";
 
@@ -24,51 +26,39 @@ const TRIAL_DAYS = 30; // PRD specifies 30-day rolling window
 
 export function BillingProvider({ 
   children, 
-  initialStatus = "trial",
-  initialOrderCount = 0,
-  trialEndsAt,
-  storeSlug
+  storeSlug,
+  storeId
 }: { 
   children: ReactNode;
-  initialStatus?: StoreStatus;
-  initialOrderCount?: number;
-  trialEndsAt?: number;
   storeSlug?: string;
+  storeId?: Id<"stores">;
 }) {
-  const [storeStatus, setStoreStatus] = useState<StoreStatus>(initialStatus);
-  const [orderCount, setOrderCount] = useState(initialOrderCount);
+  const [storeStatus, setStoreStatus] = useState<StoreStatus>("trial");
+  const [orderCount, setOrderCount] = useState(0);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-  
-  // Load store data from localStorage
+
+  // Fetch store data from Convex
+  const store = useQuery(
+    api.stores.getStore,
+    storeId ? { storeId } : "skip"
+  );
+
+  // Update state when store data changes
   useEffect(() => {
-    if (storeSlug) {
-      const savedStore = localStorage.getItem(`marlon_stores_${storeSlug}`);
-      if (savedStore) {
-        const store = JSON.parse(savedStore);
-        if (store.subscription) {
-          setStoreStatus(store.subscription);
-        }
-        if (store.orderCount !== undefined) {
-          setOrderCount(store.orderCount);
-        }
-      }
+    if (store) {
+      setStoreStatus((store.subscription as StoreStatus) || "trial");
+      setOrderCount(store.orderCount || 0);
     }
-  }, [storeSlug]);
+  }, [store]);
 
   // Calculate days remaining based on firstOrderAt for trial stores
-  const savedStore = storeSlug ? localStorage.getItem(`marlon_stores_${storeSlug}`) : null;
   let daysRemaining: number | null = null;
   
-  if (savedStore) {
-    const store = JSON.parse(savedStore);
-    if (store.firstOrderAt && store.subscription === "trial") {
-      const trialEndTime = store.firstOrderAt + (TRIAL_DAYS * 24 * 60 * 60 * 1000);
-      daysRemaining = Math.max(0, Math.ceil((trialEndTime - Date.now()) / (1000 * 60 * 60 * 24)));
-    }
-  } else if (trialEndsAt) {
-    daysRemaining = trialEndsAt 
-      ? Math.max(0, Math.ceil((trialEndsAt - Date.now()) / (1000 * 60 * 60 * 24)))
-      : null;
+  if (store?.firstOrderAt && store.subscription === "trial") {
+    const trialEndTime = store.firstOrderAt + (TRIAL_DAYS * 24 * 60 * 60 * 1000);
+    daysRemaining = Math.max(0, Math.ceil((trialEndTime - Date.now()) / (1000 * 60 * 60 * 24)));
+  } else if (store?.paidUntil && store.subscription === "active") {
+    daysRemaining = Math.max(0, Math.ceil((store.paidUntil - Date.now()) / (1000 * 60 * 60 * 24)));
   }
 
   // Lock condition per PRD:
@@ -78,14 +68,6 @@ export function BillingProvider({
   const isLocked = storeStatus === "locked" || 
     (storeStatus === "trial" && daysRemaining !== null && daysRemaining <= 0) ||
     (storeStatus === "trial" && orderCount >= FREE_ORDER_LIMIT);
-
-  useEffect(() => {
-    if (initialStatus === "trial" && trialEndsAt) {
-      if (trialEndsAt < Date.now()) {
-        setStoreStatus("locked");
-      }
-    }
-  }, [initialStatus, trialEndsAt]);
 
   const openPaymentModal = () => setIsPaymentModalOpen(true);
   const closePaymentModal = () => setIsPaymentModalOpen(false);

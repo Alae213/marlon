@@ -4,32 +4,27 @@ import { ArrowLeft } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-white dark:bg-zinc-950">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute -top-1/2 -start-1/2 w-[800px] h-[800px] rounded-full bg-[#00853f]/5 blur-3xl" />
-        <div className="absolute -bottom-1/2 -end-1/2 w-[600px] h-[600px] rounded-full bg-[#00853f]/3 blur-3xl" />
-      </div>
-
-      <header className="relative z-10 flex items-center justify-between px-8 py-6">
+    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+      <header className="flex items-center justify-between px-8 py-6">
         <Link 
           href="/" 
           className="flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-[#00853f] flex items-center justify-center">
-            <span className="text-white font-bold text-xl">م</span>
+          <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] flex items-center justify-center">
+            <span className="text-white dark:text-[#171717] font-medium text-base">م</span>
           </div>
-          <span className="text-xl font-semibold text-zinc-900 dark:text-zinc-50">مارلون</span>
+          <span className="text-base font-normal text-[#171717] dark:text-[#fafafa]">مارلون</span>
         </Link>
       </header>
 
-      <main className="relative z-10 flex min-h-[calc(100vh-88px)] flex-col items-center justify-center px-4">
+      <main className="flex min-h-[calc(100vh-88px)] flex-col items-center justify-center px-4">
         <div className="w-full max-w-lg text-center">
-          <div className="mb-8">
-            <h1 className="text-4xl md:text-5xl font-bold text-zinc-900 dark:text-zinc-50 mb-4 leading-tight">
+          <div className="mb-10">
+            <h1 className="text-4xl md:text-5xl font-normal text-[#171717] dark:text-[#fafafa] mb-6 leading-tight">
               أنشئ متجرك الإلكتروني
-              <span className="block text-[#00853f]">في دقائق</span>
+              <span className="block text-[#525252] dark:text-[#a3a3a3]">في دقائق</span>
             </h1>
-            <p className="text-lg text-zinc-600 dark:text-zinc-400 max-w-md mx-auto">
+            <p className="text-base text-[#525252] dark:text-[#a3a3a3] max-w-md mx-auto leading-relaxed">
               منصة تجارة إلكترونية للموزعين الجزائريين. أنشئ متجرك وابدأ البيع الآن بدون تكاليف شهرية
             </p>
           </div>
@@ -37,7 +32,7 @@ export default function Home() {
           <SignedOut>
             <div className="flex flex-col items-center gap-4">
               <SignInButton mode="modal">
-                <button className="group relative flex items-center justify-center gap-3 w-full max-w-xs h-14 rounded-2xl bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 font-medium text-lg transition-all duration-300 hover:scale-[1.02] hover:shadow-xl hover:shadow-zinc-900/10 dark:hover:shadow-white/10">
+                <button className="flex items-center justify-center gap-3 w-full max-w-xs h-12 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal text-base transition-all duration-300 hover:opacity-80">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -47,37 +42,31 @@ export default function Home() {
                   تسجيل الدخول عبر جوجل
                 </button>
               </SignInButton>
-
-              <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                by continuing, you agree to our Terms of Service
-              </p>
             </div>
           </SignedOut>
 
-          <div className="mt-12 pt-8 border-t border-zinc-100 dark:border-zinc-800">
-            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">или создайте магазин</p>
-            
+          <div className="mt-12">
             <Link
               href="/dashboard"
-              className="group relative flex items-center justify-center gap-3 w-full max-w-xs h-20 rounded-3xl border-2 border-dashed border-zinc-200 dark:border-zinc-700 hover:border-[#00853f] hover:bg-[#00853f]/5 transition-all duration-300 cursor-pointer mx-auto"
+              className="group flex items-center justify-center gap-4 w-full max-w-xs h-20 border border-dashed border-[#e5e5e5] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300 cursor-pointer mx-auto"
             >
-              <div className="w-12 h-12 rounded-2xl bg-[#00853f]/10 flex items-center justify-center group-hover:bg-[#00853f] group-hover:scale-110 transition-all duration-300">
-                <svg className="w-6 h-6 text-[#00853f] group-hover:text-white transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <div className="w-10 h-10 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <svg className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
                 </svg>
               </div>
               <div className="text-start">
-                <p className="font-semibold text-zinc-900 dark:text-zinc-50">متجر جديد</p>
-                <p className="text-sm text-zinc-500">أنشئ متجرك الآن</p>
+                <p className="font-medium text-[#171717] dark:text-[#fafafa]">متجر جديد</p>
+                <p className="text-sm text-[#737373]">أنشئ متجرك الآن</p>
               </div>
-              <ArrowLeft className="absolute end-4 w-5 h-5 text-zinc-300 group-hover:text-[#00853f] group-hover:translate-x-1 transition-all duration-300" />
+              <ArrowLeft className="absolute end-4 w-4 h-4 text-[#d4d4d4] group-hover:text-[#171717] group-hover:translate-x-1 transition-all duration-300" />
             </Link>
           </div>
         </div>
       </main>
 
-      <footer className="relative z-10 py-6 text-center">
-        <p className="text-sm text-zinc-400">© 2026 Marlon. جميع الحقوق محفوظة</p>
+      <footer className="py-6 text-center">
+        <p className="text-sm text-[#a3a3a3]">© 2026 Marlon. جميع الحقوق محفوظة</p>
       </footer>
     </div>
   );

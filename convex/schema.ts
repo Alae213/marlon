@@ -24,8 +24,10 @@ export default defineSchema({
     status: v.optional(v.string()),
     subscription: v.optional(v.string()),
     orderCount: v.optional(v.number()),
+    firstOrderAt: v.optional(v.number()),
     trialEndsAt: v.optional(v.number()),
     paidUntil: v.optional(v.number()),
+    lockedAt: v.optional(v.number()),
     createdAt: v.number(),
     updatedAt: v.number(),
   })

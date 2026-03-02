@@ -13,17 +13,17 @@ export default function GlobalError({
 }) {
   return (
     <html lang="ar" dir="rtl">
-      <body className="min-h-screen bg-zinc-50 dark:bg-zinc-950 flex items-center justify-center p-4">
+      <body className="min-h-screen bg-[#fafafa] dark:bg-[#0a0a0a] flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <div className="w-20 h-20 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
-            <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
+          <div className="w-16 h-16 bg-[#fee2e2] dark:bg-[#7f1d1d] rounded-full flex items-center justify-center mx-auto mb-6">
+            <AlertTriangle className="w-8 h-8 text-[#dc2626]" />
           </div>
           
-          <h2 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
+          <h2 className="text-xl font-normal text-[#171717] dark:text-[#fafafa] mb-2">
             حدث خطأ ما
           </h2>
           
-          <p className="text-zinc-600 dark:text-zinc-400 mb-6">
+          <p className="text-[#737373] mb-6">
             نعتذر، حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى أو العودة للصفحة الرئيسية.
           </p>
 

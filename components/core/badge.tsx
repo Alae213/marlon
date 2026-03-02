@@ -5,12 +5,12 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles = {
-  default: "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300",
-  success: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
-  warning: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-  danger: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  info: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
-  secondary: "bg-[#00853f]/10 text-[#00853f] dark:bg-[#00853f]/20 dark:text-[#00853f]",
+  default: "bg-[#f5f5f5] text-[#525252] dark:bg-[#262626] dark:text-[#d4d4d4]",
+  success: "bg-[#dcfce7] text-[#16a34a] dark:bg-[#14532d] dark:text-[#86efac]",
+  warning: "bg-[#fef3c7] text-[#d97706] dark:bg-[#78350f] dark:text-[#fcd34d]",
+  danger: "bg-[#fee2e2] text-[#dc2626] dark:bg-[#7f1d1d] dark:text-[#fca5a5]",
+  info: "bg-[#dbeafe] text-[#2563eb] dark:bg-[#1e3a8a] dark:text-[#93c5fd]",
+  secondary: "bg-[#171717] text-[#fafafa] dark:bg-[#fafafa] dark:text-[#171717]",
 };
 
 export function Badge({ 
@@ -21,7 +21,7 @@ export function Badge({
 }: BadgeProps) {
   return (
     <span
-      className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center px-2.5 py-1 text-xs font-medium ${variantStyles[variant]} ${className}`}
       {...props}
     >
       {children}

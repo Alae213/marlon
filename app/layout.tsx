@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
-import { Noto_Sans_Arabic, Noto_Sans } from "next/font/google";
+import { DM_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import "./globals.css";
 
-const notoSans = Noto_Sans({
-  variable: "--font-noto-sans",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
-});
-
-const notoSansArabic = Noto_Sans_Arabic({
-  variable: "--font-dj",
-  subsets: ["arabic", "latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +28,7 @@ export default function RootLayout({
       <ClerkProvider publishableKey={publishableKey}>
         <ConvexClientProvider>
           <html lang="ar" dir="rtl">
-            <body className={`${notoSans.variable} ${notoSansArabic.variable} antialiased`}>
+            <body className={`${dmSans.variable} antialiased`}>
               {children}
             </body>
           </html>
@@ -43,7 +39,7 @@ export default function RootLayout({
 
   return (
     <html lang="ar" dir="rtl">
-      <body className={`${notoSans.variable} ${notoSansArabic.variable} antialiased`}>
+      <body className={`${dmSans.variable} antialiased`}>
         <ConvexClientProvider>
           {children}
         </ConvexClientProvider>

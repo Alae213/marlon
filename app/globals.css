@@ -23,59 +23,60 @@
   --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --font-sans: var(--font-dj);
-  --font-arabic: var(--font-dj);
+  --font-sans: var(--font-dm-sans), "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", var(--font-dm-sans), system-ui, sans-serif;
 }
 
+/* Minimalist color palette - Extreme white/black with subtle warm gray */
 :root {
-  --background: #ffffff;
-  --foreground: #0f0f0f;
-  --primary: #00853f;
-  --primary-foreground: #ffffff;
+  --background: #fafafa;
+  --foreground: #171717;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
   --secondary: #f5f5f5;
-  --secondary-foreground: #0f0f0f;
+  --secondary-foreground: #171717;
   --muted: #f5f5f5;
-  --muted-foreground: #6b7280;
-  --accent: #e5f4ef;
-  --accent-foreground: #00853f;
+  --muted-foreground: #737373;
+  --accent: #171717;
+  --accent-foreground: #fafafa;
   --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #fafafa;
   --border: #e5e5e5;
   --input: #e5e5e5;
-  --ring: #00853f;
+  --ring: #171717;
   --success: #16a34a;
-  --warning: #f59e0b;
-  --info: #3b82f6;
+  --warning: #d97706;
+  --info: #2563eb;
   --card: #ffffff;
-  --card-foreground: #0f0f0f;
+  --card-foreground: #171717;
   --popover: #ffffff;
-  --popover-foreground: #0f0f0f;
+  --popover-foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
-    --foreground: #f5f5f5;
-    --primary: #00a859;
-    --primary-foreground: #0f0f0f;
-    --secondary: #1a1a1a;
-    --secondary-foreground: #f5f5f5;
-    --muted: #1a1a1a;
-    --muted-foreground: #9ca3af;
-    --accent: #1a2e22;
-    --accent-foreground: #00a859;
+    --foreground: #fafafa;
+    --primary: #fafafa;
+    --primary-foreground: #0a0a0a;
+    --secondary: #171717;
+    --secondary-foreground: #fafafa;
+    --muted: #171717;
+    --muted-foreground: #a3a3a3;
+    --accent: #fafafa;
+    --accent-foreground: #0a0a0a;
     --destructive: #ef4444;
-    --destructive-foreground: #f5f5f5;
+    --destructive-foreground: #fafafa;
     --border: #262626;
     --input: #262626;
-    --ring: #00a859;
+    --ring: #fafafa;
     --success: #22c55e;
-    --warning: #fbbf24;
-    --info: #60a5fa;
+    --warning: #f59e0b;
+    --info: #3b82f6;
     --card: #0a0a0a;
-    --card-foreground: #f5f5f5;
+    --card-foreground: #fafafa;
     --popover: #0a0a0a;
-    --popover-foreground: #f5f5f5;
+    --popover-foreground: #fafafa;
   }
 }
 
@@ -86,9 +87,56 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans), system-ui, sans-serif;
+  font-family: var(--font-arabic);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Minimalist focus styles */
+*:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+/* Remove default borders for cleaner look */
+button, input, select, textarea {
+  border-radius: 0;
+}
+
+/* Minimalist scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: #404040;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #525252;
+  }
 }
 
 @layer utilities {

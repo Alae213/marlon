@@ -1,5 +1,12 @@
 # AGENTS.md - Marlon Development Guide
 
+## CRITICAL: Follow Instructions Exactly
+
+- **DO NOT** deviate from PRD or make assumptions without asking first
+- **DO NOT** use localStorage or mock data for production features - use Convex from the start
+- **DO NOT** change route structures without explicit user approval
+- When in doubt: **ASK** before proceeding
+
 ## Overview
 
 Marlon is a multi-tenant SaaS platform for Algerian entrepreneurs to create and manage COD-based online stores. The project uses Next.js, TypeScript, Tailwind CSS, and will integrate with Convex (backend), Clerk (auth), and Chargily Pay (payments).
@@ -136,7 +143,7 @@ types/        # TypeScript type definitions
 ### Authentication (Clerk)
 
 - Use Clerk for authentication (Google OAuth only per PRD)
-- Protect routes with proxy
+- Protect routes with proxy.ts (NOT middleware.ts - deprecated in Next.js 16)
 - Always verify user ownership for store access
 
 ### Database (Convex)
@@ -177,6 +184,10 @@ types/        # TypeScript type definitions
 - [Convex Documentation](https://docs.convex.dev)
 - [Clerk Documentation](https://clerk.com/docs)
 - [PRD.md](./PRD.md) - Product requirements and feature specifications
+
+## Commands
+
+- `/compact` - Use this command to request compact summaries and concise responses
 
 
 
