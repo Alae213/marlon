@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Search, Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2 } from "lucide-react";
+import { Search, Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
@@ -32,12 +32,13 @@ interface Product {
   updatedAt?: number;
 }
 
-function ProductsContent({ storeId }: { storeId: string }) {
+function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   const products = useQuery(
     api.products.getProducts,
@@ -118,10 +119,16 @@ function ProductsContent({ storeId }: { storeId: string }) {
     <div className="max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
-        <Button onClick={() => setIsAddModalOpen(true)}>
-          <Plus className="w-4 h-4" />
-          إضافة منتج
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
+            <Settings className="w-4 h-4" />
+            الإعدادات
+          </Button>
+          <Button onClick={() => setIsAddModalOpen(true)}>
+            <Plus className="w-4 h-4" />
+            إضافة منتج
+          </Button>
+        </div>
       </div>
 
       <Card padding="none">
@@ -353,6 +360,8 @@ function ProductsContent({ storeId }: { storeId: string }) {
           />
         )}
       </Modal>
+
+      <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
     </div>
   );
 }
@@ -466,18 +475,304 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
   );
 }
 
-export default function ProductsPage() {
+function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
+  const [activeTab, setActiveTab] = useState("delivery");
+  
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+      <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-lg shadow-xl">
+        <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+          <h2 className="text-lg font-medium">إعدادات المتجر</h2>
+          <button onClick={onClose} className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        
+        <div className="flex border-b border-[#e5e5e5] dark:border-[#262626]">
+          <button
+            onClick={() => setActiveTab("delivery")}
+            className={`flex-1 py-3 text-sm font-medium ${
+              activeTab === "delivery"
+                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                : "text-[#737373]"
+            }`}
+          >
+            أسعار التوصيل
+          </button>
+          <button
+            onClick={() => setActiveTab("integration")}
+            className={`flex-1 py-3 text-sm font-medium ${
+              activeTab === "integration"
+                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                : "text-[#737373]"
+            }`}
+          >
+            شركات التوصيل
+          </button>
+          <button
+            onClick={() => setActiveTab("store")}
+            className={`flex-1 py-3 text-sm font-medium ${
+              activeTab === "store"
+                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                : "text-[#737373]"
+            }`}
+          >
+            معلومات المتجر
+          </button>
+        </div>
+
+        <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {activeTab === "delivery" && (
+            <DeliveryPricingSettings storeId={storeId} />
+          )}
+          {activeTab === "integration" && (
+            <DeliveryIntegrationSettings storeId={storeId} />
+          )}
+          {activeTab === "store" && (
+            <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DeliveryPricingSettings({ storeId }: { storeId: string }) {
+  const [pricing, setPricing] = useState<Record<string, { stopdesk: number; domicile: number }>>({});
+  const updatePricing = useMutation(api.stores.updateDeliveryPricing);
+  const [isSaving, setIsSaving] = useState(false);
+
+  const wilayas = [
+    "الجزائر", "قسنطينة", "وهران", "باتنة", "تيارت", "تبسة", "تلمسان", "تيارت",
+    "بسكرة", "بشار", "بجاية", "عنابة", "الطارف", "المسيلة", "مستغانم", "المدية",
+    "غرداية", "غليزان", "ورقلة", "سيدي بلعباس", "سوق أهراس", "تيبازة", "ميلة",
+    "عين الدفلى", "النعامة", "عين تموشنت", "خنشلة", "سعيدة", "جيجل", "سكيكدة",
+    "أولاد جلال", "برج بوعريريج", "مليانة", "عطار", "بريكة", "الوادي", "تامنة",
+    " الطارف", "زريبة", "توقرت", "جبلية", "أولاد عيسى", " الشلف"
+  ];
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      // Save pricing for each wilaya
+      for (const [wilaya, prices] of Object.entries(pricing)) {
+        await updatePricing({
+          storeId: storeId as Id<"stores">,
+          wilaya,
+          homeDelivery: prices.domicile,
+          officeDelivery: prices.stopdesk,
+        });
+      }
+    } catch (error) {
+      console.error("Failed to save pricing:", error);
+    }
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium">أسعار التوصيل لكل ولاية</h3>
+      <div className="grid grid-cols-2 gap-4">
+        {wilayas.slice(0, 10).map((wilaya) => (
+          <div key={wilaya} className="p-3 border border-[#e5e5e5] dark:border-[#404040]">
+            <p className="text-sm font-medium mb-2">{wilaya}</p>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-xs text-[#737373]">مكتب</label>
+                <input
+                  type="number"
+                  className="w-full h-8 px-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-sm"
+                  placeholder="السعر"
+                  onChange={(e) => setPricing(prev => ({
+                    ...prev,
+                    [wilaya]: { ...prev[wilaya], stopdesk: parseInt(e.target.value) || 0 }
+                  }))}
+                />
+              </div>
+              <div>
+                <label className="text-xs text-[#737373]">منزل</label>
+                <input
+                  type="number"
+                  className="w-full h-8 px-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-sm"
+                  placeholder="السعر"
+                  onChange={(e) => setPricing(prev => ({
+                    ...prev,
+                    [wilaya]: { ...prev[wilaya], domicile: parseInt(e.target.value) || 0 }
+                  }))}
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      <p className="text-xs text-[#737373]">عرض 10 ولايات فقط - تمت إضافة المزيد</p>
+      <Button onClick={handleSave} disabled={isSaving} className="w-full">
+        {isSaving ? "جاري الحفظ..." : "حفظ الأسعار"}
+      </Button>
+    </div>
+  );
+}
+
+function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
+  const [provider, setProvider] = useState<"none" | "zr_express" | "yalidine">("none");
+  const [apiKey, setApiKey] = useState("");
+  const [apiToken, setApiToken] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium">اختر شركة التوصيل</h3>
+      
+      <div className="flex gap-3">
+        <button
+          onClick={() => setProvider("none")}
+          className={`flex-1 py-3 border ${
+            provider === "none" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
+          }`}
+        >
+          لا شيء
+        </button>
+        <button
+          onClick={() => setProvider("zr_express")}
+          className={`flex-1 py-3 border ${
+            provider === "zr_express" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
+          }`}
+        >
+          ZR Express
+        </button>
+        <button
+          onClick={() => setProvider("yalidine")}
+          className={`flex-1 py-3 border ${
+            provider === "yalidine" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
+          }`}
+        >
+          Yalidine
+        </button>
+      </div>
+
+      {provider !== "none" && (
+        <div className="space-y-3 mt-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">API Key</label>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+              placeholder="أدخل API Key"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1">API Token</label>
+            <input
+              type="password"
+              value={apiToken}
+              onChange={(e) => setApiToken(e.target.value)}
+              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+              placeholder="أدخل API Token"
+            />
+          </div>
+          
+          <div className="flex gap-3">
+            <Button variant="outline" className="flex-1">
+              اختبار الاتصال
+            </Button>
+            <Button className="flex-1" disabled={isSaving}>
+              {isSaving ? "جاري الحفظ..." : "حفظ"}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StoreInfoSettings({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
+  const store = useQuery(api.stores.getStoreBySlug, { slug: storeSlug });
+  const updateStore = useMutation(api.stores.updateStore);
+  const [name, setName] = useState(store?.name || "");
+  const [description, setDescription] = useState(store?.description || "");
+  const [phone, setPhone] = useState(store?.phone || "");
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+    try {
+      await updateStore({
+        storeId: storeId as Id<"stores">,
+        name,
+        description,
+        phone,
+      });
+    } catch (error) {
+      console.error("Failed to update store:", error);
+    }
+    setIsSaving(false);
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="font-medium">معلومات المتجر</h3>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">اسم المتجر</label>
+        <input
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">الوصف</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          rows={3}
+          className="w-full px-3 py-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+        />
+      </div>
+      
+      <div>
+        <label className="block text-sm font-medium mb-1">رقم الهاتف</label>
+        <input
+          type="tel"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+        />
+      </div>
+
+      <div className="p-3 bg-[#f5f5f5] dark:bg-[#171717]">
+        <p className="text-sm text-[#737373]">رابط المتجر:</p>
+        <p className="font-medium">marlon.com/{storeSlug}</p>
+      </div>
+
+      <Button onClick={handleSave} disabled={isSaving} className="w-full">
+        {isSaving ? "جاري الحفظ..." : "حفظ التغييرات"}
+      </Button>
+    </div>
+  );
+}
+
+export default function EditorPage() {
   const params = useParams();
-  const slug = params?.storeId as string; // storeId param contains the slug
+  const storeSlug = params?.storeSlug as string;
   
   const store = useQuery(
     api.stores.getStoreBySlug,
-    slug ? { slug } : "skip"
+    storeSlug ? { slug: storeSlug } : "skip"
   );
   
-  const storeId = store?._id;
+  const storeId = store?._id as string | undefined;
   
-  if (!store && slug) {
+  if (!store && storeSlug) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 animate-spin text-[#171717] dark:text-[#fafafa]" />
@@ -497,7 +792,7 @@ export default function ProductsPage() {
   
   return (
     <RealtimeProvider storeId={storeId}>
-      <ProductsContent storeId={storeId} />
+      <ProductsContent storeId={storeId} storeSlug={storeSlug} />
     </RealtimeProvider>
   );
 }

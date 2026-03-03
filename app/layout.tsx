@@ -11,8 +11,11 @@ const dmSans = DM_Sans({
 });
 
 export const metadata: Metadata = {
-  title: "Marlon - أنشئ متجرك الإلكتروني",
-  description: "منصة التجارة الإلكترونية للشركات الجزائرية",
+  title: "Marlon",
+  description: "Marlon",
+  icons: {
+    icon: "/Favicon.png",
+  },
 };
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -27,7 +30,7 @@ export default function RootLayout({
     return (
       <ClerkProvider publishableKey={publishableKey}>
         <ConvexClientProvider>
-          <html lang="ar" dir="rtl">
+          <html lang="en" dir="ltr">
             <body className={`${dmSans.variable} antialiased`}>
               {children}
             </body>
@@ -38,7 +41,7 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="ar" dir="rtl">
+    <html lang="en" dir="ltr">
       <body className={`${dmSans.variable} antialiased`}>
         <ConvexClientProvider>
           {children}

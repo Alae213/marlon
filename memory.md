@@ -1,14 +1,12 @@
 # Marlon Development Summary
 
-## March 2, 2026
+## March 3, 2026
 
-**Completed:**
-- ✅ Removed localStorage - 100% Convex
-- ✅ GAP 4: Inline variant editor integrated
-- ✅ Route alignment to PRD:
-  - `/[userId]` - Dashboard
-  - `/[userId]/[storeId]/products` - Products
-  - `/[userId]/[storeId]/orders` - Orders
-  - `/shop/[slug]` - Public storefront (modified from PRD to avoid conflict)
+**Routes (PRD-aligned):**
+- `/` - Landing/Dashboard (auth-aware)
+- `/editor/[storeSlug]` - Editor + Settings dialog
+- `/orders/[storeSlug]` - Orders
+- `/[slug]` - Public storefront
+- `/[slug]/[productId]` - Product detail
 
-**Build:** ✅ PASSED
+**Completed:** Route restructure, settings dialog, build ✅

@@ -646,16 +646,16 @@ function OrdersContent({ storeId }: { storeId: string }) {
 
 export default function OrdersPage() {
   const params = useParams();
-  const slug = params?.storeId as string; // storeId param contains the slug
+  const storeSlug = params?.storeSlug as string;
   
   const store = useQuery(
     api.stores.getStoreBySlug,
-    slug ? { slug } : "skip"
+    storeSlug ? { slug: storeSlug } : "skip"
   );
   
   const storeId = store?._id;
   
-  if (!store && slug) {
+  if (!store && storeSlug) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 animate-spin text-[#171717] dark:text-[#fafafa]" />
@@ -674,7 +674,7 @@ export default function OrdersPage() {
   }
   
   return (
-    <BillingProvider storeSlug={slug} storeId={storeId}>
+    <BillingProvider storeSlug={storeSlug} storeId={storeId}>
       <RealtimeProvider storeId={storeId}>
         <OrdersContent storeId={storeId} />
       </RealtimeProvider>

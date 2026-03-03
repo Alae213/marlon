@@ -1,0 +1,376 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import Image from "next/image";
+import { ShoppingCart, ArrowRight, Package, Check } from "lucide-react";
+import { useCart } from "@/contexts/cart-context";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+
+interface Product {
+  _id: string;
+  name: string;
+  description?: string;
+  basePrice: number;
+  oldPrice?: number;
+  images?: string[];
+  variants?: any[];
+}
+
+const formatPrice = (price: number) => {
+  return new Intl.NumberFormat('ar-DZ', {
+    style: 'currency',
+    currency: 'DZD',
+    minimumFractionDigits: 0,
+  }).format(price);
+};
+
+export default function ProductDetailPage() {
+  const params = useParams();
+  const slug = params?.slug as string;
+  const productId = params?.productId as string;
+  
+  const { addItem } = useCart();
+  const [quantity, setQuantity] = useState(1);
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({});
+  const [orderData, setOrderData] = useState({
+    name: "",
+    phone: "",
+    address: "",
+    wilaya: "",
+    commune: "",
+    deliveryType: "stopdesk" as "stopdesk" | "domicile",
+  });
+  const [showOrderForm, setShowOrderForm] = useState(false);
+  const [orderPlaced, setOrderPlaced] = useState(false);
+  const [orderNumber, setOrderNumber] = useState("");
+
+  const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
+  
+  const products = useQuery(
+    api.products.getProducts,
+    store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
+  );
+
+  const product = useMemo(() => {
+    if (!products) return null;
+    return products.find((p: any) => p._id === productId);
+  }, [products, productId]);
+
+  const handleVariantSelect = (variantName: string, option: string) => {
+    setSelectedVariants(prev => ({ ...prev, [variantName]: option }));
+  };
+
+  const variantString = Object.values(selectedVariants).join(" - ");
+
+  const createOrder = useMutation(api.orders.createOrder);
+
+  const generateOrderNumber = () => {
+    const timestamp = Date.now().toString(36).toUpperCase();
+    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
+    return `ORD-${timestamp}-${random}`;
+  };
+
+  const handleBuyNow = async () => {
+    if (!product || !store) return;
+    
+    try {
+      const result = await createOrder({
+        storeId: store._id as Id<"stores">,
+        orderNumber: generateOrderNumber(),
+        customerName: orderData.name,
+        customerPhone: orderData.phone,
+        customerWilaya: orderData.wilaya,
+        customerCommune: orderData.commune || undefined,
+        customerAddress: orderData.address || undefined,
+        products: [{
+          productId: product._id,
+          name: product.name,
+          price: product.basePrice,
+          quantity,
+          variant: variantString || undefined,
+        }],
+        subtotal: product.basePrice * quantity,
+        deliveryCost: 0,
+        total: product.basePrice * quantity,
+        deliveryType: orderData.deliveryType,
+      });
+      
+      setOrderNumber(generateOrderNumber());
+      setOrderPlaced(true);
+    } catch (error) {
+      console.error("Failed to create order:", error);
+    }
+  };
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    addItem({
+      id: `${product._id}-${Date.now()}`,
+      productId: product._id,
+      name: product.name,
+      price: product.basePrice,
+      quantity,
+      image: product.images?.[0] || "",
+      variant: variantString || undefined,
+    });
+  };
+
+  if (orderPlaced) {
+    return (
+      <div className="max-w-2xl mx-auto px-6 py-16 text-center">
+        <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mx-auto mb-6">
+          <Check className="w-8 h-8 text-white" />
+        </div>
+        <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-4">
+          تم تأكيد طلبك!
+        </h1>
+        <p className="text-[#525252] dark:text-[#a3a3a3] mb-2">
+          سنتواصل معك على رقم الهاتف للتحقق من طلبك
+        </p>
+        <p className="text-sm text-[#a3a3a3] mb-8">
+          رقم الطلب: <span className="font-medium">{orderNumber}</span>
+        </p>
+        <Link
+          href={`/${slug}`}
+          className="inline-flex items-center gap-2 px-6 py-3 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal"
+        >
+          متابعة التسوق
+          <ArrowRight className="w-4 h-4" />
+        </Link>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="max-w-6xl mx-auto px-6 py-16 text-center">
+        <Package className="w-16 h-16 text-[#d4d4d4] mx-auto mb-4" />
+        <p className="text-[#737373]">المنتج غير موجود</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="max-w-6xl mx-auto px-6 py-8">
+      <Link href={`/${slug}`} className="inline-flex items-center gap-2 text-[#737373] hover:text-[#171717] mb-6">
+        <ArrowRight className="w-4 h-4 rotate-180" />
+        العودة للمتجر
+      </Link>
+
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717] rounded-lg overflow-hidden">
+          {product.images?.[0] ? (
+            <Image
+              src={product.images[0]}
+              alt={product.name}
+              fill
+              sizes="(max-width: 768px) 100vw, 50vw"
+              className="object-cover"
+              priority
+            />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center">
+              <Package className="w-20 h-20 text-[#d4d4d4]" />
+            </div>
+          )}
+        </div>
+
+        <div>
+          <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-4">
+            {product.name}
+          </h1>
+
+          <div className="flex items-center gap-4 mb-6">
+            <span className="text-3xl font-medium text-[#171717] dark:text-[#fafafa]">
+              {formatPrice(product.basePrice)}
+            </span>
+            {product.oldPrice && (
+              <span className="text-xl text-[#a3a3a3] line-through">
+                {formatPrice(product.oldPrice)}
+              </span>
+            )}
+          </div>
+
+          {product.description && (
+            <p className="text-[#525252] dark:text-[#a3a3a3] mb-6">
+              {product.description}
+            </p>
+          )}
+
+          {product.variants && product.variants.length > 0 && (
+            <div className="mb-6">
+              {product.variants.map((variant: any) => (
+                <div key={variant.name} className="mb-4">
+                  <p className="text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
+                    {variant.name}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {variant.options?.map((option: any) => (
+                      <button
+                        key={option.name}
+                        onClick={() => handleVariantSelect(variant.name, option.name)}
+                        className={`px-4 py-2 border rounded-lg transition-colors ${
+                          selectedVariants[variant.name] === option.name
+                            ? "border-[#171717] dark:border-[#fafafa] bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717]"
+                            : "border-[#e5e5e5] dark:border-[#404040] text-[#525252] dark:text-[#a3a3a3] hover:border-[#171717] dark:hover:border-[#fafafa]"
+                        }`}
+                      >
+                        {option.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="mb-6">
+            <p className="text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
+              الكمية
+            </p>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                className="w-10 h-10 border border-[#e5e5e5] dark:border-[#404040] flex items-center justify-center"
+              >
+                -
+              </button>
+              <span className="w-12 text-center font-medium">{quantity}</span>
+              <button
+                onClick={() => setQuantity(quantity + 1)}
+                className="w-10 h-10 border border-[#e5e5e5] dark:border-[#404040] flex items-center justify-center"
+              >
+                +
+              </button>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={handleAddToCart}
+              className="flex-1 flex items-center justify-center gap-2 h-12 border border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa] font-normal hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              إضافة للسلة
+            </button>
+            <button
+              onClick={() => setShowOrderForm(true)}
+              className="flex-1 flex items-center justify-center gap-2 h-12 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal hover:opacity-80 transition-opacity"
+            >
+              شراء الآن
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {showOrderForm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
+          <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-lg p-6 rounded-lg">
+            <h2 className="text-xl font-normal mb-6">تأكيد الطلب</h2>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-1">الاسم الكامل</label>
+                <input
+                  type="text"
+                  value={orderData.name}
+                  onChange={(e) => setOrderData({ ...orderData, name: e.target.value })}
+                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-1">رقم الهاتف</label>
+                <input
+                  type="tel"
+                  value={orderData.phone}
+                  onChange={(e) => setOrderData({ ...orderData, phone: e.target.value })}
+                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                  placeholder="05xxxxxxxx"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">الولاية</label>
+                <input
+                  type="text"
+                  value={orderData.wilaya}
+                  onChange={(e) => setOrderData({ ...orderData, wilaya: e.target.value })}
+                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-1">البلدية</label>
+                <input
+                  type="text"
+                  value={orderData.commune}
+                  onChange={(e) => setOrderData({ ...orderData, commune: e.target.value })}
+                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium mb-2">نوع التوصيل</label>
+                <div className="flex gap-4">
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="deliveryType"
+                      value="stopdesk"
+                      checked={orderData.deliveryType === "stopdesk"}
+                      onChange={() => setOrderData({ ...orderData, deliveryType: "stopdesk" })}
+                    />
+                    <span>مكتب استلام</span>
+                  </label>
+                  <label className="flex items-center gap-2">
+                    <input
+                      type="radio"
+                      name="deliveryType"
+                      value="domicile"
+                      checked={orderData.deliveryType === "domicile"}
+                      onChange={() => setOrderData({ ...orderData, deliveryType: "domicile" })}
+                    />
+                    <span>توصيل للمنزل</span>
+                  </label>
+                </div>
+              </div>
+
+              {orderData.deliveryType === "domicile" && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">العنوان</label>
+                  <input
+                    type="text"
+                    value={orderData.address}
+                    onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
+                    className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-4 mt-6">
+              <button
+                onClick={() => setShowOrderForm(false)}
+                className="flex-1 h-10 border border-[#e5e5e5] dark:border-[#404040]"
+              >
+                إلغاء
+              </button>
+              <button
+                onClick={handleBuyNow}
+                disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
+                className="flex-1 h-10 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] disabled:opacity-50"
+              >
+                تأكيد الطلب
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

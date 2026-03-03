@@ -4,20 +4,11 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, ShoppingCart, Heart, Package } from "lucide-react";
+import { Search, ShoppingCart, Package } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-
-interface CatalogProduct {
-  _id: string;
-  name: string;
-  basePrice: number;
-  oldPrice?: number;
-  images?: string[];
-  isArchived?: boolean;
-}
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ar-DZ', {
@@ -27,24 +18,20 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-export default function CatalogPage() {
+export default function StorefrontPage() {
   const params = useParams();
   const slug = params?.slug as string;
   const [searchQuery, setSearchQuery] = useState("");
   const { addItem } = useCart();
 
-  // Get store by slug
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
   
-  // Get products for this store using the store's ID
   const products = useQuery(
     api.products.getProducts,
     store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
   );
 
-  const productsData = useMemo(() => {
-    return products || [];
-  }, [products]);
+  const productsData = useMemo(() => products || [], [products]);
 
   const filteredProducts = productsData.filter(product =>
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -54,7 +41,7 @@ export default function CatalogPage() {
     <div className="max-w-6xl mx-auto px-6 py-12">
       <div className="mb-10">
         <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-6 text-center">
-          اكتشف منتجاتنا
+          {store?.name || "المتجر"}
         </h1>
         
         <div className="max-w-md mx-auto relative">
@@ -73,7 +60,7 @@ export default function CatalogPage() {
         {filteredProducts.map((product) => (
           <Link
             key={product._id}
-            href={`/shop/${slug}/product/${product._id}`}
+            href={`/${slug}/product/${product._id}`}
             className="group bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300"
           >
             <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717]">
@@ -125,7 +112,7 @@ export default function CatalogPage() {
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[#737373]">لا توجد منتجات مطابقة للبحث</p>
+          <p className="text-[#737373]">لا توجد منتجات</p>
         </div>
       )}
     </div>
