@@ -1,20 +1,22 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Search, Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings } from "lucide-react";
+import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home } from "lucide-react";
 import { Button } from "@/components/core/button";
-import { Input } from "@/components/core/input";
-import { Textarea } from "@/components/core/textarea";
-import { Modal } from "@/components/core/modal";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
+import { Modal } from "@/components/core/modal";
+import { Input } from "@/components/core/input";
+import { Textarea } from "@/components/core/textarea";
 import { ImageUploader } from "@/components/image-cropper";
 import { InlineVariantEditor } from "@/components/inline-variant-editor";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
+import { useUser, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 
 interface Product {
   _id: Id<"products">;
@@ -33,12 +35,17 @@ interface Product {
 }
 
 function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
+  const router = useRouter();
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [searchQuery, setSearchQuery] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  
+  // Inline editing states
+  const [editingField, setEditingField] = useState<{ productId: string; field: "name" | "basePrice" | "oldPrice" } | null>(null);
+  const [editValue, setEditValue] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
 
   const products = useQuery(
     api.products.getProducts,
@@ -52,13 +59,53 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
 
   const isLoading = !products;
 
-  const filteredProducts = useMemo(() => {
+  // Show all products (including archived) - filter out archived for display
+  const activeProducts = useMemo(() => {
     if (!products) return [];
-    return products.filter(p => 
-      p.name.toLowerCase().includes(searchQuery.toLowerCase()) &&
-      !p.isArchived
-    );
-  }, [products, searchQuery]);
+    return products.filter(p => !p.isArchived);
+  }, [products]);
+
+  // Inline editing handlers
+  const startEditing = (productId: string, field: "name" | "basePrice" | "oldPrice", currentValue: string | number) => {
+    setEditingField({ productId, field });
+    setEditValue(String(currentValue));
+  };
+
+  const saveInlineEdit = async () => {
+    if (!editingField) return;
+    
+    setIsSaving(true);
+    try {
+      const product = products?.find(p => p._id === editingField.productId);
+      if (!product) return;
+
+      const updates: any = { productId: editingField.productId as Id<"products"> };
+      
+      if (editingField.field === "name") {
+        updates.name = editValue;
+      } else if (editingField.field === "basePrice") {
+        updates.basePrice = parseInt(editValue) || 0;
+      } else if (editingField.field === "oldPrice") {
+        updates.oldPrice = editValue ? parseInt(editValue) : undefined;
+      }
+
+      await updateProduct(updates);
+      setEditingField(null);
+      setEditValue("");
+    } catch (error) {
+      console.error("Failed to update:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      saveInlineEdit();
+    } else if (e.key === "Escape") {
+      setEditingField(null);
+      setEditValue("");
+    }
+  };
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('ar-DZ', {
@@ -111,12 +158,34 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     }
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setDeletingProductId(null);
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      // Use archive for soft delete
+      await archiveProduct({ productId: productId as Id<"products"> });
+      setDeletingProductId(null);
+    } catch (error) {
+      console.error("Failed to delete product:", error);
+    }
   };
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Header with Logo, Back Button, and User Profile */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
+          </Link>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] rounded-full flex items-center justify-center">
+              <Home className="w-4 h-4 text-white dark:text-[#171717]" />
+            </div>
+            <span className="font-medium text-[#171717] dark:text-[#fafafa]">متجري</span>
+          </Link>
+        </div>
+        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+      </div>
+
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
         <div className="flex items-center gap-3">
@@ -132,43 +201,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
       </div>
 
       <Card padding="none">
-        <div className="p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-          <div className="flex items-center gap-4">
-            <div className="flex-1">
-              <Input
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="البحث في المنتجات..."
-                icon={<Search className="w-4 h-4" />}
-              />
-            </div>
-            
-            <div className="flex items-center gap-1 p-0.5 bg-[#f5f5f5] dark:bg-[#171717]">
-              <button
-                onClick={() => setViewMode("grid")}
-                className={`p-2 transition-colors ${
-                  viewMode === "grid" 
-                    ? "bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa]" 
-                    : "text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa]"
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode("list")}
-                className={`p-2 transition-colors ${
-                  viewMode === "list" 
-                    ? "bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa]" 
-                    : "text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa]"
-                }`}
-              >
-                <List className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {filteredProducts.length === 0 ? (
+        {activeProducts.length === 0 ? (
           <EmptyState
             icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
             title="لا توجد منتجات"
@@ -182,7 +215,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
           />
         ) : viewMode === "grid" ? (
           <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {filteredProducts.map((product) => (
+            {activeProducts.map((product) => (
               <div
                 key={product._id}
                 className="group relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200"
@@ -200,17 +233,68 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                 </div>
                 
                 <div className="p-4">
-                  <h3 className="font-normal text-[#171717] dark:text-[#fafafa] mb-2 line-clamp-2">
-                    {product.name}
-                  </h3>
+                  {/* Product Name - Inline Edit */}
+                  {editingField?.productId === product._id && editingField?.field === "name" ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={saveInlineEdit}
+                      onKeyDown={handleKeyDown}
+                      className="w-full font-normal text-[#171717] dark:text-[#fafafa] mb-2 px-1 py-0.5 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                    />
+                  ) : (
+                    <h3 
+                      className="font-normal text-[#171717] dark:text-[#fafafa] mb-2 line-clamp-2 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                      onClick={() => startEditing(product._id, "name", product.name)}
+                    >
+                      {product.name}
+                    </h3>
+                  )}
+                  
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-[#171717] dark:text-[#fafafa]">
-                      {formatPrice(product.basePrice)}
-                    </span>
-                    {product.oldPrice && (
-                      <span className="text-sm text-[#a3a3a3] line-through">
-                        {formatPrice(product.oldPrice)}
+                    {/* Base Price - Inline Edit */}
+                    {editingField?.productId === product._id && editingField?.field === "basePrice" ? (
+                      <input
+                        autoFocus
+                        type="number"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={saveInlineEdit}
+                        onKeyDown={handleKeyDown}
+                        className="font-medium text-[#171717] dark:text-[#fafafa] px-1 py-0.5 w-24 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                      />
+                    ) : (
+                      <span 
+                        className="font-medium text-[#171717] dark:text-[#fafafa] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                        onClick={() => startEditing(product._id, "basePrice", product.basePrice)}
+                      >
+                        {formatPrice(product.basePrice)}
                       </span>
+                    )}
+                    
+                    {/* Old Price - Inline Edit */}
+                    {product.oldPrice && (
+                      editingField?.productId === product._id && editingField?.field === "oldPrice" ? (
+                        <input
+                          autoFocus
+                          type="number"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={saveInlineEdit}
+                          onKeyDown={handleKeyDown}
+                          className="text-sm text-[#a3a3a3] line-through px-1 py-0.5 w-24 border border-[#a3a3a3] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                          placeholder="السعر القديم"
+                        />
+                      ) : (
+                        <span 
+                          className="text-sm text-[#a3a3a3] line-through cursor-pointer hover:text-[#737373]"
+                          onClick={() => startEditing(product._id, "oldPrice", product.oldPrice || "")}
+                        >
+                          {formatPrice(product.oldPrice)}
+                        </span>
+                      )
                     )}
                   </div>
                 </div>
@@ -274,10 +358,18 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                 )}
               </div>
             ))}
+            
+            {/* Add Product Button - Same size as product card */}
+            <button
+              onClick={() => setIsAddModalOpen(true)}
+              className="aspect-[1/1.3] bg-white dark:bg-[#0a0a0a] border border-dashed border-[#d4d4d4] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200 flex flex-col items-center justify-center gap-2"
+            >
+              <Plus className="w-8 h-8 text-[#d4d4d4] dark:text-[#525252]" />
+            </button>
           </div>
         ) : (
           <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
-            {filteredProducts.map((product) => (
+            {activeProducts.map((product) => (
               <div
                 key={product._id}
                 className="flex items-center gap-4 p-4 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors"
@@ -362,6 +454,27 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
       </Modal>
 
       <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
+
+      {/* Fixed Bottom Navigation - 200px centered */}
+      <div className="fixed bottom-4 start-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
+        <button
+          onClick={() => router.push(`/editor/${storeSlug}`)}
+          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
+        >
+          <Package className="w-5 h-5" />
+          <span className="text-xs">المنتجات</span>
+        </button>
+        <button
+          onClick={() => router.push(`/orders/${storeSlug}`)}
+          className="flex flex-col items-center gap-1 text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
+        >
+          <ShoppingCart className="w-5 h-5" />
+          <span className="text-xs">الطلبات</span>
+        </button>
+      </div>
+      
+      {/* Add padding bottom to avoid content being hidden behind fixed nav */}
+      <div className="h-20"></div>
     </div>
   );
 }

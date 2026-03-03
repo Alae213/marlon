@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
-import { X, Crop as CropIcon, Check, RotateCcw, Image as ImageIcon } from "lucide-react";
+import { X, Crop as CropIcon, Check, RotateCcw, Image as ImageIcon, Star, GripVertical, ZoomIn } from "lucide-react";
 import { Button } from "@/components/core/button";
 import "react-image-crop/dist/ReactCrop.css";
 
@@ -150,9 +150,66 @@ interface ImageUploaderProps {
   maxImages?: number;
 }
 
+function Lightbox({ images, currentIndex, onClose, onIndexChange }: { 
+  images: string[]; 
+  currentIndex: number; 
+  onClose: () => void;
+  onIndexChange: (index: number) => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+      <button
+        onClick={onClose}
+        className="absolute top-4 end-4 p-2 text-white/70 hover:text-white z-10"
+      >
+        <X className="w-8 h-8" />
+      </button>
+      
+      <button
+        onClick={() => onIndexChange((currentIndex - 1 + images.length) % images.length)}
+        className="absolute start-4 p-2 text-white/70 hover:text-white"
+      >
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+        </svg>
+      </button>
+      
+      <img
+        src={images[currentIndex]}
+        alt={`Image ${currentIndex + 1}`}
+        className="max-h-[90vh] max-w-[90vw] object-contain"
+      />
+      
+      <button
+        onClick={() => onIndexChange((currentIndex + 1) % images.length)}
+        className="absolute end-4 p-2 text-white/70 hover:text-white"
+      >
+        <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+        </svg>
+      </button>
+      
+      <div className="absolute bottom-4 start-1/2 -translate-x-1/2 flex gap-2">
+        {images.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => onIndexChange(idx)}
+            className={`w-2 h-2 rounded-full transition-colors ${
+              idx === currentIndex ? "bg-white" : "bg-white/40"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUploaderProps) {
   const [cropperImage, setCropperImage] = useState<string | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  const dragOverRef = useRef<number | null>(null);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -198,6 +255,26 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
     onImagesChange(newImages);
   };
 
+  const handleDragStart = (index: number) => {
+    setDraggedIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    dragOverRef.current = index;
+  };
+
+  const handleDragEnd = () => {
+    if (draggedIndex !== null && dragOverRef.current !== null && draggedIndex !== dragOverRef.current) {
+      const newImages = [...images];
+      const [removed] = newImages.splice(draggedIndex, 1);
+      newImages.splice(dragOverRef.current, 0, removed);
+      onImagesChange(newImages);
+    }
+    setDraggedIndex(null);
+    dragOverRef.current = null;
+  };
+
   return (
     <div className="space-y-4">
       {images.length > 0 && (
@@ -205,9 +282,13 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
           {images.map((img, index) => (
             <div
               key={index}
-              className={`relative aspect-square rounded-xl overflow-hidden border-2 ${
+              draggable
+              onDragStart={() => handleDragStart(index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragEnd={handleDragEnd}
+              className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-move transition-all ${
                 index === 0 ? "border-[#00853f]" : "border-transparent"
-              }`}
+              } ${draggedIndex === index ? "opacity-50 scale-95" : ""}`}
             >
               <img
                 src={img}
@@ -215,6 +296,13 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                <button
+                  onClick={() => setLightboxIndex(index)}
+                  className="p-2 bg-white rounded-lg text-zinc-900 hover:bg-zinc-100"
+                  title="تكبير"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </button>
                 {index !== 0 && (
                   <button
                     onClick={() => handleSetFeatured(index)}
@@ -235,6 +323,9 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
                   رئيسية
                 </span>
               )}
+              <div className="absolute top-1 end-1 opacity-0 hover:opacity-100 transition-opacity">
+                <GripVertical className="w-4 h-4 text-white drop-shadow-md" />
+              </div>
             </div>
           ))}
         </div>
@@ -275,6 +366,15 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
           imageSrc={cropperImage}
           onCropComplete={handleCropComplete}
           onCancel={() => setCropperImage(null)}
+        />
+      )}
+
+      {lightboxIndex !== null && (
+        <Lightbox
+          images={images}
+          currentIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+          onIndexChange={setLightboxIndex}
         />
       )}
     </div>

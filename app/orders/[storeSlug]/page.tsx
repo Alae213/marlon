@@ -21,12 +21,15 @@ import {
   MessageSquare,
   FileText,
   Plus,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  Home
 } from "lucide-react";
 import { SlideOver, Badge, Button } from "@/components/core";
 import { LockedData } from "@/components/locked-overlay";
 import { useBilling, BillingProvider } from "@/contexts/billing-context";
-import { useUser } from "@clerk/nextjs";
+import { useUser, UserButton } from "@clerk/nextjs";
+import Link from "next/link";
 import type { 
   SortField, 
   SortDirection, 
@@ -42,7 +45,7 @@ import {
 } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 
-function OrdersContent({ storeId }: { storeId: string }) {
+function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
   const { user } = useUser();
   const { isLocked } = useBilling();
   const [searchQuery, setSearchQuery] = useState("");
@@ -231,6 +234,22 @@ function OrdersContent({ storeId }: { storeId: string }) {
 
   return (
     <div className="max-w-6xl mx-auto">
+      {/* Header with Logo, Back Button, and User Profile */}
+      <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-full transition-colors">
+            <ArrowLeft className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
+          </Link>
+          <Link href="/" className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] rounded-full flex items-center justify-center">
+              <Home className="w-4 h-4 text-white dark:text-[#171717]" />
+            </div>
+            <span className="font-medium text-[#171717] dark:text-[#fafafa]">متجري</span>
+          </Link>
+        </div>
+        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+      </div>
+
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">الطلبات</h1>
@@ -640,6 +659,26 @@ function OrdersContent({ storeId }: { storeId: string }) {
           </div>
         )}
       </SlideOver>
+
+      {/* Fixed Bottom Navigation - 200px centered */}
+      <div className="fixed bottom-4 start-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
+        <Link
+          href={`/editor/${storeSlug}`}
+          className="flex flex-col items-center gap-1 text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
+        >
+          <Package className="w-5 h-5" />
+          <span className="text-xs">المنتجات</span>
+        </Link>
+        <div
+          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
+        >
+          <Truck className="w-5 h-5" />
+          <span className="text-xs">الطلبات</span>
+        </div>
+      </div>
+      
+      {/* Add padding bottom to avoid content being hidden behind fixed nav */}
+      <div className="h-20"></div>
     </div>
   );
 }
@@ -653,7 +692,7 @@ export default function OrdersPage() {
     storeSlug ? { slug: storeSlug } : "skip"
   );
   
-  const storeId = store?._id;
+  const storeId = store?._id as string | undefined;
   
   if (!store && storeSlug) {
     return (
@@ -676,7 +715,7 @@ export default function OrdersPage() {
   return (
     <BillingProvider storeSlug={storeSlug} storeId={storeId}>
       <RealtimeProvider storeId={storeId}>
-        <OrdersContent storeId={storeId} />
+        <OrdersContent storeId={storeId} storeSlug={storeSlug} />
       </RealtimeProvider>
     </BillingProvider>
   );
