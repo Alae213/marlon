@@ -18,7 +18,17 @@ function centerAspectCrop(
   mediaHeight: number,
   aspect: number
 ) {
-  return centerAspectCrop(mediaWidth, mediaHeight, aspect);
+  const crop = makeAspectCrop(
+    {
+      unit: "%",
+      width: 90,
+    },
+    aspect,
+    mediaWidth,
+    mediaHeight
+  );
+
+  return centerCrop(crop, mediaWidth, mediaHeight);
 }
 
 export function ImageCropper({ 

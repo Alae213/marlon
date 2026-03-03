@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { X, Plus, Edit2, Check, GripVertical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, Plus, Edit2, Check, GripVertical, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Input } from "@/components/core/input";
 
@@ -18,7 +18,23 @@ interface Variant {
 interface VariantGroup {
   name: string;
   variants: VariantOption[];
+  isHidden?: boolean;
 }
+
+const PREBUILT_OPTIONS = {
+  size: {
+    name: "المقاس",
+    variants: ["صغير", "متوسط", "كبير", "XL"]
+  },
+  color: {
+    name: "اللون",
+    variants: ["أحمر", "أزرق", "أخضر", "أسود", "أبيض"]
+  },
+  custom: {
+    name: "مخصص",
+    variants: []
+  }
+};
 
 interface InlineVariantEditorProps {
   variants: VariantGroup[];
@@ -31,12 +47,37 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
   const [editingOption, setEditingOption] = useState<{ group: string; option: string } | null>(null);
   const [groupInput, setGroupInput] = useState("");
   const [optionInput, setOptionInput] = useState("");
+  const [showPrebuiltDropdown, setShowPrebuiltDropdown] = useState(false);
 
-  const handleAddGroup = () => {
-    const newVariants: VariantGroup[] = [
-      ...localVariants,
-      { name: `خيار ${localVariants.length + 1}`, variants: [] }
-    ];
+  // Sync with parent props
+  useEffect(() => {
+    setLocalVariants(variants);
+  }, [variants]);
+
+  const handleAddGroup = (prebuiltKey?: "size" | "color" | "custom") => {
+    let newGroup: VariantGroup;
+    
+    if (prebuiltKey && PREBUILT_OPTIONS[prebuiltKey]) {
+      const prebuilt = PREBUILT_OPTIONS[prebuiltKey];
+      newGroup = {
+        name: prebuilt.name,
+        variants: prebuilt.variants.map(v => ({ name: v })),
+        isHidden: false
+      };
+    } else {
+      newGroup = { name: `خيار ${localVariants.length + 1}`, variants: [], isHidden: false };
+    }
+    
+    const newVariants: VariantGroup[] = [...localVariants, newGroup];
+    setLocalVariants(newVariants);
+    onChange(newVariants);
+    setShowPrebuiltDropdown(false);
+  };
+
+  const handleToggleVisibility = (groupName: string) => {
+    const newVariants = localVariants.map(v =>
+      v.name === groupName ? { ...v, isHidden: !v.isHidden } : v
+    );
     setLocalVariants(newVariants);
     onChange(newVariants);
   };
@@ -150,12 +191,25 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
                 </button>
               )}
             </div>
-            <button
-              onClick={() => handleDeleteGroup(group.name)}
-              className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => handleToggleVisibility(group.name)}
+                className={`p-1.5 rounded transition-colors ${
+                  group.isHidden 
+                    ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20" 
+                    : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                }`}
+                title={group.isHidden ? "إظهار في المتجر" : "إخفاء من المتجر"}
+              >
+                {group.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+              <button
+                onClick={() => handleDeleteGroup(group.name)}
+                className="p-1 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2">
@@ -212,10 +266,43 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
         </div>
       ))}
 
-      <Button variant="outline" onClick={handleAddGroup} className="w-full">
-        <Plus className="w-4 h-4" />
-        إضافة مجموعة خيارات
-      </Button>
+      <div className="relative">
+        <Button 
+          variant="outline" 
+          onClick={() => setShowPrebuiltDropdown(!showPrebuiltDropdown)} 
+          className="w-full"
+        >
+          <Plus className="w-4 h-4" />
+          إضافة مجموعة خيارات
+          <ChevronDown className={`w-4 h-4 transition-transform ${showPrebuiltDropdown ? "rotate-180" : ""}`} />
+        </Button>
+        
+        {showPrebuiltDropdown && (
+          <div className="absolute top-full start-0 end-0 mt-2 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 rounded-xl shadow-lg z-10 overflow-hidden">
+            <button
+              onClick={() => handleAddGroup("size")}
+              className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border-b border-zinc-100 dark:border-zinc-800"
+            >
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">المقاس</span>
+              <p className="text-xs text-zinc-500 mt-0.5">صغير، متوسط، كبير، XL</p>
+            </button>
+            <button
+              onClick={() => handleAddGroup("color")}
+              className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border-b border-zinc-100 dark:border-zinc-800"
+            >
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">اللون</span>
+              <p className="text-xs text-zinc-500 mt-0.5">أحمر، أزرق، أخضر، أسود، أبيض</p>
+            </button>
+            <button
+              onClick={() => handleAddGroup("custom")}
+              className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
+            >
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">مخصص</span>
+              <p className="text-xs text-zinc-500 mt-0.5">إضافة خيارات خاصة بك</p>
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

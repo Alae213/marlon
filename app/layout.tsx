@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
+import { ToastProvider } from "@/contexts/toast-context";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -30,11 +31,13 @@ export default function RootLayout({
     return (
       <ClerkProvider publishableKey={publishableKey}>
         <ConvexClientProvider>
-          <html lang="en" dir="ltr">
-            <body className={`${dmSans.variable} antialiased`}>
-              {children}
-            </body>
-          </html>
+          <ToastProvider>
+            <html lang="en" dir="ltr">
+              <body className={`${dmSans.variable} antialiased`}>
+                {children}
+              </body>
+            </html>
+          </ToastProvider>
         </ConvexClientProvider>
       </ClerkProvider>
     );
@@ -44,7 +47,9 @@ export default function RootLayout({
     <html lang="en" dir="ltr">
       <body className={`${dmSans.variable} antialiased`}>
         <ConvexClientProvider>
-          {children}
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ConvexClientProvider>
       </body>
     </html>

@@ -25,6 +25,11 @@ export default function StorefrontPage() {
   const { addItem } = useCart();
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
+
+  const navbarContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    store?._id ? { storeId: store._id as Id<"stores">, section: "navbar" } : "skip"
+  );
   
   const products = useQuery(
     api.products.getProducts,
@@ -37,8 +42,55 @@ export default function StorefrontPage() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const currentNavbar: any = navbarContent?.content;
+  const navbarBg = currentNavbar?.background ?? "light";
+  const navbarText = currentNavbar?.textColor ?? "dark";
+  const navbarLogoUrl = currentNavbar?.logoUrl;
+
+  const navbarBgClass =
+    navbarBg === "dark"
+      ? "bg-[#0a0a0a]"
+      : navbarBg === "transparent"
+        ? "bg-transparent"
+        : "bg-white";
+
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[#171717]";
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-12">
+      <div className={`border border-[#e5e5e5] dark:border-[#262626] ${navbarBgClass}`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0">
+              {navbarLogoUrl ? (
+                <Image
+                  src={navbarLogoUrl}
+                  alt="logo"
+                  width={40}
+                  height={40}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <Package className="w-5 h-5 text-[#a3a3a3]" />
+              )}
+            </div>
+            <div className={`font-medium truncate ${navbarTextClass}`}>{store?.name || "المتجر"}</div>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-5">
+            <span className={`text-sm ${navbarTextClass}`}>Shop</span>
+            <span className={`text-sm ${navbarTextClass}`}>FAQ</span>
+            <span className={`text-sm ${navbarTextClass}`}>Help</span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}>
+              <ShoppingCart className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="mb-10">
         <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-6 text-center">
           {store?.name || "المتجر"}

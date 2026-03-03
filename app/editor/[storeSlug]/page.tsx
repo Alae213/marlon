@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home } from "lucide-react";
+import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
@@ -13,10 +13,28 @@ import { Modal } from "@/components/core/modal";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
 import { ImageUploader } from "@/components/image-cropper";
+import { ImageCropper } from "@/components/image-cropper";
 import { InlineVariantEditor } from "@/components/inline-variant-editor";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+
+const ALGERIAN_WILAYAS = [
+  "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
+  "تمنراست", "تبسة", "تلمسان", "تيارت", "وهران", "سعيدة", "سكيكدة", "سطيف", "سيدي بلعباس", "عنابة",
+  "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة", "وادي رهيو", "بسكرة", "خنشلة", "سوق أهراس",
+  "تيبازة", "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان", "تيسمسيلت", "الوادي", "مشرع",
+  "برج بوعريريج", "بومرداس", "الطارف", "تندوف", "تيندوف", "جانجا", "المكان", "أولاد جلال", "بشار", "برج باجي مختار",
+  "عين صالح", "عين قزام", "تقرت", "جانت", "المريكة"
+];
+
+const DEFAULT_DELIVERY_PRICES: Record<string, { home: number; office: number }> = {
+  "أدرار": { home: 700, office: 500 },
+  "الجزائر": { home: 0, office: 0 },
+  "وهران": { home: 500, office: 350 },
+  "قسنطينة": { home: 500, office: 350 },
+  "عنابة": { home: 500, office: 350 },
+};
 
 interface Product {
   _id: Id<"products">;
@@ -41,9 +59,12 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isNavbarHovered, setIsNavbarHovered] = useState(false);
+  const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   
   // Inline editing states
-  const [editingField, setEditingField] = useState<{ productId: string; field: "name" | "basePrice" | "oldPrice" } | null>(null);
+  const [editingField, setEditingField] = useState<{ productId: string; field: "name" | "basePrice" | "oldPrice" | "heroTitle" | "heroCtaText" | "footerPhone" | "footerEmail" | "footerCopyright" } | null>(null);
   const [editValue, setEditValue] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -56,6 +77,40 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   const updateProduct = useMutation(api.products.updateProduct);
   const archiveProduct = useMutation(api.products.archiveProduct);
   const unarchiveProduct = useMutation(api.products.unarchiveProduct);
+
+  const navbarContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    storeId ? { storeId: storeId as Id<"stores">, section: "navbar" } : "skip"
+  );
+
+  const heroContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    storeId ? { storeId: storeId as Id<"stores">, section: "hero" } : "skip"
+  );
+
+  const footerContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    storeId ? { storeId: storeId as Id<"stores">, section: "footer" } : "skip"
+  );
+
+  const deliveryPricing = useQuery(
+    api.siteContent.getDeliveryPricing,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
+  );
+
+  const deliveryIntegration = useQuery(
+    api.siteContent.getDeliveryIntegration,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
+  );
+
+  const setNavbarStyles = useMutation(api.siteContent.setNavbarStyles);
+  const setHeroStyles = useMutation(api.siteContent.setHeroStyles);
+  const setFooterStyles = useMutation(api.siteContent.setFooterStyles);
+  const setDeliveryPricing = useMutation(api.siteContent.setDeliveryPricing);
+  const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
+  const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
+  const generateUploadUrl = useMutation(api.siteContent.generateUploadUrl);
+  const setLogoAndSyncFooter = useMutation(api.siteContent.setLogoAndSyncFooter);
 
   const isLoading = !products;
 
@@ -168,6 +223,69 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     }
   };
 
+  const uploadToConvexStorage = async (dataUrl: string) => {
+    const uploadUrl = await generateUploadUrl({});
+    const blob = await (await fetch(dataUrl)).blob();
+    const res = await fetch(uploadUrl, {
+      method: "POST",
+      headers: { "Content-Type": blob.type || "image/jpeg" },
+      body: blob,
+    });
+    if (!res.ok) throw new Error("Upload failed");
+    const json = await res.json();
+    return json.storageId as string;
+  };
+
+  const handleSelectLogoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onload = () => setLogoCropSrc(reader.result as string);
+    reader.readAsDataURL(file);
+  };
+
+  const handleApplyLogoCrop = async (croppedDataUrl: string) => {
+    setIsUploadingLogo(true);
+    try {
+      const storageId = await uploadToConvexStorage(croppedDataUrl);
+      await setLogoAndSyncFooter({
+        storeId: storeId as Id<"stores">,
+        logoStorageId: storageId,
+      });
+      setLogoCropSrc(null);
+    } catch (error) {
+      console.error("Failed to upload logo:", error);
+    }
+    setIsUploadingLogo(false);
+  };
+
+  const currentNavbar: any = navbarContent?.content;
+  const navbarBg = currentNavbar?.background ?? "light";
+  const navbarText = currentNavbar?.textColor ?? "dark";
+  const navbarLogoUrl = currentNavbar?.logoUrl;
+
+  const navbarBgClass =
+    navbarBg === "dark"
+      ? "bg-[#0a0a0a]"
+      : navbarBg === "transparent"
+        ? "bg-transparent"
+        : "bg-white";
+
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[#171717]";
+
+  const handleSetNavbarStyle = async (next: { background?: "dark" | "light" | "transparent"; textColor?: "dark" | "light" }) => {
+    try {
+      await setNavbarStyles({
+        storeId: storeId as Id<"stores">,
+        background: next.background,
+        textColor: next.textColor,
+      });
+    } catch (error) {
+      console.error("Failed to update navbar style:", error);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       {/* Header with Logo, Back Button, and User Profile */}
@@ -189,16 +307,471 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
         <div className="flex items-center gap-3">
-          <Button variant="outline" onClick={() => setIsSettingsOpen(true)}>
+          <Button 
+            variant="outline" 
+            onClick={() => setIsSettingsOpen(true)}
+            aria-label="فتح الإعدادات"
+          >
             <Settings className="w-4 h-4" />
             الإعدادات
           </Button>
-          <Button onClick={() => setIsAddModalOpen(true)}>
+          <Button 
+            onClick={() => setIsAddModalOpen(true)}
+            aria-label="إضافة منتج جديد"
+          >
             <Plus className="w-4 h-4" />
             إضافة منتج
           </Button>
         </div>
       </div>
+
+      <Card className="mb-6" padding="none">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">شريط التنقل (Navbar)</h2>
+            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+          </div>
+
+          <div
+            className={`relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden ${navbarBgClass}`}
+            onMouseEnter={() => setIsNavbarHovered(true)}
+            onMouseLeave={() => setIsNavbarHovered(false)}
+          >
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0">
+                  {navbarLogoUrl ? (
+                    <img src={navbarLogoUrl} alt="logo" className="w-full h-full object-cover" />
+                  ) : (
+                    <Package className="w-5 h-5 text-[#a3a3a3]" />
+                  )}
+                </div>
+                <div className={`font-medium truncate ${navbarTextClass}`}>متجرك</div>
+              </div>
+
+              <div className="hidden sm:flex items-center gap-5">
+                <span className={`text-sm ${navbarTextClass}`}>المتجر</span>
+                <span className={`text-sm ${navbarTextClass}`}>الأسئلة</span>
+                <span className={`text-sm ${navbarTextClass}`}>مساعدة</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button 
+                  className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}
+                  aria-label="السلة"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {isNavbarHovered && (
+              <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg">
+                <div className="flex items-center gap-1">
+                  <Palette className="w-4 h-4 text-[#737373]" />
+                  <button
+                    onClick={() => handleSetNavbarStyle({ background: "light" })}
+                    className={`px-2 py-1 text-xs border ${navbarBg === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    فاتح
+                  </button>
+                  <button
+                    onClick={() => handleSetNavbarStyle({ background: "dark" })}
+                    className={`px-2 py-1 text-xs border ${navbarBg === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    داكن
+                  </button>
+                  <button
+                    onClick={() => handleSetNavbarStyle({ background: "transparent" })}
+                    className={`px-2 py-1 text-xs border ${navbarBg === "transparent" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    شفاف
+                  </button>
+                </div>
+
+                <div className="w-px h-6 bg-[#e5e5e5] dark:bg-[#262626]" />
+
+                <div className="flex items-center gap-1">
+                  <Type className="w-4 h-4 text-[#737373]" />
+                  <button
+                    onClick={() => handleSetNavbarStyle({ textColor: "dark" })}
+                    className={`px-2 py-1 text-xs border ${navbarText === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    نص داكن
+                  </button>
+                  <button
+                    onClick={() => handleSetNavbarStyle({ textColor: "light" })}
+                    className={`px-2 py-1 text-xs border ${navbarText === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    نص فاتح
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="text-xs text-[#737373]">رفع شعار (يتم مزامنته تلقائياً مع الفوتر)</div>
+            <div className="flex items-center gap-2">
+              <input
+                id="navbar-logo-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleSelectLogoFile}
+                className="hidden"
+              />
+              <Button variant="outline" disabled={isUploadingLogo} onClick={() => document.getElementById("navbar-logo-upload")?.click()}>
+                <Upload className="w-4 h-4" />
+                {isUploadingLogo ? "جاري الرفع..." : "رفع الشعار"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Hero Section Editor */}
+      <Card className="mb-6" padding="none">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الرئيسية (Hero)</h2>
+            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+          </div>
+
+          {(() => {
+            const currentHero: any = heroContent?.content;
+            const heroTitle = currentHero?.title ?? "متجرنا الإلكتروني";
+            const heroCtaText = currentHero?.ctaText ?? "تسوق الآن";
+            const heroCtaColor = currentHero?.ctaColor ?? "#171717";
+            const heroLayout = currentHero?.layout ?? "center";
+            const heroBgUrl = currentHero?.backgroundImageUrl;
+
+            return (
+              <div
+                className="relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden min-h-[200px] flex flex-col items-center justify-center p-8"
+                style={heroBgUrl ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+              >
+                {!heroBgUrl && (
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#171717] dark:to-[#262626]" />
+                )}
+
+                <div className={`relative z-10 text-center w-full ${heroLayout === "left" ? "text-start items-start" : heroLayout === "right" ? "text-end items-end" : "text-center items-center"} flex flex-col`}>
+                  {/* Hero Title - Inline Edit */}
+                  {editingField?.field === "heroTitle" ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={async () => {
+                        if (editValue.trim()) {
+                          await setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
+                        }
+                        setEditingField(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          if (editValue.trim()) {
+                            setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
+                          }
+                          setEditingField(null);
+                        } else if (e.key === "Escape") {
+                          setEditingField(null);
+                        }
+                      }}
+                      className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] focus:outline-none text-center"
+                      placeholder="عنوان الصفحة"
+                    />
+                  ) : (
+                    <h1 
+                      className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] mb-4 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                      onClick={() => {
+                        setEditingField({ productId: "", field: "heroTitle" });
+                        setEditValue(heroTitle);
+                      }}
+                    >
+                      {heroTitle}
+                    </h1>
+                  )}
+
+                  {/* Hero CTA Button - Inline Edit */}
+                  {editingField?.field === "heroCtaText" ? (
+                    <input
+                      autoFocus
+                      type="text"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      onBlur={async () => {
+                        if (editValue.trim()) {
+                          await setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
+                        }
+                        setEditingField(null);
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          if (editValue.trim()) {
+                            setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
+                          }
+                          setEditingField(null);
+                        } else if (e.key === "Escape") {
+                          setEditingField(null);
+                        }
+                      }}
+                      className="px-6 py-3 text-white font-medium bg-transparent border-b-2 focus:outline-none"
+                      style={{ backgroundColor: heroCtaColor }}
+                      placeholder="نص الزر"
+                    />
+                  ) : (
+                    <button 
+                      className="px-6 py-3 text-white font-medium cursor-pointer hover:opacity-90 transition-opacity"
+                      style={{ backgroundColor: heroCtaColor }}
+                      onClick={() => {
+                        setEditingField({ productId: "", field: "heroCtaText" });
+                        setEditValue(heroCtaText);
+                      }}
+                    >
+                      {heroCtaText}
+                    </button>
+                  )}
+                </div>
+
+                {/* Layout Toggle - Show on hover */}
+                <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
+                  <span className="text-xs text-[#737373]">الموقع:</span>
+                  <button
+                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "left" })}
+                    className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    يسار
+                  </button>
+                  <button
+                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "center" })}
+                    className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    وسط
+                  </button>
+                  <button
+                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "right" })}
+                    className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                  >
+                    يمين
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          <div className="mt-4 flex items-center justify-between gap-3">
+            <div className="text-xs text-[#737373]">تغيير صورة الخلفية</div>
+            <div className="flex items-center gap-2">
+              <input
+                id="hero-bg-upload"
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (!file || !file.type.startsWith("image/")) return;
+                  const reader = new FileReader();
+                  reader.onload = async () => {
+                    try {
+                      const storageId = await uploadToConvexStorage(reader.result as string);
+                      await setHeroStyles({ storeId: storeId as Id<"stores">, backgroundImageStorageId: storageId });
+                    } catch (error) {
+                      console.error("Failed to upload hero background:", error);
+                    }
+                  };
+                  reader.readAsDataURL(file);
+                }}
+                className="hidden"
+              />
+              <Button variant="outline" onClick={() => document.getElementById("hero-bg-upload")?.click()}>
+                <Upload className="w-4 h-4" />
+                رفع صورة
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      {/* Footer Section Editor */}
+      <Card className="mb-6" padding="none">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
+            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+          </div>
+
+          {(() => {
+            const currentFooter: any = footerContent?.content;
+            const footerLogoUrl = navbarContent?.content?.logoUrl;
+            const contactPhone = currentFooter?.contactPhone ?? "";
+            const contactEmail = currentFooter?.contactEmail ?? "";
+            const copyright = currentFooter?.copyright ?? "جميع الحقوق محفوظة";
+            const socialLinks = currentFooter?.socialLinks ?? [];
+
+            return (
+              <div className="border border-[#e5e5e5] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#171717] p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Logo Section */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0">
+                      {footerLogoUrl ? (
+                        <img src={footerLogoUrl} alt="logo" className="w-full h-full object-cover" />
+                      ) : (
+                        <Package className="w-5 h-5 text-[#a3a3a3]" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">متجرك</div>
+                      <div className="text-xs text-[#737373]">الشعار مُزامَن من Navbar</div>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">معلومات التواصل</div>
+                    
+                    {/* Phone - Inline Edit */}
+                    {editingField?.field === "footerPhone" ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="رقم الهاتف"
+                      />
+                    ) : (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerPhone" });
+                          setEditValue(contactPhone);
+                        }}
+                      >
+                        <span className="text-[#737373]">📱</span>
+                        <span>{contactPhone || "أضف رقم الهاتف"}</span>
+                      </div>
+                    )}
+
+                    {/* Email - Inline Edit */}
+                    {editingField?.field === "footerEmail" ? (
+                      <input
+                        autoFocus
+                        type="email"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="البريد الإلكتروني"
+                      />
+                    ) : (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerEmail" });
+                          setEditValue(contactEmail);
+                        }}
+                      >
+                        <span className="text-[#737373]">✉️</span>
+                        <span>{contactEmail || "أضف البريد الإلكتروني"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Copyright */}
+                  <div className="flex items-center">
+                    {editingField?.field === "footerCopyright" ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="نص الحقوق"
+                      />
+                    ) : (
+                      <div 
+                        className="text-sm text-[#737373] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerCopyright" });
+                          setEditValue(copyright);
+                        }}
+                      >
+                        © {copyright}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Social Links Row */}
+                <div className="mt-6 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#737373]">روابط التواصل الاجتماعي</span>
+                    <div className="flex items-center gap-2">
+                      {["facebook", "instagram", "twitter", "whatsapp"].map((platform) => {
+                        const link = socialLinks.find((l: any) => l.platform === platform);
+                        return (
+                          <button
+                            key={platform}
+                            className={`w-8 h-8 flex items-center justify-center border ${link?.enabled ? "border-[#171717] dark:border-[#fafafa]" : "border-[#e5e5e5] dark:border-[#262626]"}`}
+                            onClick={async () => {
+                              const newLinks = link?.enabled 
+                                ? socialLinks.filter((l: any) => l.platform !== platform)
+                                : [...socialLinks.filter((l: any) => l.platform !== platform), { platform, url: "", enabled: true }];
+                              await setFooterStyles({ storeId: storeId as Id<"stores">, socialLinks: newLinks });
+                            }}
+                            title={platform}
+                          >
+                            {platform === "facebook" && "f"}
+                            {platform === "instagram" && "ig"}
+                            {platform === "twitter" && "x"}
+                            {platform === "whatsapp" && "wa"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </Card>
 
       <Card padding="none">
         {activeProducts.length === 0 ? (
@@ -426,6 +999,15 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
         )}
       </Card>
 
+      {logoCropSrc && (
+        <ImageCropper
+          imageSrc={logoCropSrc}
+          aspectRatio={1}
+          onCancel={() => setLogoCropSrc(null)}
+          onCropComplete={handleApplyLogoCrop}
+        />
+      )}
+
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
@@ -506,6 +1088,7 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
     })) : undefined;
     
     const productData = {
+      ...(product?._id ? { productId: product._id } : {}),
       name,
       description,
       basePrice: parseInt(basePrice),
@@ -589,9 +1172,9 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
 }
 
 function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
-  const [activeTab, setActiveTab] = useState("delivery");
-  
   if (!isOpen) return null;
+
+  const [activeTab, setActiveTab] = useState("delivery");
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
@@ -655,150 +1238,255 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
 }
 
 function DeliveryPricingSettings({ storeId }: { storeId: string }) {
-  const [pricing, setPricing] = useState<Record<string, { stopdesk: number; domicile: number }>>({});
-  const updatePricing = useMutation(api.stores.updateDeliveryPricing);
+  const deliveryPricing = useQuery(
+    api.siteContent.getDeliveryPricing,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
+  );
+  const setDeliveryPricing = useMutation(api.siteContent.setDeliveryPricing);
   const [isSaving, setIsSaving] = useState(false);
+  const [savedMessage, setSavedMessage] = useState(false);
 
   const wilayas = [
-    "الجزائر", "قسنطينة", "وهران", "باتنة", "تيارت", "تبسة", "تلمسان", "تيارت",
-    "بسكرة", "بشار", "بجاية", "عنابة", "الطارف", "المسيلة", "مستغانم", "المدية",
-    "غرداية", "غليزان", "ورقلة", "سيدي بلعباس", "سوق أهراس", "تيبازة", "ميلة",
-    "عين الدفلى", "النعامة", "عين تموشنت", "خنشلة", "سعيدة", "جيجل", "سكيكدة",
-    "أولاد جلال", "برج بوعريريج", "مليانة", "عطار", "بريكة", "الوادي", "تامنة",
-    " الطارف", "زريبة", "توقرت", "جبلية", "أولاد عيسى", " الشلف"
+    "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
+    "تمنراست", "تبسة", "تلمسان", "تيارت", "وهران", "سعيدة", "سكيكدة", "سطيف", "سيدي بلعباس", "عنابة",
+    "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة", "وادي رهيو", "خنشلة", "سوق أهراس", "تيبازة",
+    "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان", "تيسمسيلت", "الوادي", "مشرع", "برج بوعريريج",
+    "بومرداس", "الطارف", "تندوف", "تيندوف", "جانجا", "المكان", "أولاد جلال", "برج باجي مختار", "عين صالح", "عين قزام",
+    "تقرت", "جانت", "المريكة"
   ];
 
-  const handleSave = async () => {
-    setIsSaving(true);
+  const handleSave = async (wilaya: string, field: "homeDelivery" | "officeDelivery", value: number) => {
     try {
-      // Save pricing for each wilaya
-      for (const [wilaya, prices] of Object.entries(pricing)) {
-        await updatePricing({
-          storeId: storeId as Id<"stores">,
-          wilaya,
-          homeDelivery: prices.domicile,
-          officeDelivery: prices.stopdesk,
-        });
-      }
+      await setDeliveryPricing({
+        storeId: storeId as Id<"stores">,
+        wilaya,
+        [field]: value,
+      });
+      setSavedMessage(true);
+      setTimeout(() => setSavedMessage(false), 2000);
     } catch (error) {
       console.error("Failed to save pricing:", error);
     }
-    setIsSaving(false);
   };
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">أسعار التوصيل لكل ولاية</h3>
-      <div className="grid grid-cols-2 gap-4">
-        {wilayas.slice(0, 10).map((wilaya) => (
-          <div key={wilaya} className="p-3 border border-[#e5e5e5] dark:border-[#404040]">
-            <p className="text-sm font-medium mb-2">{wilaya}</p>
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-xs text-[#737373]">مكتب</label>
-                <input
-                  type="number"
-                  className="w-full h-8 px-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-sm"
-                  placeholder="السعر"
-                  onChange={(e) => setPricing(prev => ({
-                    ...prev,
-                    [wilaya]: { ...prev[wilaya], stopdesk: parseInt(e.target.value) || 0 }
-                  }))}
-                />
-              </div>
-              <div>
-                <label className="text-xs text-[#737373]">منزل</label>
-                <input
-                  type="number"
-                  className="w-full h-8 px-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-sm"
-                  placeholder="السعر"
-                  onChange={(e) => setPricing(prev => ({
-                    ...prev,
-                    [wilaya]: { ...prev[wilaya], domicile: parseInt(e.target.value) || 0 }
-                  }))}
-                />
-              </div>
-            </div>
-          </div>
-        ))}
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-[#171717] dark:text-[#fafafa]">أسعار التوصيل لكل ولاية</h3>
+        {savedMessage && (
+          <span className="text-sm text-green-600">✓ تم الحفظ</span>
+        )}
       </div>
-      <p className="text-xs text-[#737373]">عرض 10 ولايات فقط - تمت إضافة المزيد</p>
-      <Button onClick={handleSave} disabled={isSaving} className="w-full">
-        {isSaving ? "جاري الحفظ..." : "حفظ الأسعار"}
-      </Button>
+
+      <div className="border border-[#e5e5e5] dark:border-[#262626] rounded-lg overflow-hidden">
+        <div className="grid grid-cols-3 gap-4 bg-[#f5f5f5] dark:bg-[#171717] p-3 text-sm font-medium text-[#525252] dark:text-[#d4d4d4]">
+          <span>الولاية</span>
+          <span className="text-center">توصيل للمنزل (د.ج)</span>
+          <span className="text-center">توصيل للمكتب (د.ج)</span>
+        </div>
+        <div className="max-h-[400px] overflow-y-auto">
+          {wilayas.map((wilaya) => {
+            const pricing = deliveryPricing?.find(p => p.wilaya === wilaya);
+            const homePrice = pricing?.homeDelivery ?? 600;
+            const officePrice = pricing?.officeDelivery ?? 400;
+
+            return (
+              <div key={wilaya} className="grid grid-cols-3 gap-4 p-3 border-t border-[#e5e5e5] dark:border-[#262626] items-center">
+                <span className="text-sm text-[#171717] dark:text-[#fafafa]">{wilaya}</span>
+                <input
+                  type="number"
+                  defaultValue={homePrice}
+                  onBlur={(e) => handleSave(wilaya, "homeDelivery", parseInt(e.target.value) || 0)}
+                  className="h-8 px-2 text-center text-sm border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
+                  placeholder="0"
+                />
+                <input
+                  type="number"
+                  defaultValue={officePrice}
+                  onBlur={(e) => handleSave(wilaya, "officeDelivery", parseInt(e.target.value) || 0)}
+                  className="h-8 px-2 text-center text-sm border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
+                  placeholder="0"
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      <p className="text-xs text-[#737373]">
+        * الأسعار الافتراضية: توصيل للمنزل 600 د.ج | توصيل للمكتب 400 د.ج
+      </p>
     </div>
   );
 }
 
 function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
-  const [provider, setProvider] = useState<"none" | "zr_express" | "yalidine">("none");
+  const deliveryIntegration = useQuery(
+    api.siteContent.getDeliveryIntegration,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
+  );
+  const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
+  const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
+
+  const [provider, setProvider] = useState<"none" | "zr-express" | "yalidine">("none");
   const [apiKey, setApiKey] = useState("");
   const [apiToken, setApiToken] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [testResult, setTestResult] = useState<"success" | "error" | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [savedMessage, setSavedMessage] = useState(false);
+
+  useEffect(() => {
+    if (deliveryIntegration) {
+      setProvider((deliveryIntegration.provider as any) || "none");
+      setApiKey(deliveryIntegration.apiKey || "");
+      setApiToken(deliveryIntegration.apiToken || "");
+    }
+  }, [deliveryIntegration]);
+
+  const handleProviderChange = async (newProvider: "none" | "zr-express" | "yalidine") => {
+    setProvider(newProvider);
+    setTestResult(null);
+    try {
+      await setDeliveryIntegration({
+        storeId: storeId as Id<"stores">,
+        provider: newProvider,
+        apiKey: newProvider === "none" ? "" : apiKey,
+        apiToken: newProvider === "none" ? "" : apiToken,
+      });
+      setSavedMessage(true);
+      setTimeout(() => setSavedMessage(false), 2000);
+    } catch (error) {
+      console.error("Failed to save provider:", error);
+    }
+  };
+
+  const handleSaveCredentials = async () => {
+    if (provider === "none") return;
+    setIsSaving(true);
+    try {
+      await setDeliveryIntegration({
+        storeId: storeId as Id<"stores">,
+        provider,
+        apiKey,
+        apiToken,
+      });
+      setSavedMessage(true);
+      setTimeout(() => setSavedMessage(false), 2000);
+    } catch (error) {
+      console.error("Failed to save credentials:", error);
+    }
+    setIsSaving(false);
+  };
+
+  const handleTestConnection = async () => {
+    if (!apiKey || !apiToken) return;
+    setIsTesting(true);
+    setTestResult(null);
+    try {
+      const result = await testDeliveryConnection({
+        storeId: storeId as Id<"stores">,
+        provider: provider as "zr-express" | "yalidine",
+        apiKey,
+        apiToken,
+      });
+      setTestResult(result);
+    } catch (error) {
+      setTestResult({ success: false, message: "فشل الاتصال" });
+    }
+    setIsTesting(false);
+  };
 
   return (
     <div className="space-y-4">
-      <h3 className="font-medium">اختر شركة التوصيل</h3>
-      
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium text-[#171717] dark:text-[#fafafa]">تكامل شركة التوصيل</h3>
+        {savedMessage && (
+          <span className="text-sm text-green-600">✓ تم الحفظ</span>
+        )}
+      </div>
+
       <div className="flex gap-3">
-        <button
-          onClick={() => setProvider("none")}
-          className={`flex-1 py-3 border ${
-            provider === "none" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
-          }`}
-        >
-          لا شيء
-        </button>
-        <button
-          onClick={() => setProvider("zr_express")}
-          className={`flex-1 py-3 border ${
-            provider === "zr_express" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
-          }`}
-        >
-          ZR Express
-        </button>
-        <button
-          onClick={() => setProvider("yalidine")}
-          className={`flex-1 py-3 border ${
-            provider === "yalidine" ? "border-[#171717] bg-[#f5f5f5]" : "border-[#e5e5e5]"
-          }`}
-        >
-          Yalidine
-        </button>
+        {[
+          { value: "none", label: "بدون" },
+          { value: "zr-express", label: "ZR Express" },
+          { value: "yalidine", label: "Yalidine" },
+        ].map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => handleProviderChange(opt.value as any)}
+            className={`flex-1 py-3 text-sm font-medium border ${
+              provider === opt.value
+                ? "border-[#171717] dark:border-[#fafafa] bg-[#f5f5f5] dark:bg-[#171717] text-[#171717] dark:text-[#fafafa]"
+                : "border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#d4d4d4]"
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
       </div>
 
       {provider !== "none" && (
         <div className="space-y-3 mt-4">
           <div>
-            <label className="block text-sm font-medium mb-1">API Key</label>
+            <label className="block text-sm font-medium mb-1 text-[#525252] dark:text-[#d4d4d4]">مفتاح API</label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
-              placeholder="أدخل API Key"
+              onBlur={handleSaveCredentials}
+              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
+              placeholder="أدخل مفتاح API"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1">API Token</label>
+            <label className="block text-sm font-medium mb-1 text-[#525252] dark:text-[#d4d4d4]">رمز API</label>
             <input
               type="password"
               value={apiToken}
               onChange={(e) => setApiToken(e.target.value)}
-              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
-              placeholder="أدخل API Token"
+              onBlur={handleSaveCredentials}
+              className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
+              placeholder="أدخل رمز API"
             />
           </div>
-          
+
           <div className="flex gap-3">
-            <Button variant="outline" className="flex-1">
-              اختبار الاتصال
+            <Button
+              variant="outline"
+              onClick={handleTestConnection}
+              disabled={!apiKey || !apiToken || isTesting}
+              className="flex-1"
+            >
+              {isTesting ? "جاري الاختبار..." : "اختبار الاتصال"}
             </Button>
-            <Button className="flex-1" disabled={isSaving}>
+            <Button
+              onClick={handleSaveCredentials}
+              disabled={isSaving}
+              className="flex-1"
+            >
               {isSaving ? "جاري الحفظ..." : "حفظ"}
             </Button>
           </div>
+
+          {testResult && (
+            <div className={`p-3 rounded-lg text-sm ${testResult.success ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"}`}>
+              {testResult.message}
+            </div>
+          )}
+
+          <p className="text-xs text-[#737373]">
+            {provider === "zr-express" && "احصل على مفتاح API من موقع ZR Express"}
+            {provider === "yalidine" && "احصل على مفتاح ورمز API من موقع Yalidine"}
+          </p>
+        </div>
+      )}
+
+      {provider === "none" && (
+        <div className="p-4 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg">
+          <p className="text-sm text-[#737373]">
+            لم يتم اختيار شركة توصيل. سيتم استخدام الوضع اليدوي للشحن.
+          </p>
         </div>
       )}
     </div>
