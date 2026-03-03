@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type } from "lucide-react";
+import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
@@ -307,6 +307,15 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
         <div className="flex items-center gap-3">
+          <a
+            href={`/${storeSlug}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center justify-center gap-2 font-medium transition-all h-10 px-4 text-sm border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#171717]"
+          >
+            <ExternalLink className="w-4 h-4" />
+            معاينة
+          </a>
           <Button 
             variant="outline" 
             onClick={() => setIsSettingsOpen(true)}

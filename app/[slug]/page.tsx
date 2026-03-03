@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, ShoppingCart, Package } from "lucide-react";
-import { useCart } from "@/contexts/cart-context";
+import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -19,6 +19,14 @@ const formatPrice = (price: number) => {
 };
 
 export default function StorefrontPage() {
+  return (
+    <CartProvider>
+      <StorefrontContent />
+    </CartProvider>
+  );
+}
+
+function StorefrontContent() {
   const params = useParams();
   const slug = params?.slug as string;
   const [searchQuery, setSearchQuery] = useState("");

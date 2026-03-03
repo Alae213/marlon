@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { ShoppingCart, ArrowRight, Package, Check } from "lucide-react";
-import { useCart } from "@/contexts/cart-context";
+import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -29,6 +29,14 @@ const formatPrice = (price: number) => {
 };
 
 export default function ProductDetailPage() {
+  return (
+    <CartProvider>
+      <ProductDetailContent />
+    </CartProvider>
+  );
+}
+
+function ProductDetailContent() {
   const params = useParams();
   const slug = params?.slug as string;
   const productId = params?.productId as string;
