@@ -1295,7 +1295,7 @@ function DeliveryPricingSettings({ storeId }: { storeId: string }) {
         </div>
         <div className="max-h-[400px] overflow-y-auto">
           {wilayas.map((wilaya) => {
-            const pricing = deliveryPricing?.find(p => p.wilaya === wilaya);
+            const pricing = deliveryPricing?.find((p: any) => p.wilaya === wilaya);
             const homePrice = pricing?.homeDelivery ?? 600;
             const officePrice = pricing?.officeDelivery ?? 400;
 
@@ -1580,7 +1580,7 @@ export default function EditorPage() {
     storeSlug ? { slug: storeSlug } : "skip"
   );
   
-  const storeId = store?._id as string | undefined;
+  const storeId = store?._id as Id<"stores"> | undefined;
   
   if (!store && storeSlug) {
     return (

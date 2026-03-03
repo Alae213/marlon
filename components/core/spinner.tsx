@@ -12,7 +12,7 @@ const sizeStyles = {
 export function Spinner({ size = "md", className = "" }: SpinnerProps) {
   return (
     <div className={`flex items-center justify-center ${className}`}>
-      <div className={`${sizeStyles[size]} border-2 border-[#e5e5e5] dark:border-[#404040] border-t-[#171717] dark:border-t-[#fafafa] rounded-full animate-spin`} />
+      <div className={`${sizeStyles[size]} border-2 border-input border-t-foreground rounded-full animate-spin`} />
     </div>
   );
 }

@@ -5,12 +5,12 @@ interface BadgeProps extends HTMLAttributes<HTMLSpanElement> {
 }
 
 const variantStyles = {
-  default: "bg-[#f5f5f5] text-[#525252] dark:bg-[#262626] dark:text-[#d4d4d4]",
-  success: "bg-[#dcfce7] text-[#16a34a] dark:bg-[#14532d] dark:text-[#86efac]",
-  warning: "bg-[#fef3c7] text-[#d97706] dark:bg-[#78350f] dark:text-[#fcd34d]",
-  danger: "bg-[#fee2e2] text-[#dc2626] dark:bg-[#7f1d1d] dark:text-[#fca5a5]",
-  info: "bg-[#dbeafe] text-[#2563eb] dark:bg-[#1e3a8a] dark:text-[#93c5fd]",
-  secondary: "bg-[#171717] text-[#fafafa] dark:bg-[#fafafa] dark:text-[#171717]",
+  default: "bg-muted text-muted-foreground",
+  success: "bg-success/10 text-success dark:bg-success/20",
+  warning: "bg-warning/10 text-warning dark:bg-warning/20",
+  danger: "bg-destructive/10 text-destructive dark:bg-destructive/20",
+  info: "bg-info/10 text-info dark:bg-info/20",
+  secondary: "bg-secondary text-secondary-foreground",
 };
 
 export function Badge({ 

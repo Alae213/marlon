@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useMemo, ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -52,14 +52,20 @@ export function BillingProvider({
   }, [store]);
 
   // Calculate days remaining based on firstOrderAt for trial stores
-  let daysRemaining: number | null = null;
-  
-  if (store?.firstOrderAt && store.subscription === "trial") {
-    const trialEndTime = store.firstOrderAt + (TRIAL_DAYS * 24 * 60 * 60 * 1000);
-    daysRemaining = Math.max(0, Math.ceil((trialEndTime - Date.now()) / (1000 * 60 * 60 * 24)));
-  } else if (store?.paidUntil && store.subscription === "active") {
-    daysRemaining = Math.max(0, Math.ceil((store.paidUntil - Date.now()) / (1000 * 60 * 60 * 24)));
-  }
+  const daysRemaining = useMemo(() => {
+    let result: number | null = null;
+    
+    if (store?.firstOrderAt && store.subscription === "trial") {
+      const trialEndTime = store.firstOrderAt + (TRIAL_DAYS * 24 * 60 * 60 * 1000);
+      const now = Date.now();
+      result = Math.max(0, Math.ceil((trialEndTime - now) / (1000 * 60 * 60 * 24)));
+    } else if (store?.paidUntil && store.subscription === "active") {
+      const now = Date.now();
+      result = Math.max(0, Math.ceil((store.paidUntil - now) / (1000 * 60 * 60 * 24)));
+    }
+    
+    return result;
+  }, [store?.firstOrderAt, store?.paidUntil, store?.subscription]);
 
   // Lock condition per PRD:
   // - Store is locked when subscription = 'locked' explicitly

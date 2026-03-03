@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { 
   Plus, 
   Store, 
@@ -346,7 +347,7 @@ export default function HomePage() {
   const { user, isLoaded } = useUser();
   
   return (
-    <RealtimeProvider userId={user?.id}>
+    <RealtimeProvider userId={user?.id as Id<"users">}>
       <SignedIn>
         <DashboardContent />
       </SignedIn>

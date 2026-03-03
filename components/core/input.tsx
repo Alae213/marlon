@@ -11,28 +11,28 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full">
         {label && (
-          <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
             {label}
           </label>
         )}
         <div className="relative">
           {icon && (
-            <div className="absolute start-4 top-1/2 -translate-y-1/2 text-[#a3a3a3]">
+            <div className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground">
               {icon}
             </div>
           )}
           <input
             ref={ref}
-            className={`w-full h-11 ${icon ? "ps-12" : "px-4"} pe-4 bg-white dark:bg-[#171717] border ${
+            className={`w-full h-11 ${icon ? "ps-12" : "px-4"} pe-4 bg-card border ${
               error 
-                ? "border-[#dc2626]" 
-                : "border-[#e5e5e5] dark:border-[#404040]"
-            } text-[#171717] dark:text-[#fafafa] placeholder:text-[#a3a3a3] focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa] transition-colors disabled:bg-[#f5f5f5] dark:disabled:bg-[#0a0a0a] disabled:cursor-not-allowed ${className}`}
+                ? "border-destructive" 
+                : "border-input"
+            } text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors disabled:bg-muted disabled:cursor-not-allowed ${className}`}
             {...props}
           />
         </div>
         {error && (
-          <p className="mt-1.5 text-sm text-[#dc2626]">{error}</p>
+          <p className="mt-1.5 text-sm text-destructive">{error}</p>
         )}
       </div>
     );

@@ -29,21 +29,21 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
           className="absolute inset-0 bg-black/40"
           onClick={onClose}
         />
-        <div className={`relative bg-white dark:bg-[#0a0a0a] p-8 w-full ${sizeStyles[size]} shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto`}>
+        <div className={`relative bg-card p-8 w-full ${sizeStyles[size]} shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto`}>
           {title && (
             <div className="mb-6">
               <div className="flex items-start justify-between">
                 <div>
-                  <h2 className="text-xl font-medium text-[#171717] dark:text-[#fafafa]">{title}</h2>
+                  <h2 className="text-xl font-medium text-foreground">{title}</h2>
                   {description && (
-                    <p className="text-sm text-[#737373] mt-1">{description}</p>
+                    <p className="text-sm text-muted-foreground mt-1">{description}</p>
                   )}
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors -me-1 -mt-1"
+                  className="p-1 hover:bg-muted transition-colors -me-1 -mt-1"
                 >
-                  <X className="w-5 h-5 text-[#737373]" />
+                  <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
             </div>
@@ -51,9 +51,9 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
           {!title && (
             <button
               onClick={onClose}
-              className="absolute top-4 end-4 p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
+              className="absolute top-4 end-4 p-1 hover:bg-muted transition-colors"
             >
-              <X className="w-5 h-5 text-[#737373]" />
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           )}
           {children}

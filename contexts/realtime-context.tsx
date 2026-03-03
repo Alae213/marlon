@@ -3,13 +3,22 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
+import { Id, Doc } from "../convex/_generated/dataModel";
+
+interface Notification {
+  id: string;
+  type: "new_order";
+  message: string;
+  timestamp: number;
+  data: Doc<"orders">;
+}
 
 interface RealtimeContextType {
   isConnected: boolean;
   lastUpdate: number | null;
   triggerUpdate: () => void;
   newOrdersCount: number;
-  newNotifications: any[];
+  newNotifications: Notification[];
 }
 
 const RealtimeContext = createContext<RealtimeContextType>({
@@ -26,19 +35,19 @@ export function useRealtime() {
 
 interface RealtimeProviderProps {
   children: ReactNode;
-  storeId?: string;
-  userId?: string;
+  storeId?: Id<"stores">;
+  userId?: Id<"users">;
 }
 
 export function RealtimeProvider({ children, storeId, userId }: RealtimeProviderProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
-  const [newNotifications, setNewNotifications] = useState<any[]>([]);
+  const [newNotifications, setNewNotifications] = useState<Notification[]>([]);
 
   // Subscribe to real-time updates for orders if storeId is provided
   const realtimeOrders = useQuery(
     api.orders.subscribeToStoreOrders,
-    storeId ? { storeId: storeId as any } : "skip"
+    storeId ? { storeId } : "skip"
   );
 
   // Subscribe to dashboard updates (all stores for dashboard)
@@ -54,15 +63,16 @@ export function RealtimeProvider({ children, storeId, userId }: RealtimeProvider
   useEffect(() => {
     // Check if we have active subscriptions
     const hasActiveSubscriptions = !!realtimeOrders || !!dashboardUpdates;
-    setIsConnected(hasActiveSubscriptions);
-
+    
     if (hasActiveSubscriptions) {
       setLastUpdate(Date.now());
     }
+    
+    setIsConnected(hasActiveSubscriptions);
   }, [realtimeOrders, dashboardUpdates]);
 
   // Count new orders for notifications
-  const newOrdersCount = realtimeOrders?.filter((order: any) => 
+  const newOrdersCount = realtimeOrders?.filter((order: Doc<"orders">) => 
     order.status === "new" && 
     order.createdAt > (lastUpdate || 0)
   ).length || 0;
@@ -70,16 +80,16 @@ export function RealtimeProvider({ children, storeId, userId }: RealtimeProvider
   // Update notifications when new data comes in
   useEffect(() => {
     if (realtimeOrders && lastUpdate) {
-      const newOrders = realtimeOrders.filter((order: any) => 
+      const newOrders = realtimeOrders.filter((order: Doc<"orders">) => 
         order.createdAt > lastUpdate
       );
       
       if (newOrders.length > 0) {
         setNewNotifications(prev => [
           ...prev,
-          ...newOrders.map((order: any) => ({
-            id: order.id,
-            type: "new_order",
+          ...newOrders.map((order: Doc<"orders">) => ({
+            id: order._id.toString(),
+            type: "new_order" as const,
             message: `طلب جديد: ${order.orderNumber}`,
             timestamp: order.createdAt,
             data: order

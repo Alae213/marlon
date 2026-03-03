@@ -7,11 +7,11 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  primary: "bg-[#171717] text-[#fafafa] hover:bg-[#404040] disabled:bg-[#a3a3a3] disabled:text-[#737373]",
-  secondary: "bg-[#f5f5f5] text-[#171717] hover:bg-[#e5e5e5] dark:bg-[#262626] dark:text-[#fafafa] dark:hover:bg-[#404040] disabled:opacity-40",
-  outline: "border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#171717] disabled:opacity-40",
-  ghost: "text-[#525252] dark:text-[#a3a3a3] hover:bg-[#f5f5f5] dark:hover:bg-[#171717] disabled:opacity-40",
-  danger: "bg-[#dc2626] text-[#fafafa] hover:bg-[#b91c1c] disabled:bg-[#fca5a5]",
+  primary: "bg-primary text-primary-foreground hover:bg-primary/80 disabled:bg-muted disabled:text-muted-foreground",
+  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-40",
+  outline: "border border-border text-foreground hover:bg-muted disabled:opacity-40",
+  ghost: "text-muted-foreground hover:bg-muted disabled:opacity-40",
+  danger: "bg-destructive text-destructive-foreground hover:bg-destructive/80 disabled:bg-destructive/50",
 };
 
 const sizeStyles = {
@@ -26,7 +26,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#171717] focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading && (

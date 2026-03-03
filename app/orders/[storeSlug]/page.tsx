@@ -692,7 +692,7 @@ export default function OrdersPage() {
     storeSlug ? { slug: storeSlug } : "skip"
   );
   
-  const storeId = store?._id as string | undefined;
+  const storeId = store?._id as Id<"stores"> | undefined;
   
   if (!store && storeSlug) {
     return (

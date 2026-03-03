@@ -357,7 +357,7 @@ export const handleNewOrderSubscription = mutation({
 // This should be run as a scheduled function (cron)
 export const cleanupLockedStoreOrders = mutation({
   args: {},
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
     const now = Date.now();
     const cutoffTime = now - LOCKED_ORDER_RETENTION_MS;
 
