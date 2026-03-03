@@ -1,24 +1,8 @@
 // @ts-nocheck
-import { v } from "convex/values";
+import { v, query, mutation, action } from "convex/server";
 
 // Import types from the generated API
 import type { Doc } from "../convex/_generated/dataModel";
-
-// Define custom query, mutation and action decorators with proper typing
-const query = <Args extends Record<string, any>, Result>(config: {
-  args: Args;
-  handler: (ctx: any, args: Args) => Promise<Result>;
-}) => config;
-
-const mutation = <Args extends Record<string, any>, Result>(config: {
-  args: Args;
-  handler: (ctx: any, args: Args) => Promise<Result>;
-}) => config;
-
-const action = <Args extends Record<string, any>, Result>(config: {
-  args: Args;
-  handler: (ctx: any, args: Args) => Promise<Result>;
-}) => config;
 
 // Type definitions for site content
 interface NavbarContent {
@@ -64,21 +48,51 @@ type SiteContentSection = "navbar" | "hero" | "footer";
 // Get site content for a store
 export const getSiteContent = query({
   args: { storeId: v.id("stores"), section: v.string() },
-  handler: async (ctx: any, args: any) => {
+  handler: async (ctx, args) => {
     const content = await ctx.db
       .query("siteContent")
-      .withIndex("section", (q: any) =>
+      .withIndex("section", (q) =>
         q.eq("storeId", args.storeId).eq("section", args.section)
       )
       .first();
 
     if (!content) return null;
 
-    const typedContent = content as any;
+    const typedContent = content.content as any;
 
     if (args.section === "navbar" && (typedContent as NavbarContent)?.logoStorageId) {
       const logoUrl = await ctx.storage.getUrl((typedContent as NavbarContent).logoStorageId!);
       return { ...content, content: { ...typedContent, logoUrl } };
+    }
+
+    return content;
+  },
+});
+
+// Get site content for a store with resolved URLs
+export const getSiteContentResolved = query({
+  args: { storeId: v.id("stores"), section: v.string() },
+  handler: async (ctx, args) => {
+    const content = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) =>
+        q.eq("storeId", args.storeId).eq("section", args.section)
+      )
+      .first();
+
+    if (!content) return null;
+
+    const typedContent = content.content as any;
+
+    // Resolve URLs for different content types
+    if (args.section === "navbar" && (typedContent as NavbarContent)?.logoStorageId) {
+      const logoUrl = await ctx.storage.getUrl((typedContent as NavbarContent).logoStorageId!);
+      return { ...content, content: { ...typedContent, logoUrl } };
+    }
+
+    if (args.section === "hero" && (typedContent as HeroContent)?.backgroundImageStorageId) {
+      const backgroundImageUrl = await ctx.storage.getUrl((typedContent as HeroContent).backgroundImageStorageId!);
+      return { ...content, content: { ...typedContent, backgroundImageUrl } };
     }
 
     return content;
