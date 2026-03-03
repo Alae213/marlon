@@ -4,13 +4,18 @@ import { v } from "convex/values";
 // Import types from the generated API
 import type { Doc } from "../convex/_generated/dataModel";
 
-// Define custom query and mutation decorators with proper typing
+// Define custom query, mutation and action decorators with proper typing
 const query = <Args extends Record<string, any>, Result>(config: {
   args: Args;
   handler: (ctx: any, args: Args) => Promise<Result>;
 }) => config;
 
 const mutation = <Args extends Record<string, any>, Result>(config: {
+  args: Args;
+  handler: (ctx: any, args: Args) => Promise<Result>;
+}) => config;
+
+const action = <Args extends Record<string, any>, Result>(config: {
   args: Args;
   handler: (ctx: any, args: Args) => Promise<Result>;
 }) => config;
