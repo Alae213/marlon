@@ -408,7 +408,6 @@ const handleAddAdminNote = useCallback(async () => {
         isOpen={!!selectedOrder}
         onClose={() => setSelectedOrder(null)}
         title={`طلب ${selectedOrder?.orderNumber}`}
-        size="lg"
       >
         {selectedOrder && (
           <div className="space-y-6">
@@ -673,7 +672,17 @@ const handleAddAdminNote = useCallback(async () => {
       </SlideOver>
 
       {/* Fixed Bottom Navigation - 200px centered */}
-      <div className="fixed bottom-4 start-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
+               <div
+          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
+        >
+          <Truck className="w-5 h-5" />
+          <span className="text-xs">الطلبات</span>
+        </div>
+       
+       
+       
+       
         <Link
           href={`/editor/${storeSlug}`}
           className="flex flex-col items-center gap-1 text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
@@ -681,14 +690,9 @@ const handleAddAdminNote = useCallback(async () => {
           <Package className="w-5 h-5" />
           <span className="text-xs">المنتجات</span>
         </Link>
-        <div
-          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
-        >
-          <Truck className="w-5 h-5" />
-          <span className="text-xs">الطلبات</span>
-        </div>
+
       </div>
-      
+        
       {/* Add padding bottom to avoid content being hidden behind fixed nav */}
       <div className="h-20"></div>
     </div>

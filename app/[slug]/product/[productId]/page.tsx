@@ -119,7 +119,7 @@ function ProductDetailContent() {
 
   if (orderPlaced) {
     return (
-      <div className="max-w-2xl mx-auto px-6 py-16 text-center">
+      <div className="w-[300px] mx-auto px-6 py-16 text-center">
         <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mx-auto mb-6">
           <Check className="w-8 h-8 text-white" />
         </div>
@@ -267,7 +267,7 @@ function ProductDetailContent() {
 
       {showOrderForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-          <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-lg p-6 rounded-lg">
+          <div className="bg-white dark:bg-[#0a0a0a] w-[400px] px-6 py-4 rounded-lg">
             <h2 className="text-xl font-normal mb-6">تأكيد الطلب</h2>
             
             <div className="space-y-4">

@@ -9,17 +9,10 @@ interface ModalProps {
   title?: string;
   description?: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
 }
 
-const sizeStyles = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-};
 
-export function Modal({ isOpen, onClose, title, description, children, size = "md" }: ModalProps) {
+export function Modal({ isOpen, onClose, title, description, children }: ModalProps) {
   if (!isOpen) return null;
 
   return (
@@ -29,7 +22,7 @@ export function Modal({ isOpen, onClose, title, description, children, size = "m
           className="absolute inset-0 bg-black/40"
           onClick={onClose}
         />
-        <div className={`relative bg-card p-8 w-full ${sizeStyles[size]} shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto`}>
+        <div className={`relative bg-card p-8 w-full shadow-xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto`}>
           {title && (
             <div className="mb-6">
               <div className="flex items-start justify-between">

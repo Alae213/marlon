@@ -348,7 +348,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         </div>
         <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
       </div>
-
+      {/* Browser Preview Editor */}
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
         <div className="flex items-center gap-3">
@@ -369,22 +369,12 @@ const handleUpdateProduct = async (product: ProductFormData) => {
             <Settings className="w-4 h-4" />
             الإعدادات
           </Button>
-          <Button 
-            onClick={() => setIsAddModalOpen(true)}
-            aria-label="إضافة منتج جديد"
-          >
-            <Plus className="w-4 h-4" />
-            إضافة منتج
-          </Button>
         </div>
       </div>
 
+      {/* Nav Bar Section Editor */}
       <Card className="mb-6" padding="none">
         <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">شريط التنقل (Navbar)</h2>
-            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
-          </div>
 
           <div
             className={`relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden ${navbarBgClass}`}
@@ -393,14 +383,13 @@ const handleUpdateProduct = async (product: ProductFormData) => {
           >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
+                <div className="w-10 h-10 bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                   {navbarLogoUrl ? (
                     <Image src={navbarLogoUrl} alt="logo" fill className="object-cover" />
                   ) : (
                     <Package className="w-5 h-5 text-[#a3a3a3]" />
                   )}
                 </div>
-                <div className={`font-medium truncate ${navbarTextClass}`}>متجرك</div>
               </div>
 
               <div className="hidden sm:flex items-center gap-5">
@@ -482,7 +471,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
           </div>
         </div>
       </Card>
-
+ 
       {/* Hero Section Editor */}
       <Card className="mb-6" padding="none">
         <div className="p-4">
@@ -645,188 +634,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
           </div>
         </div>
       </Card>
-
-      {/* Footer Section Editor */}
-      <Card className="mb-6" padding="none">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
-            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
-          </div>
-
-          {(() => {
-            const currentFooter = footerContent?.content as FooterContent | undefined;
-            const footerLogoUrl = navbarContent?.content?.logoUrl;
-            const contactPhone = currentFooter?.contactPhone ?? "";
-            const contactEmail = currentFooter?.contactEmail ?? "";
-            const copyright = currentFooter?.copyright ?? "جميع الحقوق محفوظة";
-            const socialLinks = currentFooter?.socialLinks ?? [];
-
-            return (
-              <div className="border border-[#e5e5e5] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#171717] p-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Logo Section */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
-                      {footerLogoUrl ? (
-                        <Image src={footerLogoUrl} alt="logo" fill className="object-cover" />
-                      ) : (
-                        <Package className="w-5 h-5 text-[#a3a3a3]" />
-                      )}
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">متجرك</div>
-                      <div className="text-xs text-[#737373]">الشعار مُزامَن من Navbar</div>
-                    </div>
-                  </div>
-
-                  {/* Contact Info */}
-                  <div className="space-y-3">
-                    <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">معلومات التواصل</div>
-                    
-                    {/* Phone - Inline Edit */}
-                    {editingField?.field === "footerPhone" ? (
-                      <input
-                        autoFocus
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={async () => {
-                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
-                          setEditingField(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
-                            setEditingField(null);
-                          } else if (e.key === "Escape") {
-                            setEditingField(null);
-                          }
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                        placeholder="رقم الهاتف"
-                      />
-                    ) : (
-                      <div 
-                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
-                        onClick={() => {
-                          setEditingField({ productId: "", field: "footerPhone" });
-                          setEditValue(contactPhone);
-                        }}
-                      >
-                        <span className="text-[#737373]">📱</span>
-                        <span>{contactPhone || "أضف رقم الهاتف"}</span>
-                      </div>
-                    )}
-
-                    {/* Email - Inline Edit */}
-                    {editingField?.field === "footerEmail" ? (
-                      <input
-                        autoFocus
-                        type="email"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={async () => {
-                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
-                          setEditingField(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
-                            setEditingField(null);
-                          } else if (e.key === "Escape") {
-                            setEditingField(null);
-                          }
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                        placeholder="البريد الإلكتروني"
-                      />
-                    ) : (
-                      <div 
-                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
-                        onClick={() => {
-                          setEditingField({ productId: "", field: "footerEmail" });
-                          setEditValue(contactEmail);
-                        }}
-                      >
-                        <span className="text-[#737373]">✉️</span>
-                        <span>{contactEmail || "أضف البريد الإلكتروني"}</span>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Copyright */}
-                  <div className="flex items-center">
-                    {editingField?.field === "footerCopyright" ? (
-                      <input
-                        autoFocus
-                        type="text"
-                        value={editValue}
-                        onChange={(e) => setEditValue(e.target.value)}
-                        onBlur={async () => {
-                          await setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
-                          setEditingField(null);
-                        }}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter") {
-                            setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
-                            setEditingField(null);
-                          } else if (e.key === "Escape") {
-                            setEditingField(null);
-                          }
-                        }}
-                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                        placeholder="نص الحقوق"
-                      />
-                    ) : (
-                      <div 
-                        className="text-sm text-[#737373] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
-                        onClick={() => {
-                          setEditingField({ productId: "", field: "footerCopyright" });
-                          setEditValue(copyright);
-                        }}
-                      >
-                        &copy; {copyright}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Social Links Row */}
-                <div className="mt-6 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-[#737373]">روابط التواصل الاجتماعي</span>
-                    <div className="flex items-center gap-2">
-                      {["facebook", "instagram", "twitter", "whatsapp"].map((platform) => {
-                        const link = socialLinks.find((l) => l.platform === platform);
-                        return (
-                          <button
-                            key={platform}
-                            className={`w-8 h-8 flex items-center justify-center border ${link?.enabled ? "border-[#171717] dark:border-[#fafafa]" : "border-[#e5e5e5] dark:border-[#262626]"}`}
-                            onClick={async () => {
-                              const newLinks = link?.enabled 
-                                ? socialLinks.filter((l) => l.platform !== platform)
-                                : [...socialLinks.filter((l) => l.platform !== platform), { platform, url: "", enabled: true }];
-                              await setFooterStyles({ storeId: storeId as Id<"stores">, socialLinks: newLinks });
-                            }}
-                            title={platform}
-                          >
-                            {platform === "facebook" && "f"}
-                            {platform === "instagram" && "ig"}
-                            {platform === "twitter" && "x"}
-                            {platform === "whatsapp" && "wa"}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-        </div>
-      </Card>
-
+      {/* Products Catalog Section Editor */}
       <Card padding="none">
         {activeProducts.length === 0 ? (
           <EmptyState
@@ -1073,6 +881,187 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         )}
       </Card>
 
+      {/* Footer Section Editor */}
+      <Card className="mb-6" padding="none">
+        <div className="p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
+            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+          </div>
+
+          {(() => {
+            const currentFooter = footerContent?.content as FooterContent | undefined;
+            const footerLogoUrl = navbarContent?.content?.logoUrl;
+            const contactPhone = currentFooter?.contactPhone ?? "";
+            const contactEmail = currentFooter?.contactEmail ?? "";
+            const copyright = currentFooter?.copyright ?? "جميع الحقوق محفوظة";
+            const socialLinks = currentFooter?.socialLinks ?? [];
+
+            return (
+              <div className="border border-[#e5e5e5] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#171717] p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {/* Logo Section */}
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
+                      {footerLogoUrl ? (
+                        <Image src={footerLogoUrl} alt="logo" fill className="object-cover" />
+                      ) : (
+                        <Package className="w-5 h-5 text-[#a3a3a3]" />
+                      )}
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">متجرك</div>
+                      <div className="text-xs text-[#737373]">الشعار مُزامَن من Navbar</div>
+                    </div>
+                  </div>
+
+                  {/* Contact Info */}
+                  <div className="space-y-3">
+                    <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">معلومات التواصل</div>
+                    
+                    {/* Phone - Inline Edit */}
+                    {editingField?.field === "footerPhone" ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, contactPhone: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="رقم الهاتف"
+                      />
+                    ) : (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerPhone" });
+                          setEditValue(contactPhone);
+                        }}
+                      >
+                        <span className="text-[#737373]">📱</span>
+                        <span>{contactPhone || "أضف رقم الهاتف"}</span>
+                      </div>
+                    )}
+
+                    {/* Email - Inline Edit */}
+                    {editingField?.field === "footerEmail" ? (
+                      <input
+                        autoFocus
+                        type="email"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="البريد الإلكتروني"
+                      />
+                    ) : (
+                      <div 
+                        className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerEmail" });
+                          setEditValue(contactEmail);
+                        }}
+                      >
+                        <span className="text-[#737373]">✉️</span>
+                        <span>{contactEmail || "أضف البريد الإلكتروني"}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Copyright */}
+                  <div className="flex items-center">
+                    {editingField?.field === "footerCopyright" ? (
+                      <input
+                        autoFocus
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        onBlur={async () => {
+                          await setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
+                          setEditingField(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            setFooterStyles({ storeId: storeId as Id<"stores">, copyright: editValue });
+                            setEditingField(null);
+                          } else if (e.key === "Escape") {
+                            setEditingField(null);
+                          }
+                        }}
+                        className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        placeholder="نص الحقوق"
+                      />
+                    ) : (
+                      <div 
+                        className="text-sm text-[#737373] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                        onClick={() => {
+                          setEditingField({ productId: "", field: "footerCopyright" });
+                          setEditValue(copyright);
+                        }}
+                      >
+                        &copy; {copyright}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Social Links Row */}
+                <div className="mt-6 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#737373]">روابط التواصل الاجتماعي</span>
+                    <div className="flex items-center gap-2">
+                      {["facebook", "instagram", "twitter", "whatsapp"].map((platform) => {
+                        const link = socialLinks.find((l) => l.platform === platform);
+                        return (
+                          <button
+                            key={platform}
+                            className={`w-8 h-8 flex items-center justify-center border ${link?.enabled ? "border-[#171717] dark:border-[#fafafa]" : "border-[#e5e5e5] dark:border-[#262626]"}`}
+                            onClick={async () => {
+                              const newLinks = link?.enabled 
+                                ? socialLinks.filter((l) => l.platform !== platform)
+                                : [...socialLinks.filter((l) => l.platform !== platform), { platform, url: "", enabled: true }];
+                              await setFooterStyles({ storeId: storeId as Id<"stores">, socialLinks: newLinks });
+                            }}
+                            title={platform}
+                          >
+                            {platform === "facebook" && "f"}
+                            {platform === "instagram" && "ig"}
+                            {platform === "twitter" && "x"}
+                            {platform === "whatsapp" && "wa"}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </Card>
+
       {logoCropSrc && (
         <ImageCropper
           imageSrc={logoCropSrc}
@@ -1086,7 +1075,6 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         title="إضافة منتج جديد"
-        size="lg"
       >
         <ProductForm onClose={() => setIsAddModalOpen(false)} onSubmit={handleAddProduct} />
       </Modal>
@@ -1095,7 +1083,6 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         isOpen={!!editingProduct}
         onClose={() => setEditingProduct(null)}
         title="تعديل المنتج"
-        size="lg"
       >
         {editingProduct && (
           <ProductForm 
@@ -1112,14 +1099,8 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
 
       {/* Fixed Bottom Navigation - 200px centered */}
-      <div className="fixed bottom-4 start-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
-        <button
-          onClick={() => router.push(`/editor/${storeSlug}`)}
-          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
-        >
-          <Package className="w-5 h-5" />
-          <span className="text-xs">المنتجات</span>
-        </button>
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
+        
         <button
           onClick={() => router.push(`/orders/${storeSlug}`)}
           className="flex flex-col items-center gap-1 text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
@@ -1127,6 +1108,16 @@ const handleUpdateProduct = async (product: ProductFormData) => {
           <ShoppingCart className="w-5 h-5" />
           <span className="text-xs">الطلبات</span>
         </button>
+        
+        <button
+          onClick={() => router.push(`/editor/${storeSlug}`)}
+          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
+        >
+          <Package className="w-5 h-5" />
+          <span className="text-xs">المنتجات</span>
+        </button>
+
+        
       </div>
       
       {/* Add padding bottom to avoid content being hidden behind fixed nav */}
@@ -1267,7 +1258,7 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white dark:bg-[#0a0a0a] w-full max-w-2xl max-h-[80vh] overflow-hidden rounded-lg shadow-xl">
+      <div className="bg-white dark:bg-[#0a0a0a] w-full  max-h-[80vh] overflow-hidden rounded-lg shadow-xl">
         <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
           <h2 className="text-lg font-medium">إعدادات المتجر</h2>
           <button onClick={onClose} className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]">

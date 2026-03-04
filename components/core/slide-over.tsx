@@ -8,17 +8,11 @@ interface SlideOverProps {
   onClose: () => void;
   title?: string;
   children: ReactNode;
-  size?: "sm" | "md" | "lg" | "xl";
 }
 
-const sizeStyles = {
-  sm: "max-w-sm",
-  md: "max-w-md",
-  lg: "max-w-lg",
-  xl: "max-w-xl",
-};
 
-export function SlideOver({ isOpen, onClose, title, children, size = "md" }: SlideOverProps) {
+
+export function SlideOver({ isOpen, onClose, title, children }: SlideOverProps) {
   if (!isOpen) return null;
 
   return (
@@ -27,7 +21,7 @@ export function SlideOver({ isOpen, onClose, title, children, size = "md" }: Sli
         className="fixed inset-0 z-50 bg-black/30 transition-opacity"
         onClick={onClose}
       />
-      <div className={`fixed inset-y-0 end-0 z-50 w-full ${sizeStyles[size]} bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-y-auto`}>
+      <div className={`fixed inset-y-0 right-0 z-50 w-[400px] bg-card shadow-xl animate-in slide-in-from-right duration-300 overflow-y-auto`}>
         <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
           {title && (
             <h2 className="text-lg font-medium text-foreground">{title}</h2>
