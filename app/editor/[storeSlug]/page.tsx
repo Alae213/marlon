@@ -12,6 +12,7 @@ import { EmptyState } from "@/components/core/empty-state";
 import { Modal } from "@/components/core/modal";
 import { Input } from "@/components/core/input";
 import { Textarea } from "@/components/core/textarea";
+import { BottomNavigation } from "@/components/core/bottom-navigation";
 import { ImageUploader } from "@/components/image-cropper";
 import { ImageCropper } from "@/components/image-cropper";
 import { InlineVariantEditor } from "@/components/inline-variant-editor";
@@ -1098,30 +1099,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
 
       <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
 
-      {/* Fixed Bottom Navigation - 200px centered */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[200px]">
-        
-        <button
-          onClick={() => router.push(`/orders/${storeSlug}`)}
-          className="flex flex-col items-center gap-1 text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
-        >
-          <ShoppingCart className="w-5 h-5" />
-          <span className="text-xs">الطلبات</span>
-        </button>
-        
-        <button
-          onClick={() => router.push(`/editor/${storeSlug}`)}
-          className="flex flex-col items-center gap-1 text-[#171717] dark:text-[#fafafa]"
-        >
-          <Package className="w-5 h-5" />
-          <span className="text-xs">المنتجات</span>
-        </button>
-
-        
-      </div>
-      
-      {/* Add padding bottom to avoid content being hidden behind fixed nav */}
-      <div className="h-20"></div>
+      <BottomNavigation storeSlug={storeSlug} currentPage="products" />
     </div>
   );
 }
