@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const {
       orderId,
-      orderNumber,
+      orderNumber: _orderNumber,
       customerName,
       customerPhone,
       customerWilaya,

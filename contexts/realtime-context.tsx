@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, useMemo, ReactNode } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id, Doc } from "../convex/_generated/dataModel";
@@ -56,20 +56,11 @@ export function RealtimeProvider({ children, storeId, userId }: RealtimeProvider
     userId ? { userId } : "skip"
   );
 
-  const triggerUpdate = () => {
+const triggerUpdate = () => {
     setLastUpdate(Date.now());
   };
 
-  useEffect(() => {
-    // Check if we have active subscriptions
-    const hasActiveSubscriptions = !!realtimeOrders || !!dashboardUpdates;
-    
-    if (hasActiveSubscriptions) {
-      setLastUpdate(Date.now());
-    }
-    
-    setIsConnected(hasActiveSubscriptions);
-  }, [realtimeOrders, dashboardUpdates]);
+  const hasConnection = !!realtimeOrders || !!dashboardUpdates;
 
   // Count new orders for notifications
   const newOrdersCount = realtimeOrders?.filter((order: Doc<"orders">) => 
@@ -77,27 +68,42 @@ export function RealtimeProvider({ children, storeId, userId }: RealtimeProvider
     order.createdAt > (lastUpdate || 0)
   ).length || 0;
 
+  // Calculate notifications from new orders
+  const notificationsFromNewOrders = useMemo(() => {
+    if (!realtimeOrders || !lastUpdate) return [];
+    
+    const newOrders = realtimeOrders.filter((order: Doc<"orders">) => 
+      order.createdAt > lastUpdate
+    );
+    
+    return newOrders.map((order: Doc<"orders">) => ({
+      id: order._id.toString(),
+      type: "new_order" as const,
+      message: `طلب جديد: ${order.orderNumber}`,
+      timestamp: order.createdAt,
+      data: order
+    }));
+  }, [realtimeOrders, lastUpdate]);
+
   // Update notifications when new data comes in
   useEffect(() => {
-    if (realtimeOrders && lastUpdate) {
-      const newOrders = realtimeOrders.filter((order: Doc<"orders">) => 
-        order.createdAt > lastUpdate
-      );
-      
-      if (newOrders.length > 0) {
-        setNewNotifications(prev => [
-          ...prev,
-          ...newOrders.map((order: Doc<"orders">) => ({
-            id: order._id.toString(),
-            type: "new_order" as const,
-            message: `طلب جديد: ${order.orderNumber}`,
-            timestamp: order.createdAt,
-            data: order
-          }))
-        ]);
-      }
+    if (notificationsFromNewOrders.length > 0) {
+      setNewNotifications(prev => {
+        const existingIds = new Set(prev.map(n => n.id));
+        const newNotifications = notificationsFromNewOrders.filter(n => !existingIds.has(n.id));
+        return [...prev, ...newNotifications];
+      });
     }
-  }, [realtimeOrders, lastUpdate]);
+  }, [notificationsFromNewOrders]);
+
+  // Update connection state
+  useEffect(() => {
+    if (hasConnection) {
+      setLastUpdate(Date.now());
+    }
+
+    setIsConnected(hasConnection);
+  }, [hasConnection]);
 
   return (
     <RealtimeContext.Provider value={{ 

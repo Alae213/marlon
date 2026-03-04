@@ -281,7 +281,7 @@ export interface AgentState {
   messageHistory: Message[]
 
   /** The last value set by the set_output tool. This is a plain object or undefined if not set. */
-  output: Record<string, any> | undefined
+  output: Record<string, unknown> | undefined
 
   /** The system prompt for this agent. */
   systemPrompt: string
@@ -289,7 +289,7 @@ export interface AgentState {
   /** The tool definitions for this agent. */
   toolDefinitions: Record<
     string,
-    { description: string | undefined; inputSchema: {} }
+    { description: string | undefined; inputSchema: object }
   >
 
   /**
@@ -305,7 +305,7 @@ export interface AgentState {
 export interface AgentStepContext {
   agentState: AgentState
   prompt?: string
-  params?: Record<string, any>
+  params?: Record<string, unknown>
   logger: Logger
 }
 

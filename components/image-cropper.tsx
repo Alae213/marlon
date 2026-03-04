@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
+import Image from "next/image";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
-import { X, Crop as CropIcon, Check, RotateCcw, Image as ImageIcon, Star, GripVertical, ZoomIn } from "lucide-react";
+import { X, Crop as CropIcon, Check, RotateCcw, Image as ImageIcon, GripVertical, ZoomIn } from "lucide-react";
 import { Button } from "@/components/core/button";
 import "react-image-crop/dist/ReactCrop.css";
 
@@ -167,7 +168,7 @@ function Lightbox({ images, currentIndex, onClose, onIndexChange }: {
   onIndexChange: (index: number) => void;
 }) {
   return (
-    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center relative">
       <button
         onClick={onClose}
         className="absolute top-4 end-4 p-2 text-white/70 hover:text-white z-10"
@@ -184,11 +185,14 @@ function Lightbox({ images, currentIndex, onClose, onIndexChange }: {
         </svg>
       </button>
       
-      <img
-        src={images[currentIndex]}
-        alt={`Image ${currentIndex + 1}`}
-        className="max-h-[90vh] max-w-[90vw] object-contain"
-      />
+      <div className="relative w-full h-full max-w-4xl max-h-[80vh]">
+        <Image
+          src={images[currentIndex]}
+          alt={`Image ${currentIndex + 1}`}
+          fill
+          className="object-contain"
+        />
+      </div>
       
       <button
         onClick={() => onIndexChange((currentIndex + 1) % images.length)}
@@ -300,10 +304,11 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
                 index === 0 ? "border-[#00853f]" : "border-transparent"
               } ${draggedIndex === index ? "opacity-50 scale-95" : ""}`}
             >
-              <img
+              <Image
                 src={img}
                 alt={`Product ${index + 1}`}
-                className="w-full h-full object-cover"
+                fill
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button

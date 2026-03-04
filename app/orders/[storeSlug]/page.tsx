@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { Id, Doc } from "@/convex/_generated/dataModel";
 import { 
   Search, 
   Download, 
@@ -32,10 +32,12 @@ import { useUser, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import type { 
   SortField, 
-  SortDirection, 
-  Order, 
-  CallLog, 
-  AdminNote 
+SortDirection, 
+  CallLog,
+  Order,
+  OrderStatus,
+  AdminNote,
+  AuditTrailEntry
 } from "@/lib/orders-types";
 import { 
   STATUS_LABELS, 
@@ -45,20 +47,35 @@ import {
 } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 
+function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {
+  if (sortField !== field) return <ArrowUpDown className="w-3.5 h-3.5 opacity-30" />;
+  return sortDirection === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />;
+}
+
 function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
   const { user } = useUser();
-  const { isLocked } = useBilling();
+  useBilling();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState("all");
   const [sortField, setSortField] = useState<SortField>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-  const [selectedOrder, setSelectedOrder] = useState<any>(null);
+const [selectedOrder, setSelectedOrder] = useState<Doc<"orders"> | null>(null);
   const [callOutcome, setCallOutcome] = useState<CallLog["outcome"] | null>(null);
   const [callNotes, setCallNotes] = useState("");
   const [showAuditTrail, setShowAuditTrail] = useState(false);
   const [newNote, setNewNote] = useState("");
-  const [showAddNote, setShowAddNote] = useState(false);
+const [showAddNote, setShowAddNote] = useState(false);
+  const [currentTime, setCurrentTime] = useState(() => Date.now());
+
+  // Update currentTime every minute to keep date filters fresh
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(Date.now());
+    }, 60000); // Update every minute
+
+    return () => clearInterval(interval); // Cleanup on unmount
+  }, []);
 
   const orders = useQuery(
     api.orders.getOrders,
@@ -75,7 +92,9 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     cleanupLockedOrders({});
   }, [cleanupLockedOrders]);
 
-  const ordersData = orders || [];
+const ordersData = orders || [];
+
+  const dayMs = 86400000;
 
   const filteredOrders = useMemo(() => {
     let filtered = [...ordersData];
@@ -92,17 +111,15 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       filtered = filtered.filter(order => order.status === statusFilter);
     }
 
-    if (dateFilter !== "all") {
-      const now = Date.now();
-      const dayMs = 86400000;
+if (dateFilter !== "all") {
       filtered = filtered.filter(order => {
         switch (dateFilter) {
           case "today":
-            return order.createdAt > now - dayMs;
+            return order.createdAt > currentTime - dayMs;
           case "week":
-            return order.createdAt > now - (dayMs * 7);
+            return order.createdAt > currentTime - (dayMs * 7);
           case "month":
-            return order.createdAt > now - (dayMs * 30);
+            return order.createdAt > currentTime - (dayMs * 30);
           default:
             return true;
         }
@@ -125,8 +142,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
-    return filtered;
-  }, [ordersData, searchQuery, statusFilter, dateFilter, sortField, sortDirection]);
+return filtered;
+  }, [ordersData, searchQuery, statusFilter, dateFilter, sortField, sortDirection, currentTime, dayMs]);
 
   const newOrdersCount = ordersData.filter(o => o.status === "new").length;
 
@@ -154,31 +171,31 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     }
   };
 
-  const handleStatusChange = async (newStatus: string) => {
+const handleStatusChange = useCallback(async (newStatus: string) => {
     if (!selectedOrder) return;
     
     try {
       await updateOrderStatus({
-        orderId: selectedOrder._id as any,
+        orderId: selectedOrder._id,
         status: newStatus,
       });
       
       setSelectedOrder({
         ...selectedOrder,
-        status: newStatus as any,
+        status: newStatus,
         updatedAt: Date.now(),
       });
     } catch (error) {
       console.error("Failed to update status:", error);
     }
-  };
+  }, [selectedOrder, updateOrderStatus]);
 
-  const handleAddCallLog = async () => {
+const handleAddCallLog = useCallback(async () => {
     if (!selectedOrder || !callOutcome) return;
     
     try {
       await addCallLogMutation({
-        orderId: selectedOrder._id as any,
+        orderId: selectedOrder._id,
         outcome: callOutcome,
         notes: callNotes || undefined,
       });
@@ -198,14 +215,14 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     } catch (error) {
       console.error("Failed to add call log:", error);
     }
-  };
+  }, [selectedOrder, callOutcome, callNotes, addCallLogMutation]);
 
-  const handleAddAdminNote = async () => {
+const handleAddAdminNote = useCallback(async () => {
     if (!selectedOrder || !newNote.trim()) return;
     
     try {
       await addAdminNoteMutation({
-        orderId: selectedOrder._id as any,
+        orderId: selectedOrder._id,
         text: newNote,
         merchantId: user?.id || "unknown",
       });
@@ -225,12 +242,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     } catch (error) {
       console.error("Failed to add admin note:", error);
     }
-  };
-
-  const SortIcon = ({ field }: { field: SortField }) => {
-    if (sortField !== field) return <ArrowUpDown className="w-3.5 h-3.5 opacity-30" />;
-    return sortDirection === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />;
-  };
+}, [selectedOrder, newNote, user, addAdminNoteMutation]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -322,7 +334,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                 >
                   <div className="flex items-center gap-1">
                     الحالة
-                    <SortIcon field="status" />
+                    <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
                 <th 
@@ -331,7 +343,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                 >
                   <div className="flex items-center gap-1">
                     التاريخ
-                    <SortIcon field="date" />
+                    <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
               </tr>
@@ -371,9 +383,9 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                   <td className="px-4 py-4 font-normal text-[#171717] dark:text-[#fafafa]">
                     {formatPrice(order.total)}
                   </td>
-                  <td className="px-4 py-4">
-                    <Badge variant={(STATUS_LABELS as any)[order.status]?.variant || "default"}>
-                      {(STATUS_LABELS as any)[order.status]?.label || order.status}
+<td className="px-4 py-4">
+                    <Badge variant={STATUS_LABELS[order.status as OrderStatus]?.variant || "default"}>
+                      {STATUS_LABELS[order.status as OrderStatus]?.label || order.status}
                     </Badge>
                   </td>
                   <td className="px-4 py-4 text-sm text-[#737373]">
@@ -400,9 +412,9 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       >
         {selectedOrder && (
           <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <Badge variant={(STATUS_LABELS as any)[selectedOrder.status]?.variant || "default"}>
-                {(STATUS_LABELS as any)[selectedOrder.status]?.label || selectedOrder.status}
+<div className="flex items-center justify-between">
+              <Badge variant={STATUS_LABELS[selectedOrder.status as OrderStatus]?.variant || "default"}>
+                {STATUS_LABELS[selectedOrder.status as OrderStatus]?.label || selectedOrder.status}
               </Badge>
               <span className="text-sm text-[#737373]">{formatDate(selectedOrder.createdAt)}</span>
             </div>
@@ -435,8 +447,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                 <Package className="w-4 h-4" />
                 <span className="text-sm">المنتجات</span>
               </div>
-              <div className="space-y-3">
-                {(selectedOrder.products || []).map((item: any, idx: number) => (
+<div className="space-y-3">
+                {(selectedOrder.products || []).map((item, idx: number) => (
                   <div key={idx} className="flex items-center justify-between">
                     <div>
                       <p className="font-normal text-[#171717] dark:text-[#fafafa]">{item.name}</p>
@@ -471,8 +483,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                 <Truck className="w-4 h-4" />
                 <span className="text-sm">معلومات التوصيل</span>
               </div>
-              <p className="text-sm text-[#171717] dark:text-[#fafafa]">
-                {(DELIVERY_TYPE_LABELS as any)[selectedOrder.deliveryType] || selectedOrder.deliveryType}
+<p className="text-sm text-[#171717] dark:text-[#fafafa]">
+                {DELIVERY_TYPE_LABELS[selectedOrder.deliveryType as Order["deliveryType"]] || selectedOrder.deliveryType}
               </p>
               {selectedOrder.trackingNumber && (
                 <p className="text-sm text-[#737373] mt-1">
@@ -487,16 +499,16 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                 سجل المكالمات
                 <span className="text-sm font-normal text-[#737373]">({selectedOrder.callLog?.length || 0})</span>
               </h3>
-              {selectedOrder.callLog && selectedOrder.callLog.length > 0 ? (
+{selectedOrder.callLog && selectedOrder.callLog.length > 0 ? (
                 <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(selectedOrder.callLog || []).map((call: any) => (
+                  {(selectedOrder.callLog || []).map((call) => (
                     <div key={call.id} className="p-3 bg-[#fafafa] dark:bg-[#171717] flex items-start gap-3">
                       <span className={call.outcome === "answered" ? "text-[#16a34a]" : "text-[#dc2626]"}>
-                        {(CALL_OUTCOME_LABELS as any)[call.outcome]?.icon}
+                        {CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.icon}
                       </span>
                       <div className="flex-1">
                         <p className="text-sm font-normal text-[#171717] dark:text-[#fafafa]">
-                          {(CALL_OUTCOME_LABELS as any)[call.outcome]?.label}
+                          {CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label}
                         </p>
                         {call.notes && (
                           <p className="text-xs text-[#737373]">{call.notes}</p>
@@ -604,8 +616,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                   <MessageSquare className="w-4 h-4" />
                   الملاحظات ({(selectedOrder.adminNotes || []).length})
                 </h3>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(selectedOrder.adminNotes || []).slice().reverse().map((note: any) => (
+<div className="space-y-2 max-h-40 overflow-y-auto">
+                  {(selectedOrder.adminNotes || []).slice().reverse().map((note: AdminNote) => (
                     <div key={note.id} className="p-3 bg-[#fef3c7] dark:bg-[#78350f] border border-[#fcd34d] dark:border-[#92400e]">
                       <p className="text-sm text-[#171717] dark:text-[#fafafa]">{note.text}</p>
                       <p className="text-xs text-[#a3a3a3] mt-1">{formatDate(note.timestamp)}</p>
@@ -621,8 +633,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
                   <Clock className="w-4 h-4" />
                   سجل التغييرات
                 </h3>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {(selectedOrder.auditTrail || []).slice().reverse().map((entry: any) => (
+<div className="space-y-2 max-h-40 overflow-y-auto">
+                  {(selectedOrder.auditTrail || []).slice().reverse().map((entry) => (
                     <div key={entry.id} className="flex items-start gap-3 text-sm">
                       <CheckCircle className="w-4 h-4 text-[#a3a3a3] mt-0.5 flex-shrink-0" />
                       <div>
@@ -635,10 +647,10 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
               </div>
             )}
 
-            <div className="space-y-3">
+<div className="space-y-3">
               <h3 className="font-normal text-[#171717] dark:text-[#fafafa]">تغيير الحالة</h3>
               <div className="flex flex-wrap gap-2">
-                {((STATUS_TRANSITIONS as any)[selectedOrder.status] || []).map((status: any) => (
+                {(STATUS_TRANSITIONS[selectedOrder.status as OrderStatus] || []).map((status) => (
                   <Button
                     key={status}
                     onClick={() => handleStatusChange(status)}

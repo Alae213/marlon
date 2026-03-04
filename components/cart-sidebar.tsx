@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment, ReactNode } from "react";
+import { Fragment } from "react";
+import Image from "next/image";
 import { X, Minus, Plus, Trash2 } from "lucide-react";
 import { useCart } from "@/contexts/cart-context";
 
@@ -53,11 +54,12 @@ export function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
                 className="flex gap-4 p-4 border border-border"
               >
                 {item.image && (
-                  <div className="w-20 h-20 bg-muted flex-shrink-0 overflow-hidden">
-                    <img
+                  <div className="w-20 h-20 bg-muted flex-shrink-0 overflow-hidden relative">
+                    <Image
                       src={item.image}
                       alt={item.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   </div>
                 )}

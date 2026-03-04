@@ -33,39 +33,32 @@ export function BillingProvider({
   storeSlug?: string;
   storeId?: Id<"stores">;
 }) {
-  const [storeStatus, setStoreStatus] = useState<StoreStatus>("trial");
-  const [orderCount, setOrderCount] = useState(0);
-  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
-
   // Fetch store data from Convex
   const store = useQuery(
     api.stores.getStore,
     storeId ? { storeId } : "skip"
   );
 
-  // Update state when store data changes
-  useEffect(() => {
-    if (store) {
-      setStoreStatus((store.subscription as StoreStatus) || "trial");
-      setOrderCount(store.orderCount || 0);
-    }
-  }, [store]);
+  // Use store values directly; fall back to defaults when store is not yet loaded
+  const storeStatus = (store?.subscription as StoreStatus) || "trial";
+  const currentOrderCount = store?.orderCount ?? 0;
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
 
   // Calculate days remaining based on firstOrderAt for trial stores
+  const now = useState(() => Date.now())[0];
+  
   const daysRemaining = useMemo(() => {
     let result: number | null = null;
     
     if (store?.firstOrderAt && store.subscription === "trial") {
       const trialEndTime = store.firstOrderAt + (TRIAL_DAYS * 24 * 60 * 60 * 1000);
-      const now = Date.now();
       result = Math.max(0, Math.ceil((trialEndTime - now) / (1000 * 60 * 60 * 24)));
     } else if (store?.paidUntil && store.subscription === "active") {
-      const now = Date.now();
       result = Math.max(0, Math.ceil((store.paidUntil - now) / (1000 * 60 * 60 * 24)));
     }
     
     return result;
-  }, [store?.firstOrderAt, store?.paidUntil, store?.subscription]);
+  }, [store?.firstOrderAt, store?.paidUntil, store?.subscription, now]);
 
   // Lock condition per PRD:
   // - Store is locked when subscription = 'locked' explicitly
@@ -73,7 +66,7 @@ export function BillingProvider({
   // - OR order count exceeds 50 in trial window
   const isLocked = storeStatus === "locked" || 
     (storeStatus === "trial" && daysRemaining !== null && daysRemaining <= 0) ||
-    (storeStatus === "trial" && orderCount >= FREE_ORDER_LIMIT);
+    (storeStatus === "trial" && currentOrderCount >= FREE_ORDER_LIMIT);
 
   const openPaymentModal = () => setIsPaymentModalOpen(true);
   const closePaymentModal = () => setIsPaymentModalOpen(false);
@@ -82,7 +75,7 @@ export function BillingProvider({
     <BillingContext.Provider
       value={{
         storeStatus,
-        orderCount,
+        orderCount: currentOrderCount,
         orderLimit: FREE_ORDER_LIMIT,
         daysRemaining,
         isLocked,

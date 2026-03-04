@@ -1,6 +1,6 @@
 "use client";
 
-import { Lock, CreditCard, X } from "lucide-react";
+import { Lock, CreditCard } from "lucide-react";
 import { Button } from "@/components/core";
 import { useBilling } from "@/contexts/billing-context";
 
@@ -17,7 +17,6 @@ export function LockedOverlay({ children, showOverlay = true }: LockedOverlayPro
   }
 
   const isTrialExpired = storeStatus === "trial" && daysRemaining !== null && daysRemaining <= 0;
-  const isOrderLimitReached = storeStatus === "trial" && orderCount >= orderLimit;
 
   return (
     <div className="relative">

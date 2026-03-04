@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Bell, X, CheckCircle, AlertCircle, Info, XCircle } from "lucide-react";
 
 interface Notification {
@@ -12,77 +12,74 @@ interface Notification {
   read: boolean;
 }
 
+// Static timestamps for demo notifications (fixed values for consistency)
+const DEMO_NOTIFICATIONS: Notification[] = [
+  {
+    id: "1",
+    type: "info",
+    title: "طلب جديد",
+    message: "وصلتك طلب جديد من أحمد محمد",
+    timestamp: 1700000000000 - 300000,
+    read: false,
+  },
+  {
+    id: "2",
+    type: "success",
+    title: "تم الشحن",
+    message: "تم إرسال طلب ORD-003 لشركة التوصيل",
+    timestamp: 1700000000000 - 3600000,
+    read: false,
+  },
+  {
+    id: "3",
+    type: "warning",
+    title: "تنبيه المخزون",
+    message: "مخزون سماعة بلوتوث منخفض",
+    timestamp: 1700000000000 - 7200000,
+    read: true,
+  },
+];
+
 interface NotificationBellProps {
   storeId?: string;
 }
 
-export function NotificationBell({ storeId }: NotificationBellProps) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+export function NotificationBell(_props: NotificationBellProps) {
+  const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
   const [isOpen, setIsOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
 
-  useEffect(() => {
-    // Demo notifications
-    const demoNotifications: Notification[] = [
-      {
-        id: "1",
-        type: "info",
-        title: "طلب جديد",
-        message: "وصلتك طلب جديد من أحمد محمد",
-        timestamp: Date.now() - 300000,
-        read: false,
-      },
-      {
-        id: "2",
-        type: "success",
-        title: "تم الشحن",
-        message: "تم إرسال طلب ORD-003 لشركة التوصيل",
-        timestamp: Date.now() - 3600000,
-        read: false,
-      },
-      {
-        id: "3",
-        type: "warning",
-        title: "تنبيه المخزون",
-        message: "مخزون سماعة بلوتوث منخفض",
-        timestamp: Date.now() - 7200000,
-        read: true,
-      },
-    ];
-    setNotifications(demoNotifications);
-    setUnreadCount(demoNotifications.filter(n => !n.read).length);
-  }, [storeId]);
+  const currentTime = Date.now();
+
+  const unreadCount = useMemo(() => {
+    return notifications.filter(n => !n.read).length;
+  }, [notifications]);
 
   const markAsRead = (id: string) => {
     setNotifications(prev =>
       prev.map(n => (n.id === id ? { ...n, read: true } : n))
     );
-    setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    setUnreadCount(0);
   };
 
   const dismissNotification = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
-    const notification = notifications.find(n => n.id === id);
-    if (notification && !notification.read) {
-      setUnreadCount(prev => Math.max(0, prev - 1));
-    }
   };
 
-  const formatTime = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
-    const minutes = Math.floor(diff / 60000);
-    const hours = Math.floor(diff / 3600000);
-    
-    if (minutes < 1) return "الآن";
-    if (minutes < 60) return `منذ ${minutes} دقيقة`;
-    if (hours < 24) return `منذ ${hours} ساعة`;
-    return `منذ ${Math.floor(hours / 24)} يوم`;
-  };
+  const formatTime = useMemo(() => {
+    return (timestamp: number) => {
+      const diff = currentTime - timestamp;
+      const minutes = Math.floor(diff / 60000);
+      const hours = Math.floor(diff / 3600000);
+      
+      if (minutes < 1) return "الآن";
+      if (minutes < 60) return `منذ ${minutes} دقيقة`;
+      if (hours < 24) return `منذ ${hours} ساعة`;
+      return `منذ ${Math.floor(hours / 24)} يوم`;
+    };
+  }, [currentTime]);
 
   const getIcon = (type: Notification["type"]) => {
     switch (type) {

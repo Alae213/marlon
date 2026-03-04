@@ -10,16 +10,6 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
-interface Product {
-  _id: string;
-  name: string;
-  description?: string;
-  basePrice: number;
-  oldPrice?: number;
-  images?: string[];
-  variants?: any[];
-}
-
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('ar-DZ', {
     style: 'currency',
@@ -65,7 +55,7 @@ function ProductDetailContent() {
 
   const product = useMemo(() => {
     if (!products) return null;
-    return products.find((p: any) => p._id === productId);
+    return products.find((p) => p._id === productId);
   }, [products, productId]);
 
   const handleVariantSelect = (variantName: string, option: string) => {
@@ -86,7 +76,7 @@ function ProductDetailContent() {
     if (!product || !store) return;
     
     try {
-      const result = await createOrder({
+      await createOrder({
         storeId: store._id as Id<"stores">,
         orderNumber: generateOrderNumber(),
         customerName: orderData.name,
@@ -211,13 +201,13 @@ function ProductDetailContent() {
 
           {product.variants && product.variants.length > 0 && (
             <div className="mb-6">
-              {product.variants.map((variant: any) => (
+              {product.variants.map((variant) => (
                 <div key={variant.name} className="mb-4">
                   <p className="text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
                     {variant.name}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {variant.options?.map((option: any) => (
+                    {variant.options?.map((option) => (
                       <button
                         key={option.name}
                         onClick={() => handleVariantSelect(variant.name, option.name)}

@@ -18,7 +18,7 @@ interface DeliveryConfig {
   isActive: boolean;
 }
 
-export function DeliverySettings({ storeId }: DeliverySettingsProps) {
+export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
   const [selectedProvider, setSelectedProvider] = useState<DeliveryProvider>(null);
   const [config, setConfig] = useState<DeliveryConfig>({
     provider: null,

@@ -10,11 +10,6 @@ interface VariantOption {
   priceModifier?: number;
 }
 
-interface Variant {
-  name: string;
-  options: VariantOption[];
-}
-
 interface VariantGroup {
   name: string;
   variants: VariantOption[];

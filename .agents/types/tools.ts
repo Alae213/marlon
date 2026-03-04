@@ -136,7 +136,7 @@ export interface CodeSearchParams {
 /**
  * End your turn, regardless of any new tool results that might be coming. This will allow the user to type another prompt.
  */
-export interface EndTurnParams {}
+export type EndTurnParams = Record<string, never>;
 
 /**
  * Find several files related to a brief natural language description of the files or the name of a function or class you are looking for.
@@ -257,13 +257,13 @@ export interface RunTerminalCommandParams {
  * Set the conversation history to the provided messages.
  */
 export interface SetMessagesParams {
-  messages: any
+  messages: unknown
 }
 
 /**
  * JSON object to set as the agent output. This completely replaces any previous output. If the agent was spawned, this value will be passed back to its parent. If the agent has an outputSchema defined, the output will be validated against it.
  */
-export interface SetOutputParams {}
+export type SetOutputParams = Record<string, never>;
 
 /**
  * Load a skill's full instructions when relevant to the current task. Skills are loaded on-demand - only load them when you need their specific guidance.
@@ -283,7 +283,7 @@ export interface SpawnAgentsParams {
     /** Prompt to send to the agent */
     prompt?: string
     /** Parameters object for the agent (if any) */
-    params?: Record<string, any>
+    params?: Record<string, unknown>
   }[]
 }
 
@@ -325,7 +325,7 @@ export interface SuggestFollowupsParams {
 
 This tool explicitly marks the end of your work on the current task.
  */
-export interface TaskCompletedParams {}
+export type TaskCompletedParams = Record<string, never>;
 
 /**
  * Deeply consider complex tasks by brainstorming approaches and tradeoffs step-by-step.

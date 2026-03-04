@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, Loader2, CheckCircle, XCircle, AlertCircle } from "lucide-react";
+import { Truck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button, Modal } from "@/components/core";
 
 interface DeliveryActionProps {
@@ -72,7 +72,7 @@ export function DeliveryAction({
         setResult("error");
         setErrorMessage(data.error || "فشل إرسال الطلب");
       }
-    } catch (error) {
+    } catch (_error) {
       setResult("error");
       setErrorMessage("حدث خطأ في الاتصال بالخادم");
     } finally {

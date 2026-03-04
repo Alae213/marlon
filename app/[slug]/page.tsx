@@ -50,7 +50,7 @@ function StorefrontContent() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const currentNavbar: any = navbarContent?.content;
+  const currentNavbar = navbarContent?.content as { background?: string; textColor?: string; logoUrl?: string } | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
   const navbarText = currentNavbar?.textColor ?? "dark";
   const navbarLogoUrl = currentNavbar?.logoUrl;

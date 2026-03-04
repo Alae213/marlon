@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Id, Doc } from "@/convex/_generated/dataModel";
 import { 
   Plus, 
   Store, 
@@ -46,8 +47,10 @@ function StoreCard({ store }: { store: StoreData }) {
       <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] p-8 hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300">
         <div className="flex items-start justify-between mb-6">
           <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center">
-            {store.logo ? (
-              <img src={store.logo} alt={store.name} className="w-8 h-8 object-cover" />
+{store.logo ? (
+              <div className="relative w-8 h-8">
+                <Image src={store.logo} alt={store.name} fill className="object-cover" />
+              </div>
             ) : (
               <Store className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" />
             )}
@@ -150,7 +153,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
       onClose();
       setName("");
       setSlug("");
-    } catch (err) {
+} catch (_err) {
       setError("حدث خطأ. يرجى المحاولة مرة أخرى");
       setIsLoading(false);
     }
@@ -209,7 +212,7 @@ function DashboardContent() {
 
   const stores = useQuery(api.stores.getUserStores, user ? { userId: user.id } : "skip");
 
-  const storesData: StoreData[] = stores?.map((store: any) => ({
+  const storesData: StoreData[] = stores?.map((store: Doc<"stores">) => ({
     _id: store._id,
     name: store.name,
     slug: store.slug,

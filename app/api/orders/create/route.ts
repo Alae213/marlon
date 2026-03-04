@@ -10,14 +10,14 @@ export async function POST(request: NextRequest) {
       customerName,
       customerPhone,
       customerWilaya,
-      customerCommune,
-      customerAddress,
+      customerCommune: _customerCommune,
+      customerAddress: _customerAddress,
       products,
       subtotal,
-      deliveryCost,
+      deliveryCost: _deliveryCost,
       total,
-      deliveryType,
-      notes,
+      deliveryType: _deliveryType,
+      notes: _notes,
     } = body;
 
     if (!storeSlug || !orderNumber || !customerName || !customerPhone || !customerWilaya || !products || subtotal === undefined || total === undefined) {

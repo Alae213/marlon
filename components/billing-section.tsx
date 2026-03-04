@@ -9,7 +9,7 @@ import {
   TrendingUp,
   Shield
 } from "lucide-react";
-import { Badge, Card, CardHeader, CardTitle, CardContent } from "@/components/core";
+import { Badge, Card, CardContent } from "@/components/core";
 import { useBilling } from "@/contexts/billing-context";
 import { PaymentModal } from "@/components/payment-modal";
 

@@ -4,8 +4,8 @@ import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Grid3X3, List, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink } from "lucide-react";
+import { Id, Doc } from "@/convex/_generated/dataModel";
+import { Plus, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
@@ -15,26 +15,52 @@ import { Textarea } from "@/components/core/textarea";
 import { ImageUploader } from "@/components/image-cropper";
 import { ImageCropper } from "@/components/image-cropper";
 import { InlineVariantEditor } from "@/components/inline-variant-editor";
-import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { RealtimeProvider } from "@/contexts/realtime-context";
+import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import Image from "next/image";
 
-const ALGERIAN_WILAYAS = [
-  "أدرار", "الشلف", "الأغواط", "أم البواقي", "باتنة", "بجاية", "بسكرة", "بشار", "البليدة", "البويرة",
-  "تمنراست", "تبسة", "تلمسان", "تيارت", "وهران", "سعيدة", "سكيكدة", "سطيف", "سيدي بلعباس", "عنابة",
-  "قسنطينة", "المدية", "مستغانم", "المسيلة", "معسكر", "ورقلة", "وادي رهيو", "بسكرة", "خنشلة", "سوق أهراس",
-  "تيبازة", "ميلة", "عين الدفلى", "النعامة", "عين تموشنت", "غرداية", "غليزان", "تيسمسيلت", "الوادي", "مشرع",
-  "برج بوعريريج", "بومرداس", "الطارف", "تندوف", "تيندوف", "جانجا", "المكان", "أولاد جلال", "بشار", "برج باجي مختار",
-  "عين صالح", "عين قزام", "تقرت", "جانت", "المريكة"
-];
+interface Variant {
+  name: string;
+  options: VariantOption[];
+}
 
-const DEFAULT_DELIVERY_PRICES: Record<string, { home: number; office: number }> = {
-  "أدرار": { home: 700, office: 500 },
-  "الجزائر": { home: 0, office: 0 },
-  "وهران": { home: 500, office: 350 },
-  "قسنطينة": { home: 500, office: 350 },
-  "عنابة": { home: 500, office: 350 },
-};
+interface VariantOption {
+  name: string;
+  priceModifier?: number;
+}
+
+interface NavbarContent {
+  logoStorageId?: string;
+  logoUrl?: string;
+  links: Array<{
+    text: string;
+    url: string;
+    enabled: boolean;
+  }>;
+  background?: string;
+  textColor?: string;
+}
+
+interface HeroContent {
+  title?: string;
+  ctaText?: string;
+  ctaColor?: string;
+  layout?: "left" | "center" | "right";
+  backgroundImageStorageId?: string;
+  backgroundImageUrl?: string;
+}
+
+interface FooterContent {
+  contactEmail?: string;
+  contactPhone?: string;
+  copyright?: string;
+  socialLinks?: Array<{
+    platform: string;
+    url: string;
+    enabled: boolean;
+  }>;
+}
 
 interface Product {
   _id: Id<"products">;
@@ -45,7 +71,7 @@ interface Product {
   oldPrice?: number;
   images?: string[];
   category?: string;
-  variants?: any[];
+  variants?: Variant[];
   isArchived?: boolean;
   sortOrder?: number;
   createdAt?: number;
@@ -54,7 +80,7 @@ interface Product {
 
 function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
   const router = useRouter();
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [viewMode, _setViewMode] = useState<"grid" | "list">("grid");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
@@ -66,7 +92,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   // Inline editing states
   const [editingField, setEditingField] = useState<{ productId: string; field: "name" | "basePrice" | "oldPrice" | "heroTitle" | "heroCtaText" | "footerPhone" | "footerEmail" | "footerCopyright" } | null>(null);
   const [editValue, setEditValue] = useState("");
-  const [isSaving, setIsSaving] = useState(false);
+  const [_isSaving, _setIsSaving] = useState(false);
 
   const products = useQuery(
     api.products.getProducts,
@@ -93,12 +119,12 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     storeId ? { storeId: storeId as Id<"stores">, section: "footer" } : "skip"
   );
 
-  const deliveryPricing = useQuery(
+  const _deliveryPricing = useQuery(
     api.siteContent.getDeliveryPricing,
     storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
 
-  const deliveryIntegration = useQuery(
+  const _deliveryIntegration = useQuery(
     api.siteContent.getDeliveryIntegration,
     storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
@@ -106,13 +132,13 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   const setNavbarStyles = useMutation(api.siteContent.setNavbarStyles);
   const setHeroStyles = useMutation(api.siteContent.setHeroStyles);
   const setFooterStyles = useMutation(api.siteContent.setFooterStyles);
-  const setDeliveryPricing = useMutation(api.siteContent.setDeliveryPricing);
-  const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
-  const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
+  const _setDeliveryPricing = useMutation(api.siteContent.setDeliveryPricing);
+  const _setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
+  const _testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
   const generateUploadUrl = useMutation(api.siteContent.generateUploadUrl);
   const setLogoAndSyncFooter = useMutation(api.siteContent.setLogoAndSyncFooter);
 
-  const isLoading = !products;
+  const _isLoading = !products;
 
   // Show all products (including archived) - filter out archived for display
   const activeProducts = useMemo(() => {
@@ -126,15 +152,22 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     setEditValue(String(currentValue));
   };
 
-  const saveInlineEdit = async () => {
+const saveInlineEdit = async () => {
     if (!editingField) return;
     
-    setIsSaving(true);
+    _setIsSaving(true);
     try {
       const product = products?.find(p => p._id === editingField.productId);
       if (!product) return;
 
-      const updates: any = { productId: editingField.productId as Id<"products"> };
+      const updates: {
+        productId: Id<"products">;
+        name?: string;
+        basePrice?: number;
+        oldPrice?: number;
+      } = {
+        productId: editingField.productId as Id<"products">,
+      };
       
       if (editingField.field === "name") {
         updates.name = editValue;
@@ -150,7 +183,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     } catch (error) {
       console.error("Failed to update:", error);
     }
-    setIsSaving(false);
+    _setIsSaving(false);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -170,7 +203,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     }).format(price);
   };
 
-  const handleAddProduct = async (product: Omit<Product, "_id" | "isArchived" | "sortOrder">) => {
+  const handleAddProduct = async (product: ProductFormData) => {
     try {
       await createProduct({
         storeId: storeId as Id<"stores">,
@@ -179,6 +212,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
         basePrice: product.basePrice,
         oldPrice: product.oldPrice || undefined,
         images: product.images,
+        variants: product.variants,
       });
     } catch (error) {
       console.error("Failed to create product:", error);
@@ -197,16 +231,27 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     }
   };
 
-  const handleUpdateProduct = async (product: Product) => {
+const handleUpdateProduct = async (product: ProductFormData) => {
     try {
-      await updateProduct({
-        productId: product._id,
+      const updateData: {
+        productId: Id<"products">;
+        name: string;
+        description?: string;
+        basePrice: number;
+        oldPrice?: number;
+        images?: string[];
+        variants?: Variant[];
+      } = {
+        productId: product.productId!,
         name: product.name,
         description: product.description || undefined,
         basePrice: product.basePrice,
         oldPrice: product.oldPrice || undefined,
         images: product.images,
-      });
+        variants: product.variants,
+      };
+      
+      await updateProduct(updateData);
       setEditingProduct(null);
     } catch (error) {
       console.error("Failed to update product:", error);
@@ -260,7 +305,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
     setIsUploadingLogo(false);
   };
 
-  const currentNavbar: any = navbarContent?.content;
+  const currentNavbar = navbarContent?.content as NavbarContent | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
   const navbarText = currentNavbar?.textColor ?? "dark";
   const navbarLogoUrl = currentNavbar?.logoUrl;
@@ -348,9 +393,9 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
           >
             <div className="flex items-center justify-between px-4 py-3">
               <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                   {navbarLogoUrl ? (
-                    <img src={navbarLogoUrl} alt="logo" className="w-full h-full object-cover" />
+                    <Image src={navbarLogoUrl} alt="logo" fill className="object-cover" />
                   ) : (
                     <Package className="w-5 h-5 text-[#a3a3a3]" />
                   )}
@@ -447,7 +492,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
           </div>
 
           {(() => {
-            const currentHero: any = heroContent?.content;
+            const currentHero = heroContent?.content as HeroContent | undefined;
             const heroTitle = currentHero?.title ?? "متجرنا الإلكتروني";
             const heroCtaText = currentHero?.ctaText ?? "تسوق الآن";
             const heroCtaColor = currentHero?.ctaColor ?? "#171717";
@@ -610,7 +655,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
           </div>
 
           {(() => {
-            const currentFooter: any = footerContent?.content;
+            const currentFooter = footerContent?.content as FooterContent | undefined;
             const footerLogoUrl = navbarContent?.content?.logoUrl;
             const contactPhone = currentFooter?.contactPhone ?? "";
             const contactEmail = currentFooter?.contactEmail ?? "";
@@ -622,9 +667,9 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   {/* Logo Section */}
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                       {footerLogoUrl ? (
-                        <img src={footerLogoUrl} alt="logo" className="w-full h-full object-cover" />
+                        <Image src={footerLogoUrl} alt="logo" fill className="object-cover" />
                       ) : (
                         <Package className="w-5 h-5 text-[#a3a3a3]" />
                       )}
@@ -741,7 +786,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                           setEditValue(copyright);
                         }}
                       >
-                        © {copyright}
+                        &copy; {copyright}
                       </div>
                     )}
                   </div>
@@ -753,15 +798,15 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                     <span className="text-sm text-[#737373]">روابط التواصل الاجتماعي</span>
                     <div className="flex items-center gap-2">
                       {["facebook", "instagram", "twitter", "whatsapp"].map((platform) => {
-                        const link = socialLinks.find((l: any) => l.platform === platform);
+                        const link = socialLinks.find((l) => l.platform === platform);
                         return (
                           <button
                             key={platform}
                             className={`w-8 h-8 flex items-center justify-center border ${link?.enabled ? "border-[#171717] dark:border-[#fafafa]" : "border-[#e5e5e5] dark:border-[#262626]"}`}
                             onClick={async () => {
                               const newLinks = link?.enabled 
-                                ? socialLinks.filter((l: any) => l.platform !== platform)
-                                : [...socialLinks.filter((l: any) => l.platform !== platform), { platform, url: "", enabled: true }];
+                                ? socialLinks.filter((l) => l.platform !== platform)
+                                : [...socialLinks.filter((l) => l.platform !== platform), { platform, url: "", enabled: true }];
                               await setFooterStyles({ storeId: storeId as Id<"stores">, socialLinks: newLinks });
                             }}
                             title={platform}
@@ -802,12 +847,13 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                 key={product._id}
                 className="group relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200"
               >
-                <div className="aspect-square bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center">
+                <div className="aspect-square bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center relative">
                   {product.images?.[0] ? (
-                    <img 
+                    <Image 
                       src={product.images[0]} 
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <ImageIcon className="w-8 h-8 text-[#d4d4d4]" />
@@ -889,7 +935,14 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                       setEditingProduct({ 
                         ...product, 
                         images: product.images || [],
-                        isArchived: product.isArchived ?? false
+                        isArchived: product.isArchived ?? false,
+                        variants: product.variants?.map(v => ({
+                          name: v.name,
+                          options: v.options.map(o => ({
+                            name: typeof o === 'string' ? o : o.name,
+                            priceModifier: typeof o === 'string' ? undefined : o.priceModifier
+                          }))
+                        })) || []
                       }); 
                     }}
                     className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
@@ -956,12 +1009,13 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
                 key={product._id}
                 className="flex items-center gap-4 p-4 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors"
               >
-                <div className="w-14 h-14 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center flex-shrink-0">
+                <div className="w-14 h-14 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center flex-shrink-0 relative">
                   {product.images?.[0] ? (
-                    <img 
+                    <Image 
                       src={product.images[0]} 
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      fill
+                      className="object-cover"
                     />
                   ) : (
                     <ImageIcon className="w-5 h-5 text-[#d4d4d4]" />
@@ -990,7 +1044,18 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
 
                 <div className="flex items-center gap-1">
                   <button 
-                    onClick={() => setEditingProduct(product)}
+                    onClick={() => setEditingProduct({
+                      ...product,
+                      images: product.images || [],
+                      isArchived: product.isArchived ?? false,
+                      variants: product.variants?.map(v => ({
+                        name: v.name,
+                        options: v.options.map(o => ({
+                          name: typeof o === 'string' ? o : o.name,
+                          priceModifier: typeof o === 'string' ? undefined : o.priceModifier
+                        }))
+                      })) || []
+                    })}
                     className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
                   >
                     <Edit className="w-4 h-4 text-[#737373]" />
@@ -1070,8 +1135,23 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   );
 }
 
-function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: any) => void }) {
-  const convertToEditorFormat = (variants?: any[]) => {
+interface ProductFormData {
+  productId?: Id<"products">;
+  name: string;
+  description: string;
+  basePrice: number;
+  oldPrice?: number;
+  images: string[];
+  variants?: Variant[];
+}
+
+function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClose: () => void; onSubmit: (product: ProductFormData) => void }) {
+  interface EditorVariant {
+    name: string;
+    variants: VariantOption[];
+  }
+  
+  const convertToEditorFormat = (variants?: Variant[]): EditorVariant[] => {
     if (!variants || variants.length === 0) return [];
     return variants.map(v => ({
       name: v.name,
@@ -1084,7 +1164,7 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
   const [basePrice, setBasePrice] = useState(product?.basePrice?.toString() || "");
   const [oldPrice, setOldPrice] = useState(product?.oldPrice?.toString() || "");
   const [images, setImages] = useState<string[]>(product?.images || []);
-  const [variants, setVariants] = useState<any[]>(convertToEditorFormat(product?.variants));
+  const [variants, setVariants] = useState<EditorVariant[]>(convertToEditorFormat(product?.variants));
 
   const isEditing = !!product;
 
@@ -1096,7 +1176,7 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
       options: group.variants || []
     })) : undefined;
     
-    const productData = {
+    const productData: ProductFormData = {
       ...(product?._id ? { productId: product._id } : {}),
       name,
       description,
@@ -1181,9 +1261,9 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
 }
 
 function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
-  if (!isOpen) return null;
-
   const [activeTab, setActiveTab] = useState("delivery");
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
@@ -1252,7 +1332,7 @@ function DeliveryPricingSettings({ storeId }: { storeId: string }) {
     storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
   const setDeliveryPricing = useMutation(api.siteContent.setDeliveryPricing);
-  const [isSaving, setIsSaving] = useState(false);
+  const [_isSaving, _setIsSaving] = useState(false);
   const [savedMessage, setSavedMessage] = useState(false);
 
   const wilayas = [
@@ -1295,7 +1375,7 @@ function DeliveryPricingSettings({ storeId }: { storeId: string }) {
         </div>
         <div className="max-h-[400px] overflow-y-auto">
           {wilayas.map((wilaya) => {
-            const pricing = deliveryPricing?.find((p: any) => p.wilaya === wilaya);
+            const pricing = deliveryPricing?.find((p: Doc<"deliveryPricing">) => p.wilaya === wilaya);
             const homePrice = pricing?.homeDelivery ?? 600;
             const officePrice = pricing?.officeDelivery ?? 400;
 
@@ -1338,20 +1418,21 @@ function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
   const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
 
   const [provider, setProvider] = useState<"none" | "zr-express" | "yalidine">("none");
-  const [apiKey, setApiKey] = useState("");
-  const [apiToken, setApiToken] = useState("");
+  const [apiKey, setApiKey] = useState<string>("");
+  const [apiToken, setApiToken] = useState<string>("");
+
+  // Sync form state with delivery integration data
+  useEffect(() => {
+    if (deliveryIntegration) {
+      setProvider(deliveryIntegration.provider as "none" | "zr-express" | "yalidine");
+      setApiKey(deliveryIntegration.apiKey ?? "");
+      setApiToken(deliveryIntegration.apiToken ?? "");
+    }
+  }, [deliveryIntegration]);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
-
-  useEffect(() => {
-    if (deliveryIntegration) {
-      setProvider((deliveryIntegration.provider as any) || "none");
-      setApiKey(deliveryIntegration.apiKey || "");
-      setApiToken(deliveryIntegration.apiToken || "");
-    }
-  }, [deliveryIntegration]);
 
   const handleProviderChange = async (newProvider: "none" | "zr-express" | "yalidine") => {
     setProvider(newProvider);
@@ -1400,7 +1481,7 @@ function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
         apiToken,
       });
       setTestResult(result);
-    } catch (error) {
+    } catch (_error) {
       setTestResult({ success: false, message: "فشل الاتصال" });
     }
     setIsTesting(false);
@@ -1416,14 +1497,14 @@ function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
       </div>
 
       <div className="flex gap-3">
-        {[
-          { value: "none", label: "بدون" },
-          { value: "zr-express", label: "ZR Express" },
-          { value: "yalidine", label: "Yalidine" },
-        ].map((opt) => (
+        {([
+          { value: "none" as const, label: "بدون" },
+          { value: "zr-express" as const, label: "ZR Express" },
+          { value: "yalidine" as const, label: "Yalidine" },
+        ]).map((opt) => (
           <button
             key={opt.value}
-            onClick={() => handleProviderChange(opt.value as any)}
+            onClick={() => handleProviderChange(opt.value)}
             className={`flex-1 py-3 text-sm font-medium border ${
               provider === opt.value
                 ? "border-[#171717] dark:border-[#fafafa] bg-[#f5f5f5] dark:bg-[#171717] text-[#171717] dark:text-[#fafafa]"

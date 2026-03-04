@@ -16,14 +16,14 @@ function getSystemTheme(): ThemeName {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeName>("light");
+function getInitialTheme(): ThemeName {
+  if (typeof window === "undefined") return "light";
+  const stored = localStorage.getItem("marlon-theme") as ThemeName | null;
+  return stored || getSystemTheme();
+}
 
-  useLayoutEffect(() => {
-    const stored = localStorage.getItem("marlon-theme") as ThemeName | null;
-    const initial = stored || getSystemTheme();
-    setThemeState(initial);
-  }, []);
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [theme, setThemeState] = useState<ThemeName>(getInitialTheme);
 
   useLayoutEffect(() => {
     applyTheme(theme);

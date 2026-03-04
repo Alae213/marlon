@@ -1,13 +1,17 @@
-// @ts-nocheck
-import { v, query, mutation, action } from "convex/server";
+import { query, mutation, action } from "./_generated/server";
+import { v } from "convex/values";
 
 // Import types from the generated API
-import type { Doc } from "../convex/_generated/dataModel";
+import type { Doc } from "./_generated/dataModel";
 
 // Type definitions for site content
 interface NavbarContent {
+  logo?: string;
   logoStorageId?: string;
   logoUrl?: string;
+  background?: "dark" | "light" | "transparent";
+  textColor?: "dark" | "light";
+  showCart?: boolean;
   links: Array<{
     text: string;
     url: string;
@@ -17,14 +21,20 @@ interface NavbarContent {
 
 interface HeroContent {
   title?: string;
+  subtitle?: string;
   ctaText?: string;
   ctaColor?: string;
+  ctaLink?: string;
   layout?: "left" | "center" | "right";
   backgroundImageStorageId?: string;
   backgroundImageUrl?: string;
+  backgroundImage?: string;
 }
 
 interface FooterContent {
+  logo?: string;
+  logoStorageId?: string;
+  description?: string;
   contactEmail?: string;
   contactPhone?: string;
   copyright?: string;
@@ -58,7 +68,7 @@ export const getSiteContent = query({
 
     if (!content) return null;
 
-    const typedContent = content.content as any;
+    const typedContent = content.content as SiteContent;
 
     if (args.section === "navbar" && (typedContent as NavbarContent)?.logoStorageId) {
       const logoUrl = await ctx.storage.getUrl((typedContent as NavbarContent).logoStorageId!);
@@ -82,7 +92,7 @@ export const getSiteContentResolved = query({
 
     if (!content) return null;
 
-    const typedContent = content.content as any;
+    const typedContent = content.content as SiteContent;
 
     // Resolve URLs for different content types
     if (args.section === "navbar" && (typedContent as NavbarContent)?.logoStorageId) {
@@ -205,12 +215,12 @@ export const setLogoAndSyncFooter = mutation({
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "footer"))
       .first();
 
-    const nextNavbar: any = {
+    const nextNavbar: NavbarContent = {
       ...(navbarDoc?.content ?? DEFAULT_NAVBAR),
       logoStorageId: args.logoStorageId,
     };
 
-    const nextFooter: any = {
+    const nextFooter: FooterContent = {
       ...(footerDoc?.content ?? DEFAULT_FOOTER),
       logoStorageId: args.logoStorageId,
     };
@@ -500,32 +510,32 @@ export const testDeliveryConnection = action({
 });
 
 // Default site content templates
-export const DEFAULT_NAVBAR = {
-  logo: null,
-  logoStorageId: null,
+export const DEFAULT_NAVBAR: NavbarContent = {
+  logoStorageId: undefined,
+  logoUrl: undefined,
   background: "light",
   textColor: "dark",
   links: [
-    { label: "الرئيسية", href: "/" },
-    { label: "المنتجات", href: "/#products" },
-    { label: "تواصل معنا", href: "/#contact" },
+    { text: "الرئيسية", url: "/", enabled: true },
+    { text: "المنتجات", url: "/#products", enabled: true },
+    { text: "تواصل معنا", url: "/#contact", enabled: true },
   ],
   showCart: true,
 };
 
-export const DEFAULT_HERO = {
+export const DEFAULT_HERO: HeroContent = {
   title: "متجرنا الإلكتروني",
   subtitle: "أفضل المنتجات بأسعار منافسة",
   ctaText: "تسوق الآن",
   ctaLink: "/#products",
-  layout: "centered",
-  backgroundImage: null,
+  layout: "center",
+  backgroundImage: undefined,
 };
 
-export const DEFAULT_FOOTER = {
-  logo: null,
-  logoStorageId: null,
-  description: "متجرنا为您提供最好的产品",
+export const DEFAULT_FOOTER: FooterContent = {
+  logo: undefined,
+  logoStorageId: undefined,
+  description: "متجرنا يوفر لك أفضل المنتجات",
   contactEmail: "",
   contactPhone: "",
   socialLinks: [],
