@@ -8,6 +8,7 @@ export default defineSchema({
     firstName: v.optional(v.string()),
     lastName: v.optional(v.string()),
     phone: v.optional(v.string()),
+    theme: v.optional(v.string()),
     createdAt: v.number(),
     updatedAt: v.number(),
   }).index("clerkId", ["clerkId"]),

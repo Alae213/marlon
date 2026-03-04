@@ -68,6 +68,16 @@
   --popover: #ffffff;
   --popover-foreground: #171717;
 
+  /* NEW: Weight-based color system - Light mode */
+  --system-50: #FAFAFA;
+  --system-100: #EFEFEF;
+  --system-200: #D6D6D6;
+  --system-300: #929292;
+  --system-400: #5D5D5D;
+  --system-500: #3D3D3D;
+  --system-600: #1F1F1F;
+  --system-700: #000000;
+
   /* Spacing tokens */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -78,14 +88,14 @@
   --spacing-3xl: 4rem;
 
   /* Typography tokens */
-  --font-sans: "DM Sans", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
-  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "DM Sans", system-ui, sans-serif;
+  --font-sans: "Geist", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", "Geist", system-ui, sans-serif;
 
   /* Radius tokens */
   --radius-none: 0;
-  --radius-sm: 0.125rem;
-  --radius-md: 0.25rem;
-  --radius-lg: 0.5rem;
+  --radius-sm: 18px;
+  --radius-md: 24px;
+  --radius-lg: 32px;
   --radius-full: 9999px;
 
   /* Shadow tokens */

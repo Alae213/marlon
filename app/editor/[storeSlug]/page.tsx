@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink } from "lucide-react";
+import { Plus, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink, Sun, Moon } from "lucide-react";
 import { Button } from "@/components/core/button";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
@@ -18,6 +18,8 @@ import { ImageCropper } from "@/components/image-cropper";
 import { InlineVariantEditor } from "@/components/inline-variant-editor";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 import { UserButton } from "@clerk/nextjs";
+import { ThemeToggle } from "@/components/core/theme-toggle";
+import { useTheme } from "@/lib/theme/provider";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -1229,8 +1231,88 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
   );
 }
 
+function PreferencesSettings() {
+  const { theme, isLoading } = useTheme();
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-medium text-[#171717] dark:text-[#fafafa] mb-2">المظهر</h3>
+        <p className="text-sm text-[#737373] mb-4">
+          اختر وضع المظهر الذي يناسبك. سيتم حفظ تفضيلك تلقائياً.
+        </p>
+        
+        <div className="space-y-4">
+          {/* Theme Toggle */}
+          <div className="flex items-center justify-between p-4 border border-[#e5e5e5] dark:border-[#262626] rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-gray-700 dark:to-gray-900 flex items-center justify-center">
+                {theme === "dark" ? (
+                  <Moon className="w-5 h-5 text-white" />
+                ) : (
+                  <Sun className="w-5 h-5 text-white" />
+                )}
+              </div>
+              <div>
+                <div className="font-medium text-[#171717] dark:text-[#fafafa]">
+                  وضع المظهر
+                </div>
+                <div className="text-sm text-[#737373]">
+                  {theme === "dark" ? "الوضع الليلي" : "الوضع النهاري"}
+                </div>
+              </div>
+            </div>
+            <ThemeToggle />
+          </div>
+
+          {/* Theme Preview */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className={`p-4 border-2 rounded-lg transition-all ${
+              theme === "light" 
+                ? "border-[#171717] bg-white" 
+                : "border-[#e5e5e5] bg-white opacity-50"
+            }`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Sun className="w-4 h-4 text-yellow-500" />
+                <span className="font-medium text-[#171717]">وضع نهاري</span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 bg-gray-200 rounded"></div>
+                <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+              </div>
+            </div>
+            
+            <div className={`p-4 border-2 rounded-lg transition-all ${
+              theme === "dark" 
+                ? "border-[#fafafa] bg-[#0a0a0a]" 
+                : "border-[#262626] bg-[#0a0a0a] opacity-50"
+            }`}>
+              <div className="flex items-center gap-2 mb-3">
+                <Moon className="w-4 h-4 text-blue-400" />
+                <span className="font-medium text-[#fafafa]">وضع ليلي</span>
+              </div>
+              <div className="space-y-2">
+                <div className="h-2 bg-gray-700 rounded"></div>
+                <div className="h-2 bg-gray-700 rounded w-3/4"></div>
+                <div className="h-2 bg-gray-700 rounded w-1/2"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-3 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg">
+        <p className="text-sm text-[#737373]">
+          💡 يتم حفظ تفضيلات المظهر تلقائياً وسيتم تطبيقها عند زيارتك القادمة.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
-  const [activeTab, setActiveTab] = useState("delivery");
+  const [activeTab, setActiveTab] = useState("preferences");
 
   if (!isOpen) return null;
 
@@ -1247,6 +1329,16 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
         </div>
         
         <div className="flex border-b border-[#e5e5e5] dark:border-[#262626]">
+          <button
+            onClick={() => setActiveTab("preferences")}
+            className={`flex-1 py-3 text-sm font-medium ${
+              activeTab === "preferences"
+                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                : "text-[#737373]"
+            }`}
+          >
+            التفضيلات
+          </button>
           <button
             onClick={() => setActiveTab("delivery")}
             className={`flex-1 py-3 text-sm font-medium ${
@@ -1280,6 +1372,9 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {activeTab === "preferences" && (
+            <PreferencesSettings />
+          )}
           {activeTab === "delivery" && (
             <DeliveryPricingSettings storeId={storeId} />
           )}

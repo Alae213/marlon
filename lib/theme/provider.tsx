@@ -1,12 +1,16 @@
 "use client";
 
-import { createContext, useContext, useLayoutEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useLayoutEffect, useState, ReactNode, useEffect } from "react";
 import { themes, ThemeName } from "./config";
+import { useAuth } from "@clerk/nextjs";
+import { api } from "@/convex/_generated/api";
+import { useMutation, useQuery } from "convex/react";
 
 interface ThemeContextType {
   theme: ThemeName;
   setTheme: (theme: ThemeName) => void;
   colors: typeof themes.light.colors;
+  isLoading: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -23,22 +27,66 @@ function getInitialTheme(): ThemeName {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
+  const { isSignedIn, user } = useAuth();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Fetch user theme preference from database
+  const userData = useQuery(
+    api.users.getUserByClerkId,
+    isSignedIn && user ? { clerkId: user.id } : "skip"
+  );
+  
+  // Update theme mutation
+  const updateThemeMutation = useMutation(api.users.updateUserTheme);
+
+  // Set initial theme based on user preference or fallback
+  useEffect(() => {
+    if (isSignedIn && userData) {
+      // Priority: user's saved preference > system preference > light
+      const userTheme = userData.theme as ThemeName;
+      if (userTheme && (userTheme === "light" || userTheme === "dark")) {
+        setThemeState(userTheme);
+        localStorage.setItem("marlon-theme", userTheme);
+      } else {
+        const systemTheme = getSystemTheme();
+        setThemeState(systemTheme);
+        localStorage.setItem("marlon-theme", systemTheme);
+      }
+      setIsLoading(false);
+    } else if (!isSignedIn) {
+      // Not signed in, use localStorage or system preference
+      const fallbackTheme = getInitialTheme();
+      setThemeState(fallbackTheme);
+      setIsLoading(false);
+    }
+  }, [isSignedIn, userData]);
 
   useLayoutEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
+    if (!isLoading) {
+      applyTheme(theme);
+    }
+  }, [theme, isLoading]);
 
-  const setTheme = (newTheme: ThemeName) => {
+  const setTheme = async (newTheme: ThemeName) => {
     setThemeState(newTheme);
     localStorage.setItem("marlon-theme", newTheme);
     applyTheme(newTheme);
+    
+    // Update database if user is signed in
+    if (isSignedIn && user) {
+      try {
+        await updateThemeMutation({ clerkId: user.id, theme: newTheme });
+      } catch (error) {
+        console.error("Failed to update theme in database:", error);
+      }
+    }
   };
 
   const colors = themes[theme].colors;
 
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, colors }}>
+    <ThemeContext.Provider value={{ theme, setTheme, colors, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );

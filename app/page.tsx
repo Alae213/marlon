@@ -19,6 +19,7 @@ import {
 import { Button, Input } from "@/components/core";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 
+// Types
 interface StoreData {
   _id: string;
   name: string;
@@ -30,6 +31,7 @@ interface StoreData {
   subscription: string;
 }
 
+// Store Card Component - Displays individual store with status and basic info
 function StoreCard({ store }: { store: StoreData }) {
   const getStatusBadge = () => {
     switch (store.subscription) {
@@ -44,42 +46,24 @@ function StoreCard({ store }: { store: StoreData }) {
 
   return (
     <Link href={`/editor/${store.slug}`} className="group block">
-      <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] p-8 hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300">
-        <div className="flex items-start justify-between mb-6">
-          <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center">
-{store.logo ? (
-              <div className="relative w-8 h-8">
-                <Image src={store.logo} alt={store.name} fill className="object-cover" />
-              </div>
-            ) : (
-              <Store className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" />
-            )}
-          </div>
-          {getStatusBadge()}
+      <div className="flex flex-col items-end cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px]"
+            style={{ borderRadius: '32px' }}>
+
+              <div className="flex items-center justify-between">
+          <ExternalLink className="w-3.5 h-3.5" />
         </div>
-        
-        <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-2 group-hover:text-[#525252] dark:group-hover:text-[#d4d4d4] transition-colors">
+
+        <h3 className="font-medium text-[var(--system-50)]">
           {store.name}
         </h3>
         
-        <p className="text-sm text-[#737373] mb-6 line-clamp-2">
-          {store.description || "لا يوجد وصف"}
-        </p>
         
-        <div className="flex items-center justify-between">
-          <span className="text-sm text-[#a3a3a3]">
-            {store.orderCount} طلب
-          </span>
-          <span className="flex items-center gap-1 text-sm text-[#171717] dark:text-[#fafafa] font-medium">
-            فتح المتجر
-            <ExternalLink className="w-3.5 h-3.5" />
-          </span>
-        </div>
       </div>
     </Link>
   );
 }
 
+// Create Store Modal Component - Handles new store creation form
 function CreateStoreModal({ isOpen, onClose, onSuccess }: { 
   isOpen: boolean; 
   onClose: () => void;
@@ -205,6 +189,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   );
 }
 
+// Dashboard Content Component - Main dashboard view with store list and create button
 function DashboardContent() {
   const { user, isLoaded } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -234,51 +219,24 @@ function DashboardContent() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-12">
-        <div>
-          <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa]">متاجرتي</h1>
-          <p className="text-[#737373] mt-2">إدارة جميع متاجرك في مكان واحد</p>
-        </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5">
-            {isConnected ? (
-              <div className="flex items-center gap-2">
-                <Wifi className="w-4 h-4 text-[#16a34a]" />
-                <span className="text-sm text-[#737373]">متصل</span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <WifiOff className="w-4 h-4 text-[#a3a3a3]" />
-                <span className="text-sm text-[#a3a3a3]">غير متصل</span>
-              </div>
-            )}
-          </div>
-          
+    <>
+    <div className="flex flex-col gap-4 h-screen justify-between items-center py-10 max-w-5xl mx-auto bg-[var(--system-50)] dark:bg-[var(--system-900)]">
+      
+        <Image src="/logo.svg" alt="Marlon Logo" width={71} height={22} />
+      
           <SignedIn>
-            <div className="flex items-center gap-3">
-              <Button onClick={() => setIsCreateModalOpen(true)}>
-                <Plus className="w-4 h-4" />
-                متجر جديد
-              </Button>
-              <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
-            </div>
-          </SignedIn>
-        </div>
-      </div>
-
-      <SignedIn>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="flex flex-row gap-4 ">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="group flex flex-col items-center justify-center min-h-[200px] border border-dashed border-[#e5e5e5] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300 cursor-pointer bg-transparent"
+            className="flex flex-col items-end cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
+            style={{ borderRadius: '32px' }}
           >
-            <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-300">
-              <Plus className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" />
+            <div className="w-12 h-12 bg-[var(--system-200)] flex items-center justify-center rounded-[26px]">
+              <Plus className="w-5 h-5 text-[var(--system-600)]" />
             </div>
-            <p className="font-medium text-[#171717] dark:text-[#fafafa]">متجر جديد</p>
-            <p className="text-sm text-[#737373] mt-1">أنشئ متجرك الأول</p>
+
+            <p className="font-medium text-[var(--system-600)]">new store </p>
+
           </button>
 
           {storesData.map((store) => (
@@ -286,42 +244,24 @@ function DashboardContent() {
           ))}
         </div>
 
-        {storesData.length === 0 && (
-          <div className="text-center py-16">
-            <Package className="w-10 h-10 text-[#d4d4d4] mx-auto mb-4" />
-            <p className="text-[#737373]">لا توجد متاجر بعد. أنشئ متجرك الأول!</p>
-          </div>
-        )}
-      </SignedIn>
+      </SignedIn><CreateStoreModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSuccess={() => { } } />
 
-      <CreateStoreModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSuccess={() => {}} />
+        <p className="text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
     </div>
+    </>
   );
 }
 
+// Landing Page Component - Public landing page for unauthenticated users
 function LandingPage() {
   return (
     <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
       <header className="flex items-center justify-between px-8 py-6">
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] flex items-center justify-center">
-            <span className="text-white dark:text-[#171717] font-medium text-base">م</span>
-          </div>
-          <span className="text-base font-normal text-[#171717] dark:text-[#fafafa]">مارلون</span>
-        </Link>
+        
       </header>
 
       <main className="flex min-h-[calc(100vh-88px)] flex-col items-center justify-center px-4">
         <div className="w-full max-w-lg text-center">
-          <div className="mb-10">
-            <h1 className="text-4xl md:text-5xl font-normal text-[#171717] dark:text-[#fafafa] mb-6 leading-tight">
-              أنشئ متجرك الإلكتروني
-              <span className="block text-[#525252] dark:text-[#a3a3a3]">في دقائق</span>
-            </h1>
-            <p className="text-base text-[#525252] dark:text-[#a3a3a3] max-w-md mx-auto leading-relaxed">
-              منصة تجارة إلكترونية للموزعين الجزائريين. أنشئ متجرك وابدأ البيع الآن بدون تكاليف شهرية
-            </p>
-          </div>
 
           <SignedOut>
             <div className="flex flex-col items-center gap-4">
@@ -346,6 +286,7 @@ function LandingPage() {
   );
 }
 
+// Main Page Component - Root page with authentication and dashboard
 export default function HomePage() {
   const { user, isLoaded } = useUser();
   
