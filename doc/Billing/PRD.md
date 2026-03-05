@@ -41,7 +41,7 @@ Store created → status: trial, orderCount: 0
 ## Locked State Behavior
 
 - **Public storefront**: fully operational — customers can still place orders
-- **Orders page**: orders visible, but customer name/phone/address replaced with `***`; all action buttons disabled; call log disabled; notes disabled
+- **Orders page**: orders visible, but customer name/phone/address replaced with `***`; all action buttons disabled; call log disabled; notes disabled 
 - **Editor**: full access (products, site content)
 - **Customer data**: never deleted, only masked while locked; revealed after payment
 - Overlay message: "Unlock your store to manage orders: Pay 2000 DZD" + Pay Now button

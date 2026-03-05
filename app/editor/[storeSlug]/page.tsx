@@ -967,7 +967,8 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                         onBlur={async () => {
                           await setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
                           setEditingField(null);
-                        }}
+                        }} 
+                        
                         onKeyDown={(e) => {
                           if (e.key === "Enter") {
                             setFooterStyles({ storeId: storeId as Id<"stores">, contactEmail: editValue });
@@ -1244,20 +1245,20 @@ function PreferencesSettings() {
         
         <div className="space-y-4">
           {/* Theme Toggle */}
-          <div className="flex items-center justify-between p-4 border border-[#e5e5e5] dark:border-[#262626] rounded-lg">
+          <div className="flex items-center justify-between p-4 border border-[var(--border)]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-300 to-orange-400 dark:from-gray-700 dark:to-gray-900 flex items-center justify-center">
+              <div className="w-10 h-10 bg-[var(--bg-primary)] border border-[var(--border)] flex items-center justify-center">
                 {theme === "dark" ? (
-                  <Moon className="w-5 h-5 text-white" />
+                  <Moon className="w-5 h-5 text-[var(--text-primary)]" />
                 ) : (
-                  <Sun className="w-5 h-5 text-white" />
+                  <Sun className="w-5 h-5 text-[var(--text-primary)]" />
                 )}
               </div>
               <div>
-                <div className="font-medium text-[#171717] dark:text-[#fafafa]">
+                <div className="font-medium text-[var(--text-primary)]">
                   وضع المظهر
                 </div>
-                <div className="text-sm text-[#737373]">
+                <div className="text-sm text-[var(--text-secondary)]">
                   {theme === "dark" ? "الوضع الليلي" : "الوضع النهاري"}
                 </div>
               </div>
@@ -1265,40 +1266,6 @@ function PreferencesSettings() {
             <ThemeToggle />
           </div>
 
-          {/* Theme Preview */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className={`p-4 border-2 rounded-lg transition-all ${
-              theme === "light" 
-                ? "border-[#171717] bg-white" 
-                : "border-[#e5e5e5] bg-white opacity-50"
-            }`}>
-              <div className="flex items-center gap-2 mb-3">
-                <Sun className="w-4 h-4 text-yellow-500" />
-                <span className="font-medium text-[#171717]">وضع نهاري</span>
-              </div>
-              <div className="space-y-2">
-                <div className="h-2 bg-gray-200 rounded"></div>
-                <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            </div>
-            
-            <div className={`p-4 border-2 rounded-lg transition-all ${
-              theme === "dark" 
-                ? "border-[#fafafa] bg-[#0a0a0a]" 
-                : "border-[#262626] bg-[#0a0a0a] opacity-50"
-            }`}>
-              <div className="flex items-center gap-2 mb-3">
-                <Moon className="w-4 h-4 text-blue-400" />
-                <span className="font-medium text-[#fafafa]">وضع ليلي</span>
-              </div>
-              <div className="space-y-2">
-                <div className="h-2 bg-gray-700 rounded"></div>
-                <div className="h-2 bg-gray-700 rounded w-3/4"></div>
-                <div className="h-2 bg-gray-700 rounded w-1/2"></div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1354,7 +1321,7 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
             className={`flex-1 py-3 text-sm font-medium ${
               activeTab === "integration"
                 ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                : "text-[#737373]"
+                : "text-[var(--system-600)]"
             }`}
           >
             شركات التوصيل

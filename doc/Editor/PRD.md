@@ -51,6 +51,7 @@ The Editor is where merchants build their store — add/edit products, customize
 
 ---
 
+
 ## Relevant Data Models
 
 ### Product
