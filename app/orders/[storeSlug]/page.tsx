@@ -263,25 +263,32 @@ const handleAddAdminNote = useCallback(async () => {
         <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
       </div>
 
+      {/* Page Title with New Orders Indicator */}
       <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
           <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">الطلبات</h1>
+          {/* Animated indicator for new orders */}
           {newOrdersCount > 0 && (
             <span className="flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#2563eb] opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563eb]"></span>
               <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#dc2626] opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#dc2626]"></span>
             </span>
           )}
         </div>
+        {/* Export functionality placeholder */}
         <button className="flex items-center gap-2 px-4 py-2 border border-[#e5e5e5] dark:border-[#404040] text-[#525252] dark:text-[#a3a3a3] hover:text-[#171717] dark:hover:text-[#fafafa] transition-colors text-sm">
           <Download className="w-4 h-4" />
           تصدير
         </button>
       </div>
 
+      {/* Filters and Search Bar */}
       <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden">
         <div className="p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
           <div className="flex flex-wrap items-center gap-4">
+            {/* Search input with icon */}
             <div className="flex-1 min-w-[200px] relative">
               <Search className="absolute start-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[#a3a3a3]" />
               <input
@@ -293,6 +300,7 @@ const handleAddAdminNote = useCallback(async () => {
               />
             </div>
             
+            {/* Status filter dropdown */}
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
@@ -308,6 +316,7 @@ const handleAddAdminNote = useCallback(async () => {
               <option value="hold">معلق</option>
             </select>
 
+            {/* Date filter dropdown */}
             <select
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
@@ -321,14 +330,17 @@ const handleAddAdminNote = useCallback(async () => {
           </div>
         </div>
 
+        {/* Orders Table */}
         <div className="overflow-x-auto">
           <table className="w-full">
+            {/* Table Header */}
             <thead>
               <tr className="border-b border-[#e5e5e5] dark:border-[#262626] text-start">
                 <th className="px-4 py-3 text-sm font-normal text-[#737373]">الطلب</th>
                 <th className="px-4 py-3 text-sm font-normal text-[#737373]">العميل</th>
                 <th className="px-4 py-3 text-sm font-normal text-[#737373]">الولاية</th>
                 <th className="px-4 py-3 text-sm font-normal text-[#737373]">المجموع</th>
+                {/* Sortable status column */}
                 <th 
                   className="px-4 py-3 text-sm font-normal text-[#737373] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa] transition-colors"
                   onClick={() => handleSort("status")}
@@ -338,6 +350,7 @@ const handleAddAdminNote = useCallback(async () => {
                     <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
                   </div>
                 </th>
+                {/* Sortable date column */}
                 <th 
                   className="px-4 py-3 text-sm font-normal text-[#737373] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa] transition-colors"
                   onClick={() => handleSort("date")}
@@ -349,6 +362,7 @@ const handleAddAdminNote = useCallback(async () => {
                 </th>
               </tr>
             </thead>
+            {/* Table Body */}
             <tbody className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
               {filteredOrders.map((order) => (
                 <tr 
@@ -356,14 +370,17 @@ const handleAddAdminNote = useCallback(async () => {
                   className="hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors cursor-pointer"
                   onClick={() => setSelectedOrder(order)}
                 >
+                  {/* Order number with new order indicator */}
                   <td className="px-4 py-4">
                     <span className="font-mono text-sm font-normal text-[#171717] dark:text-[#fafafa]">
                       {order.orderNumber}
                     </span>
+                    {/* Blue dot for new orders */}
                     {order.status === "new" && (
                       <span className="ms-2 inline-flex h-2 w-2 rounded-full bg-[#2563eb]"></span>
                     )}
                   </td>
+                  {/* Customer information with privacy protection */}
                   <td className="px-4 py-4">
                     <div>
                       <LockedData fallback="***">
@@ -376,19 +393,23 @@ const handleAddAdminNote = useCallback(async () => {
                       </LockedData>
                     </div>
                   </td>
+                  {/* Customer location with privacy protection */}
                   <td className="px-4 py-4 text-[#525252] dark:text-[#a3a3a3]">
                     <LockedData fallback="***">
                       {order.customerWilaya}
                     </LockedData>
                   </td>
+                  {/* Order total */}
                   <td className="px-4 py-4 font-normal text-[#171717] dark:text-[#fafafa]">
                     {formatPrice(order.total)}
                   </td>
-<td className="px-4 py-4">
+{/* Order status badge */}
+                  <td className="px-4 py-4">
                     <Badge variant={STATUS_LABELS[order.status as OrderStatus]?.variant || "default"}>
                       {STATUS_LABELS[order.status as OrderStatus]?.label || order.status}
                     </Badge>
                   </td>
+                  {/* Order creation date */}
                   <td className="px-4 py-4 text-sm text-[#737373]">
                     {formatDate(order.createdAt)}
                   </td>

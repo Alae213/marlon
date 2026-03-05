@@ -14,10 +14,10 @@ export default function MarketingPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-bold text-[#171717] dark:text-[#fafafa] mb-2">
-          التسويق
+          Marketing
         </h1>
         <p className="text-[#737373]">
-          أدوات التسويق والترويج لمتجرك - قريباً
+          Marketing and promotion tools for your store - Coming Soon
         </p>
       </div>
 
@@ -30,10 +30,10 @@ export default function MarketingPage() {
           
           <div>
             <h2 className="text-xl font-medium text-[#171717] dark:text-[#fafafa] mb-2">
-              قريباً
+              Coming Soon
             </h2>
             <p className="text-[#737373] mb-4">
-              نعمل على تطوير أدوات تسويق متقدمة لمساعدتك في نمو متجرك
+              We are working on advanced marketing tools to help grow your store
             </p>
           </div>
 
@@ -44,10 +44,10 @@ export default function MarketingPage() {
                 <Target className="w-6 h-6 text-[#a3a3a3]" />
               </div>
               <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
-                الحملات الإعلانية
+                Advertising Campaigns
               </h3>
               <p className="text-sm text-[#737373]">
-                إنشاء وإدارة حملات تسويقية مخصصة
+                Create and manage custom marketing campaigns
               </p>
             </div>
 
@@ -56,10 +56,10 @@ export default function MarketingPage() {
                 <TrendingUp className="w-6 h-6 text-[#a3a3a3]" />
               </div>
               <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
-                التحليلات والتقارير
+                Analytics & Reports
               </h3>
               <p className="text-sm text-[#737373]">
-                تتبع أداء حملاتك التسويقية
+                Track your marketing campaign performance
               </p>
             </div>
 
@@ -68,10 +68,10 @@ export default function MarketingPage() {
                 <Users className="w-6 h-6 text-[#a3a3a3]" />
               </div>
               <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
-                التسويق عبر البريد
+                Email Marketing
               </h3>
               <p className="text-sm text-[#737373]">
-                التواصل مع عملائك عبر البريد الإلكتروني
+                Communicate with your customers via email
               </p>
             </div>
           </div>
@@ -80,19 +80,19 @@ export default function MarketingPage() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mt-8">
             <div className="flex items-center gap-2 text-sm text-[#737373]">
               <Zap className="w-4 h-4" />
-              <span>كوبونات الخصم</span>
+              <span>Discount Coupons</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#737373]">
               <Calendar className="w-4 h-4" />
-              <span>المواعيد الترويجية</span>
+              <span>Promotional Dates</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#737373]">
               <TrendingUp className="w-4 h-4" />
-              <span>تحليل السوق</span>
+              <span>Market Analysis</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-[#737373]">
               <Users className="w-4 h-4" />
-              <span>ولاء العملاء</span>
+              <span>Customer Loyalty</span>
             </div>
           </div>
         </div>

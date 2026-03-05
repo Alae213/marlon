@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useLayoutEffect, useState, ReactNode, useEffect } from "react";
 import { themes, ThemeName } from "./config";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useUser } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 
@@ -27,7 +27,8 @@ function getInitialTheme(): ThemeName {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { isSignedIn, user } = useAuth();
+  const { isSignedIn } = useAuth();
+  const { user } = useUser();
   const [theme, setThemeState] = useState<ThemeName>(getInitialTheme);
   const [isLoading, setIsLoading] = useState(true);
   

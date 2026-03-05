@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('ar-DZ', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'DZD',
     minimumFractionDigits: 0,
@@ -124,19 +124,19 @@ function ProductDetailContent() {
           <Check className="w-8 h-8 text-white" />
         </div>
         <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-4">
-          تم تأكيد طلبك!
+          Order Confirmed!
         </h1>
         <p className="text-[#525252] dark:text-[#a3a3a3] mb-2">
-          سنتواصل معك على رقم الهاتف للتحقق من طلبك
+          We will contact you at your phone number to verify your order
         </p>
         <p className="text-sm text-[#a3a3a3] mb-8">
-          رقم الطلب: <span className="font-medium">{orderNumber}</span>
+          Order Number: <span className="font-medium">{orderNumber}</span>
         </p>
         <Link
           href={`/${slug}`}
           className="inline-flex items-center gap-2 px-6 py-3 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal"
         >
-          متابعة التسوق
+          Continue Shopping
           <ArrowRight className="w-4 h-4" />
         </Link>
       </div>
@@ -147,7 +147,7 @@ function ProductDetailContent() {
     return (
       <div className="max-w-6xl mx-auto px-6 py-16 text-center">
         <Package className="w-16 h-16 text-[#d4d4d4] mx-auto mb-4" />
-        <p className="text-[#737373]">المنتج غير موجود</p>
+        <p className="text-[#737373]">Product not found</p>
       </div>
     );
   }
@@ -156,7 +156,7 @@ function ProductDetailContent() {
     <div className="max-w-6xl mx-auto px-6 py-8">
       <Link href={`/${slug}`} className="inline-flex items-center gap-2 text-[#737373] hover:text-[#171717] mb-6">
         <ArrowRight className="w-4 h-4 rotate-180" />
-        العودة للمتجر
+        Back to Store
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
@@ -228,7 +228,7 @@ function ProductDetailContent() {
 
           <div className="mb-6">
             <p className="text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
-              الكمية
+              Quantity
             </p>
             <div className="flex items-center gap-3">
               <button
@@ -253,13 +253,13 @@ function ProductDetailContent() {
               className="flex-1 flex items-center justify-center gap-2 h-12 border border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa] font-normal hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
             >
               <ShoppingCart className="w-5 h-5" />
-              إضافة للسلة
+              Add to Cart
             </button>
             <button
               onClick={() => setShowOrderForm(true)}
               className="flex-1 flex items-center justify-center gap-2 h-12 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal hover:opacity-80 transition-opacity"
             >
-              شراء الآن
+              Buy Now
             </button>
           </div>
         </div>
@@ -268,11 +268,11 @@ function ProductDetailContent() {
       {showOrderForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white dark:bg-[#0a0a0a] w-[400px] px-6 py-4 rounded-lg">
-            <h2 className="text-xl font-normal mb-6">تأكيد الطلب</h2>
+            <h2 className="text-xl font-normal mb-6">Confirm Order</h2>
             
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium mb-1">الاسم الكامل</label>
+                <label className="block text-sm font-medium mb-1">Full Name</label>
                 <input
                   type="text"
                   value={orderData.name}
@@ -282,7 +282,7 @@ function ProductDetailContent() {
               </div>
               
               <div>
-                <label className="block text-sm font-medium mb-1">رقم الهاتف</label>
+                <label className="block text-sm font-medium mb-1">Phone Number</label>
                 <input
                   type="tel"
                   value={orderData.phone}
@@ -293,7 +293,7 @@ function ProductDetailContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">الولاية</label>
+                <label className="block text-sm font-medium mb-1">Wilaya</label>
                 <input
                   type="text"
                   value={orderData.wilaya}
@@ -303,7 +303,7 @@ function ProductDetailContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">البلدية</label>
+                <label className="block text-sm font-medium mb-1">Commune</label>
                 <input
                   type="text"
                   value={orderData.commune}
@@ -313,7 +313,7 @@ function ProductDetailContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">نوع التوصيل</label>
+                <label className="block text-sm font-medium mb-2">Delivery Type</label>
                 <div className="flex gap-4">
                   <label className="flex items-center gap-2">
                     <input
@@ -323,7 +323,7 @@ function ProductDetailContent() {
                       checked={orderData.deliveryType === "stopdesk"}
                       onChange={() => setOrderData({ ...orderData, deliveryType: "stopdesk" })}
                     />
-                    <span>مكتب استلام</span>
+                    <span>Pickup Point</span>
                   </label>
                   <label className="flex items-center gap-2">
                     <input
@@ -333,14 +333,14 @@ function ProductDetailContent() {
                       checked={orderData.deliveryType === "domicile"}
                       onChange={() => setOrderData({ ...orderData, deliveryType: "domicile" })}
                     />
-                    <span>توصيل للمنزل</span>
+                    <span>Home Delivery</span>
                   </label>
                 </div>
               </div>
 
               {orderData.deliveryType === "domicile" && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">العنوان</label>
+                  <label className="block text-sm font-medium mb-1">Address</label>
                   <input
                     type="text"
                     value={orderData.address}
@@ -356,14 +356,14 @@ function ProductDetailContent() {
                 onClick={() => setShowOrderForm(false)}
                 className="flex-1 h-10 border border-[#e5e5e5] dark:border-[#404040]"
               >
-                إلغاء
+                Cancel
               </button>
               <button
                 onClick={handleBuyNow}
                 disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
                 className="flex-1 h-10 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] disabled:opacity-50"
               >
-                تأكيد الطلب
+                Confirm Order
               </button>
             </div>
           </div>

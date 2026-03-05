@@ -11,7 +11,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 
 const formatPrice = (price: number) => {
-  return new Intl.NumberFormat('ar-DZ', {
+  return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'DZD',
     minimumFractionDigits: 0,
@@ -82,7 +82,7 @@ function StorefrontContent() {
                 <Package className="w-5 h-5 text-[#a3a3a3]" />
               )}
             </div>
-            <div className={`font-medium truncate ${navbarTextClass}`}>{store?.name || "المتجر"}</div>
+            <div className={`font-medium truncate ${navbarTextClass}`}>{store?.name || "Store"}</div>
           </div>
 
           <div className="hidden sm:flex items-center gap-5">
@@ -101,7 +101,7 @@ function StorefrontContent() {
 
       <div className="mb-10">
         <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-6 text-center">
-          {store?.name || "المتجر"}
+          {store?.name || "Store"}
         </h1>
         
         <div className="max-w-md mx-auto relative">
@@ -110,7 +110,7 @@ function StorefrontContent() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="البحث عن منتج..."
+            placeholder="Search for a product..."
             className="w-full h-11 ps-11 pe-4 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-[#171717] dark:text-[#fafafa] placeholder:text-[#a3a3a3] focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa] transition-colors"
           />
         </div>
@@ -172,7 +172,7 @@ function StorefrontContent() {
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[#737373]">لا توجد منتجات</p>
+          <p className="text-[#737373]">No products available</p>
         </div>
       )}
     </div>
