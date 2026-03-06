@@ -1,8 +1,14 @@
 "use client";
 
-import { Truck, Package, Megaphone } from "lucide-react";
+import { Home, Truck, Package, Megaphone } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/animate-ui/components/animate/tooltip";
 
 interface BottomNavigationProps {
   storeSlug: string;
@@ -14,55 +20,95 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
 
   const navItems = [
     {
-      id: "orders",
-      label: "الطلبات",
-      icon: Truck,
-      href: `/orders/${storeSlug}`,
-      isActive: currentPage === "orders",
+      id: "marketing",
+      label: "Marketing", 
+      icon: Megaphone,
+      href: `/marketing/${storeSlug}`,
+      isActive: currentPage === "marketing",
     },
     {
       id: "products", 
-      label: "المنتجات",
+      label: "Editor",
       icon: Package,
       href: `/editor/${storeSlug}`,
       isActive: currentPage === "products",
     },
     {
-      id: "marketing",
-      label: "التسويق", 
-      icon: Megaphone,
-      href: `/marketing/${storeSlug}`,
-      isActive: currentPage === "marketing",
+      id: "orders",
+      label: "Orders",
+      icon: Truck,
+      href: `/orders/${storeSlug}`,
+      isActive: currentPage === "orders",
     },
+    
+    
   ];
 
   return (
-    <>
-      {/* Fixed Bottom Navigation - 200px centered */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-full px-6 py-2 flex justify-around items-center z-40 shadow-lg w-[300px]">
+    <TooltipProvider>
+      
+      <div 
+      className="fixed flex flex-row items-center backdrop-blur-[4px] overflow-hidden justify-center bottom-4 left-1/2 bg-[image:var(--gradient-popup)] -translate-x-1/2  rounded-[999px] p-[5px] z-40 w-fit"
+      style={{
+        boxShadow: 'var(--bottom-nav-shadow)',
+      }}>
+        
+        {/* Back to Home */}
+        <Tooltip side="top">
+          <TooltipTrigger asChild>
+            <Link
+              href="/"
+              className="flex  flex-row items-center gap-2 px-[14px] py-[10px] rounded-[999px] transition-colors text-[#a3a3a3] dark:text-[#525252] hover:bg-white/10"
+            >
+              <Home className="w-5 h-5" />
+            </Link>
+          </TooltipTrigger>
+          <TooltipContent>
+            Home
+          </TooltipContent>
+        </Tooltip>
+
+        <div className="h-[22px] w-[1px] mx-2 "
+            style={{
+            background: "rgba(242, 242, 242, 0.30)",
+            boxShadow: "1px 0px 0 0 rgba(0, 0, 0, 0.30)",
+        }}/>
+        
         {navItems.map((item) => {
           const Icon = item.icon;
           const isExternal = item.id === "marketing";
           
           return (
-            <Link
-              key={item.id}
-              href={item.href}
-              className={`flex flex-col items-center gap-1 transition-colors ${
-                item.isActive
-                  ? "text-[#171717] dark:text-[#fafafa]"
-                  : "text-[#a3a3a3] dark:text-[#525252] hover:text-[#171717] dark:hover:text-[#fafafa]"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="text-xs">{item.label}</span>
-            </Link>
+            <Tooltip key={item.id} side="top">
+              <TooltipTrigger asChild>
+                <Link
+                  href={item.href}
+                  className={`flex flex-row items-center gap-2 px-[14px] py-[8px] rounded-[999px] transition-colors ${
+                    item.isActive
+                      ? "text-[var(--system-100)] bg-white/30 dark:text-[#fafafa]"
+                      : "text-[#a3a3a3] dark:text-[#525252] hover:bg-white/10 "
+                  }`}
+                  style={{ 
+                    fontWeight: '500',
+                    ...(item.isActive && { boxShadow: "0px -1px 0 0px rgba(255, 255, 255, 0.6)" })
+                  }}
+                  
+                >
+                  <Icon className="w-5 h-5" />
+                  {item.isActive && <span className="Body-base">{item.label}</span>}
+                </Link>
+              </TooltipTrigger>
+              <TooltipContent>
+                {item.label}
+              </TooltipContent>
+            </Tooltip>
           );
         })}
+
+        
       </div>
       
-      {/* Add padding bottom to avoid content being hidden behind fixed nav */}
-      <div className="h-20"></div>
-    </>
+      <div className="h-[22px]"></div>
+    </TooltipProvider>
   );
 }

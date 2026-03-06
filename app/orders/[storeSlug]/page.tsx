@@ -250,15 +250,7 @@ const handleAddAdminNote = useCallback(async () => {
       {/* Header with Logo, Back Button, and User Profile */}
       <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e5e5e5] dark:border-[#262626]">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
-          </Link>
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] rounded-full flex items-center justify-center">
-              <Home className="w-4 h-4 text-white dark:text-[#171717]" />
-            </div>
-            <span className="font-medium text-[#171717] dark:text-[#fafafa]">متجري</span>
-          </Link>
+          
         </div>
         <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
       </div>
