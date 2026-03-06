@@ -1,42 +1,32 @@
-import { InputHTMLAttributes, forwardRef } from "react";
+import * as React from "react"
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  label?: string;
-  error?: string;
-  icon?: React.ReactNode;
+import { cn } from "@/lib/utils"
+
+function Input({ className, type, ...props }: React.ComponentProps<"input">) {
+  return (
+    <input
+      type={type}
+      data-slot="input"
+      style={{ boxShadow: "var(--shadow-inside-shadow)" }}
+      className={cn(
+        // Base styles
+        "h-[32px] w-full min-w-0 rounded-[10px] bg-black/20 px-[8px] py-[6px] body-base",
+        "transition-[color,box-shadow] outline-none text-[var(--system-100)]",
+        "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
+        "placeholder:text-[var(--system-300)] text-base leading-[150%]",
+        
+        // Focus states
+        "focus:outline-none focus:ring-0",
+        "focus:text-[var(--system-100)]",
+        
+        // Custom class name
+        className
+      )}
+      {...props}
+    />
+  )
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ className = "", label, error, icon, ...props }, ref) => {
-    return (
-      <div className="w-full">
-        {label && (
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            {label}
-          </label>
-        )}
-        <div className="relative">
-          {icon && (
-            <div className="absolute start-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-              {icon}
-            </div>
-          )}
-          <input
-            ref={ref}
-            className={`w-full h-11 ${icon ? "ps-12" : "px-4"} pe-4 bg-card border ${
-              error 
-                ? "border-destructive" 
-                : "border-input"
-            } text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors disabled:bg-muted disabled:cursor-not-allowed ${className}`}
-            {...props}
-          />
-        </div>
-        {error && (
-          <p className="mt-1.5 text-sm text-destructive">{error}</p>
-        )}
-      </div>
-    );
-  }
-);
+export { Input }
 
-Input.displayName = "Input";
+Input.displayName = "Input"
