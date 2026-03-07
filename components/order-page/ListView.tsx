@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useCallback, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { 
   Search, 
@@ -11,8 +11,6 @@ import {
   Archive,
   X,
   Check,
-  List,
-  LayoutGrid,
 } from "lucide-react";
 import { Badge } from "@/components/core";
 import { LockedData } from "@/components/locked-overlay";
@@ -23,7 +21,6 @@ import type {
   OrderStatus,
 } from "@/lib/orders-types";
 import { STATUS_LABELS } from "@/lib/orders-types";
-import { StatusDropdown } from "./StatusDropdown";
 import { ProductCell } from "./ProductCell";
 
 // Relative time helper
@@ -45,6 +42,20 @@ export function getRelativeTime(timestamp: number): string {
     dateStyle: 'medium',
   }).format(new Date(timestamp));
 }
+
+// Status colors for dropdown
+const statusColors: Record<OrderStatus, { dot: string }> = {
+  new: { dot: "bg-blue-500" },
+  confirmed: { dot: "bg-gray-500" },
+  packaged: { dot: "bg-gray-500" },
+  shipped: { dot: "bg-yellow-500" },
+  succeeded: { dot: "bg-green-500" },
+  canceled: { dot: "bg-red-500" },
+  blocked: { dot: "bg-red-500" },
+  hold: { dot: "bg-yellow-500" },
+};
+
+const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "hold"];
 
 // Sort icon component
 function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {
@@ -69,6 +80,70 @@ interface ListViewProps {
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
   onOrderClick: (order: Doc<"orders">) => void;
+}
+
+// Status Dropdown Component
+function StatusCell({ 
+  orderId, 
+  status, 
+  isOpen, 
+  onToggle, 
+  onStatusChange 
+}: { 
+  orderId: string; 
+  status: string; 
+  isOpen: boolean; 
+  onToggle: (open: boolean) => void;
+  onStatusChange: (status: string) => void;
+}) {
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        onToggle(false);
+      }
+    }
+    
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isOpen, onToggle]);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => onToggle(!isOpen)}
+        className="cursor-pointer"
+      >
+        <Badge variant={STATUS_LABELS[status as OrderStatus]?.variant || "default"}>
+          {STATUS_LABELS[status as OrderStatus]?.label || status}
+        </Badge>
+      </button>
+      
+      {isOpen && (
+        <div className="absolute top-full mt-1 left-0 z-[9999] min-w-[160px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
+          {statuses.map((s) => (
+            <button
+              key={s}
+              onClick={() => {
+                onStatusChange(s);
+                onToggle(false);
+              }}
+              className={`w-full px-3 py-2 text-start body-base flex items-center gap-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
+                status === s ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${statusColors[s].dot}`} />
+              <span className="flex-1 text-[var(--system-600)]">{STATUS_LABELS[s]?.label || s}</span>
+              {status === s && <Check className="w-3.5 h-3.5" />}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function ListView({
@@ -136,8 +211,6 @@ export function ListView({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchOpen, onSearchOpenChange]);
 
-  const dayMs = 86400000;
-
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
     
@@ -166,7 +239,7 @@ export function ListView({
     });
 
     return filtered;
-  }, [orders, searchQuery, sortField, sortDirection, currentTime, dayMs]);
+  }, [orders, searchQuery, sortField, sortDirection, currentTime]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -178,15 +251,10 @@ export function ListView({
 
   const handleSelectAll = (checked: boolean) => {
     onSelectAll(checked);
-    if (checked) {
-      // Note: filteredOrders is passed from parent, we need to handle this there
-    } else {
-      // Clear selection
-    }
   };
 
   return (
-    <div className="space-y-4">
+    <div className="w-full h-full flex flex-col gap-3">
       {/* Toolbar */}
       <div className="flex items-center justify-end gap-1">
         {/* Search */}
@@ -199,11 +267,11 @@ export function ListView({
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
                 placeholder="Search orders..."
-                className="w-48 h-8 px-3 pe-8 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] placeholder:text-[#a3a3a3] text-sm focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
+                className="w-48 h-8 px-3 pe-8 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#404040] text-[var(--system-600)] placeholder:text-[var(--system-300)] text-sm focus:outline-none focus:border-[var(--system-600)] rounded-lg"
               />
               <button
                 onClick={() => onSearchOpenChange(false)}
-                className="absolute end-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa]"
+                className="absolute end-2 text-[var(--system-300)] hover:text-[var(--system-600)]"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -212,7 +280,7 @@ export function ListView({
             <button
               ref={searchButtonRef}
               onClick={() => onSearchOpenChange(true)}
-              className="p-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-md transition-colors"
+              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
               title="Search"
             >
               <Search className="w-4 h-4" />
@@ -223,7 +291,7 @@ export function ListView({
         {/* Sort */}
         <button
           onClick={() => onSort(sortField)}
-          className="p-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-md transition-colors"
+          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
           title="Sort"
         >
           <ArrowUpDown className="w-4 h-4" />
@@ -231,7 +299,7 @@ export function ListView({
 
         {/* Settings */}
         <button
-          className="p-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-md transition-colors"
+          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
           title="Settings"
         >
           <Settings className="w-4 h-4" />
@@ -239,7 +307,7 @@ export function ListView({
 
         {/* Archive */}
         <button
-          className="p-2 text-[#737373] hover:text-[#171717] dark:hover:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#262626] rounded-md transition-colors"
+          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
           title="Archive"
         >
           <Archive className="w-4 h-4" />
@@ -247,121 +315,108 @@ export function ListView({
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-visible">
-        <div className="overflow-x-visible">
-          <table className="w-full">
-            {/* Table Header */}
-            <thead>
-              <tr className="border-b border-[#e5e5e5] dark:border-[#262626] text-start">
-                <th className="w-10 px-3 py-2">
-                  <input
-                    type="checkbox"
-                    checked={selectAll}
-                    onChange={(e) => handleSelectAll(e.target.checked)}
-                    className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
-                  />
-                </th>
-                <th className="px-3 py-2 text-sm font-normal text-[#737373]">Customer</th>
-                <th className="px-3 py-2 text-sm font-normal text-[#737373]">Product</th>
-                <th 
-                  className="px-3 py-2 text-sm font-normal text-[#737373] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
-                  onClick={() => onSort("status")}
-                >
-                  <div className="flex items-center gap-1">
-                    State
-                    <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
-                <th 
-                  className="px-3 py-2 text-sm font-normal text-[#737373] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
-                  onClick={() => onSort("total")}
-                >
-                  <div className="flex items-center gap-1">
-                    Total
-                    <SortIcon field="total" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
-                <th 
-                  className="px-3 py-2 text-sm font-normal text-[#737373] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
-                  onClick={() => onSort("date")}
-                >
-                  <div className="flex items-center gap-1">
-                    Date
-                    <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
-                  </div>
-                </th>
-              </tr>
-            </thead>
-            {/* Table Body */}
-            <tbody className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
-              {filteredOrders.map((order) => (
-                <tr 
-                  key={order._id}
-                  className={`hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors cursor-pointer ${
-                    selectedOrders.has(order._id) ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
-                  }`}
-                  onClick={() => onOrderClick(order)}
-                >
-                  {/* Checkbox */}
-                  <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
-                    <input
-                      type="checkbox"
-                      checked={selectedOrders.has(order._id)}
-                      onChange={() => onOrderSelect(order._id)}
-                      className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
-                    />
-                  </td>
-                  {/* Customer */}
-                  <td className="px-3 py-3">
-                    <div>
-                      <LockedData fallback="***">
-                        <p className="font-normal text-[#171717] dark:text-[#fafafa]">
-                          {order.customerName}
-                        </p>
-                        <p className="text-sm text-[#737373]">
-                          {order.customerPhone}
-                        </p>
-                      </LockedData>
-                    </div>
-                  </td>
-                  {/* Product */}
-                  <td className="px-3 py-3">
-                    <ProductCell items={order.products || []} />
-                  </td>
-                  {/* State */}
-                  <td className="px-3 py-3 relative z-0" onClick={(e) => e.stopPropagation()}>
-                    <button
-                      onClick={() => onStatusDropdownToggle(order._id, !statusDropdownOpen[order._id])}
-                      className="relative"
-                    >
-                      <Badge variant={STATUS_LABELS[order.status as OrderStatus]?.variant || "default"}>
-                        {STATUS_LABELS[order.status as OrderStatus]?.label || order.status}
-                      </Badge>
-                    </button>
-                    <StatusDropdown
-                      currentStatus={order.status}
-                      onStatusChange={(status) => onStatusChange(order._id, status)}
-                      isOpen={!!statusDropdownOpen[order._id]}
-                      setIsOpen={(open) => onStatusDropdownToggle(order._id, open)}
-                    />
-                  </td>
-                  {/* Total */}
-                  <td className="px-3 py-3 font-normal text-[#171717] dark:text-[#fafafa]">
-                    {formatPrice(order.total)}
-                  </td>
-                  {/* Date */}
-                  <td className="px-3 py-3 text-sm text-[#737373]">
-                    {getRelativeTime(order.createdAt)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="bg-white dark:bg-[#0a0a0a] rounded-xl overflow-visible border border-[#e5e5e5] dark:border-[#262626]">
+        {/* Table Header - with rounded top corners */}
+        <div className="bg-[var(--system-100)] rounded-t-xl">
+          <div className="grid grid-cols-12 gap-0">
+            {/* Checkbox */}
+            <div className="col-span-1 px-3 py-3">
+              <input
+                type="checkbox"
+                checked={selectAll}
+                onChange={(e) => handleSelectAll(e.target.checked)}
+                className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
+              />
+            </div>
+            {/* Customer */}
+            <div className="col-span-3 px-3 py-3 body-base text-[var(--system-600)]">Customer</div>
+            {/* Product */}
+            <div className="col-span-3 px-3 py-3 body-base text-[var(--system-600)]">Product</div>
+            {/* State */}
+            <div className="col-span-2 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("status")}>
+              <div className="flex items-center gap-1">
+                State
+                <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
+              </div>
+            </div>
+            {/* Total */}
+            <div className="col-span-2 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("total")}>
+              <div className="flex items-center gap-1">
+                Total
+                <SortIcon field="total" sortField={sortField} sortDirection={sortDirection} />
+              </div>
+            </div>
+            {/* Date */}
+            <div className="col-span-1 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("date")}>
+              <div className="flex items-center gap-1">
+                Date
+                <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Table Body */}
+        <div className="divide-y-0">
+          {filteredOrders.map((order, index) => (
+            <div 
+              key={order._id}
+              className={`grid grid-cols-12 gap-0 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors cursor-pointer ${
+                selectedOrders.has(order._id) ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+              } ${index === filteredOrders.length - 1 ? 'rounded-b-xl' : ''}`}
+              onClick={() => onOrderClick(order)}
+            >
+              {/* Checkbox */}
+              <div className="col-span-1 px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
+                <input
+                  type="checkbox"
+                  checked={selectedOrders.has(order._id)}
+                  onChange={() => onOrderSelect(order._id)}
+                  className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
+                />
+              </div>
+              {/* Customer */}
+              <div className="col-span-3 px-3 py-3 flex items-center">
+                <div>
+                  <LockedData fallback="***">
+                    <p className="body-base text-[var(--system-600)]">
+                      {order.customerName}
+                    </p>
+                    <p className="body-base text-[var(--system-300)]">
+                      {order.customerPhone}
+                    </p>
+                  </LockedData>
+                </div>
+              </div>
+              {/* Product */}
+              <div className="col-span-3 px-3 py-3 flex items-center">
+                <ProductCell items={order.products || []} />
+              </div>
+              {/* State */}
+              <div className="col-span-2 px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
+                <StatusCell
+                  orderId={order._id}
+                  status={order.status}
+                  isOpen={!!statusDropdownOpen[order._id]}
+                  onToggle={(open) => onStatusDropdownToggle(order._id, open)}
+                  onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                />
+              </div>
+              {/* Total */}
+              <div className="col-span-2 px-3 py-3 flex items-center body-base text-[var(--system-600)]">
+                {formatPrice(order.total)}
+              </div>
+              {/* Date */}
+              <div className="col-span-1 px-3 py-3 flex items-center body-base text-[var(--system-300)]">
+                {getRelativeTime(order.createdAt)}
+              </div>
+            </div>
+          ))}
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="p-12 text-center">
-            <p className="text-[#737373]">No orders found</p>
+          <div className="p-12 text-center body-base text-[var(--system-300)]">
+            No orders found
           </div>
         )}
       </div>

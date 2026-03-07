@@ -24,6 +24,7 @@ import type {
 } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 import { ListView, KanbanView, OrderDetails } from "@/components/order-page";
+import { div } from "framer-motion/client";
 
 function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
   const { user } = useUser();
@@ -179,7 +180,8 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
+    <div className="h-screen w-full bg-[var(--system-50)]">
+    <div className="max-w-6xl mx-auto h-full">
       {/* Header */}
       <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-3">
@@ -199,7 +201,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       {/* Page Title */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <h1 className="headline-2xl text-[#171717] dark:text-[#fafafa]">Orders</h1>
+          <h1 className="headline-2xl">My Orders</h1>
           {newOrdersCount > 0 && (
             <span className="flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#2563eb] opacity-75"></span>
@@ -209,19 +211,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
         </div>
       </div>
 
-      {/* View Toggle */}
-      <AnimatedTabs
-        tabs={[
-          { id: "list", label: "List", icon: <List className="w-4 h-4" /> },
-          { id: "state", label: "By State", icon: <LayoutGrid className="w-4 h-4" /> },
-        ]}
-        activeTab={viewMode}
-        onChange={(tab) => setViewMode(tab as "list" | "state")}
-        variant="pills"
-        size="md"
-        className="mb-4"
-      />
-
+ 
       {/* Content based on view mode */}
       <AnimatedTabContent active={viewMode === "list"}>
         <ListView
@@ -245,7 +235,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       </AnimatedTabContent>
       
       <AnimatedTabContent active={viewMode === "state"}>
-        <KanbanView onViewChange={setViewMode} />
+        <KanbanView />
       </AnimatedTabContent>
 
       {/* Order Detail SlideOver */}
@@ -260,6 +250,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       />
 
       <BottomNavigation storeSlug={storeSlug} currentPage="orders" />
+    </div>
     </div>
   );
 }

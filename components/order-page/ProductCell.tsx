@@ -12,9 +12,9 @@ export function ProductCell({ items }: ProductCellProps) {
   const remainingCount = items.length - 1;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-2 min-w-0">
       {firstItem.image ? (
-        <div className="w-8 h-8 bg-[#f5f5f5] dark:bg-[#262626] rounded overflow-hidden relative flex-shrink-0">
+        <div className="w-8 h-8 bg-[var(--system-100)] rounded-lg overflow-hidden relative flex-shrink-0">
           <Image
             src={firstItem.image}
             alt={firstItem.name}
@@ -23,18 +23,18 @@ export function ProductCell({ items }: ProductCellProps) {
           />
         </div>
       ) : (
-        <div className="w-8 h-8 bg-[#f5f5f5] dark:bg-[#262626] rounded flex items-center justify-center flex-shrink-0">
-          <Package className="w-4 h-4 text-[#a3a3a3]" />
+        <div className="w-8 h-8 bg-[var(--system-100)] rounded-lg flex items-center justify-center flex-shrink-0">
+          <Package className="w-4 h-4 text-[var(--system-300)]" />
         </div>
       )}
       <div className="min-w-0">
-        <p className="text-sm text-[#171717] dark:text-[#fafafa] truncate">{firstItem.name}</p>
+        <p className="body-base text-[var(--system-600)] truncate">{firstItem.name}</p>
         {firstItem.variant && (
-          <p className="text-xs text-[#737373] truncate">{firstItem.variant}</p>
+          <p className="body-base text-[var(--system-300)] truncate">{firstItem.variant}</p>
         )}
       </div>
       {remainingCount > 0 && (
-        <span className="text-xs text-[#737373] whitespace-nowrap">+{remainingCount} more</span>
+        <span className="body-base text-[var(--system-300)] whitespace-nowrap">+{remainingCount} more</span>
       )}
     </div>
   );
