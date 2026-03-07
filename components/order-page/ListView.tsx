@@ -13,6 +13,7 @@ import {
   Check,
 } from "lucide-react";
 import { Badge } from "@/components/core";
+import { AnimatedTabs } from "@/components/core/animated-tabs";
 import { LockedData } from "@/components/locked-overlay";
 import Image from "next/image";
 import type { 
@@ -42,6 +43,30 @@ export function getRelativeTime(timestamp: number): string {
     dateStyle: 'medium',
   }).format(new Date(timestamp));
 }
+
+// Custom icon components
+const ListIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <g clipPath="url(#clip0_164_2937)">
+      <path d="M2.594 2.59478C3.5215 1.66732 5.01428 1.66732 7.99984 1.66732C10.9854 1.66732 12.4782 1.66732 13.4057 2.59478C14.3332 3.52232 14.3332 5.01512 14.3332 8.00065C14.3332 10.9862 14.3332 12.479 13.4057 13.4065C12.4782 14.334 10.9854 14.334 7.99984 14.334C5.01428 14.334 3.5215 14.334 2.594 13.4065C1.6665 12.479 1.6665 10.9862 1.6665 8.00065C1.6665 5.01512 1.6665 3.52232 2.594 2.59478Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M1.6665 10.334L14.3332 10.334" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      <path d="M1.6665 5.66602L14.3332 5.66602" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    </g>
+    <defs>
+      <clipPath id="clip0_164_2937">
+        <rect width="16" height="16" fill="white" transform="translate(6.99382e-07 16) rotate(-90)"/>
+      </clipPath>
+    </defs>
+  </svg>
+);
+
+const KanbanIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2.3999" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
+    <rect x="7.2002" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
+    <rect x="12" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
+  </svg>
+);
 
 // Status colors for dropdown
 const statusColors: Record<OrderStatus, { dot: string }> = {
@@ -80,6 +105,8 @@ interface ListViewProps {
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
   onOrderClick: (order: Doc<"orders">) => void;
+  viewMode: "list" | "state";
+  onViewModeChange: (mode: "list" | "state") => void;
 }
 
 // Status Dropdown Component
@@ -163,6 +190,8 @@ export function ListView({
   sortDirection,
   onSort,
   onOrderClick,
+  viewMode,
+  onViewModeChange,
 }: ListViewProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -256,9 +285,20 @@ export function ListView({
   return (
     <div className="w-full h-full flex flex-col gap-3">
       {/* Toolbar */}
-      <div className="flex items-center justify-end gap-1">
-        {/* Search */}
-        <div id="search-container" className="relative">
+      <div className="flex items-center justify-between gap-1">
+        {/* View Toggle */}
+        <AnimatedTabs
+          tabs={[
+            { id: "list", label: "List", icon: <ListIcon /> },
+            { id: "state", label: "By State", icon: <KanbanIcon /> },
+          ]}
+          activeTab={viewMode}
+          onChange={(tabId) => onViewModeChange(tabId as "list" | "state")}
+        />
+        
+        <div className="flex items-center gap-1">
+          {/* Search */}
+          <div id="search-container" className="relative">
           {isSearchOpen ? (
             <div className="flex items-center">
               <input
@@ -312,12 +352,13 @@ export function ListView({
         >
           <Archive className="w-4 h-4" />
         </button>
+        </div>
       </div>
 
       {/* Table */}
-      <div className="bg-white dark:bg-[#0a0a0a] rounded-xl overflow-visible border border-[#e5e5e5] dark:border-[#262626]">
+      <div className=" rounded-xl overflow-visible ">
         {/* Table Header - with rounded top corners */}
-        <div className="bg-[var(--system-100)] rounded-t-xl">
+        <div className="bg-[var(--system-100)] rounded-xl">
           <div className="grid grid-cols-12 gap-0">
             {/* Checkbox */}
             <div className="col-span-1 px-3 py-3">
@@ -325,7 +366,7 @@ export function ListView({
                 type="checkbox"
                 checked={selectAll}
                 onChange={(e) => handleSelectAll(e.target.checked)}
-                className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
+                className="w-4 h-4 rounded border-[var(--system-200)]"
               />
             </div>
             {/* Customer */}

@@ -9,6 +9,9 @@ import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { WilayaSelect, CommuneSelect } from "@/components/wilaya-select";
+import { ImageCarousel } from "@/components/image-carousel";
+import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -48,6 +51,11 @@ function ProductDetailContent() {
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
   
+  const footerContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    store?._id ? { storeId: store._id as Id<"stores">, section: "footer" } : "skip"
+  );
+  
   const products = useQuery(
     api.products.getProducts,
     store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
@@ -56,6 +64,29 @@ function ProductDetailContent() {
   const product = useMemo(() => {
     if (!products) return null;
     return products.find((p) => p._id === productId);
+  }, [products, productId]);
+
+  // Footer content
+  const currentFooter = footerContent?.content as {
+    logo?: string;
+    logoUrl?: string;
+    description?: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    copyright?: string;
+  } | undefined;
+  const footerLogoUrl = currentFooter?.logoUrl;
+  const footerDescription = currentFooter?.description ?? "";
+  const footerPhone = currentFooter?.contactPhone ?? "";
+  const footerEmail = currentFooter?.contactEmail ?? "";
+  const footerCopyright = currentFooter?.copyright ?? "";
+
+  // Related products (other products from the same store, excluding current)
+  const relatedProducts = useMemo(() => {
+    if (!products || !productId) return [];
+    return products
+      .filter((p) => p._id !== productId)
+      .slice(0, 4);
   }, [products, productId]);
 
   const handleVariantSelect = (variantName: string, option: string) => {
@@ -161,22 +192,10 @@ function ProductDetailContent() {
       </Link>
 
       <div className="grid md:grid-cols-2 gap-8">
-        <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717] rounded-lg overflow-hidden">
-          {product.images?.[0] ? (
-            <Image
-              src={product.images[0]}
-              alt={product.name}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <Package className="w-20 h-20 text-[#d4d4d4]" />
-            </div>
-          )}
-        </div>
+        <ImageCarousel 
+          images={product.images || []} 
+          alt={product.name} 
+        />
 
         <div>
           <h1 className="text-2xl font-normal text-[#171717] dark:text-[#fafafa] mb-4">
@@ -266,6 +285,49 @@ function ProductDetailContent() {
         </div>
       </div>
 
+      {/* Related Products */}
+      {relatedProducts.length > 0 && (
+        <div className="mt-16">
+          <h2 className="text-xl font-medium text-[#171717] dark:text-[#fafafa] mb-6">
+            Related Products
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {relatedProducts.map((relatedProduct) => (
+              <Link
+                key={relatedProduct._id}
+                href={`/${slug}/product/${relatedProduct._id}`}
+                className="group bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300"
+              >
+                <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717]">
+                  {relatedProduct.images && relatedProduct.images[0] ? (
+                    <Image
+                      src={relatedProduct.images[0]}
+                      alt={relatedProduct.name}
+                      fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 25vw, 25vw"
+                      loading="lazy"
+                      className="object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Package className="w-10 h-10 text-[#d4d4d4]" />
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <h3 className="font-normal text-[#171717] dark:text-[#fafafa] text-sm mb-2 line-clamp-2">
+                    {relatedProduct.name}
+                  </h3>
+                  <span className="text-base font-normal text-[#171717] dark:text-[#fafafa]">
+                    {formatPrice(relatedProduct.basePrice)}
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
       {showOrderForm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
           <div className="bg-white dark:bg-[#0a0a0a] w-[400px] px-6 py-4 rounded-lg">
@@ -294,22 +356,21 @@ function ProductDetailContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Wilaya</label>
-                <input
-                  type="text"
+                <WilayaSelect
                   value={orderData.wilaya}
-                  onChange={(e) => setOrderData({ ...orderData, wilaya: e.target.value })}
-                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                  onChange={(value) => setOrderData({ ...orderData, wilaya: value })}
+                  label="Wilaya"
+                  required
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Commune</label>
-                <input
-                  type="text"
+                <CommuneSelect
+                  wilayaValue={orderData.wilaya}
                   value={orderData.commune}
-                  onChange={(e) => setOrderData({ ...orderData, commune: e.target.value })}
-                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
+                  onChange={(value) => setOrderData({ ...orderData, commune: value })}
+                  label="Commune"
+                  disabled={!orderData.wilaya}
                 />
               </div>
 
@@ -370,6 +431,53 @@ function ProductDetailContent() {
           </div>
         </div>
       )}
+
+      {/* Footer */}
+      <footer className="mt-16 border-t border-[#e5e5e5] dark:border-[#262626] pt-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {/* Logo & Description */}
+          <div>
+            {footerLogoUrl && (
+              <div className="w-16 h-16 mb-4 relative">
+                <Image
+                  src={footerLogoUrl}
+                  alt="Store logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+            )}
+            {footerDescription && (
+              <p className="text-sm text-[#737373] mb-4">{footerDescription}</p>
+            )}
+          </div>
+
+          {/* Contact Info */}
+          <div>
+            <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-4">معلومات التواصل</h3>
+            {footerPhone && (
+              <p className="text-sm text-[#737373] mb-2">
+                Phone: {footerPhone}
+              </p>
+            )}
+            {footerEmail && (
+              <p className="text-sm text-[#737373]">
+                Email: {footerEmail}
+              </p>
+            )}
+          </div>
+
+          {/* Copyright */}
+          <div className="md:text-end">
+            {footerCopyright && (
+              <p className="text-sm text-[#737373]">{footerCopyright}</p>
+            )}
+            <p className="text-sm text-[#a3a3a3] mt-4">
+              © {new Date().getFullYear()} {store?.name || "Store"}
+            </p>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

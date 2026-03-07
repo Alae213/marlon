@@ -1,12 +1,15 @@
 "use client";
 
-import { Fragment, useState } from "react";
+import { Fragment, useState, useMemo } from "react";
 import Image from "next/image";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { X, Minus, Plus, Trash2, Loader2, Check } from "lucide-react";
 import { useCart, CartItem } from "@/contexts/cart-context";
+import { WilayaSelect, CommuneSelect } from "@/components/wilaya-select";
+import { getWilayaById } from "@/lib/algeria-data";
+import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -50,6 +53,34 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+
+  // Fetch delivery pricing
+  const deliveryPricing = useQuery(
+    api.stores.getDeliveryPricing,
+    storeId ? { storeId: storeId as Id<"stores"> } : "skip"
+  );
+
+  // Extract wilaya number from the selected wilaya string
+  const selectedWilayaNumber = useMemo(() => {
+    if (!formData.wilaya) return null;
+    const match = formData.wilaya.match(/^(\d+)/);
+    return match ? match[1] : null;
+  }, [formData.wilaya]);
+
+  // Calculate delivery cost
+  const deliveryCost = useMemo(() => {
+    if (!deliveryPricing || !selectedWilayaNumber) return 0;
+    
+    const pricing = deliveryPricing.find(p => p.wilaya === selectedWilayaNumber);
+    if (!pricing) return 0;
+    
+    return formData.deliveryType === "domicile" 
+      ? (pricing.homeDelivery || 0) 
+      : (pricing.officeDelivery || 0);
+  }, [deliveryPricing, selectedWilayaNumber, formData.deliveryType]);
+
+  const orderTotal = total + deliveryCost;
 
   const createOrder = useMutation(api.orders.createOrder);
 
@@ -60,10 +91,32 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
   };
 
   const handleInputChange = (field: keyof OrderFormData, value: string) => {
+    // Format phone input
+    if (field === "phone") {
+      const formatted = formatPhoneInput(value);
+      setFormData(prev => ({ ...prev, [field]: formatted }));
+      
+      // Validate phone
+      if (formatted.length > 0) {
+        const validation = validateAlgerianPhone(formatted);
+        setPhoneError(validation.error || "");
+      } else {
+        setPhoneError("");
+      }
+      return;
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmitOrder = async () => {
+    // Validate phone before submitting
+    const phoneValidation = validateAlgerianPhone(formData.phone);
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.error || "Invalid phone number");
+      return;
+    }
+
     if (!formData.name || !formData.phone || !formData.wilaya) {
       return;
     }
@@ -91,8 +144,8 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
         customerAddress: formData.address || undefined,
         products,
         subtotal: total,
-        deliveryCost: 0,
-        total,
+        deliveryCost: deliveryCost,
+        total: orderTotal,
         deliveryType: formData.deliveryType,
       });
 
@@ -123,7 +176,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
           className="fixed inset-0 z-50 bg-black/30"
           onClick={handleClose}
         />
-        <div className="fixed inset-y-0 end-0 z-50 w-full max-w-md bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
+        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
           <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
             <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mb-6">
               <Check className="w-8 h-8 text-white" />
@@ -157,7 +210,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
           className="fixed inset-0 z-50 bg-black/30"
           onClick={handleClose}
         />
-        <div className="fixed inset-y-0 end-0 z-50 w-full max-w-md bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
+        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
           <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
             <h2 className="text-lg font-normal text-foreground">
               Checkout
@@ -192,34 +245,33 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className="w-full px-3 py-2 border border-input bg-background text-foreground focus:outline-none focus:border-primary"
+                className={`w-full px-3 py-2 border bg-background text-foreground focus:outline-none focus:border-primary ${
+                  phoneError ? "border-destructive" : "border-input"
+                }`}
                 placeholder="05XX XXX XXX"
                 required
               />
+              {phoneError && (
+                <p className="text-xs text-destructive mt-1">{phoneError}</p>
+              )}
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
-                Wilaya *
-              </label>
-              <input
-                type="text"
+              <WilayaSelect
                 value={formData.wilaya}
-                onChange={(e) => handleInputChange("wilaya", e.target.value)}
-                className="w-full px-3 py-2 border border-input bg-background text-foreground focus:outline-none focus:border-primary"
+                onChange={(value) => handleInputChange("wilaya", value)}
+                label="Wilaya"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
-                Commune
-              </label>
-              <input
-                type="text"
+              <CommuneSelect
+                wilayaValue={formData.wilaya}
                 value={formData.commune}
-                onChange={(e) => handleInputChange("commune", e.target.value)}
-                className="w-full px-3 py-2 border border-input bg-background text-foreground focus:outline-none focus:border-primary"
+                onChange={(value) => handleInputChange("commune", value)}
+                label="Commune"
+                disabled={!formData.wilaya}
               />
             </div>
 
@@ -269,11 +321,22 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
           </div>
 
           <div className="sticky bottom-0 p-4 border-t border-border bg-card/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-muted-foreground">Total</span>
-              <span className="text-xl font-normal text-foreground">
-                {formatPrice(total)}
-              </span>
+            {/* Order Summary */}
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">Subtotal</span>
+                <span className="text-foreground">{formatPrice(total)}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground text-sm">Delivery</span>
+                <span className="text-foreground">{formatPrice(deliveryCost)}</span>
+              </div>
+              <div className="flex items-center justify-between pt-2 border-t border-border">
+                <span className="font-medium text-foreground">Total</span>
+                <span className="text-xl font-normal text-foreground">
+                  {formatPrice(orderTotal)}
+                </span>
+              </div>
             </div>
             <button
               onClick={handleSubmitOrder}
@@ -297,16 +360,16 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
 
   // Cart view
   return (
-    <Fragment>
-      <div 
-        className="fixed inset-0 z-50 bg-black/30"
-        onClick={handleClose}
-      />
-      <div className="fixed inset-y-0 end-0 z-50 w-full max-w-md bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
-        <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
-          <h2 className="text-lg font-normal text-foreground">
-            سلة المشتريات
-          </h2>
+      <Fragment>
+        <div 
+          className="fixed inset-0 z-50 bg-black/30"
+          onClick={handleClose}
+        />
+        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
+          <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
+            <h2 className="text-lg font-normal text-foreground">
+              سلة المشتريات
+            </h2>
           <button
             onClick={handleClose}
             className="p-1 hover:bg-muted transition-colors"

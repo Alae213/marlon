@@ -231,11 +231,13 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
           sortDirection={sortDirection}
           onSort={handleSort}
           onOrderClick={setSelectedOrder}
+          viewMode={viewMode}
+          onViewModeChange={setViewMode}
         />
       </AnimatedTabContent>
       
       <AnimatedTabContent active={viewMode === "state"}>
-        <KanbanView />
+        <KanbanView viewMode={viewMode} onViewModeChange={setViewMode} />
       </AnimatedTabContent>
 
       {/* Order Detail SlideOver */}

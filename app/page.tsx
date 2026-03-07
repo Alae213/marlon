@@ -207,7 +207,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                         boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
                       }}/>
 
-                      <p className="body-base text-[var(--system-200)] ">you can change it Late</p>
+                      <p className="body-base text-[var(--system-200)] "> </p>
 
             <div
                     style={{ boxShadow: "var(--shadow-xl-shadow)" }}
@@ -286,8 +286,8 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                     )}
                   </div>
 
-                  <p className="body-base text-[var(--system-300)] px-[2px]">
-                        3-50 characters: lowercase letters, numbers, or hyphens
+                  <p className="body-base text-[var(--system-200)] py-[2px] text-center w-full">
+                         You can change it Later
                       </p>
 
                   <div className="flex gap-3 w-full">
