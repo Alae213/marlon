@@ -7,5 +7,6 @@ export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 export { Modal } from "./modal";
 export { SlideOver } from "./slide-over";
 export { Tabs } from "./tabs";
+export { AnimatedTabs, AnimatedTabContent } from "./animated-tabs";
 export { EmptyState } from "./empty-state";
 export { Spinner, PageLoader } from "./spinner";

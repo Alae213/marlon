@@ -111,8 +111,8 @@
   /* Typography tokens */
   /* Note: --font-geist-sans is injected by geist/font package via GeistSans.variable */
   --line-height-0: 120%;
-  --font-weight-0: 700;
-  --font-weight-1: 450;
+  --font-weight-0: 700; /* Bold */
+  --font-weight-1: 450; /* Medium */
   --font-size-0: 12px;
   --font-size-1: 17px;
   --font-size-2: 22px;

@@ -9,6 +9,7 @@ import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { CartSidebar } from "@/components/cart-sidebar";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -30,7 +31,8 @@ function StorefrontContent() {
   const params = useParams();
   const slug = params?.slug as string;
   const [searchQuery, setSearchQuery] = useState("");
-  const { addItem } = useCart();
+  const [isCartOpen, setIsCartOpen] = useState(false);
+  const { addItem, itemCount } = useCart();
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
 
@@ -92,8 +94,16 @@ function StorefrontContent() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}>
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] relative ${navbarTextClass}`}
+            >
               <ShoppingCart className="w-4 h-4" />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                  {itemCount > 9 ? "9+" : itemCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -175,6 +185,13 @@ function StorefrontContent() {
           <p className="text-[#737373]">No products available</p>
         </div>
       )}
+
+      <CartSidebar 
+        isOpen={isCartOpen} 
+        onClose={() => setIsCartOpen(false)}
+        storeId={store?._id as string}
+        storeSlug={slug}
+      />
     </div>
   );
 }

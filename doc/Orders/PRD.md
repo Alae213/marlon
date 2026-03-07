@@ -23,8 +23,8 @@ Notion-style order management with a status state machine, call logging, context
 
 ```
 new → confirmed → packaged → shipped → succeeded
- ↓        ↓          ↓
-canceled / blocked / hold
+  ↓        ↓          ↓
+blocked / canceled / hold
 ```
 
 | Status | Description |
@@ -81,7 +81,7 @@ canceled / blocked / hold
 ```
 orderId, storeId, orderNumber,
 customer: { name, phone, wilaya, commune, address },
-items: [{ productId, name, variant, quantity, price }],
+items: [{ productId, name, image, variant, quantity, price }],
 deliveryType: 'stopdesk' | 'domicile',
 deliveryCost, subtotal, total,
 status: 'new' | 'confirmed' | 'packaged' | 'shipped' | 'succeeded' | 'canceled' | 'blocked' | 'hold',

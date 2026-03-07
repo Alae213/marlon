@@ -336,17 +336,17 @@ const handleUpdateProduct = async (product: ProductFormData) => {
 
   return (
     <div className="max-w-6xl mx-auto">
-      {/* Header with Logo, Back Button, and User Profile */}
-      <div className="flex items-center justify-between mb-6 pb-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+      {/* Header with Logo, and User Profile */}
+      <div className="flex items-center justify-between py-4">
         <div className="flex items-center gap-3">
-          <Link href="/" className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-full transition-colors">
-            <ArrowLeft className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
-          </Link>
-          <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#171717] dark:bg-[#fafafa] rounded-full flex items-center justify-center">
-              <Home className="w-4 h-4 text-white dark:text-[#171717]" />
-            </div>
-            <span className="font-medium text-[#171717] dark:text-[#fafafa]">متجري</span>
+          <Link href="/" className="flex items-center">
+            <Image 
+              src="/Logo-text.svg" 
+              alt="Marlon Logo" 
+              width={118} 
+              height={36}
+              className="h-9 w-auto"
+            />
           </Link>
         </div>
         <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
@@ -1163,36 +1163,44 @@ function ProductForm({ product, onClose, onSubmit }: { product?: Product; onClos
 
   return (
     <div className="space-y-5">
-      <Input
-        label="اسم المنتج"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        placeholder="قميص رجالي قطني"
-      />
+      <div>
+        <label className="block text-sm mb-2">اسم المنتج</label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="قميص رجالي قطني"
+        />
+      </div>
 
-      <Textarea
-        label="الوصف"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        placeholder="وصف المنتج..."
-        rows={3}
-      />
+      <div>
+        <label className="block text-sm mb-2">الوصف</label>
+        <Textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="وصف المنتج..."
+          rows={3}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <Input
-          label="السعر (د.ج)"
-          type="number"
-          value={basePrice}
-          onChange={(e) => setBasePrice(e.target.value)}
-          placeholder="2500"
-        />
-        <Input
-          label="السعر القديم (اختياري)"
-          type="number"
-          value={oldPrice}
-          onChange={(e) => setOldPrice(e.target.value)}
-          placeholder="3000"
-        />
+        <div>
+          <label className="block text-sm mb-2">السعر (د.ج)</label>
+          <Input
+            type="number"
+            value={basePrice}
+            onChange={(e) => setBasePrice(e.target.value)}
+            placeholder="2500"
+          />
+        </div>
+        <div>
+          <label className="block text-sm mb-2">السعر القديم (اختياري)</label>
+          <Input
+            type="number"
+            value={oldPrice}
+            onChange={(e) => setOldPrice(e.target.value)}
+            placeholder="3000"
+          />
+        </div>
       </div>
 
       <div>

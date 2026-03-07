@@ -87,6 +87,7 @@ function ProductDetailContent() {
         products: [{
           productId: product._id,
           name: product.name,
+          image: product.images?.[0],
           price: product.basePrice,
           quantity,
           variant: variantString || undefined,
