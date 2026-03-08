@@ -105,3 +105,26 @@ app/layout.tsx - ThemeProvider integration
 Multiple context/type files - Build error fixes
 Result:
 Successfully implemented complete theme-driven architecture with minimalist aesthetic and resolved all build-blocking errors. Application now builds successfully and supports dynamic theme switching.
+
+## March 8, 2026 - Public Storefront Polish
+
+**Goal:** Polish public storefront (`/[storeSlug]`, `/[storeSlug]/product/[productId]`) for market readiness.
+
+**Completed Phases:**
+1. **Cart Modal Fix** - Fixed width (420-480px), added auto-open on addItem, cart state management
+2. **Hero Section** - Rendered from siteContent in storefront catalog page
+3. **Footer** - Added to catalog and product detail pages
+4. **Wilaya/Commune Dropdowns** - Created `components/wilaya-select.tsx` with searchable Algerian geographic data (58 wilayas + communes)
+5. **Delivery Cost Calculation** - Fetch pricing via `api.stores.getDeliveryPricing`, display based on wilaya + delivery type
+6. **Image Carousel** - Created `components/image-carousel.tsx` with thumbnails, arrows, dots
+7. **Related Products** - Added to product detail page (4 products from same store)
+8. **Phone Validation** - Created `lib/phone-validation.ts` for Algerian format (05XX XXX XXX)
+
+**Created Files:**
+- `lib/algeria-data.ts` - 58 wilayas with communes
+- `lib/phone-validation.ts` - validateAlgerianPhone, formatPhoneInput, formatPhoneDisplay
+- `components/wilaya-select.tsx` - WilayaSelect, CommuneSelect dropdowns
+- `components/image-carousel.tsx` - Product image carousel
+
+**In Progress:** Phone validation in product detail page order form
+**Next:** Run lint/build, test in browser

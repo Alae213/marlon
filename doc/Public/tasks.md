@@ -35,73 +35,73 @@
 ## Phase 1: Cart Modal Fixes (Priority: HIGH)
 
 ### Tasks
-- [ ] Fix cart modal width (too small)
-- [ ] Auto-open cart modal when adding product to cart
-- [ ] Ensure cart icon click also opens modal
+- [x] Fix cart modal width (too small)
+- [x] Auto-open cart modal when adding product to cart
+- [x] Ensure cart icon click also opens modal
 
 ---
 
 ## Phase 2: Hero Section (Priority: HIGH)
 
 ### Tasks
-- [ ] Render hero section on catalog page from site content editor
-- [ ] Support all layout options (left/center/right)
-- [ ] Display CTA button with link
+- [x] Render hero section on catalog page from site content editor
+- [x] Support all layout options (left/center/right)
+- [x] Display CTA button with link
 
 ---
 
 ## Phase 3: Footer (Priority: HIGH)
 
 ### Tasks
-- [ ] Add footer to catalog page
-- [ ] Add footer to product detail page
-- [ ] Display contact info, social links, logo from site content
+- [x] Add footer to catalog page
+- [x] Add footer to product detail page
+- [x] Display contact info, social links, logo from site content
 
 ---
 
 ## Phase 4: Wilaya & Commune Dropdowns (Priority: HIGH)
 
 ### Tasks
-- [ ] Create algeria-data.ts with all 58 wilayas
-- [ ] Include wilaya number, French name, Arabic name
-- [ ] Add commune data per wilaya
-- [ ] Implement wilaya dropdown component
-- [ ] Implement dependent commune dropdown
-- [ ] Update order forms (Buy Now, Checkout)
+- [x] Create algeria-data.ts with all 58 wilayas
+- [x] Include wilaya number, French name, Arabic name
+- [x] Add commune data per wilaya
+- [x] Implement wilaya dropdown component
+- [x] Implement dependent commune dropdown
+- [x] Update order forms (Buy Now, Checkout)
 
 ---
 
 ## Phase 5: Delivery Cost Calculation (Priority: HIGH)
 
 ### Tasks
-- [ ] Pull delivery prices from store's delivery pricing table
-- [ ] Calculate cost based on wilaya + delivery type (stopdesk/domicile)
-- [ ] Display real-time delivery cost in checkout summary
+- [x] Pull delivery prices from store's delivery pricing table
+- [x] Calculate cost based on wilaya + delivery type (stopdesk/domicile)
+- [x] Display real-time delivery cost in checkout summary
 
 ---
 
 ## Phase 6: Product Image Carousel (Priority: MEDIUM)
 
 ### Tasks
-- [ ] Implement image carousel/slider on product detail page
-- [ ] Support multiple product images
-- [ ] Add navigation arrows and dots
-- [ ] Touch/swipe support for mobile
+- [x] Implement image carousel/slider on product detail page
+- [x] Support multiple product images
+- [x] Add navigation arrows and dots
+- [x] Touch/swipe support for mobile
 
 ---
 
 ## Phase 7: Related Products Section (Priority: MEDIUM)
 
 ### Tasks
-- [ ] Fetch related products from same store (exclude current)
-- [ ] Display as mini product cards
-- [ ] Add to product detail page
+- [x] Fetch related products from same store (exclude current)
+- [x] Display as mini product cards
+- [x] Add to product detail page
 
 ---
 
 ## Phase 8: Phone Validation (Priority: MEDIUM)
 
 ### Tasks
-- [ ] Add Algerian phone format validation (05XX/06XX/07XX  XXX XXX)
-- [ ] Show error message for invalid format
-- [ ] Apply to both Buy Now and Checkout forms
+- [x] Add Algerian phone format validation (05XX/06XX/07XX  XXX XXX)
+- [x] Show error message for invalid format
+- [x] Apply to both Buy Now and Checkout forms
