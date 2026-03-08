@@ -8,7 +8,6 @@ import { Id } from "@/convex/_generated/dataModel";
 import { X, Minus, Plus, Trash2, Loader2, Check } from "lucide-react";
 import { useCart, CartItem } from "@/contexts/cart-context";
 import { WilayaSelect, CommuneSelect } from "@/components/wilaya-select";
-import { getWilayaById } from "@/lib/algeria-data";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
 
 interface CartSidebarProps {

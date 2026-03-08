@@ -3,8 +3,16 @@
 import { useState, useRef, useCallback } from "react";
 import Image from "next/image";
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
-import { X, Crop as CropIcon, Check, RotateCcw, Image as ImageIcon, GripVertical, ZoomIn } from "lucide-react";
+import { Crop as CropIcon, Check, RotateCcw } from "lucide-react";
 import { Button } from "@/components/core/button";
+import { 
+  Dialog, 
+  DialogPortal, 
+  DialogOverlay, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle 
+} from "@/components/animate-ui/primitives/radix/dialog";
 import "react-image-crop/dist/ReactCrop.css";
 
 interface ImageCropperProps {
@@ -41,6 +49,7 @@ export function ImageCropper({
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [rotation, setRotation] = useState(0);
+  const [isOpen, setIsOpen] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -84,66 +93,106 @@ export function ImageCropper({
 
     const croppedImageUrl = canvas.toDataURL("image/jpeg", 0.9);
     onCropComplete(croppedImageUrl);
+    setIsOpen(false);
   }, [completedCrop, rotation, onCropComplete]);
 
+  const handleCancel = () => {
+    setIsOpen(false);
+    // Wait for animation to complete before calling onCancel
+    setTimeout(() => {
+      onCancel();
+    }, 200);
+  };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-      <div className="bg-white dark:bg-zinc-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-4 border-b border-zinc-200 dark:border-zinc-800">
-          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50 flex items-center gap-2">
-            <CropIcon className="w-5 h-5" />
-            قص الصورة
-          </h3>
-          <button
-            onClick={onCancel}
-            className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
+    <Dialog open={isOpen} onOpenChange={(open) => !open && handleCancel()}>
+      <DialogPortal>
+        <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
+        <div className="fixed inset-0 flex items-center justify-center z-[70]">
+          <DialogContent
+            style={{ 
+              boxShadow: "var(--shadow-xl-shadow)",
+            } as any}
+            className="w-[90vw] max-w-[640px] bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[16px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
+            from="top"
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 25,
+            }}
           >
-            <X className="w-5 h-5 text-zinc-500" />
-          </button>
-        </div>
+            <DialogHeader className="flex flex-row justify-between w-full h-[56px]">
+              <DialogTitle className="title-xl text-white flex items-center gap-3">
+                <CropIcon className="w-5 h-5" />
+                قص الصورة
+              </DialogTitle>
+              <div 
+                onClick={handleCancel} 
+                className="w-5 h-5 cursor-pointer transition-opacity hover:opacity-60"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+                </svg>
+              </div>
+            </DialogHeader>
 
-        <div className="flex-1 overflow-auto p-4 flex items-center justify-center bg-zinc-100 dark:bg-zinc-800">
-          <ReactCrop
-            crop={crop}
-            onChange={(_, percentCrop) => setCrop(percentCrop)}
-            onComplete={(c) => setCompletedCrop(c)}
-            aspect={aspectRatio}
-            className="max-h-[50vh]"
-          >
-            <img
-              ref={imgRef}
-              src={imageSrc}
-              alt="Crop"
-              onLoad={onImageLoad}
-              className="max-h-[50vh] object-contain"
-              style={{ transform: `rotate(${rotation}deg)` }}
-            />
-          </ReactCrop>
-        </div>
+            <hr className="h-px w-full border-0 rounded-full"
+              style={{
+                background: "rgba(242, 242, 242, 0.30)",
+                boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
+              }}/>
 
-        <div className="flex items-center justify-between p-4 border-t border-zinc-200 dark:border-zinc-800">
-          <button
-            onClick={() => setRotation((r) => (r + 90) % 360)}
-            className="flex items-center gap-2 px-4 py-2 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            تدوير
-          </button>
-          
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={onCancel}>
-              إلغاء
-            </Button>
-            <Button onClick={getCroppedImage}>
-              <Check className="w-4 h-4" />
-              تطبيق
-            </Button>
-          </div>
+            <div className="flex-1 overflow-auto p-2 flex items-center justify-center bg-white/10 rounded-[20px] min-h-[300px] max-h-[50vh]">
+              <ReactCrop
+                crop={crop}
+                onChange={(_, percentCrop) => setCrop(percentCrop)}
+                onComplete={(c) => setCompletedCrop(c)}
+                aspect={aspectRatio}
+                className="max-h-[45vh]"
+              >
+                <img
+                  ref={imgRef}
+                  src={imageSrc}
+                  alt="Crop"
+                  onLoad={onImageLoad}
+                  className="max-h-[45vh] object-contain"
+                  style={{ transform: `rotate(${rotation}deg)` }}
+                />
+              </ReactCrop>
+            </div>
+
+            <div className="flex items-center justify-between w-full gap-3">
+              <button
+                onClick={() => setRotation((r) => (r + 90) % 360)}
+                className="flex items-center gap-2 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-[12px] transition-all duration-200"
+              >
+                <RotateCcw className="w-4 h-4" />
+                <span className="body-base">تدوير</span>
+              </button>
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="ghost"
+                  onClick={handleCancel}
+                  className="bg-white/10 hover:bg-white/20 text-white rounded-[12px] px-5"
+                >
+                  إلغاء
+                </Button>
+                <Button
+                  onClick={getCroppedImage}
+                  className="bg-white text-[var(--system-600)] hover:bg-white/90 rounded-[12px] px-5"
+                >
+                  <Check className="w-4 h-4" />
+                  تطبيق
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
         </div>
-      </div>
+      </DialogPortal>
 
       <canvas ref={canvasRef} className="hidden" />
-    </div>
+    </Dialog>
   );
 }
 
@@ -173,19 +222,21 @@ function Lightbox({ images, currentIndex, onClose, onIndexChange }: {
         onClick={onClose}
         className="absolute top-4 end-4 p-2 text-white/70 hover:text-white z-10"
       >
-        <X className="w-8 h-8" />
+        <svg width="32" height="32" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="currentColor"/>
+        </svg>
       </button>
       
       <button
         onClick={() => onIndexChange((currentIndex - 1 + images.length) % images.length)}
-        className="absolute start-4 p-2 text-white/70 hover:text-white"
+        className="absolute start-4 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
       >
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
         </svg>
       </button>
       
-      <div className="relative w-full h-full max-w-4xl max-h-[80vh]">
+      <div className="relative w-full h-full max-w-4xl max-h-[80vh] flex items-center justify-center p-16">
         <Image
           src={images[currentIndex]}
           alt={`Image ${currentIndex + 1}`}
@@ -196,7 +247,7 @@ function Lightbox({ images, currentIndex, onClose, onIndexChange }: {
       
       <button
         onClick={() => onIndexChange((currentIndex + 1) % images.length)}
-        className="absolute end-4 p-2 text-white/70 hover:text-white"
+        className="absolute end-4 p-3 text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-all"
       >
         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -300,7 +351,7 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
               onDragStart={() => handleDragStart(index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragEnd={handleDragEnd}
-              className={`relative aspect-square rounded-xl overflow-hidden border-2 cursor-move transition-all ${
+              className={`relative aspect-square rounded-2xl overflow-hidden border-2 cursor-move transition-all ${
                 index === 0 ? "border-[#00853f]" : "border-transparent"
               } ${draggedIndex === index ? "opacity-50 scale-95" : ""}`}
             >
@@ -313,34 +364,35 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
               <div className="absolute inset-0 bg-black/40 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
                 <button
                   onClick={() => setLightboxIndex(index)}
-                  className="p-2 bg-white rounded-lg text-zinc-900 hover:bg-zinc-100"
+                  className="p-2 bg-white/20 backdrop-blur-sm rounded-xl text-white hover:bg-white/30 transition-colors"
                   title="تكبير"
                 >
-                  <ZoomIn className="w-4 h-4" />
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                  </svg>
                 </button>
                 {index !== 0 && (
                   <button
                     onClick={() => handleSetFeatured(index)}
-                    className="p-2 bg-white rounded-lg text-xs font-medium text-zinc-900 hover:bg-zinc-100"
+                    className="p-2 bg-white/20 backdrop-blur-sm rounded-xl text-xs font-medium text-white hover:bg-white/30 transition-colors"
                   >
                     رئيسية
                   </button>
                 )}
                 <button
                   onClick={() => handleRemoveImage(index)}
-                  className="p-2 bg-red-500 rounded-lg text-white hover:bg-red-600"
+                  className="p-2 bg-red-500/80 backdrop-blur-sm rounded-xl text-white hover:bg-red-600 transition-colors"
                 >
-                  <X className="w-4 h-4" />
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </div>
               {index === 0 && (
-                <span className="absolute top-1 start-1 bg-[#00853f] text-white text-xs px-2 py-0.5 rounded-full">
+                <span className="absolute top-2 start-2 bg-[#00853f] text-white text-xs px-2.5 py-1 rounded-full font-medium">
                   رئيسية
                 </span>
               )}
-              <div className="absolute top-1 end-1 opacity-0 hover:opacity-100 transition-opacity">
-                <GripVertical className="w-4 h-4 text-white drop-shadow-md" />
-              </div>
             </div>
           ))}
         </div>
@@ -351,10 +403,10 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={() => setIsDragging(false)}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors cursor-pointer ${
+          className={`border-2 border-dashed rounded-2xl p-8 text-center transition-colors cursor-pointer ${
             isDragging
               ? "border-[#00853f] bg-[#00853f]/5"
-              : "border-zinc-200 dark:border-zinc-700 hover:border-[#00853f] hover:bg-[#00853f]/5"
+              : "border-[var(--system-200)] hover:border-[#00853f] hover:bg-[#00853f]/5"
           }`}
         >
           <input
@@ -364,12 +416,14 @@ export function ImageUploader({ images, onImagesChange, maxImages = 5 }: ImageUp
             className="hidden"
             id="image-upload"
           />
-          <label htmlFor="image-upload" className="cursor-pointer">
-            <ImageIcon className="w-10 h-10 mx-auto mb-3 text-zinc-300" />
-            <p className="text-sm text-zinc-500 mb-1">
+          <label htmlFor="image-upload" className="cursor-pointer flex flex-col items-center">
+            <svg className="w-10 h-10 mb-3 text-[var(--system-300)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <p className="text-sm text-[var(--system-400)] mb-1">
               اسحب وأفلت الصور هنا
             </p>
-            <p className="text-xs text-zinc-400">
+            <p className="text-xs text-[var(--system-300)]">
               أو انقر للتصفح ({images.length}/{maxImages})
             </p>
           </label>

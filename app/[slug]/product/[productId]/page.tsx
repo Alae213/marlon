@@ -48,8 +48,15 @@ function ProductDetailContent() {
   const [showOrderForm, setShowOrderForm] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
+  const [phoneError, setPhoneError] = useState("");
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
+  
+  // Fetch delivery pricing
+  const deliveryPricing = useQuery(
+    api.stores.getDeliveryPricing,
+    store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
+  );
   
   const footerContent = useQuery(
     api.siteContent.getSiteContentResolved,
@@ -89,6 +96,29 @@ function ProductDetailContent() {
       .slice(0, 4);
   }, [products, productId]);
 
+  // Extract wilaya number from the selected wilaya string (e.g., "1 - Adrar - أدرار" -> "1")
+  const selectedWilayaNumber = useMemo(() => {
+    if (!orderData.wilaya) return null;
+    const match = orderData.wilaya.match(/^(\d+)/);
+    return match ? match[1] : null;
+  }, [orderData.wilaya]);
+
+  // Calculate delivery cost based on wilaya and delivery type
+  const deliveryCost = useMemo(() => {
+    if (!deliveryPricing || !selectedWilayaNumber) return 0;
+    
+    const pricing = deliveryPricing.find(p => p.wilaya === selectedWilayaNumber);
+    if (!pricing) return 0;
+    
+    return orderData.deliveryType === "domicile" 
+      ? (pricing.homeDelivery || 0) 
+      : (pricing.officeDelivery || 0);
+  }, [deliveryPricing, selectedWilayaNumber, orderData.deliveryType]);
+
+  // Calculate order totals
+  const subtotal = product ? product.basePrice * quantity : 0;
+  const total = subtotal + deliveryCost;
+
   const handleVariantSelect = (variantName: string, option: string) => {
     setSelectedVariants(prev => ({ ...prev, [variantName]: option }));
   };
@@ -105,6 +135,13 @@ function ProductDetailContent() {
 
   const handleBuyNow = async () => {
     if (!product || !store) return;
+    
+    // Validate phone before submitting
+    const phoneValidation = validateAlgerianPhone(orderData.phone);
+    if (!phoneValidation.isValid) {
+      setPhoneError(phoneValidation.error || "Invalid phone number");
+      return;
+    }
     
     try {
       await createOrder({
@@ -123,9 +160,9 @@ function ProductDetailContent() {
           quantity,
           variant: variantString || undefined,
         }],
-        subtotal: product.basePrice * quantity,
-        deliveryCost: 0,
-        total: product.basePrice * quantity,
+        subtotal,
+        deliveryCost,
+        total,
         deliveryType: orderData.deliveryType,
       });
       
@@ -349,10 +386,26 @@ function ProductDetailContent() {
                 <input
                   type="tel"
                   value={orderData.phone}
-                  onChange={(e) => setOrderData({ ...orderData, phone: e.target.value })}
-                  className="w-full h-10 px-3 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717]"
-                  placeholder="05xxxxxxxx"
+                  onChange={(e) => {
+                    const formatted = formatPhoneInput(e.target.value);
+                    setOrderData({ ...orderData, phone: formatted });
+                    
+                    // Validate phone
+                    if (formatted.length > 0) {
+                      const validation = validateAlgerianPhone(formatted);
+                      setPhoneError(validation.error || "");
+                    } else {
+                      setPhoneError("");
+                    }
+                  }}
+                  className={`w-full h-10 px-3 border bg-white dark:bg-[#171717] ${
+                    phoneError ? "border-red-500" : "border-[#e5e5e5] dark:border-[#404040]"
+                  }`}
+                  placeholder="05XX XXX XXX"
                 />
+                {phoneError && (
+                  <p className="text-xs text-red-500 mt-1">{phoneError}</p>
+                )}
               </div>
 
               <div>
@@ -411,6 +464,25 @@ function ProductDetailContent() {
                   />
                 </div>
               )}
+
+              {/* Order Summary */}
+              <div className="border-t border-[#e5e5e5] dark:border-[#404040] pt-4 mt-4">
+                <h3 className="text-sm font-medium mb-3">Order Summary</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-[#737373]">Subtotal</span>
+                    <span>{formatPrice(subtotal)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-[#737373]">Delivery</span>
+                    <span>{deliveryCost > 0 ? formatPrice(deliveryCost) : "Free"}</span>
+                  </div>
+                  <div className="flex justify-between font-medium text-base border-t border-[#e5e5e5] dark:border-[#404040] pt-2 mt-2">
+                    <span>Total</span>
+                    <span>{formatPrice(total)}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-4 mt-6">
