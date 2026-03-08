@@ -1,16 +1,11 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import Script from "next/script";
+import { GeistSans } from "geist/font";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
 import { ThemeProvider } from "@/lib/theme";
 import "./globals.css";
-
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-  display: "swap",
-});
 
 export const metadata: Metadata = {
   title: "Marlon",
@@ -35,7 +30,22 @@ export default function RootLayout({
           <ThemeProvider>
             <ToastProvider>
               <html lang="en" dir="ltr">
-                <body className={`${dmSans.variable} antialiased`}>
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+            strategy="lazyOnload"
+          />
+        )}
+      </head>
+                <body className={`${GeistSans.variable} antialiased`}>
                   {children}
                 </body>
               </html>
@@ -48,7 +58,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" dir="ltr">
-      <body className={`${dmSans.variable} antialiased`}>
+      <body className={`${GeistSans.variable} antialiased`}>
         <ConvexClientProvider>
           <ThemeProvider>
             <ToastProvider>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
@@ -16,8 +17,11 @@ import {
   Wifi,
   WifiOff,
 } from "lucide-react";
+import { CircleX } from "@/components/animate-ui/icons/circle-x";
 import { Button, Input } from "@/components/core";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
+import { AnimatePresence } from 'motion/react';
+import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle } from "@/components/animate-ui/primitives/radix/dialog";
 
 // Types
 interface StoreData {
@@ -36,9 +40,9 @@ function StoreCard({ store }: { store: StoreData }) {
   const getStatusBadge = () => {
     switch (store.subscription) {
       case "active":
-        return <span className="text-xs text-[#16a34a]">نشط</span>;
+        return <span className="text-xs text-[#16a34a]">Active</span>;
       case "trial":
-        return <span className="text-xs text-[#737373]">تجريبي</span>;
+        return <span className="text-xs text-[#737373]">Trial</span>;
       default:
         return null;
     }
@@ -46,7 +50,7 @@ function StoreCard({ store }: { store: StoreData }) {
 
   return (
     <Link href={`/editor/${store.slug}`} className="group block">
-      <div className="flex flex-col items-end cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px]"
+      <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px]"
             style={{ borderRadius: '32px' }}>
 
               <div className="flex items-center justify-between">
@@ -73,6 +77,8 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   const [slug, setSlug] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [hasSubmitted, setHasSubmitted] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   
   const { user } = useUser();
   const createStore = useMutation(api.stores.createStore);
@@ -80,6 +86,14 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
     api.stores.isSlugAvailable, 
     slug ? { slug } : "skip"
   );
+
+  const validateSlug = (inputSlug: string) => {
+    if (!inputSlug) return { valid: false, message: 'URL is required' };
+    if (inputSlug.length < 3) return { valid: false, message: 'URL must be at least 3 characters' };
+    if (inputSlug.length > 50) return { valid: false, message: 'URL must be less than 50 characters' };
+    if (!/^[a-z0-9-]+$/.test(inputSlug)) return { valid: false, message: 'URL can only contain lowercase letters, numbers, and hyphens' };
+    return { valid: true, message: '' };
+  };
 
   const generateSlug = (inputName: string) => {
     return inputName
@@ -94,24 +108,29 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
     if (!slug || slug === generateSlug(slug)) {
       setSlug(generateSlug(value));
     }
+    if (hasSubmitted) setError("");
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleCreate = async () => {
     setError("");
+    setHasSubmitted(true);
+    setIsCreating(true);
     
     if (!name.trim()) {
-      setError("يرجى إدخال اسم المتجر");
+      setError("Please enter a store name");
+      setIsCreating(false);
       return;
     }
     
     if (!slug.trim()) {
-      setError("يرجى إدخال رابط المتجر");
+      setError("Please enter a store URL");
+      setIsCreating(false);
       return;
     }
     
     if (!user) {
-      setError("يرجى تسجيل الدخول أولاً");
+      setError("Please login first");
+      setIsCreating(false);
       return;
     }
     
@@ -120,7 +139,8 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
     try {
       const isAvailable = await slugAvailable;
       if (!isAvailable) {
-        setError("هذا الرابط مستخدم. يرجى اختيار رابط آخر");
+        setError("This URL is already taken. Please choose another one");
+        setIsCreating(false);
         setIsLoading(false);
         return;
       }
@@ -132,13 +152,15 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
         description: "",
       });
       
+      setIsCreating(false);
       setIsLoading(false);
       onSuccess();
       onClose();
       setName("");
       setSlug("");
-} catch (_err) {
-      setError("حدث خطأ. يرجى المحاولة مرة أخرى");
+    } catch (_err) {
+      setError("An error occurred. Please try again");
+      setIsCreating(false);
       setIsLoading(false);
     }
   };
@@ -146,46 +168,150 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      
-      <div className="relative bg-white dark:bg-[#0a0a0a] w-full max-w-md shadow-2xl">
-        <div className="flex items-center justify-between p-6 border-b border-[#e5e5e5] dark:border-[#262626]">
-          <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">
-            إنشاء متجر جديد
-          </h2>
-          <button onClick={onClose} className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]">
-            <svg className="w-5 h-5 text-[#737373]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogPortal>
+        <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
+        <div className="fixed inset-0 flex items-center justify-center z-[70]">
+          <DialogContent
+            style={{ 
+              boxShadow: "var(--shadow-xl-shadow)",
+            } as any}
+            className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px]  items-start backdrop-blur-[12px]"
+            from="top"
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 25,
+            }}
+          >
+            <DialogHeader className="flex flex-row justify-between w-full h-[68px]">
+              <DialogTitle className="headline-2xl text-white">
+                This is what people
+                <br />
+                will see.
+              </DialogTitle>
+              <div 
+                onClick={onClose} 
+                className="w-5 h-5 cursor-pointer transition-opacity hover:opacity-60"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+                </svg>
+              </div>
+            </DialogHeader>
+
+
+            <hr className="h-px w-full border-0 rounded-full "
+                      style={{
+                        background: "rgba(242, 242, 242, 0.30)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
+                      }}/>
+
+                      <p className="body-base text-[var(--system-200)] "> </p>
+
+            <div
+                    style={{ boxShadow: "var(--shadow-xl-shadow)" }}
+                    className="flex flex-col gap-[11px] p-[12px] rounded-[20px] bg-white/10 "
+                  >
+                    <div className="flex flex-row gap-4 items-center w-full">
+                      
+                        <Image src="/windw.svg" alt="Website" width={33} height={9} />
+                        <div className="flex flex-row gap-2 items-center w-full">
+                          <Image src="/favicon.svg" alt="Marlon" width={27} height={34} />
+                        
+                        <input
+                          type="text"
+                          value={name}
+                          onChange={(e) => {
+                            handleNameChange(e.target.value);
+                            if (hasSubmitted) setError("");
+                          }}
+                          placeholder="Type . . ."
+                          className={`w-full px-[4px] rounded-[4px]  bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] focus:ring-0 title-xl py-[0px] transition-all duration-300 ease-in-out focus:outline-none hover:bg-white/10`}
+                          autoFocus
+                          aria-label="Website name"
+                        />  
+                        </div>
+                    </div>
+
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[var(--system-200)] body-base">
+                          marlon.app/
+                        </span>
+                        <div className="relative w-full">
+                          <Input
+                            type="text"
+                            value={slug}
+                            onChange={(e) => {
+                              const newSlug = e.target.value.toLowerCase();
+                              setSlug(newSlug);
+                              if (hasSubmitted) {
+                                const validation = validateSlug(newSlug);
+                                setError(validation.valid ? '' : validation.message || '');
+                              } else {
+                                setError('');
+                              }
+                            }}
+                            className={`pr-8 ${hasSubmitted && (error || !slug) ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                            placeholder="my-website"
+                          />
+                          {slug && (
+                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                              {validateSlug(slug).valid ? (
+                                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              ) : (
+                                <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {error && (
+                      <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-[10px] text-red-200 text-sm flex items-start gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                        </svg>
+                        <div>
+                          <p className="font-medium">Please fix the following:</p>
+                          <p>{error}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="body-base text-[var(--system-200)] py-[2px] text-center w-full">
+                         You can change it Later
+                      </p>
+
+                  <div className="flex gap-3 w-full">
+                    <Button
+                      variant="ghost"
+                      onClick={onClose}
+                      className=" w-full rounded-[12px]"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreate}
+                      disabled={isCreating}
+                      className="w-full rounded-[12px]"
+                    >
+                      {isCreating ? "Creating..." : "Create"}
+                    </Button>
+                  </div>
+                  
+                
+          </DialogContent>
         </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-5">
-          {error && <div className="p-3 bg-[#fee2e2] text-[#dc2626] text-sm">{error}</div>}
-          
-          <div>
-            <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">اسم المتجر</label>
-            <Input value={name} onChange={(e) => handleNameChange(e.target.value)} placeholder="متجري الإلكتروني" />
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">رابط المتجر</label>
-            <div className="flex items-center gap-2">
-              <span className="text-[#a3a3a3] text-sm">marlon.com/</span>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase())} placeholder="my-store" className="flex-1" />
-            </div>
-          </div>
-          
-          <div className="flex gap-3 pt-2">
-            <Button type="button" variant="secondary" onClick={onClose} className="flex-1">إلغاء</Button>
-            <Button type="submit" disabled={isLoading} className="flex-1">
-              {isLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> جاري...</> : "إنشاء المتجر"}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </DialogPortal>
+    </Dialog>
   );
 }
 
@@ -210,7 +336,7 @@ function DashboardContent() {
 
   if (!isLoaded) {
     return (
-      <div className="max-w-5xl mx-auto">
+      <div className="w-full h-screen flex items-center justify-center">
         <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] p-12 text-center">
           <Loader2 className="w-6 h-6 animate-spin text-[#171717] mx-auto mb-4" />
         </div>
@@ -220,7 +346,7 @@ function DashboardContent() {
 
   return (
     <>
-    <div className="flex flex-col gap-4 h-screen justify-between items-center py-10 max-w-5xl mx-auto bg-[var(--system-50)] dark:bg-[var(--system-900)]">
+    <div className="flex flex-col gap-4 h-screen justify-between items-center py-10 w-full mx-auto bg-[var(--system-50)] dark:bg-[var(--system-900)]">
       
         <Image src="/logo.svg" alt="Marlon Logo" width={71} height={22} />
       
@@ -228,14 +354,14 @@ function DashboardContent() {
         <div className="flex flex-row gap-4 ">
           <button
             onClick={() => setIsCreateModalOpen(true)}
-            className="flex flex-col items-end cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
+            className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
             style={{ borderRadius: '32px' }}
           >
             <div className="w-12 h-12 bg-[var(--system-200)] flex items-center justify-center rounded-[26px]">
               <Plus className="w-5 h-5 text-[var(--system-600)]" />
             </div>
 
-            <p className="font-medium text-[var(--system-600)]">new store </p>
+            <p className="body-base text-[var(--system-600)]">new store </p>
 
           </button>
 
@@ -246,7 +372,7 @@ function DashboardContent() {
 
       </SignedIn><CreateStoreModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSuccess={() => { } } />
 
-        <p className="text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
+        <p className="label-xs text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
     </div>
     </>
   );
@@ -271,7 +397,7 @@ function LandingPage() {
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   </svg>
-                  تسجيل الدخول عبر جوجل
+                  Sign in with Google
                 </button>
               </SignInButton>
             </div>
@@ -280,7 +406,7 @@ function LandingPage() {
       </main>
 
       <footer className="py-6 text-center">
-        <p className="text-sm text-[#a3a3a3]">© 2026 Marlon. جميع الحقوق محفوظة</p>
+        <p className="text-sm text-[#a3a3a3]">© 2026 Marlon. All rights reserved.</p>
       </footer>
     </div>
   );

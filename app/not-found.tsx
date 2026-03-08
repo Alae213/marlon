@@ -11,18 +11,18 @@ export default function NotFound() {
         </div>
         
         <h2 className="text-xl font-normal text-[#171717] dark:text-[#fafafa] mb-2">
-          الصفحة غير موجودة
+          Page Not Found
         </h2>
         
         <p className="text-[#737373] mb-6">
-          الصفحة التي تبحث عنها غير موجودة أو تم نقلها.
+          The page you are looking for does not exist or has been moved.
         </p>
 
         <div className="flex gap-3 justify-center">
           <Link href="/">
             <Button>
               <Home className="w-4 h-4" />
-              الصفحة الرئيسية
+              Go Home
             </Button>
           </Link>
         </div>

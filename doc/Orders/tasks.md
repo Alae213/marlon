@@ -43,10 +43,62 @@
 
 ## Remaining
 
-(none — all orders tasks complete)
+## Phase 1: Add Image Field to Orders (COMPLETED)
 
-## Next Up
+### Schema Updates
+- [x] Add `image` field to Convex schema (products array in orders table)
+- [x] Update createOrder mutation to accept image parameter
+- [x] Update orders-types.ts OrderItem interface
 
-- [ ] Bulk status change for multiple orders
-- [ ] Order export (CSV)
-- [ ] Advanced filtering (by wilaya, delivery type)
+## Phase 2: Add Blocked Status (COMPLETED)
+
+### Status Machine Updates
+- [x] Add "blocked" to OrderStatus type in orders-types.ts
+- [x] Add blocked entry to STATUS_LABELS with danger variant
+- [x] Add blocked to STATUS_TRANSITIONS (from new, confirmed, hold)
+
+## Phase 3: Cart & Checkout Flow (COMPLETED)
+
+### Cart Sidebar
+- [x] Add order form with customer details (name, phone, wilaya, commune, address, delivery type)
+- [x] Get storeId from context for order creation
+- [x] Map cart items to order products with images
+
+### Product Detail Page
+- [x] Pass product image when creating order from "Buy Now"
+
+## Phase 4: Orders Page Redesign (COMPLETED)
+
+### Header
+- [x] Change page title from "الطلبات" to "Orders"
+- [x] Remove Export button
+
+### View Toggle
+- [x] Add viewMode state ("list" | "state")
+- [x] Create toggle bar with "List" and "By State" options
+- [x] Show "Coming Soon" placeholder for "By State"
+
+### Toolbar (Icon Bar)
+- [x] Add 5 icon buttons: Search, Filter, Sort, Settings, Archive
+- [x] Implement expandable search input (click to expand, escape/click outside to collapse)
+- [x] Wire search to existing search logic
+
+### Table Redesign
+- [x] Add checkbox column (select all + individual checkboxes)
+- [x] Redesign Customer column (name bold + phone muted)
+- [x] Remove Order ID column
+- [x] Add Product column (first item name + variant + "+N more" badge)
+- [x] Add inline status dropdown (clickable badge → dropdown below)
+- [x] Add Total column with formatted price
+- [x] Add Date column with relative time (e.g., "about 3h ago")
+
+### Additional Components
+- [x] Add relativeTime helper function
+- [x] Create inline status dropdown component (Notion-style)
+- [x] Wire updateOrderStatus mutation to dropdown
+
+## Phase 5: Testing (COMPLETED)
+
+- [x] Run lint to check for errors
+- [x] Run build to verify no compilation errors
+- [x] Fix any lint or build errors

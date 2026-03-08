@@ -8,6 +8,11 @@
 - **Single source of truth**: The `doc/` folder is the only source of truth for all features and specs. Before adding or updating any feature, ensure it is documented in the relevant `doc/` domain PRD first.
 - When in doubt: **ASK** before proceeding
 
+## Forbidden **DO NOT READ**:
+- node_modules/
+- .next/
+- public/
+
 ## Overview
 
 Marlon is a multi-tenant SaaS platform for Algerian entrepreneurs to create and manage COD-based online stores. The project uses Next.js, TypeScript, Tailwind CSS, and will integrate with Convex (backend), Clerk (auth), and Chargily Pay (payments).

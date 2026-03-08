@@ -7,10 +7,10 @@ export interface OrderItem {
   id: string;
   productId: string;
   name: string;
+  image?: string;
   price: number;
   quantity: number;
   variant?: string;
-  image?: string;
 }
 
 // Call log entry for orders
@@ -68,6 +68,7 @@ export type OrderStatus =
   | "shipped" 
   | "succeeded" 
   | "canceled" 
+  | "blocked"
   | "hold";
 
 // Sort types
@@ -76,37 +77,39 @@ export type SortDirection = "asc" | "desc";
 
 // Status labels for display
 export const STATUS_LABELS: Record<OrderStatus, { label: string; variant: "default" | "success" | "warning" | "danger" | "info" }> = {
-  new: { label: "جديد", variant: "info" },
-  confirmed: { label: "مؤكد", variant: "default" },
-  packaged: { label: "مُعبأ", variant: "default" },
-  shipped: { label: "مُشحن", variant: "warning" },
-  succeeded: { label: "مُنجز", variant: "success" },
-  canceled: { label: "ملغى", variant: "danger" },
-  hold: { label: "معلق", variant: "warning" },
+  new: { label: "New", variant: "info" },
+  confirmed: { label: "Confirmed", variant: "default" },
+  packaged: { label: "Packaged", variant: "default" },
+  shipped: { label: "Shipped", variant: "warning" },
+  succeeded: { label: "Succeeded", variant: "success" },
+  canceled: { label: "Canceled", variant: "danger" },
+  blocked: { label: "Blocked", variant: "danger" },
+  hold: { label: "On Hold", variant: "warning" },
 };
 
 // Call outcome labels
 export const CALL_OUTCOME_LABELS: Record<CallLog["outcome"], { label: string; icon: string }> = {
-  answered: { label: "تم الرد", icon: "✓" },
-  no_answer: { label: "لا رد", icon: "✗" },
-  wrong_number: { label: "رقم خطأ", icon: "!" },
-  refused: { label: "رفض الاستلام", icon: "✗" },
+  answered: { label: "Answered", icon: "✓" },
+  no_answer: { label: "No Answer", icon: "✗" },
+  wrong_number: { label: "Wrong Number", icon: "!" },
+  refused: { label: "Refused", icon: "✗" },
 };
 
 // Delivery type labels
 export const DELIVERY_TYPE_LABELS: Record<Order["deliveryType"], string> = {
-  home_delivery: "توصيل للمنزل",
-  office_delivery: "توصيل للمكتب",
-  pickup: "استلام من المحل",
+  home_delivery: "Home Delivery",
+  office_delivery: "Office Delivery",
+  pickup: "Pickup",
 };
 
 // Status transition map - what statuses can each status transition to
 export const STATUS_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  new: ["confirmed", "canceled", "hold"],
-  confirmed: ["packaged", "canceled", "hold"],
+  new: ["confirmed", "canceled", "blocked", "hold"],
+  confirmed: ["packaged", "canceled", "blocked", "hold"],
   packaged: ["shipped", "canceled"],
   shipped: ["succeeded", "canceled"],
   succeeded: [],
   canceled: ["new"], // Can reopen
+  blocked: ["new"], // Can reopen
   hold: ["new", "confirmed", "canceled"],
 };

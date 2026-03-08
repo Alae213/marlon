@@ -7,17 +7,29 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantStyles = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary/80 disabled:bg-muted disabled:text-muted-foreground",
-  secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 disabled:opacity-40",
-  outline: "border border-border text-foreground hover:bg-muted disabled:opacity-40",
-  ghost: "text-muted-foreground hover:bg-muted disabled:opacity-40",
-  danger: "bg-destructive text-destructive-foreground hover:bg-destructive/80 disabled:bg-destructive/50",
+  primary: 
+    "bg-[var(--system-300)] text-[var(--system-100)] hover:bg-[var(--system-200)]/50 disabled:bg-muted disabled:text-[var(--system-300)]",
+  
+  secondary: 
+    "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 disabled:opacity-40",
+  
+  outline: 
+    "border border-border text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/40",
+  
+  ghost: 
+    "body-base text-[var(--system-100)] hover:bg-white/10 dark:hover:bg-white/10",
+  
+  link: 
+    "body-base underline-offset-4 hover:underline",
+  
+  danger: 
+    "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 disabled:bg-destructive/50",
 };
 
 const sizeStyles = {
-  sm: "h-9 px-4 text-sm",
-  md: "h-10 px-6 text-sm",
-  lg: "h-12 px-8 text-base",
+  sm: "h-9 px-4 text-sm rounded-[12px]",
+  md: "h-10 px-6 text-sm rounded-[12px]",
+  lg: "h-12 px-8 text-base rounded-[12px]",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -26,7 +38,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`body-base cursor-pointer inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
         {...props}
       >
         {isLoading && (
