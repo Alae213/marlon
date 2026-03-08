@@ -167,7 +167,7 @@ function StorefrontContent() {
             heroLayout === "right" ? "text-end items-end" : 
             "text-center items-center"
           } flex flex-col gap-4`}>
-            <h1 className="headline-2xl text-[var(--system-100)] dark:text-[#fafafa]">
+            <h1 className="display-5xl text-[var(--system-100)] dark:text-[#fafafa]">
               {heroTitle}
             </h1>
             {heroCtaText && (
@@ -188,7 +188,7 @@ function StorefrontContent() {
           <Link
             key={product._id}
             href={`/${slug}/product/${product._id}`}
-            className="group bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-300"
+            className=" dark:bg-[#0a0a0a] border border-[#e5e5e5] overflow-hidden"
           >
             <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717]">
               {product.images && product.images[0] ? (
@@ -214,23 +214,6 @@ function StorefrontContent() {
                 <span className="text-base font-normal text-[#171717] dark:text-[#fafafa]">
                   {formatPrice(product.basePrice)}
                 </span>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    addItem({
-                      id: `${product._id}-${Date.now()}`,
-                      productId: product._id,
-                      name: product.name,
-                      price: product.basePrice,
-                      quantity: 1,
-                      image: product.images?.[0] || "",
-                    });
-                  }}
-                  className="w-9 h-9 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] flex items-center justify-center hover:opacity-80 transition-opacity"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                </button>
               </div>
             </div>
           </Link>

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { GeistSans } from "geist/font";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
@@ -29,6 +30,21 @@ export default function RootLayout({
           <ThemeProvider>
             <ToastProvider>
               <html lang="en" dir="ltr">
+      <head>
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/react-grab/dist/index.global.js"
+            crossOrigin="anonymous"
+            strategy="beforeInteractive"
+          />
+        )}
+        {process.env.NODE_ENV === "development" && (
+          <Script
+            src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+            strategy="lazyOnload"
+          />
+        )}
+      </head>
                 <body className={`${GeistSans.variable} antialiased`}>
                   {children}
                 </body>
