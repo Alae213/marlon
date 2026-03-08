@@ -13,10 +13,10 @@ export default function MarketingPage() {
     <div className="max-w-6xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-[#171717] dark:text-[#fafafa] mb-2">
+        <h1 className="headline-2xl text-[var(--system-600)] mb-2">
           Marketing
         </h1>
-        <p className="text-[#737373]">
+        <p className="body-base text-[var(--system-400)]">
           Marketing and promotion tools for your store - Coming Soon
         </p>
       </div>
@@ -24,15 +24,15 @@ export default function MarketingPage() {
       {/* Coming Soon Card */}
       <Card className="p-12 text-center">
         <div className="flex flex-col items-center gap-6">
-          <div className="w-16 h-16 bg-[#f5f5f5] dark:bg-[#171717] rounded-full flex items-center justify-center">
-            <Megaphone className="w-8 h-8 text-[#a3a3a3]" />
+          <div className="w-16 h-16 bg-[var(--system-100)] rounded-full flex items-center justify-center">
+            <Megaphone className="w-8 h-8 text-[var(--system-300)]" />
           </div>
           
           <div>
-            <h2 className="text-xl font-medium text-[#171717] dark:text-[#fafafa] mb-2">
+            <h2 className="title-xl text-[var(--system-600)] mb-2">
               Coming Soon
             </h2>
-            <p className="text-[#737373] mb-4">
+            <p className="body-base text-[var(--system-400)] mb-4">
               We are working on advanced marketing tools to help grow your store
             </p>
           </div>
@@ -40,37 +40,37 @@ export default function MarketingPage() {
           {/* Features Preview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-2xl mt-8">
             <div className="text-center">
-              <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Target className="w-6 h-6 text-[#a3a3a3]" />
+              <div className="w-12 h-12 bg-[var(--system-100)] rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Target className="w-6 h-6 text-[var(--system-300)]" />
               </div>
-              <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
+              <h3 className="title-xl text-[var(--system-600)] mb-1">
                 Advertising Campaigns
               </h3>
-              <p className="text-sm text-[#737373]">
+              <p className="label-xs text-[var(--system-400)]">
                 Create and manage custom marketing campaigns
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg flex items-center justify-center mx-auto mb-3">
-                <TrendingUp className="w-6 h-6 text-[#a3a3a3]" />
+              <div className="w-12 h-12 bg-[var(--system-100)] rounded-lg flex items-center justify-center mx-auto mb-3">
+                <TrendingUp className="w-6 h-6 text-[var(--system-300)]" />
               </div>
-              <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
+              <h3 className="title-xl text-[var(--system-600)] mb-1">
                 Analytics & Reports
               </h3>
-              <p className="text-sm text-[#737373]">
+              <p className="label-xs text-[var(--system-400)]">
                 Track your marketing campaign performance
               </p>
             </div>
 
             <div className="text-center">
-              <div className="w-12 h-12 bg-[#f5f5f5] dark:bg-[#171717] rounded-lg flex items-center justify-center mx-auto mb-3">
-                <Users className="w-6 h-6 text-[#a3a3a3]" />
+              <div className="w-12 h-12 bg-[var(--system-100)] rounded-lg flex items-center justify-center mx-auto mb-3">
+                <Users className="w-6 h-6 text-[var(--system-300)]" />
               </div>
-              <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-1">
+              <h3 className="title-xl text-[var(--system-600)] mb-1">
                 Email Marketing
               </h3>
-              <p className="text-sm text-[#737373]">
+              <p className="label-xs text-[var(--system-400)]">
                 Communicate with your customers via email
               </p>
             </div>
@@ -78,19 +78,19 @@ export default function MarketingPage() {
 
           {/* Additional Features */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 w-full max-w-3xl mt-8">
-            <div className="flex items-center gap-2 text-sm text-[#737373]">
+            <div className="flex items-center gap-2 label-xs text-[var(--system-400)]">
               <Zap className="w-4 h-4" />
               <span>Discount Coupons</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-[#737373]">
+            <div className="flex items-center gap-2 label-xs text-[var(--system-400)]">
               <Calendar className="w-4 h-4" />
               <span>Promotional Dates</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-[#737373]">
+            <div className="flex items-center gap-2 label-xs text-[var(--system-400)]">
               <TrendingUp className="w-4 h-4" />
               <span>Market Analysis</span>
             </div>
-            <div className="flex items-center gap-2 text-sm text-[#737373]">
+            <div className="flex items-center gap-2 label-xs text-[var(--system-400)]">
               <Users className="w-4 h-4" />
               <span>Customer Loyalty</span>
             </div>

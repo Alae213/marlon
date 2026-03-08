@@ -4,12 +4,14 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, ShoppingCart, Package } from "lucide-react";
+import { Search, Package } from "lucide-react";
+import { CartIcon } from "@/components/core/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/cart-sidebar";
+import { Button } from "@/components/core/button";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -98,12 +100,12 @@ function StorefrontContent() {
 
   const navbarBgClass =
     navbarBg === "dark"
-      ? "bg-[#0a0a0a]"
+      ? "bg-[var(--system-700)]"
       : navbarBg === "transparent"
         ? "bg-transparent"
         : "bg-white";
 
-  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[#171717]";
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-600)]";
 
   return (
     <div className="w-full">
@@ -111,7 +113,7 @@ function StorefrontContent() {
       <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-[var(--system-100)] overflow-hidden flex items-center justify-center flex-shrink-0">
               {navbarLogoUrl ? (
                 <Image
                   src={navbarLogoUrl}
@@ -121,7 +123,7 @@ function StorefrontContent() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <Package className="w-5 h-5 text-[#a3a3a3]" />
+                <Package className="w-5 h-5 text-[var(--system-400)]" />
               )}
             </div>
           </div>
@@ -135,9 +137,9 @@ function StorefrontContent() {
           <div className="flex items-center gap-2">
             <button 
               onClick={openCart}
-              className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] relative ${navbarTextClass}`}
+              className={`w-9 h-9 flex items-center justify-center relative ${navbarTextClass}`}
             >
-              <ShoppingCart className="w-4 h-4" />
+              <CartIcon className="w-4 h-4" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                   {itemCount > 9 ? "9+" : itemCount}
@@ -159,24 +161,24 @@ function StorefrontContent() {
           } : {}}
         >
           {!heroBgUrl && (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#171717] dark:to-[#262626]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[var(--system-100)] to-[var(--system-200)]" />
           )}
           
           <div className={`relative z-10 text-center w-full ${
-            heroLayout === "left" ? "text-start items-start" : 
-            heroLayout === "right" ? "text-end items-end" : 
+            heroLayout === "left" ? "text-start items-start": 
+            heroLayout === "right" ? "text-end items-end": 
             "text-center items-center"
           } flex flex-col gap-4`}>
-            <h1 className="display-5xl text-[var(--system-100)] dark:text-[#fafafa]">
+            <h1 className="display-5xl text-white">
               {heroTitle}
             </h1>
             {heroCtaText && (
-              <button 
-                className="px-6 py-2 text-white font-medium hover:opacity-90 transition-opacity w-fit"
+              <Button 
+                className="px-6 py-2 w-fit"
                 style={{ backgroundColor: heroCtaColor }}
               >
                 {heroCtaText}
-              </button>
+              </Button>
             )}
           </div>
         </div>
@@ -188,9 +190,9 @@ function StorefrontContent() {
           <Link
             key={product._id}
             href={`/${slug}/product/${product._id}`}
-            className=" dark:bg-[#0a0a0a] border border-[#e5e5e5] overflow-hidden"
+            className="bg-[var(--system-50)] overflow-hidden"
           >
-            <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717]">
+            <div className="relative aspect-square bg-[var(--system-100)]">
               {product.images && product.images[0] ? (
                 <Image
                   src={product.images[0]}
@@ -202,16 +204,16 @@ function StorefrontContent() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
-                  <Package className="w-10 h-10 text-[#d4d4d4]" />
+                  <Package className="w-10 h-10 text-[var(--system-300)]" />
                 </div>
               )}
             </div>
             <div className="p-4">
-              <h3 className="font-normal text-[#171717] dark:text-[#fafafa] mb-3 line-clamp-2">
+              <h3 className="body-base text-[var(--system-600)] mb-3 line-clamp-2">
                 {product.name}
               </h3>
               <div className="flex items-center justify-between">
-                <span className="text-base font-normal text-[#171717] dark:text-[#fafafa]">
+                <span className="body-base text-[var(--system-600)]">
                   {formatPrice(product.basePrice)}
                 </span>
               </div>
@@ -223,7 +225,7 @@ function StorefrontContent() {
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[#737373]">No products available</p>
+          <p className="body-base text-[var(--system-400)]">No products available</p>
         </div>
       )}
 
@@ -235,7 +237,7 @@ function StorefrontContent() {
       />
 
       {/* Footer */}
-      <footer className="mt-16 border-t border-[#e5e5e5] dark:border-[#262626] pt-8">
+      <footer className="mt-16 pt-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Logo & Description */}
           <div>
@@ -250,20 +252,20 @@ function StorefrontContent() {
               </div>
             )}
             {footerDescription && (
-              <p className="text-sm text-[#737373] mb-4">{footerDescription}</p>
+              <p className="body-base text-[var(--system-400)] mb-4">{footerDescription}</p>
             )}
           </div>
 
           {/* Contact Info */}
           <div>
-            <h3 className="font-medium text-[#171717] dark:text-[#fafafa] mb-4">معلومات التواصل</h3>
+            <h3 className="title-xl text-[var(--system-600)] mb-4">معلومات التواصل</h3>
             {footerPhone && (
-              <p className="text-sm text-[#737373] mb-2">
+              <p className="body-base text-[var(--system-400)] mb-2">
                 Phone: {footerPhone}
               </p>
             )}
             {footerEmail && (
-              <p className="text-sm text-[#737373]">
+              <p className="body-base text-[var(--system-400)]">
                 Email: {footerEmail}
               </p>
             )}
@@ -272,9 +274,9 @@ function StorefrontContent() {
           {/* Copyright */}
           <div className="md:text-end">
             {footerCopyright && (
-              <p className="text-sm text-[#737373]">{footerCopyright}</p>
+              <p className="body-base text-[var(--system-400)]">{footerCopyright}</p>
             )}
-            <p className="text-sm text-[#a3a3a3] mt-4">
+            <p className="label-xs text-[var(--system-300)] mt-4">
               © {new Date().getFullYear()} {store?.name || "Store"}
             </p>
           </div>

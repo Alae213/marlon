@@ -5,7 +5,8 @@ import { useParams, useRouter } from "next/navigation";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ShoppingCart, ArrowLeft, Home, Upload, Palette, Type, ExternalLink, Sun, Moon } from "lucide-react";
+import { Plus, Image as ImageIcon, Edit, Archive, Eye, EyeOff, Trash2, Loader2, Settings, Package, ArrowLeft, Home, Upload, Palette, Type, ExternalLink, Sun, Moon, X } from "lucide-react";
+import { CartIcon } from "@/components/core/cart-icon";
 import { Button } from "@/components/core/button";
 import { Card } from "@/components/core/card";
 import { EmptyState } from "@/components/core/empty-state";
@@ -20,6 +21,14 @@ import { RealtimeProvider } from "@/contexts/realtime-context";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/core/theme-toggle";
 import { useTheme } from "@/lib/theme/provider";
+import {
+  Dialog,
+  DialogPortal,
+  DialogOverlay,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/animate-ui/primitives/radix/dialog";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -406,7 +415,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                   className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}
                   aria-label="السلة"
                 >
-                  <ShoppingCart className="w-4 h-4" />
+                  <CartIcon className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -1322,79 +1331,92 @@ function PreferencesSettings() {
 function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
   const [activeTab, setActiveTab] = useState("preferences");
 
-  if (!isOpen) return null;
-
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white dark:bg-[#0a0a0a] w-full  max-h-[80vh] overflow-hidden rounded-lg shadow-xl">
-        <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-          <h2 className="text-lg font-medium">إعدادات المتجر</h2>
-          <button onClick={onClose} className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
-        
-        <div className="flex border-b border-[#e5e5e5] dark:border-[#262626]">
-          <button
-            onClick={() => setActiveTab("preferences")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              activeTab === "preferences"
-                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                : "text-[#737373]"
-            }`}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogPortal>
+        <DialogOverlay className="fixed inset-0 z-[60] bg-black/40" />
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <DialogContent
+            style={{ boxShadow: "var(--shadow-xl-shadow)" } as any}
+            className="w-[600px] max-h-[80vh] overflow-hidden bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
+            from="top"
+            transition={{ type: "spring", stiffness: 300, damping: 25 }}
           >
-            التفضيلات
-          </button>
-          <button
-            onClick={() => setActiveTab("delivery")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              activeTab === "delivery"
-                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                : "text-[#737373]"
-            }`}
-          >
-            أسعار التوصيل
-          </button>
-          <button
-            onClick={() => setActiveTab("integration")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              activeTab === "integration"
-                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                : "text-[#737373]"
-            }`}
-          >
-            شركات التوصيل
-          </button>
-          <button
-            onClick={() => setActiveTab("store")}
-            className={`flex-1 py-3 text-sm font-medium ${
-              activeTab === "store"
-                ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                : "text-[#737373]"
-            }`}
-          >
-            معلومات المتجر
-          </button>
-        </div>
+            <DialogHeader className="w-full">
+              <div className="flex items-center justify-between w-full">
+                <DialogTitle className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">
+                  إعدادات المتجر
+                </DialogTitle>
+                <button 
+                  onClick={onClose} 
+                  className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
+                </button>
+              </div>
+            </DialogHeader>
+            
+            <div className="flex border-b border-[#e5e5e5] dark:border-[#262626] w-full">
+              <button
+                onClick={() => setActiveTab("preferences")}
+                className={`flex-1 py-3 text-sm font-medium ${
+                  activeTab === "preferences"
+                    ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                    : "text-[#737373]"
+                }`}
+              >
+                التفضيلات
+              </button>
+              <button
+                onClick={() => setActiveTab("delivery")}
+                className={`flex-1 py-3 text-sm font-medium ${
+                  activeTab === "delivery"
+                    ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                    : "text-[#737373]"
+                }`}
+              >
+                أسعار التوصيل
+              </button>
+              <button
+                onClick={() => setActiveTab("integration")}
+                className={`flex-1 py-3 text-sm font-medium ${
+                  activeTab === "integration"
+                    ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                    : "text-[#737373]"
+                }`}
+              >
+                شركات التوصيل
+              </button>
+              <button
+                onClick={() => setActiveTab("store")}
+                className={`flex-1 py-3 text-sm font-medium ${
+                  activeTab === "store"
+                    ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
+                    : "text-[#737373]"
+                }`}
+              >
+                معلومات المتجر
+              </button>
+            </div>
 
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
-          {activeTab === "preferences" && (
-            <PreferencesSettings />
-          )}
-          {activeTab === "delivery" && (
-            <DeliveryPricingSettings storeId={storeId} />
-          )}
-          {activeTab === "integration" && (
-            <DeliveryIntegrationSettings storeId={storeId} />
-          )}
-          {activeTab === "store" && (
-            <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />
-          )}
+            <div className="p-4 overflow-y-auto max-h-[60vh] w-full">
+              {activeTab === "preferences" && (
+                <PreferencesSettings />
+              )}
+              {activeTab === "delivery" && (
+                <DeliveryPricingSettings storeId={storeId} />
+              )}
+              {activeTab === "integration" && (
+                <DeliveryIntegrationSettings storeId={storeId} />
+              )}
+              {activeTab === "store" && (
+                <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />
+              )}
+            </div>
+          </DialogContent>
         </div>
-      </div>
-    </div>
+      </DialogPortal>
+    </Dialog>
   );
 }
 

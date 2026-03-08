@@ -18,6 +18,14 @@
 Marlon is a multi-tenant SaaS platform for Algerian entrepreneurs to create and manage COD-based online stores. The project uses Next.js, TypeScript, Tailwind CSS, and will integrate with Convex (backend), Clerk (auth), and Chargily Pay (payments).
 
 
+## Lessons Learned
+
+### Convex Storage & Images
+- **Storage IDs vs. URLs**: Never send raw Convex `storageId` strings directly to the frontend for use in `<img>` or Next.js `<Image />` tags. They are not valid URLs.
+- **Resolution**: Always resolve `storageId`s in your Convex queries using `await ctx.storage.getUrl(id)`.
+- **Performance**: When resolving multiple IDs (e.g., in a list of products), use `Promise.all()` to resolve them in parallel.
+- **Frontend Fallbacks**: Always provide a fallback (like a placeholder icon) if an image URL is missing or fails to load.
+
 ## Code Style Guidelines
 
 ### General Principles
@@ -69,11 +77,70 @@ import { formatPrice } from "../utils/format";
 ### Styling
 
 - **Icons**: Always use Lucide icons library (`lucide-react`). Never create custom icons from scratch.
- Tailwind CSS v4 exclusively - no inline style={} unless dynamic values_require it.
-. Global CSS variables defined in app/globals.css using @theme inline block.
-. Dark mode: use dark: variant (respects prefers-color-scheme).
-. RTL: this is an Arabic-first app. Use logical properties (ps-4, pe-4, ms-auto,
-me-auto, start-0, end-0) instead of physical left/right properties.
+- **Modal Components**: Always use the established visual styling for all modal/dialog components (see section below).
+
+### Modal Component Visual Styling
+
+All modal/dialog components must use this consistent styling:
+
+- **Component**: Use `Dialog`, `DialogPortal`, `DialogOverlay`, `DialogHeader`, `DialogTitle` from `@/components/animateContent`, `Dialog-ui/primitives/radix/dialog`
+- **Background**: `bg-[image:var(--gradient-popup)]`
+- **Shape**: `[corner-shape:squircle] rounded-[48px]` (or 64px for larger modals)
+- **Colors**: `bg-[--system-100]`, white text
+- **Shadow**: `style={{ boxShadow: "var(--shadow-xl-shadow)" } as any`
+- **Backdrop**: `backdrop-blur-[12px]`
+- **Glass elements**: `bg-white/10`, `hover:bg-white/20`, etc.
+- **Animation**: `from="top"` with spring transition
+
+### Public Routes Styling (Storefront, Product Pages)
+
+All public-facing routes (storefront, product detail, landing pages) must use:
+
+- **Typography classes**: Always use defined typography classes from globals.css:
+  - `display-5xl` - Large display text (64px)
+  - `headline-2xl` - Headings (29px)
+  - `title-xl` - Section titles (22px)
+  - `body-base` - Body text (17px)
+  - `label-xs` - Small labels (12px)
+
+- **Color variables**: Always use system-X color variables instead of hardcoded hex:
+  - `var(--system-50)` - Lightest (#FAFAFA)
+  - `var(--system-100)` - Light (#EFEFEF)
+  - `var(--system-200)` - Light gray (#D6D6D6)
+  - `var(--system-300)` - Gray (#929292)
+  - `var(--system-400)` - Dark gray (#5D5D5D)
+  - `var(--system-500)` - Darker (#3D3D3D)
+  - `var(--system-600)` - Dark (#1F1F1F)
+  - `var(--system-700)` - Darkest (#0C0C0C)
+
+- **No borders**: Remove all border styles from public route components
+- **Button component**: Always use `Button` from `@/components/core/button`
+
+**Example:**
+```tsx
+<Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+  <DialogPortal>
+    <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
+    <div className="fixed inset-0 flex items-center justify-center z-[70]">
+      <DialogContent
+        style={{ boxShadow: "var(--shadow-xl-shadow)" } as any}
+        className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
+        from="top"
+        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+      >
+        {/* Modal content */}
+      </DialogContent>
+    </div>
+  </DialogPortal>
+</Dialog>
+```
+
+### Tailwind CSS
+
+- Tailwind CSS v4 exclusively - no inline style={} unless dynamic values require it.
+- Global CSS variables defined in app/globals.css using @theme inline block.
+- Dark mode: use dark: variant (respects prefers-color-scheme).
+- RTL: this is an Arabic-first app. Use logical properties (ps-4, pe-4, ms-auto, me-auto, start-0, end-0) instead of physical left/right properties.
 
 ### React / Next.js Patterns
 

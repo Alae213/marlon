@@ -1,5 +1,27 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Doc } from "./_generated/dataModel";
+
+// Helper to resolve product images
+async function resolveProductImages(ctx: any, product: Doc<"products">) {
+  if (!product.images || product.images.length === 0) return product;
+  
+  const resolvedImages = await Promise.all(
+    product.images.map(async (img) => {
+      if (img.startsWith("http")) return img;
+      try {
+        return await ctx.storage.getUrl(img);
+      } catch (e) {
+        return null;
+      }
+    })
+  );
+  
+  return {
+    ...product,
+    images: resolvedImages.filter((img): img is string => img !== null),
+  };
+}
 
 // Get all products for a store
 export const getProducts = query({
@@ -11,7 +33,8 @@ export const getProducts = query({
       .filter((q) => q.eq(q.field("isArchived"), false))
       .order("asc")
       .collect();
-    return products;
+    
+    return Promise.all(products.map((p) => resolveProductImages(ctx, p)));
   },
 });
 
@@ -24,7 +47,8 @@ export const getAllProducts = query({
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
       .order("asc")
       .collect();
-    return products;
+    
+    return Promise.all(products.map((p) => resolveProductImages(ctx, p)));
   },
 });
 
@@ -33,7 +57,8 @@ export const getProduct = query({
   args: { productId: v.id("products") },
   handler: async (ctx, args) => {
     const product = await ctx.db.get(args.productId);
-    return product;
+    if (!product) return null;
+    return resolveProductImages(ctx, product);
   },
 });
 
@@ -48,7 +73,8 @@ export const getProductsByCategory = query({
       )
       .filter((q) => q.eq(q.field("isArchived"), false))
       .collect();
-    return products;
+    
+    return Promise.all(products.map((p) => resolveProductImages(ctx, p)));
   },
 });
 
@@ -62,12 +88,14 @@ export const searchProducts = query({
       .filter((q) => q.eq(q.field("isArchived"), false))
       .collect();
     
-    const query = args.searchQuery.toLowerCase();
-    return products.filter(
+    const queryStr = args.searchQuery.toLowerCase();
+    const filtered = products.filter(
       (p) =>
-        p.name.toLowerCase().includes(query) ||
-        p.description?.toLowerCase().includes(query)
+        p.name.toLowerCase().includes(queryStr) ||
+        p.description?.toLowerCase().includes(queryStr)
     );
+
+    return Promise.all(filtered.map((p) => resolveProductImages(ctx, p)));
   },
 });
 

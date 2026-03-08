@@ -337,8 +337,8 @@ function DashboardContent() {
   if (!isLoaded) {
     return (
       <div className="w-full h-screen flex items-center justify-center">
-        <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] p-12 text-center">
-          <Loader2 className="w-6 h-6 animate-spin text-[#171717] mx-auto mb-4" />
+        <div className="bg-white p-12 text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[var(--system-600)] mx-auto mb-4" />
         </div>
       </div>
     );
@@ -346,7 +346,7 @@ function DashboardContent() {
 
   return (
     <>
-    <div className="flex flex-col gap-4 h-screen justify-between items-center py-10 w-full mx-auto bg-[var(--system-50)] dark:bg-[var(--system-900)]">
+    <div className="flex flex-col gap-4 h-screen justify-between items-center py-10 w-full mx-auto bg-[var(--system-50)]">
       
         <Image src="/logo.svg" alt="Marlon Logo" width={71} height={22} />
       
@@ -381,7 +381,7 @@ function DashboardContent() {
 // Landing Page Component - Public landing page for unauthenticated users
 function LandingPage() {
   return (
-    <div className="min-h-screen bg-white dark:bg-[#0a0a0a]">
+    <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between px-8 py-6">
         
       </header>
@@ -392,13 +392,13 @@ function LandingPage() {
           <SignedOut>
             <div className="flex flex-col items-center gap-4">
               <SignInButton mode="modal">
-                <button className="flex items-center justify-center gap-3 w-full max-w-xs h-12 bg-[#171717] dark:bg-[#fafafa] text-white dark:text-[#171717] font-normal text-base transition-all duration-300 hover:opacity-80">
+                <Button className="flex items-center justify-center gap-3 w-full max-w-xs h-12">
                   <svg className="w-5 h-5" viewBox="0 0 24 24">
                     <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                     <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                   </svg>
                   Sign in with Google
-                </button>
+                </Button>
               </SignInButton>
             </div>
           </SignedOut>
@@ -406,7 +406,7 @@ function LandingPage() {
       </main>
 
       <footer className="py-6 text-center">
-        <p className="text-sm text-[#a3a3a3]">© 2026 Marlon. All rights reserved.</p>
+        <p className="label-xs text-[var(--system-300)]">© 2026 Marlon. All rights reserved.</p>
       </footer>
     </div>
   );

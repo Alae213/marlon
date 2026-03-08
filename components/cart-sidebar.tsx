@@ -60,24 +60,55 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
     storeId ? { storeId: storeId as Id<"stores"> } : "skip"
   );
 
-  // Extract wilaya number from the selected wilaya string
+  // Extract wilaya Arabic name from the selected wilaya string (e.g., "1 - Adrar - أدرار" -> "أدرار")
+  const selectedWilayaArabic = useMemo(() => {
+    if (!formData.wilaya) return null;
+    const parts = formData.wilaya.split(" - ");
+    return parts.length >= 3 ? parts[2].trim() : null;
+  }, [formData.wilaya]);
+
+  // Extract wilaya number as fallback (e.g., "1 - Adrar - أدرار" -> "1")
   const selectedWilayaNumber = useMemo(() => {
     if (!formData.wilaya) return null;
     const match = formData.wilaya.match(/^(\d+)/);
     return match ? match[1] : null;
   }, [formData.wilaya]);
 
-  // Calculate delivery cost
-  const deliveryCost = useMemo(() => {
-    if (!deliveryPricing || !selectedWilayaNumber) return 0;
+  // Find pricing with multiple fallback strategies
+  const findDeliveryPrice = useMemo(() => {
+    if (!deliveryPricing || !formData.wilaya) return null;
     
-    const pricing = deliveryPricing.find(p => p.wilaya === selectedWilayaNumber);
-    if (!pricing) return 0;
+    // Strategy 1: Match by Arabic name
+    if (selectedWilayaArabic) {
+      const found = deliveryPricing.find(p => p.wilaya === selectedWilayaArabic);
+      if (found) return found;
+    }
     
-    return formData.deliveryType === "domicile" 
+    // Strategy 2: Match by wilaya number (some entries might be saved with number)
+    if (selectedWilayaNumber) {
+      const found = deliveryPricing.find(p => p.wilaya === selectedWilayaNumber);
+      if (found) return found;
+    }
+    
+    return null;
+  }, [deliveryPricing, selectedWilayaArabic, selectedWilayaNumber, formData.wilaya]);
+
+  // Get delivery cost - use stored price or default fallback
+  const getDeliveryCost = (type: "domicile" | "stopdesk") => {
+    const pricing = findDeliveryPrice;
+    if (!pricing) {
+      // Default fallback prices (same as editor defaults)
+      return type === "domicile" ? 600 : 400;
+    }
+    return type === "domicile" 
       ? (pricing.homeDelivery || 0) 
       : (pricing.officeDelivery || 0);
-  }, [deliveryPricing, selectedWilayaNumber, formData.deliveryType]);
+  };
+
+  // Calculate delivery cost
+  const deliveryCost = useMemo(() => {
+    return getDeliveryCost(formData.deliveryType);
+  }, [findDeliveryPrice, formData.deliveryType]);
 
   const orderTotal = total + deliveryCost;
 

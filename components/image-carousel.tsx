@@ -31,7 +31,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   // If only one image, don't show carousel controls
   if (images.length === 1) {
     return (
-      <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717] rounded-lg overflow-hidden">
+      <div className="relative aspect-square bg-[var(--system-100)] dark:bg-[var(--system-600)] rounded-2xl overflow-hidden">
         <Image
           src={images[0]}
           alt={alt}
@@ -47,7 +47,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   return (
     <div className="relative">
       {/* Main Image */}
-      <div className="relative aspect-square bg-[#f5f5f5] dark:bg-[#171717] rounded-lg overflow-hidden">
+      <div className="relative aspect-square bg-[var(--system-100)] dark:bg-[var(--system-600)] rounded-2xl overflow-hidden">
         <Image
           src={images[currentIndex]}
           alt={`${alt} - Image ${currentIndex + 1}`}
@@ -63,7 +63,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
           className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/50 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-black/70 transition-colors shadow-lg"
           aria-label="Previous image"
         >
-          <ChevronLeft className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" />
+          <ChevronLeft className="w-5 h-5 text-[var(--system-600)] dark:text-[var(--system-50)]" />
         </button>
         
         <button
@@ -71,7 +71,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
           className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/50 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-black/70 transition-colors shadow-lg"
           aria-label="Next image"
         >
-          <ChevronRight className="w-5 h-5 text-[#171717] dark:text-[#fafafa]" />
+          <ChevronRight className="w-5 h-5 text-[var(--system-600)] dark:text-[var(--system-50)]" />
         </button>
       </div>
 
@@ -82,10 +82,10 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
             <button
               key={index}
               onClick={() => goToSlide(index)}
-              className={`relative w-16 h-16 flex-shrink-0 rounded-md overflow-hidden border-2 transition-colors ${
+              className={`relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-colors ${
                 index === currentIndex
-                  ? "border-[#171717] dark:border-[#fafafa]"
-                  : "border-transparent hover:border-[#a3a3a3]"
+                  ? "border-[var(--system-600)] dark:border-[var(--system-50)]"
+                  : "border-transparent hover:border-[var(--system-300)]"
               }`}
             >
               <Image
@@ -109,8 +109,8 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentIndex
-                  ? "bg-[#171717] dark:bg-[#fafafa]"
-                  : "bg-[#d4d4d4] dark:bg-[#404040]"
+                  ? "bg-[var(--system-600)] dark:bg-[var(--system-50)]"
+                  : "bg-[var(--system-200)] dark:bg-[var(--system-400)]"
               }`}
               aria-label={`Go to image ${index + 1}`}
             />

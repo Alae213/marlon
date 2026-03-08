@@ -18,15 +18,15 @@ interface VariantGroup {
 
 const PREBUILT_OPTIONS = {
   size: {
-    name: "المقاس",
-    variants: ["صغير", "متوسط", "كبير", "XL"]
+    name: "Size",
+    variants: ["Small", "Medium", "Large", "XL"]
   },
   color: {
-    name: "اللون",
-    variants: ["أحمر", "أزرق", "أخضر", "أسود", "أبيض"]
+    name: "Color",
+    variants: ["Red", "Blue", "Green", "Black", "White"]
   },
   custom: {
-    name: "مخصص",
+    name: "Custom",
     variants: []
   }
 };
@@ -60,7 +60,7 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
         isHidden: false
       };
     } else {
-      newGroup = { name: `خيار ${localVariants.length + 1}`, variants: [], isHidden: false };
+      newGroup = { name: `Option ${localVariants.length + 1}`, variants: [], isHidden: false };
     }
     
     const newVariants: VariantGroup[] = [...localVariants, newGroup];
@@ -100,13 +100,13 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
   const handleAddOption = (groupName: string) => {
     const newVariants = localVariants.map(v => {
       if (v.name === groupName) {
-        return {
-          ...v,
-          variants: [
-            ...v.variants,
-            { name: `خيار ${v.variants.length + 1}` }
-          ]
-        };
+            return {
+              ...v,
+              variants: [
+                ...v.variants,
+                { name: `Option ${v.variants.length + 1}` }
+              ]
+            };
       }
       return v;
     });
@@ -194,7 +194,7 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
                     ? "text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/20" 
                     : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                 }`}
-                title={group.isHidden ? "إظهار في المتجر" : "إخفاء من المتجر"}
+                title={group.isHidden ? "Show in store" : "Hide from store"}
               >
                 {group.isHidden ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -255,7 +255,7 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
               className="flex items-center gap-1 px-3 py-1.5 text-sm text-zinc-500 hover:text-[#00853f] hover:bg-zinc-50 dark:hover:bg-zinc-800 rounded-lg transition-colors"
             >
               <Plus className="w-3 h-3" />
-              إضافة
+              Add
             </button>
           </div>
         </div>
@@ -268,7 +268,7 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
           className="w-full"
         >
           <Plus className="w-4 h-4" />
-          إضافة مجموعة خيارات
+          Add Option Group
           <ChevronDown className={`w-4 h-4 transition-transform ${showPrebuiltDropdown ? "rotate-180" : ""}`} />
         </Button>
         
@@ -278,22 +278,22 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
               onClick={() => handleAddGroup("size")}
               className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border-b border-zinc-100 dark:border-zinc-800"
             >
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">المقاس</span>
-              <p className="text-xs text-zinc-500 mt-0.5">صغير، متوسط، كبير، XL</p>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">Size</span>
+              <p className="text-xs text-zinc-500 mt-0.5">Small, Medium, Large, XL</p>
             </button>
             <button
               onClick={() => handleAddGroup("color")}
               className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors border-b border-zinc-100 dark:border-zinc-800"
             >
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">اللون</span>
-              <p className="text-xs text-zinc-500 mt-0.5">أحمر، أزرق، أخضر، أسود، أبيض</p>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">Color</span>
+              <p className="text-xs text-zinc-500 mt-0.5">Red, Blue, Green, Black, White</p>
             </button>
             <button
               onClick={() => handleAddGroup("custom")}
               className="w-full px-4 py-3 text-start hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors"
             >
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">مخصص</span>
-              <p className="text-xs text-zinc-500 mt-0.5">إضافة خيارات خاصة بك</p>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">Custom</span>
+              <p className="text-xs text-zinc-500 mt-0.5">Add your own options</p>
             </button>
           </div>
         )}
