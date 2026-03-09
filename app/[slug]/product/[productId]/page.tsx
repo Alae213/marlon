@@ -283,6 +283,7 @@ function ProductDetailContent() {
   }
 
   return (
+    <>
     <div className="w-full pt-16">
       {/* Navbar */}
       <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`}>
@@ -690,5 +691,7 @@ function ProductDetailContent() {
         </div>
       </footer>
     </div>
+    </div>
+    </>
   );
 }
