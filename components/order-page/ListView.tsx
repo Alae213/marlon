@@ -77,10 +77,10 @@ const statusColors: Record<OrderStatus, { dot: string }> = {
   succeeded: { dot: "bg-green-500" },
   canceled: { dot: "bg-red-500" },
   blocked: { dot: "bg-red-500" },
-  hold: { dot: "bg-yellow-500" },
+  router: { dot: "bg-yellow-500" },
 };
 
-const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "hold"];
+const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "router"];
 
 // Sort icon component
 function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {

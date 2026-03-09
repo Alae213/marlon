@@ -46,7 +46,7 @@ export function RealtimeProvider({ children, storeId, userId }: RealtimeProvider
 
   // Subscribe to real-time updates for orders if storeId is provided
   const realtimeOrders = useQuery(
-    api.orders.subscribeToStoreOrders,
+    api.orders.getOrders,
     storeId ? { storeId } : "skip"
   );
 

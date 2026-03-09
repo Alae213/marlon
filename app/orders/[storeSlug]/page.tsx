@@ -67,11 +67,6 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
   const updateOrderStatus = useMutation(api.orders.updateOrderStatus);
   const addCallLogMutation = useMutation(api.orders.addCallLog);
   const addAdminNoteMutation = useMutation(api.orders.addAdminNote);
-  const cleanupLockedOrders = useMutation(api.stores.cleanupLockedStoreOrders);
-
-  useEffect(() => {
-    cleanupLockedOrders({});
-  }, [cleanupLockedOrders]);
 
   const ordersData = orders || [];
   const newOrdersCount = ordersData.filter(o => o.status === "new").length;
@@ -135,7 +130,6 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
       await addAdminNoteMutation({
         orderId: orderId as Id<"orders">,
         text,
-        merchantId: user?.id || "unknown",
       });
       
       // Update local state if this is the selected order
@@ -143,7 +137,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
         setSelectedOrder({
           ...selectedOrder,
           adminNotes: [...(selectedOrder.adminNotes || []), {
-            id: `note_${Date.now()}`,
+            id: crypto.randomUUID(),
             text,
             timestamp: Date.now(),
             merchantId: user?.id || "unknown",

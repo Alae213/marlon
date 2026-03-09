@@ -1,5 +1,29 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+
+// Helper to verify store ownership
+async function assertStoreOwnership(
+  ctx: { db: any; auth: any },
+  storeId: any,
+  requireAdmin = false
+) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  
+  const store = await ctx.db.get(storeId);
+  if (!store) {
+    throw new Error("Store not found");
+  }
+  
+  // For admin functions, check if user is the owner
+  if (store.ownerId !== identity.subject) {
+    throw new Error("Forbidden");
+  }
+  
+  return { identity, store };
+}
 
 // Get store by slug
 export const getStoreBySlug = query({
@@ -30,15 +54,25 @@ export const getUserStores = query({
 export const subscribeToUserStores = query({
   args: { userId: v.optional(v.string()) },
   handler: async (ctx, args) => {
-    if (!args.userId || args.userId === undefined) {
-      // If no userId provided, return all stores (for admin dashboard)
-      const stores = await ctx.db.query("stores").order("desc").collect();
-      return stores;
-    }
-    
+    // If no userId provided, require auth and return user's own stores
+    if (!args.userId) {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        throw new Error("Unauthorized");
+      }
     const stores = await ctx.db
       .query("stores")
       .withIndex("ownerId", (q) => q.eq("ownerId", args.userId as string))
+      .order("desc")
+      .collect();
+      return stores;
+    }
+    
+    // When userId is provided, return stores for that user
+    const userIdParam = args.userId as string;
+    const stores = await ctx.db
+      .query("stores")
+      .withIndex("ownerId", (q) => q.eq("ownerId", userIdParam))
       .order("desc")
       .collect();
     return stores;
@@ -105,7 +139,6 @@ export const generateSlugSuggestions = query({
 // Create a new store
 export const createStore = mutation({
   args: {
-    ownerId: v.string(),
     name: v.string(),
     slug: v.string(),
     description: v.optional(v.string()),
@@ -113,6 +146,12 @@ export const createStore = mutation({
     wilaya: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+    
+    const ownerId = identity.subject;
     const now = Date.now();
     
     // Check if slug already exists
@@ -126,7 +165,7 @@ export const createStore = mutation({
     }
     
     const storeId = await ctx.db.insert("stores", {
-      ownerId: args.ownerId,
+      ownerId: ownerId,
       name: args.name,
       slug: args.slug,
       description: args.description,
@@ -156,10 +195,7 @@ export const updateStore = mutation({
     wilaya: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const store = await ctx.db.get(args.storeId);
-    if (!store) {
-      throw new Error("Store not found");
-    }
+    const { store } = await assertStoreOwnership(ctx, args.storeId);
     
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),
@@ -185,10 +221,7 @@ export const updateSubscription = mutation({
     paidUntil: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const store = await ctx.db.get(args.storeId);
-    if (!store) {
-      throw new Error("Store not found");
-    }
+    const { store } = await assertStoreOwnership(ctx, args.storeId);
     
     await ctx.db.patch(args.storeId, {
       subscription: args.subscription,
@@ -222,6 +255,9 @@ export const updateDeliveryPricing = mutation({
     officeDelivery: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    // Verify ownership
+    await assertStoreOwnership(ctx, args.storeId);
+    
     // Find existing pricing for this wilaya
     const existing = await ctx.db
       .query("deliveryPricing")
@@ -354,8 +390,8 @@ export const handleNewOrderSubscription = mutation({
 
 // Clean up orders from locked stores older than 20 days
 // Per PRD §Billing Edge Case 3
-// This should be run as a scheduled function (cron)
-export const cleanupLockedStoreOrders = mutation({
+// This is an internal mutation - only callable by Convex scheduled functions
+export const cleanupLockedStoreOrders = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();

@@ -341,7 +341,7 @@ export function OrderDetails({
                   {status === "shipped" && "Ship"}
                   {status === "succeeded" && "Complete"}
                   {status === "canceled" && "Cancel"}
-                  {status === "hold" && "Hold"}
+                  {status === "router" && "Router"}
                   {status === "blocked" && "Block"}
                   {status === "new" && "Reopen"}
                 </Button>

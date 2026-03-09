@@ -146,7 +146,6 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
       }
       
       await createStore({
-        ownerId: user.id,
         name,
         slug,
         description: "",

@@ -18,7 +18,7 @@ export function StatusDropdown({
   isOpen,
   setIsOpen
 }: StatusDropdownProps) {
-  const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "hold"];
+  const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "router"];
   
   const statusColors: Record<OrderStatus, { dot: string }> = {
     new: { dot: "bg-blue-500" },
@@ -28,7 +28,7 @@ export function StatusDropdown({
     succeeded: { dot: "bg-green-500" },
     canceled: { dot: "bg-red-500" },
     blocked: { dot: "bg-red-500" },
-    hold: { dot: "bg-yellow-500" },
+    router: { dot: "bg-yellow-500" },
   };
 
   return (

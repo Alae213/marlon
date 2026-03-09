@@ -69,7 +69,7 @@ export type OrderStatus =
   | "succeeded" 
   | "canceled" 
   | "blocked"
-  | "hold";
+  | "router";
 
 // Sort types
 export type SortField = "date" | "total" | "status";
@@ -84,7 +84,7 @@ export const STATUS_LABELS: Record<OrderStatus, { label: string; variant: "defau
   succeeded: { label: "Succeeded", variant: "success" },
   canceled: { label: "Canceled", variant: "danger" },
   blocked: { label: "Blocked", variant: "danger" },
-  hold: { label: "On Hold", variant: "warning" },
+  router: { label: "Router", variant: "warning" },
 };
 
 // Call outcome labels
@@ -104,12 +104,12 @@ export const DELIVERY_TYPE_LABELS: Record<Order["deliveryType"], string> = {
 
 // Status transition map - what statuses can each status transition to
 export const STATUS_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  new: ["confirmed", "canceled", "blocked", "hold"],
-  confirmed: ["packaged", "canceled", "blocked", "hold"],
+  new: ["confirmed", "canceled", "blocked", "router"],
+  confirmed: ["packaged", "canceled", "blocked", "router"],
   packaged: ["shipped", "canceled"],
-  shipped: ["succeeded", "canceled"],
+  shipped: ["succeeded", "router", "canceled"],
   succeeded: [],
   canceled: ["new"], // Can reopen
   blocked: ["new"], // Can reopen
-  hold: ["new", "confirmed", "canceled"],
+  router: ["new", "confirmed", "canceled"],
 };

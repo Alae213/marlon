@@ -2,6 +2,42 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Doc } from "./_generated/dataModel";
 
+// Helper to verify product/store ownership via product
+async function assertProductOwnership(ctx: { db: any; auth: any }, productId: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  
+  const product = await ctx.db.get(productId);
+  if (!product) {
+    throw new Error("Product not found");
+  }
+  
+  // Get the store and verify ownership
+  const store = await ctx.db.get(product.storeId);
+  if (!store || store.ownerId !== identity.subject) {
+    throw new Error("Forbidden");
+  }
+  
+  return { identity, product, store };
+}
+
+// Helper to verify store ownership
+async function assertStoreOwnership(ctx: { db: any; auth: any }, storeId: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  
+  const store = await ctx.db.get(storeId);
+  if (!store || store.ownerId !== identity.subject) {
+    throw new Error("Forbidden");
+  }
+  
+  return { identity, store };
+}
+
 // Helper to resolve product images
 async function resolveProductImages(ctx: any, product: Doc<"products">) {
   if (!product.images || product.images.length === 0) return product;
@@ -30,7 +66,7 @@ export const getProducts = query({
     const products = await ctx.db
       .query("products")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .filter((q) => q.eq(q.field("isArchived"), false))
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .order("asc")
       .collect();
     
@@ -71,7 +107,7 @@ export const getProductsByCategory = query({
       .withIndex("category", (q) =>
         q.eq("storeId", args.storeId).eq("category", args.category)
       )
-      .filter((q) => q.eq(q.field("isArchived"), false))
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .collect();
     
     return Promise.all(products.map((p) => resolveProductImages(ctx, p)));
@@ -85,7 +121,7 @@ export const searchProducts = query({
     const products = await ctx.db
       .query("products")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .filter((q) => q.eq(q.field("isArchived"), false))
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .collect();
     
     const queryStr = args.searchQuery.toLowerCase();
@@ -124,16 +160,20 @@ export const createProduct = mutation({
     ),
   },
   handler: async (ctx, args) => {
+    // Verify ownership of the store
+    await assertStoreOwnership(ctx, args.storeId);
+    
     const now = Date.now();
     
-    // Get the highest sort order
+    // Get all products to find the actual max sortOrder
     const products = await ctx.db
       .query("products")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .order("desc")
-      .first();
+      .collect();
     
-    const sortOrder = products ? (products.sortOrder || 0) + 1 : 0;
+    const sortOrder = products.length > 0
+      ? Math.max(...products.map(p => p.sortOrder ?? 0)) + 1
+      : 0;
     
     const productId = await ctx.db.insert("products", {
       storeId: args.storeId,
@@ -179,10 +219,7 @@ export const updateProduct = mutation({
     ),
   },
   handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.productId);
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    await assertProductOwnership(ctx, args.productId);
     
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),
@@ -207,10 +244,7 @@ export const archiveProduct = mutation({
     productId: v.id("products"),
   },
   handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.productId);
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    await assertProductOwnership(ctx, args.productId);
     
     await ctx.db.patch(args.productId, {
       isArchived: true,
@@ -227,10 +261,7 @@ export const unarchiveProduct = mutation({
     productId: v.id("products"),
   },
   handler: async (ctx, args) => {
-    const product = await ctx.db.get(args.productId);
-    if (!product) {
-      throw new Error("Product not found");
-    }
+    await assertProductOwnership(ctx, args.productId);
     
     await ctx.db.patch(args.productId, {
       isArchived: false,
@@ -248,6 +279,8 @@ export const reorderProducts = mutation({
     productIds: v.array(v.id("products")),
   },
   handler: async (ctx, args) => {
+    // Verify ownership of the store
+    await assertStoreOwnership(ctx, args.storeId);
     for (let i = 0; i < args.productIds.length; i++) {
       await ctx.db.patch(args.productIds[i], {
         sortOrder: i,
@@ -266,7 +299,7 @@ export const getCategories = query({
     const products = await ctx.db
       .query("products")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .filter((q) => q.eq(q.field("isArchived"), false))
+      .filter((q) => q.neq(q.field("isArchived"), true))
       .collect();
     
     const categories = new Set<string>();

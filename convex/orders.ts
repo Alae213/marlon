@@ -1,21 +1,29 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 
+// Helper to verify store ownership via order
+async function assertOrderOwnership(ctx: { db: any; auth: any }, orderId: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+  
+  const order = await ctx.db.get(orderId);
+  if (!order) {
+    throw new Error("Order not found");
+  }
+  
+  // Get the store and verify ownership
+  const store = await ctx.db.get(order.storeId);
+  if (!store || store.ownerId !== identity.subject) {
+    throw new Error("Forbidden");
+  }
+  
+  return { identity, order, store };
+}
+
 // Get all orders for a store
 export const getOrders = query({
-  args: { storeId: v.id("stores") },
-  handler: async (ctx, args) => {
-    const orders = await ctx.db
-      .query("orders")
-      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .order("desc")
-      .collect();
-    return orders;
-  },
-});
-
-// Real-time subscription to store orders
-export const subscribeToStoreOrders = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
     const orders = await ctx.db
@@ -69,12 +77,13 @@ export const getNewOrdersCount = query({
 export const getOrderByNumber = query({
   args: { storeId: v.id("stores"), orderNumber: v.string() },
   handler: async (ctx, args) => {
-    const orders = await ctx.db
+    // Use orderNumber index for efficiency, then filter by storeId
+    const order = await ctx.db
       .query("orders")
-      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .filter((q) => q.eq(q.field("orderNumber"), args.orderNumber))
+      .withIndex("orderNumber", (q) => q.eq("orderNumber", args.orderNumber))
+      .filter((q) => q.eq(q.field("storeId"), args.storeId))
       .first();
-    return orders;
+    return order;
   },
 });
 
@@ -105,6 +114,17 @@ export const createOrder = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    // Verify ownership of the store
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+    
+    const store = await ctx.db.get(args.storeId);
+    if (!store || store.ownerId !== identity.subject) {
+      throw new Error("Forbidden");
+    }
+    
     const now = Date.now();
     const orderId = await ctx.db.insert("orders", {
       storeId: args.storeId,
@@ -135,7 +155,6 @@ export const createOrder = mutation({
     });
 
     // Update store order count
-    const store = await ctx.db.get(args.storeId);
     if (store) {
       await ctx.db.patch(args.storeId, {
         orderCount: (store.orderCount || 0) + 1,
@@ -155,18 +174,16 @@ export const updateOrderStatus = mutation({
     note: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    await assertOrderOwnership(ctx, args.orderId);
 
+    const order = await ctx.db.get(args.orderId);
     const now = Date.now();
-    const timeline = order.timeline || [];
-    timeline.push({
+    // Use immutable spread instead of mutating array
+    const timeline = [...(order?.timeline || []), {
       status: args.status,
       timestamp: now,
       note: args.note || `تم تغيير الحالة إلى ${args.status}`,
-    });
+    }];
 
     await ctx.db.patch(args.orderId, {
       status: args.status,
@@ -186,18 +203,15 @@ export const addCallLog = mutation({
     notes: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
-    const timeline = order.timeline || [];
-    timeline.push({
+    // Use immutable spread instead of mutating array
+    const timeline = [...(order.timeline || []), {
       status: "call_log",
       timestamp: now,
       note: `مكالمة: ${args.outcome}${args.notes ? ` - ${args.notes}` : ""}`,
-    });
+    }];
 
     await ctx.db.patch(args.orderId, {
       callAttempts: (order.callAttempts || 0) + 1,
@@ -218,18 +232,15 @@ export const updateTrackingNumber = mutation({
     trackingNumber: v.string(),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
-    const timeline = order.timeline || [];
-    timeline.push({
+    // Use immutable spread instead of mutating array
+    const timeline = [...(order.timeline || []), {
       status: "tracking",
       timestamp: now,
       note: `تم إضافة رقم التتبع: ${args.trackingNumber}`,
-    });
+    }];
 
     await ctx.db.patch(args.orderId, {
       trackingNumber: args.trackingNumber,
@@ -248,10 +259,7 @@ export const updateOrderNotes = mutation({
     notes: v.string(),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    await assertOrderOwnership(ctx, args.orderId);
 
     await ctx.db.patch(args.orderId, {
       notes: args.notes,
@@ -267,29 +275,24 @@ export const addAdminNote = mutation({
   args: {
     orderId: v.id("orders"),
     text: v.string(),
-    merchantId: v.string(),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
-    const adminNotes = order.adminNotes || [];
-    adminNotes.push({
-      id: `note_${now}`,
+    // Use immutable spread and crypto.randomUUID() for unique ID
+    const adminNotes = [...(order.adminNotes || []), {
+      id: crypto.randomUUID(),
       text: args.text,
       timestamp: now,
-      merchantId: args.merchantId,
-    });
+      merchantId: identity.subject,
+    }];
 
-    const timeline = order.timeline || [];
-    timeline.push({
+    const timeline = [...(order.timeline || []), {
       status: "admin_note",
       timestamp: now,
       note: `إضافة ملاحظة: ${args.text.substring(0, 30)}${args.text.length > 30 ? "..." : ""}`,
-    });
+    }];
 
     await ctx.db.patch(args.orderId, {
       adminNotes,

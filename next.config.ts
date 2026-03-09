@@ -9,11 +9,13 @@ const nextConfig: NextConfig = {
       },
       {
         protocol: 'https',
-        hostname: '**.cloudfront.net',
+        // TODO: Replace with your specific CloudFront distribution domain
+        // e.g., 'd1234567890.cloudfront.net'
+        hostname: '*.cloudfront.net',
       },
       {
         protocol: 'https',
-        hostname: '**.convex.cloud',
+        hostname: '*.convex.cloud',
       },
     ],
     formats: ['image/avif', 'image/webp'],
@@ -50,6 +52,10 @@ const nextConfig: NextConfig = {
           {
             key: "X-XSS-Protection",
             value: "1; mode=block"
+          },
+          {
+            key: "Content-Security-Policy",
+            value: "default-src 'self'; img-src 'self' https: data:; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://unpkg.com; style-src 'self' 'unsafe-inline'; connect-src 'self' https: wss: https://*.clerk.accounts.dev https://*.clerk.com; worker-src 'self' blob:; frame-src 'self' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com; font-src 'self' data: https:;"
           }
         ]
       }
