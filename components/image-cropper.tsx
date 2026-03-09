@@ -48,7 +48,6 @@ export function ImageCropper({
 }: ImageCropperProps) {
   const [crop, setCrop] = useState<Crop>();
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
-  const [rotation, setRotation] = useState(0);
   const [isOpen, setIsOpen] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -67,38 +66,39 @@ export function ImageCropper({
     const canvas = canvasRef.current;
     const crop = completedCrop;
 
-    const scaleX = image.naturalWidth / image.width;
-    const scaleY = image.naturalHeight / image.height;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    const rotRad = (rotation * Math.PI) / 180;
-    const { width: bBoxWidth, height: bBoxHeight } = rotateSize(
-      image.width,
-      image.height,
-      rotation
-    );
+    // Calculate scaling between displayed image and natural image
+    const scaleX = image.naturalWidth / image.width;
+    const scaleY = image.naturalHeight / image.height;
 
+    // Set canvas size to the cropped area size in natural pixels
     canvas.width = crop.width * scaleX;
     canvas.height = crop.height * scaleY;
 
-    ctx.translate(crop.x * scaleX, crop.y * scaleY);
-    ctx.rotate(rotRad);
-    ctx.translate(-image.width * scaleX / 2, -image.height * scaleY / 2);
-    ctx.scale(scaleX, scaleY);
-    ctx.rotate((rotation * Math.PI) / 180);
-    ctx.translate(-bBoxWidth / 2, -bBoxHeight / 2);
+    ctx.imageSmoothingQuality = "high";
 
-    ctx.drawImage(image, 0, 0, bBoxWidth, bBoxHeight, 0, 0, bBoxWidth, bBoxHeight);
+    // Draw the specific part of the image onto the canvas
+    ctx.drawImage(
+      image,
+      crop.x * scaleX,
+      crop.y * scaleY,
+      crop.width * scaleX,
+      crop.height * scaleY,
+      0,
+      0,
+      crop.width * scaleX,
+      crop.height * scaleY
+    );
 
     const croppedImageUrl = canvas.toDataURL("image/jpeg", 0.9);
     onCropComplete(croppedImageUrl);
     setIsOpen(false);
-  }, [completedCrop, rotation, onCropComplete]);
+  }, [completedCrop, onCropComplete]);
 
   const handleCancel = () => {
     setIsOpen(false);
-    // Wait for animation to complete before calling onCancel
     setTimeout(() => {
       onCancel();
     }, 200);
@@ -156,20 +156,11 @@ export function ImageCropper({
                   alt="Crop"
                   onLoad={onImageLoad}
                   className="max-h-[45vh] object-contain"
-                  style={{ transform: `rotate(${rotation}deg)` }}
                 />
               </ReactCrop>
             </div>
 
-            <div className="flex items-center justify-between w-full gap-3">
-              <button
-                onClick={() => setRotation((r) => (r + 90) % 360)}
-                className="flex items-center gap-2 px-4 py-2.5 text-white/70 hover:text-white hover:bg-white/10 rounded-[12px] transition-all duration-200"
-              >
-                <RotateCcw className="w-4 h-4" />
-                <span className="body-base">تدوير</span>
-              </button>
-              
+            <div className="flex items-center justify-end w-full gap-3">
               <div className="flex gap-3">
                 <Button
                   variant="ghost"
@@ -241,6 +232,7 @@ function Lightbox({ images, currentIndex, onClose, onIndexChange }: {
           src={images[currentIndex]}
           alt={`Image ${currentIndex + 1}`}
           fill
+          unoptimized
           className="object-contain"
         />
       </div>

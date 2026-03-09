@@ -177,6 +177,7 @@ const saveInlineEdit = async () => {
         name?: string;
         basePrice?: number;
         oldPrice?: number;
+        images?: string[];
       } = {
         productId: editingField.productId as Id<"products">,
       };
@@ -217,17 +218,31 @@ const saveInlineEdit = async () => {
 
   const handleAddProduct = async (product: ProductFormData) => {
     try {
+      _setIsSaving(true);
+      // Upload any new base64 images to Convex storage
+      const storageIds = await Promise.all(
+        product.images.map(async (img) => {
+          if (img.startsWith("data:")) {
+            return await uploadToConvexStorage(img);
+          }
+          return img; // Already a storage ID or URL
+        })
+      );
+
       await createProduct({
         storeId: storeId as Id<"stores">,
         name: product.name,
         description: product.description || undefined,
         basePrice: product.basePrice,
         oldPrice: product.oldPrice || undefined,
-        images: product.images,
+        images: storageIds,
         variants: product.variants,
       });
+      setIsAddModalOpen(false);
     } catch (error) {
       console.error("Failed to create product:", error);
+    } finally {
+      _setIsSaving(false);
     }
   };
 
@@ -243,8 +258,20 @@ const saveInlineEdit = async () => {
     }
   };
 
-const handleUpdateProduct = async (product: ProductFormData) => {
+  const handleUpdateProduct = async (product: ProductFormData) => {
     try {
+      _setIsSaving(true);
+      
+      // Upload any new base64 images to Convex storage
+      const storageIds = await Promise.all(
+        product.images.map(async (img) => {
+          if (img.startsWith("data:")) {
+            return await uploadToConvexStorage(img);
+          }
+          return img; // Already a storage ID or URL
+        })
+      );
+
       const updateData: {
         productId: Id<"products">;
         name: string;
@@ -259,7 +286,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         description: product.description || undefined,
         basePrice: product.basePrice,
         oldPrice: product.oldPrice || undefined,
-        images: product.images,
+        images: storageIds,
         variants: product.variants,
       };
       
@@ -267,6 +294,8 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       setEditingProduct(null);
     } catch (error) {
       console.error("Failed to update product:", error);
+    } finally {
+      _setIsSaving(false);
     }
   };
 

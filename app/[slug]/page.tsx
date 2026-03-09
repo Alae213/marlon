@@ -108,10 +108,10 @@ function StorefrontContent() {
   const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-600)]";
 
   return (
-    <div className="w-full">
+    <div className="w-full bg-[var(--system-50)]">
       {/* Navbar */}
       <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`}>
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center max-w-6xl mx-auto justify-between px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-full bg-[var(--system-100)] overflow-hidden flex items-center justify-center flex-shrink-0">
               {navbarLogoUrl ? (
@@ -153,23 +153,23 @@ function StorefrontContent() {
       {/* Hero Section */}
       {heroTitle && (
         <div 
-          className="relative overflow-hidden h-[calc(100vh-80px)] flex flex-col items-center justify-center p-8 mb-10"
+          className="relative overflow-hidden h-[calc(100vh-40px)] flex flex-col items-center justify-center mb-10"
           style={heroBgUrl ? { 
             backgroundImage: `url(${heroBgUrl})`, 
             backgroundSize: 'cover', 
-            backgroundPosition: 'center' 
+            backgroundPosition: 'center'
           } : {}}
         >
           {!heroBgUrl && (
-            <div className="absolute inset-0 bg-gradient-to-br from-[var(--system-100)] to-[var(--system-200)]" />
+            <div className="absolute inset-0 bg-[var(--system-100)]" />
           )}
           
-          <div className={`relative z-10 text-center w-full ${
+          <div className={`max-w-6xl mx-auto relative z-10 text-center w-full ${
             heroLayout === "left" ? "text-start items-start": 
             heroLayout === "right" ? "text-end items-end": 
             "text-center items-center"
-          } flex flex-col gap-4`}>
-            <h1 className="display-5xl text-white">
+          } flex flex-col gap-6`}>
+            <h1 className="display-5xl text-[var(--system-600)]">
               {heroTitle}
             </h1>
             {heroCtaText && (
@@ -184,15 +184,17 @@ function StorefrontContent() {
         </div>
       )}
 
-      <div className="max-w-6xl mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {/* Product Catalog Section */}
+      <div className="max-w-6xl mx-auto my-[32px]">
+        <h2 className="headline-2xl mb-6">Products</h2>
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 ">
         {filteredProducts.map((product) => (
           <Link
             key={product._id}
             href={`/${slug}/product/${product._id}`}
-            className="bg-[var(--system-50)] overflow-hidden"
+            className="bg-[var(--system-50)] overflow-hidden flex flex-col gap-[16px] p-1 pb-4 rounded-[20px] hover:bg-black/2"
           >
-            <div className="relative aspect-square bg-[var(--system-100)]">
+            <div className="relative aspect-square bg-[var(--system-100)] rounded-[18px]">
               {product.images && product.images[0] ? (
                 <Image
                   src={product.images[0]}
@@ -200,7 +202,7 @@ function StorefrontContent() {
                   fill
                   sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 25vw"
                   loading="lazy"
-                  className="object-cover"
+                  className="object-cover rounded-[18px]"
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
@@ -208,8 +210,8 @@ function StorefrontContent() {
                 </div>
               )}
             </div>
-            <div className="p-4">
-              <h3 className="body-base text-[var(--system-600)] mb-3 line-clamp-2">
+            <div className="px-[2px] flex flex-col gap-2">
+              <h3 className="title-xl text-[var(--system-600)] line-clamp-2">
                 {product.name}
               </h3>
               <div className="flex items-center justify-between">
@@ -237,30 +239,43 @@ function StorefrontContent() {
       />
 
       {/* Footer */}
-      <footer className="mt-16 pt-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+      <footer className="mt-16 p-8 pb-[180px]">
+        <div className="flex flex-col justify-between w-full md:flex-row max-w-6xl mx-auto">
           {/* Logo & Description */}
           <div>
             {footerLogoUrl && (
               <div className="w-16 h-16 mb-4 relative">
                 <Image
                   src={footerLogoUrl}
-                  alt="Store logo"
+                  alt="Store logo" 
                   fill
                   className="object-contain"
                 />
               </div>
             )}
             {footerDescription && (
-              <p className="body-base text-[var(--system-400)] mb-4">{footerDescription}</p>
+              <p className="title-xl text-[var(--system-400)]">{heroTitle}</p>
             )}
           </div>
 
+          {/* Links */}
+          <div className="flex flex-col items-start gap-6">
+              <p className="body-base text-[var(--system-400)]">
+                Shop
+              </p>
+              <p className="body-base text-[var(--system-400)]">
+                FAQ
+              </p>
+              <p className="body-base text-[var(--system-400)]">
+                Help
+              </p>
+          </div>
+
+
           {/* Contact Info */}
-          <div>
-            <h3 className="title-xl text-[var(--system-600)] mb-4">معلومات التواصل</h3>
+          <div className="flex flex-col items-start gap-6">
             {footerPhone && (
-              <p className="body-base text-[var(--system-400)] mb-2">
+              <p className="body-base text-[var(--system-400)]">
                 Phone: {footerPhone}
               </p>
             )}
@@ -270,16 +285,7 @@ function StorefrontContent() {
               </p>
             )}
           </div>
-
-          {/* Copyright */}
-          <div className="md:text-end">
-            {footerCopyright && (
-              <p className="body-base text-[var(--system-400)]">{footerCopyright}</p>
-            )}
-            <p className="label-xs text-[var(--system-300)] mt-4">
-              © {new Date().getFullYear()} {store?.name || "Store"}
-            </p>
-          </div>
+          
         </div>
       </footer>
     </div>
