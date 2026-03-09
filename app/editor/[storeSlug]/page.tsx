@@ -20,6 +20,7 @@ import { RealtimeProvider } from "@/contexts/realtime-context";
 import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/core/theme-toggle";
 import { useTheme } from "@/lib/theme/provider";
+import { ImagePlaceholder } from "@/components/core/image-placeholder";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -335,344 +336,371 @@ const handleUpdateProduct = async (product: ProductFormData) => {
   };
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header with Logo, and User Profile */}
-      <div className="flex items-center justify-between py-4">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center">
-            <Image 
-              src="/Logo-text.svg" 
-              alt="Marlon Logo" 
-              width={118} 
-              height={36}
-              className="h-9 w-auto"
-            />
-          </Link>
-        </div>
-        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
-      </div>
-      {/* Browser Preview Editor */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
-        <div className="flex items-center gap-3">
-          <a
-            href={`/${storeSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 font-medium transition-all h-10 px-4 text-sm border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#171717]"
-          >
-            <ExternalLink className="w-4 h-4" />
-            معاينة
-          </a>
-          <Button 
-            variant="outline" 
-            onClick={() => setIsSettingsOpen(true)}
-            aria-label="فتح الإعدادات"
-          >
-            <Settings className="w-4 h-4" />
-            الإعدادات
-          </Button>
-        </div>
-      </div>
-
-      {/* Nav Bar Section Editor */}
-      <Card className="mb-6" padding="none">
-        <div className="p-4">
-
-          <div
-            className={`relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden ${navbarBgClass}`}
-            onMouseEnter={() => setIsNavbarHovered(true)}
-            onMouseLeave={() => setIsNavbarHovered(false)}
-          >
-            <div className="flex items-center justify-between px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 bg-[#f5f5f5] dark:bg-[#171717] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
-                  {navbarLogoUrl ? (
-                    <Image src={navbarLogoUrl} alt="logo" fill className="object-cover" />
-                  ) : (
-                    <Package className="w-5 h-5 text-[#a3a3a3]" />
-                  )}
-                </div>
-              </div>
-
-              <div className="hidden sm:flex items-center gap-5">
-                <span className={`text-sm ${navbarTextClass}`}>المتجر</span>
-                <span className={`text-sm ${navbarTextClass}`}>الأسئلة</span>
-                <span className={`text-sm ${navbarTextClass}`}>مساعدة</span>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button 
-                  className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}
-                  aria-label="السلة"
-                >
-                  <ShoppingCart className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {isNavbarHovered && (
-              <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg">
-                <div className="flex items-center gap-1">
-                  <Palette className="w-4 h-4 text-[#737373]" />
-                  <button
-                    onClick={() => handleSetNavbarStyle({ background: "light" })}
-                    className={`px-2 py-1 text-xs border ${navbarBg === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    فاتح
-                  </button>
-                  <button
-                    onClick={() => handleSetNavbarStyle({ background: "dark" })}
-                    className={`px-2 py-1 text-xs border ${navbarBg === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    داكن
-                  </button>
-                  <button
-                    onClick={() => handleSetNavbarStyle({ background: "transparent" })}
-                    className={`px-2 py-1 text-xs border ${navbarBg === "transparent" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    شفاف
-                  </button>
-                </div>
-
-                <div className="w-px h-6 bg-[#e5e5e5] dark:bg-[#262626]" />
-
-                <div className="flex items-center gap-1">
-                  <Type className="w-4 h-4 text-[#737373]" />
-                  <button
-                    onClick={() => handleSetNavbarStyle({ textColor: "dark" })}
-                    className={`px-2 py-1 text-xs border ${navbarText === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    نص داكن
-                  </button>
-                  <button
-                    onClick={() => handleSetNavbarStyle({ textColor: "light" })}
-                    className={`px-2 py-1 text-xs border ${navbarText === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    نص فاتح
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <div className="text-xs text-[#737373]">رفع شعار (يتم مزامنته تلقائياً مع الفوتر)</div>
-            <div className="flex items-center gap-2">
-              <input
-                id="navbar-logo-upload"
-                type="file"
-                accept="image/*"
-                onChange={handleSelectLogoFile}
-                className="hidden"
+    <div className="bg-sunglasses-pattern min-h-screen">
+      <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pt-8">
+        {/* Header with Logo, Nav, and User Profile */}
+        <header className="flex items-center gap-4 py-5 md:gap-8">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/Logo-text.svg"
+                alt="Marlon Logo"
+                width={118}
+                height={36}
+                className="h-9 w-auto"
               />
-              <Button variant="outline" disabled={isUploadingLogo} onClick={() => document.getElementById("navbar-logo-upload")?.click()}>
-                <Upload className="w-4 h-4" />
-                {isUploadingLogo ? "جاري الرفع..." : "رفع الشعار"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
- 
-      {/* Hero Section Editor */}
-      <Card className="mb-6" padding="none">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الرئيسية (Hero)</h2>
-            <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+            </Link>
           </div>
 
-          {(() => {
-            const currentHero = heroContent?.content as HeroContent | undefined;
-            const heroTitle = currentHero?.title ?? "متجرنا الإلكتروني";
-            const heroCtaText = currentHero?.ctaText ?? "تسوق الآن";
-            const heroCtaColor = currentHero?.ctaColor ?? "#171717";
-            const heroLayout = currentHero?.layout ?? "center";
-            const heroBgUrl = currentHero?.backgroundImageUrl;
-
-            return (
-              <div
-                className="relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden min-h-[200px] flex flex-col items-center justify-center p-8"
-                style={heroBgUrl ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : {}}
+          <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
+            {[{ label: "التصميم", href: "#navbar-preview" }, { label: "الرئيسية", href: "#hero-preview" }, { label: "المنتجات", href: "#products-preview" }].map((link) => (
+              <Link
+                key={link.label}
+                href={link.href}
+                className="text-sm font-medium text-[#404040] transition-colors hover:text-[#171717] dark:text-[#d4d4d4] dark:hover:text-[#fafafa]"
               >
-                {!heroBgUrl && (
-                  <div className="absolute inset-0 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#171717] dark:to-[#262626]" />
-                )}
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
-                <div className={`relative z-10 text-center w-full ${heroLayout === "left" ? "text-start items-start" : heroLayout === "right" ? "text-end items-end" : "text-center items-center"} flex flex-col`}>
-                  {/* Hero Title - Inline Edit */}
-                  {editingField?.field === "heroTitle" ? (
-                    <input
-                      autoFocus
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={async () => {
-                        if (editValue.trim()) {
-                          await setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
-                        }
-                        setEditingField(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          if (editValue.trim()) {
-                            setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
-                          }
-                          setEditingField(null);
-                        } else if (e.key === "Escape") {
-                          setEditingField(null);
-                        }
-                      }}
-                      className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] focus:outline-none text-center"
-                      placeholder="عنوان الصفحة"
-                    />
-                  ) : (
-                    <h1 
-                      className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] mb-4 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
-                      onClick={() => {
-                        setEditingField({ productId: "", field: "heroTitle" });
-                        setEditValue(heroTitle);
-                      }}
-                    >
-                      {heroTitle}
-                    </h1>
-                  )}
+          <div className="ms-auto flex items-center gap-3">
+            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+          </div>
+        </header>
 
-                  {/* Hero CTA Button - Inline Edit */}
-                  {editingField?.field === "heroCtaText" ? (
-                    <input
-                      autoFocus
-                      type="text"
-                      value={editValue}
-                      onChange={(e) => setEditValue(e.target.value)}
-                      onBlur={async () => {
-                        if (editValue.trim()) {
-                          await setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
-                        }
-                        setEditingField(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter") {
-                          if (editValue.trim()) {
-                            setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
-                          }
-                          setEditingField(null);
-                        } else if (e.key === "Escape") {
-                          setEditingField(null);
-                        }
-                      }}
-                      className="px-6 py-3 text-white font-medium bg-transparent border-b-2 focus:outline-none"
-                      style={{ backgroundColor: heroCtaColor }}
-                      placeholder="نص الزر"
-                    />
-                  ) : (
-                    <button 
-                      className="px-6 py-3 text-white font-medium cursor-pointer hover:opacity-90 transition-opacity"
-                      style={{ backgroundColor: heroCtaColor }}
-                      onClick={() => {
-                        setEditingField({ productId: "", field: "heroCtaText" });
-                        setEditValue(heroCtaText);
-                      }}
-                    >
-                      {heroCtaText}
-                    </button>
-                  )}
+        {/* Browser Preview Editor */}
+        <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-white px-4 py-4 shadow-[0_4px_30px_-18px_rgba(0,0,0,0.12)] sm:flex-row sm:items-center sm:justify-between dark:border-[#262626] dark:bg-[#0a0a0a]">
+          <h1 className="text-[22px] leading-[28px] font-semibold tracking-tight text-[#0f0f0f] text-start dark:text-[#fafafa]">المنتجات</h1>
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+            <a
+              href={`/${storeSlug}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#e5e5e5] px-4 text-sm font-medium text-[#171717] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+            >
+              <ExternalLink className="h-4 w-4" />
+              معاينة
+            </a>
+            <Button
+              variant="outline"
+              onClick={() => setIsSettingsOpen(true)}
+              aria-label="فتح الإعدادات"
+              className="rounded-full"
+            >
+              <Settings className="h-4 w-4" />
+              الإعدادات
+            </Button>
+          </div>
+        </div>
+
+        {/* Nav Bar Section Editor */}
+        <section id="navbar-preview">
+          <Card className="mb-6" padding="none">
+            <div className="p-4">
+
+            <div
+              className={`relative overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-[#262626] ${navbarBgClass}`}
+              onMouseEnter={() => setIsNavbarHovered(true)}
+              onMouseLeave={() => setIsNavbarHovered(false)}
+            >
+              <div className="flex items-center justify-between px-4 py-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-[#171717]">
+                    {navbarLogoUrl ? (
+                      <Image src={navbarLogoUrl} alt="logo" fill className="object-cover" />
+                    ) : (
+                      <Package className="h-5 w-5 text-[#a3a3a3]" />
+                    )}
+                  </div>
                 </div>
 
-                {/* Layout Toggle - Show on hover */}
-                <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
-                  <span className="text-xs text-[#737373]">الموقع:</span>
+                <div className="hidden items-center justify-center gap-5 sm:flex">
+                  <span className={`text-sm ${navbarTextClass}`}>المتجر</span>
+                  <span className={`text-sm ${navbarTextClass}`}>الأسئلة</span>
+                  <span className={`text-sm ${navbarTextClass}`}>مساعدة</span>
+                </div>
+
+                <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "left" })}
-                    className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}
+                    aria-label="السلة"
                   >
-                    يسار
-                  </button>
-                  <button
-                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "center" })}
-                    className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    وسط
-                  </button>
-                  <button
-                    onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "right" })}
-                    className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
-                  >
-                    يمين
+                    <ShoppingCart className="h-4 w-4" />
                   </button>
                 </div>
               </div>
-            );
-          })()}
 
-          <div className="mt-4 flex items-center justify-between gap-3">
-            <div className="text-xs text-[#737373]">تغيير صورة الخلفية</div>
-            <div className="flex items-center gap-2">
-              <input
-                id="hero-bg-upload"
-                type="file"
-                accept="image/*"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file || !file.type.startsWith("image/")) return;
-                  const reader = new FileReader();
-                  reader.onload = async () => {
-                    try {
-                      const storageId = await uploadToConvexStorage(reader.result as string);
-                      await setHeroStyles({ storeId: storeId as Id<"stores">, backgroundImageStorageId: storageId });
-                    } catch (error) {
-                      console.error("Failed to upload hero background:", error);
-                    }
-                  };
-                  reader.readAsDataURL(file);
-                }}
-                className="hidden"
-              />
-              <Button variant="outline" onClick={() => document.getElementById("hero-bg-upload")?.click()}>
-                <Upload className="w-4 h-4" />
-                رفع صورة
-              </Button>
+              {isNavbarHovered && (
+                <div className="absolute top-2 end-2 flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-white/90 px-2 py-1.5 shadow-sm backdrop-blur dark:border-[#262626] dark:bg-[#0a0a0a]/90">
+                  <div className="flex items-center gap-1">
+                    <Palette className="h-4 w-4 text-[#737373]" />
+                    <button
+                      onClick={() => handleSetNavbarStyle({ background: "light" })}
+                      className={`px-2 py-1 text-xs border ${navbarBg === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    >
+                      فاتح
+                    </button>
+                    <button
+                      onClick={() => handleSetNavbarStyle({ background: "dark" })}
+                      className={`px-2 py-1 text-xs border ${navbarBg === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    >
+                      داكن
+                    </button>
+                    <button
+                      onClick={() => handleSetNavbarStyle({ background: "transparent" })}
+                      className={`px-2 py-1 text-xs border ${navbarBg === "transparent" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    >
+                      شفاف
+                    </button>
+                  </div>
+
+                  <div className="h-6 w-px bg-[#e5e5e5] dark:bg-[#262626]" />
+
+                  <div className="flex items-center gap-1">
+                    <Type className="h-4 w-4 text-[#737373]" />
+                    <button
+                      onClick={() => handleSetNavbarStyle({ textColor: "dark" })}
+                      className={`px-2 py-1 text-xs border ${navbarText === "dark" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    >
+                      نص داكن
+                    </button>
+                    <button
+                      onClick={() => handleSetNavbarStyle({ textColor: "light" })}
+                      className={`px-2 py-1 text-xs border ${navbarText === "light" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                    >
+                      نص فاتح
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs text-[#737373]">رفع شعار (يتم مزامنته تلقائياً مع الفوتر)</div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="navbar-logo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleSelectLogoFile}
+                  className="hidden"
+                />
+                <Button variant="outline" disabled={isUploadingLogo} onClick={() => document.getElementById("navbar-logo-upload")?.click()}>
+                  <Upload className="h-4 w-4" />
+                  {isUploadingLogo ? "جاري الرفع..." : "رفع الشعار"}
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </Card>
-      {/* Products Catalog Section Editor */}
-      <Card padding="none">
-        {activeProducts.length === 0 ? (
-          <EmptyState
-            icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
-            title="لا توجد منتجات"
-            description="ابدأ بإضافة أول منتج لمتجرك"
-            action={
-              <Button onClick={() => setIsAddModalOpen(true)}>
-                <Plus className="w-4 h-4" />
-                إضافة منتج
-              </Button>
-            }
-          />
-        ) : viewMode === "grid" ? (
-          <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        </Card>
+      </section>
+ 
+        {/* Hero Section Editor */}
+        <section id="hero-preview">
+          <Card className="mb-6" padding="none">
+            <div className="p-4">
+            <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الرئيسية (Hero)</h2>
+              <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+            </div>
+
+            {(() => {
+              const currentHero = heroContent?.content as HeroContent | undefined;
+              const heroTitle = currentHero?.title ?? "متجرنا الإلكتروني";
+              const heroCtaText = currentHero?.ctaText ?? "تسوق الآن";
+              const heroCtaColor = currentHero?.ctaColor ?? "#171717";
+              const heroLayout = currentHero?.layout ?? "center";
+              const heroBgUrl = currentHero?.backgroundImageUrl;
+              const heroAlignment =
+                heroLayout === "left"
+                  ? "items-start text-start"
+                  : heroLayout === "right"
+                    ? "items-end text-end ms-auto"
+                    : "items-center text-center mx-auto";
+
+              return (
+                <div className="group relative overflow-hidden rounded-2xl border border-[#e5e5e5] dark:border-[#262626]">
+                  <div
+                    className={`relative isolate flex min-h-[320px] w-full flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 ${heroBgUrl ? "" : "bg-sunglasses-pattern"}`}
+                    style={heroBgUrl ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
+                  >
+                    {!heroBgUrl && (
+                      <div className="absolute inset-0 bg-gradient-to-br from-[#f7f7f7] via-white to-[#ececec] dark:from-[#111111] dark:via-[#0f0f0f] dark:to-[#1c1c1c]" />
+                    )}
+                    <div className="absolute inset-0 bg-white/40 backdrop-blur-[1px] dark:bg-black/20" />
+
+                    <div className={`relative z-10 flex max-w-3xl flex-col gap-4 ${heroAlignment}`}>
+                      {editingField?.field === "heroTitle" ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={async () => {
+                            if (editValue.trim()) {
+                              await setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
+                            }
+                            setEditingField(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              if (editValue.trim()) {
+                                setHeroStyles({ storeId: storeId as Id<"stores">, title: editValue.trim() });
+                              }
+                              setEditingField(null);
+                            } else if (e.key === "Escape") {
+                              setEditingField(null);
+                            }
+                          }}
+                          className="w-full bg-transparent text-2xl font-bold leading-tight text-[#171717] outline-none ring-0 transition focus:border-b focus:border-[#171717] sm:text-3xl lg:text-[34px] dark:text-[#fafafa] dark:focus:border-[#fafafa]"
+                          placeholder="عنوان الصفحة"
+                        />
+                      ) : (
+                        <h1
+                          className="text-balance text-2xl font-bold leading-tight text-[#171717] transition hover:text-[#525252] sm:text-3xl lg:text-[34px] dark:text-[#fafafa] dark:hover:text-[#d4d4d4]"
+                          onClick={() => {
+                            setEditingField({ productId: "", field: "heroTitle" });
+                            setEditValue(heroTitle);
+                          }}
+                        >
+                          {heroTitle}
+                        </h1>
+                      )}
+
+                      {editingField?.field === "heroCtaText" ? (
+                        <input
+                          autoFocus
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={async () => {
+                            if (editValue.trim()) {
+                              await setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
+                            }
+                            setEditingField(null);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              if (editValue.trim()) {
+                                setHeroStyles({ storeId: storeId as Id<"stores">, ctaText: editValue.trim() });
+                              }
+                              setEditingField(null);
+                            } else if (e.key === "Escape") {
+                              setEditingField(null);
+                            }
+                          }}
+                          className="w-full max-w-xs rounded-full border border-[#d4d4d4] bg-white/70 px-5 py-3 text-center text-sm font-semibold text-[#171717] shadow-sm outline-none ring-0 focus:border-[#171717] dark:border-[#404040] dark:bg-[#0a0a0a]/80 dark:text-[#fafafa] dark:focus:border-[#fafafa]"
+                          placeholder="نص الزر"
+                        />
+                      ) : (
+                        <Button
+                          className="min-w-[150px] rounded-full px-6 py-3 text-sm font-semibold shadow-sm"
+                          style={{ backgroundColor: heroCtaColor, borderColor: heroCtaColor, color: "#fff" }}
+                          onClick={() => {
+                            setEditingField({ productId: "", field: "heroCtaText" });
+                            setEditValue(heroCtaText);
+                          }}
+                        >
+                          {heroCtaText}
+                        </Button>
+                      )}
+                    </div>
+
+                    <div className="absolute top-3 end-3 flex items-center gap-2 rounded-lg border border-[#e5e5e5] bg-white/90 px-2 py-1.5 opacity-0 shadow-sm transition-opacity backdrop-blur group-hover:opacity-100 dark:border-[#262626] dark:bg-[#0a0a0a]/90">
+                      <span className="text-xs text-[#737373]">الموقع:</span>
+                      <button
+                        onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "left" })}
+                        className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                      >
+                        يسار
+                      </button>
+                      <button
+                        onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "center" })}
+                        className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                      >
+                        وسط
+                      </button>
+                      <button
+                        onClick={() => setHeroStyles({ storeId: storeId as Id<"stores">, layout: "right" })}
+                        className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+                      >
+                        يمين
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="text-xs text-[#737373]">تغيير صورة الخلفية</div>
+              <div className="flex items-center gap-2">
+                <input
+                  id="hero-bg-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file || !file.type.startsWith("image/")) return;
+                    const reader = new FileReader();
+                    reader.onload = async () => {
+                      try {
+                        const storageId = await uploadToConvexStorage(reader.result as string);
+                        await setHeroStyles({ storeId: storeId as Id<"stores">, backgroundImageStorageId: storageId });
+                      } catch (error) {
+                        console.error("Failed to upload hero background:", error);
+                      }
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  className="hidden"
+                />
+                <Button variant="outline" onClick={() => document.getElementById("hero-bg-upload")?.click()}>
+                  <Upload className="h-4 w-4" />
+                  رفع صورة
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Card>
+      </section>
+        {/* Products Catalog Section Editor */}
+        <section id="products-preview">
+          <Card padding="none">
+            {activeProducts.length === 0 ? (
+              <EmptyState
+                icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
+                title="لا توجد منتجات"
+                description="ابدأ بإضافة أول منتج لمتجرك"
+                action={
+                  <Button onClick={() => setIsAddModalOpen(true)}>
+                    <Plus className="w-4 h-4" />
+                    إضافة منتج
+                  </Button>
+                }
+              />
+            ) : viewMode === "grid" ? (
+              <div className="grid grid-cols-1 gap-5 p-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {activeProducts.map((product) => (
               <div
                 key={product._id}
-                className="group relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200"
+                className="group relative flex h-full flex-col overflow-hidden rounded-xl border border-[#e5e5e5] bg-white transition-all duration-200 hover:-translate-y-0.5 hover:border-[#171717] hover:shadow-[0_12px_30px_rgba(0,0,0,0.06)] dark:border-[#262626] dark:bg-[#0a0a0a] dark:hover:border-[#fafafa]"
               >
-                <div className="aspect-square bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center relative">
+                <div className="relative aspect-[3/4] w-full overflow-hidden bg-[#f5f5f5] dark:bg-[#171717]">
                   {product.images?.[0] ? (
-                    <Image 
-                      src={product.images[0]} 
+                    <Image
+                      src={product.images[0]}
                       alt={product.name}
                       fill
                       className="object-cover"
                     />
                   ) : (
-                    <ImageIcon className="w-8 h-8 text-[#d4d4d4]" />
+                    <ImagePlaceholder aspectRatio="3 / 4" className="h-full w-full" />
                   )}
                 </div>
-                
-                <div className="p-4">
-                  {/* Product Name - Inline Edit */}
+
+                <div className="flex flex-1 flex-col gap-3 p-4">
                   {editingField?.productId === product._id && editingField?.field === "name" ? (
                     <input
                       autoFocus
@@ -681,19 +709,18 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                       onChange={(e) => setEditValue(e.target.value)}
                       onBlur={saveInlineEdit}
                       onKeyDown={handleKeyDown}
-                      className="w-full font-normal text-[#171717] dark:text-[#fafafa] mb-2 px-1 py-0.5 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                      className="w-full rounded-lg border border-[#d4d4d4] bg-white px-2.5 py-2 text-[15px] font-medium leading-6 text-[#171717] focus:border-[#171717] focus:outline-none dark:border-[#404040] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:focus:border-[#fafafa]"
                     />
                   ) : (
-                    <h3 
-                      className="font-normal text-[#171717] dark:text-[#fafafa] mb-2 line-clamp-2 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                    <h3
+                      className="line-clamp-2 text-[15px] font-medium leading-6 text-[#171717] transition-colors hover:text-[#525252] dark:text-[#fafafa] dark:hover:text-[#d4d4d4]"
                       onClick={() => startEditing(product._id, "name", product.name)}
                     >
                       {product.name}
                     </h3>
                   )}
-                  
-                  <div className="flex items-center gap-2">
-                    {/* Base Price - Inline Edit */}
+
+                  <div className="flex items-baseline justify-between gap-3">
                     {editingField?.productId === product._id && editingField?.field === "basePrice" ? (
                       <input
                         autoFocus
@@ -702,18 +729,17 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                         onChange={(e) => setEditValue(e.target.value)}
                         onBlur={saveInlineEdit}
                         onKeyDown={handleKeyDown}
-                        className="font-medium text-[#171717] dark:text-[#fafafa] px-1 py-0.5 w-24 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                        className="w-28 rounded-md border border-[#d4d4d4] bg-white px-2 py-1.5 text-sm font-semibold text-[#171717] focus:border-[#171717] focus:outline-none dark:border-[#404040] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:focus:border-[#fafafa]"
                       />
                     ) : (
-                      <span 
-                        className="font-medium text-[#171717] dark:text-[#fafafa] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                      <span
+                        className="cursor-pointer text-base font-semibold text-[#171717] transition-colors hover:text-[#525252] dark:text-[#fafafa] dark:hover:text-[#d4d4d4]"
                         onClick={() => startEditing(product._id, "basePrice", product.basePrice)}
                       >
                         {formatPrice(product.basePrice)}
                       </span>
                     )}
-                    
-                    {/* Old Price - Inline Edit */}
+
                     {product.oldPrice && (
                       editingField?.productId === product._id && editingField?.field === "oldPrice" ? (
                         <input
@@ -723,12 +749,12 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                           onChange={(e) => setEditValue(e.target.value)}
                           onBlur={saveInlineEdit}
                           onKeyDown={handleKeyDown}
-                          className="text-sm text-[#a3a3a3] line-through px-1 py-0.5 w-24 border border-[#a3a3a3] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                          className="w-24 rounded-md border border-[#d4d4d4] bg-white px-2 py-1.5 text-sm text-[#a3a3a3] line-through focus:border-[#171717] focus:outline-none dark:border-[#404040] dark:bg-[#0a0a0a] dark:text-[#a3a3a3] dark:focus:border-[#fafafa]"
                           placeholder="السعر القديم"
                         />
                       ) : (
-                        <span 
-                          className="text-sm text-[#a3a3a3] line-through cursor-pointer hover:text-[#737373]"
+                        <span
+                          className="cursor-pointer text-sm text-[#a3a3a3] line-through transition-colors hover:text-[#737373]"
                           onClick={() => startEditing(product._id, "oldPrice", product.oldPrice || "")}
                         >
                           {formatPrice(product.oldPrice)}
@@ -738,13 +764,13 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                   </div>
                 </div>
 
-                <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-3 end-3 flex items-center gap-2 rounded-full bg-white/90 px-1.5 py-1 opacity-0 shadow-sm ring-1 ring-[#e5e5e5] transition-opacity group-hover:opacity-100 dark:bg-[#0a0a0a]/90 dark:ring-[#262626]">
                   <button
-                    onClick={(e) => { 
-                      e.preventDefault(); 
-                      e.stopPropagation(); 
-                      setEditingProduct({ 
-                        ...product, 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setEditingProduct({
+                        ...product,
                         images: product.images || [],
                         isArchived: product.isArchived ?? false,
                         variants: product.variants?.map(v => ({
@@ -754,47 +780,47 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                             priceModifier: typeof o === 'string' ? undefined : o.priceModifier
                           }))
                         })) || []
-                      }); 
+                      });
                     }}
-                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
+                    className="rounded-full p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]"
                     title="تعديل"
                   >
-                    <Edit className="w-4 h-4 text-[#525252]" />
+                    <Edit className="h-4 w-4 text-[#525252]" />
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleToggleArchive(product._id, product.isArchived); }}
-                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
+                    className="rounded-full p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]"
                     title={product.isArchived ? "تفعيل" : "تعطيل"}
                   >
                     {product.isArchived ? (
-                      <Eye className="w-4 h-4 text-[#16a34a]" />
+                      <Eye className="h-4 w-4 text-[#16a34a]" />
                     ) : (
-                      <EyeOff className="w-4 h-4 text-[#d97706]" />
+                      <EyeOff className="h-4 w-4 text-[#d97706]" />
                     )}
                   </button>
                   <button
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(product._id); }}
-                    className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#fee2e2] dark:hover:bg-[#7f1d1d]/20 transition-colors"
+                    className="rounded-full p-2 hover:bg-[#fee2e2] dark:hover:bg-[#7f1d1d]/20"
                     title="حذف"
                   >
-                    <Trash2 className="w-4 h-4 text-[#dc2626]" />
+                    <Trash2 className="h-4 w-4 text-[#dc2626]" />
                   </button>
                 </div>
 
                 {deletingProductId === product._id && (
-                  <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                    <div className="text-center p-4">
-                      <p className="text-white font-normal mb-3">حذف المنتج؟</p>
-                      <div className="flex gap-2 justify-center">
+                  <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/60 backdrop-blur-[1px]">
+                    <div className="w-full max-w-[240px] rounded-lg bg-white/95 p-4 text-center shadow-lg dark:bg-[#0a0a0a]/95">
+                      <p className="mb-3 text-sm font-medium text-[#171717] dark:text-[#fafafa]">حذف المنتج؟</p>
+                      <div className="flex justify-center gap-2">
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); setDeletingProductId(null); }}
-                          className="px-3 py-1.5 bg-white text-[#171717] text-sm"
+                          className="rounded-md bg-white px-3 py-1.5 text-sm text-[#171717] shadow-sm ring-1 ring-[#e5e5e5] transition hover:bg-[#f5f5f5] dark:bg-[#0a0a0a] dark:text-[#fafafa] dark:ring-[#262626] dark:hover:bg-[#171717]"
                         >
                           إلغاء
                         </button>
                         <button
                           onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleDeleteProduct(product._id); }}
-                          className="px-3 py-1.5 bg-[#dc2626] text-white text-sm"
+                          className="rounded-md bg-[#dc2626] px-3 py-1.5 text-sm text-white shadow-sm transition hover:bg-[#b91c1c]"
                         >
                           حذف
                         </button>
@@ -804,14 +830,27 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                 )}
               </div>
             ))}
-            
-            {/* Add Product Button - Same size as product card */}
-            <button
+
+            <Card
+              variant="dashed"
+              padding="none"
+              role="button"
+              tabIndex={0}
               onClick={() => setIsAddModalOpen(true)}
-              className="aspect-[1/1.3] bg-white dark:bg-[#0a0a0a] border border-dashed border-[#d4d4d4] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200 flex flex-col items-center justify-center gap-2"
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setIsAddModalOpen(true);
+                }
+              }}
+              className="aspect-[3/4] flex w-full cursor-pointer items-center justify-center overflow-hidden rounded-xl bg-[#fafafa] text-center text-[#525252] transition-all duration-200 hover:border-[#171717] hover:bg-white dark:bg-[#0a0a0a] dark:text-[#d4d4d4] dark:hover:border-[#fafafa] dark:hover:bg-[#0f0f0f]"
             >
-              <Plus className="w-8 h-8 text-[#d4d4d4] dark:text-[#525252]" />
-            </button>
+              <div className="flex h-full flex-col items-center justify-center gap-2">
+                <Plus className="h-8 w-8 text-[#a3a3a3] dark:text-[#525252]" />
+                <span className="text-sm font-medium">إضافة منتج</span>
+                <span className="text-xs text-[#a3a3a3] dark:text-[#737373]">بطاقة جديدة</span>
+              </div>
+            </Card>
           </div>
         ) : (
           <div className="divide-y divide-[#e5e5e5] dark:divide-[#262626]">
@@ -882,12 +921,13 @@ const handleUpdateProduct = async (product: ProductFormData) => {
             ))}
           </div>
         )}
-      </Card>
+        </Card>
+      </section>
 
-      {/* Footer Section Editor */}
-      <Card className="mb-6" padding="none">
-        <div className="p-4">
-          <div className="flex items-center justify-between mb-3">
+        {/* Footer Section Editor */}
+        <Card className="mb-6" padding="none">
+          <div className="p-4">
+            <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
             <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
           </div>
@@ -1103,6 +1143,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
 
       <BottomNavigation storeSlug={storeSlug} currentPage="products" />
+      </div>
     </div>
   );
 }

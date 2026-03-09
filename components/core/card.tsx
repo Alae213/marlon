@@ -1,7 +1,7 @@
 import { HTMLAttributes, forwardRef } from "react";
 
 interface CardProps extends HTMLAttributes<HTMLDivElement> {
-  variant?: "default" | "bordered" | "ghost";
+  variant?: "default" | "bordered" | "ghost" | "dashed";
   padding?: "none" | "sm" | "md" | "lg";
 }
 
@@ -18,6 +18,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       default: "bg-card text-card-foreground border border-border",
       bordered: "bg-card text-card-foreground border-2 border-foreground",
       ghost: "bg-transparent",
+      dashed: "bg-card text-card-foreground border-2 border-dashed border-border",
     };
 
     return (

@@ -1,6 +1,11 @@
 {
   "version": 1,
   "skills": {
+    "chrome-devtools": {
+      "source": "github/awesome-copilot",
+      "sourceType": "github",
+      "computedHash": "85d9c4ef94e00ddfc937d50aab72a307e80b98bc7e6744ec6e239ef68819c2d7"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",

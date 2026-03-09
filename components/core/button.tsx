@@ -1,29 +1,26 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary" | "outline" | "ghost" | "danger";
+  variant?: "primary" | "secondary" | "outline" | "ghost" | "link" | "danger" | "rounded";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
 }
 
 const variantStyles = {
-  primary: 
+  primary:
     "bg-[var(--system-300)] text-[var(--system-100)] hover:bg-[var(--system-200)]/50 disabled:bg-muted disabled:text-[var(--system-300)]",
-  
-  secondary: 
+  secondary:
     "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 disabled:opacity-40",
-  
-  outline: 
+  outline:
     "border border-border text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/40",
-  
-  ghost: 
+  ghost:
     "body-base text-[var(--system-100)] hover:bg-white/10 dark:hover:bg-white/10",
-  
-  link: 
+  link:
     "body-base underline-offset-4 hover:underline",
-  
-  danger: 
+  danger:
     "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 disabled:bg-destructive/50",
+  rounded:
+    "bg-[var(--system-300)] text-[var(--system-100)] hover:bg-[var(--system-200)]/50 disabled:bg-muted disabled:text-[var(--system-300)]",
 };
 
 const sizeStyles = {
@@ -38,7 +35,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         disabled={disabled || isLoading}
-        className={`body-base cursor-pointer inline-flex items-center justify-center gap-2 font-medium transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+        className={`body-base cursor-pointer inline-flex items-center justify-center gap-2 font-medium transform transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:pointer-events-none ${variantStyles[variant]} ${sizeStyles[size]} ${variant === "rounded" ? "rounded-full" : ""} ${className}`}
         {...props}
       >
         {isLoading && (
