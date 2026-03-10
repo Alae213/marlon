@@ -480,28 +480,7 @@ export function OrderDetails({
             </div>
           )}
 
-          <div className="space-y-3">
-            <h3 className="font-normal text-[#171717] dark:text-[#fafafa]">Change Status</h3>
-            <div className="flex flex-wrap gap-2">
-              {(STATUS_TRANSITIONS[order.status as OrderStatus] || []).map((status) => (
-                <Button
-                  key={status}
-                  onClick={() => onStatusChange(order._id, status)}
-                  variant={status === "canceled" ? "danger" : "primary"}
-                  size="sm"
-                >
-                  {status === "confirmed" && "Confirm"}
-                  {status === "packaged" && "Package"}
-                  {status === "shipped" && "Ship"}
-                  {status === "succeeded" && "Complete"}
-                  {status === "canceled" && "Cancel"}
-                  {status === "router" && "Router"}
-                  {status === "blocked" && "Block"}
-                  {status === "new" && "Reopen"}
-                </Button>
-              ))}
-            </div>
-          </div>
+          
         </div>
       )}
     </SlideOver>

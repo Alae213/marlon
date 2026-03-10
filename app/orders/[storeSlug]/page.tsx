@@ -13,7 +13,7 @@ import {
 import { BottomNavigation } from "@/components/core/bottom-navigation";
 import { AnimatedTabs, AnimatedTabContent } from "@/components/core/animated-tabs";
 import { useBilling, BillingProvider } from "@/contexts/billing-context";
-import { useUser, UserButton } from "@clerk/nextjs";
+import { useUser, UserButton, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
 import type { 
@@ -27,8 +27,8 @@ import { ListView, KanbanView, OrderDetails } from "@/components/order-page";
 import { div } from "framer-motion/client";
 
 function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
-  const { user } = useUser();
-  useBilling();
+  const { user, isLoaded } = useUser();
+  const { isLocked } = useBilling();
   
   // View mode state
   const [viewMode, setViewMode] = useState<"list" | "state">("list");
@@ -58,6 +58,14 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     }, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  if (!isLoaded) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[var(--system-50)]">
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--system-600)]" />
+      </div>
+    );
+  }
 
   const orders = useQuery(
     api.orders.getOrders,
@@ -290,7 +298,12 @@ export default function OrdersPage() {
   return (
     <BillingProvider storeSlug={storeSlug} storeId={storeId}>
       <RealtimeProvider storeId={storeId}>
-        <OrdersContent storeId={storeId} storeSlug={storeSlug} />
+        <SignedIn>
+          <OrdersContent storeId={storeId} storeSlug={storeSlug} />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
       </RealtimeProvider>
     </BillingProvider>
   );

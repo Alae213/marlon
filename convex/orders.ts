@@ -5,7 +5,7 @@ import { v } from "convex/values";
 async function assertOrderOwnership(ctx: { db: any; auth: any }, orderId: any) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
   }
   
   const order = await ctx.db.get(orderId);
@@ -16,16 +16,38 @@ async function assertOrderOwnership(ctx: { db: any; auth: any }, orderId: any) {
   // Get the store and verify ownership
   const store = await ctx.db.get(order.storeId);
   if (!store || store.ownerId !== identity.subject) {
-    throw new Error("Forbidden");
+    throw new Error("Forbidden: You do not have permission to access this store's orders.");
   }
   
   return { identity, order, store };
+}
+
+// Helper to verify store ownership directly
+async function assertStoreOwnership(ctx: { db: any; auth: any }, storeId: any) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
+  }
+  
+  const store = await ctx.db.get(storeId);
+  if (!store) {
+    throw new Error("Store not found");
+  }
+  
+  if (store.ownerId !== identity.subject) {
+    throw new Error("Forbidden: You do not have permission to access this store.");
+  }
+  
+  return { identity, store };
 }
 
 // Get all orders for a store
 export const getOrders = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
+    // Verify ownership for security
+    await assertStoreOwnership(ctx, args.storeId);
+
     const orders = await ctx.db
       .query("orders")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
@@ -39,7 +61,7 @@ export const getOrders = query({
 export const getOrder = query({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
     return order;
   },
 });
@@ -48,6 +70,8 @@ export const getOrder = query({
 export const getOrdersByStatus = query({
   args: { storeId: v.id("stores"), status: v.string() },
   handler: async (ctx, args) => {
+    await assertStoreOwnership(ctx, args.storeId);
+
     const orders = await ctx.db
       .query("orders")
       .withIndex("status", (q) =>
@@ -63,6 +87,8 @@ export const getOrdersByStatus = query({
 export const getNewOrdersCount = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
+    await assertStoreOwnership(ctx, args.storeId);
+
     const orders = await ctx.db
       .query("orders")
       .withIndex("status", (q) =>
@@ -323,8 +349,7 @@ export const updateOrderProductQuantity = mutation({
     quantity: v.number(),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) throw new Error("Order not found");
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
     
     const products = [...order.products];
     if (products[args.productIndex]) {
@@ -335,12 +360,13 @@ export const updateOrderProductQuantity = mutation({
       
       // Recalculate totals
       const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-      const total = subtotal + order.deliveryCost;
+      const total = subtotal + (order.deliveryCost || 0);
       
       await ctx.db.patch(args.orderId, {
         products,
         subtotal,
         total,
+        updatedAt: Date.now(),
       });
     }
   },
@@ -353,19 +379,19 @@ export const removeOrderProduct = mutation({
     productIndex: v.number(),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) throw new Error("Order not found");
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
     
-    const products = order.products.filter((_, i) => i !== args.productIndex);
+    const products = order.products.filter((_: any, i: number) => i !== args.productIndex);
     
     // Recalculate totals
-    const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const total = subtotal + order.deliveryCost;
+    const subtotal = products.reduce((sum: number, p: any) => sum + (p.price * p.quantity), 0);
+    const total = subtotal + (order.deliveryCost || 0);
     
     await ctx.db.patch(args.orderId, {
       products,
       subtotal,
       total,
+      updatedAt: Date.now(),
     });
   },
 });
@@ -377,25 +403,26 @@ export const addProductToOrder = mutation({
     product: v.object({
       productId: v.string(),
       name: v.string(),
+      image: v.optional(v.string()),
       price: v.number(),
       quantity: v.number(),
       variant: v.optional(v.string()),
     }),
   },
   handler: async (ctx, args) => {
-    const order = await ctx.db.get(args.orderId);
-    if (!order) throw new Error("Order not found");
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
     
     const products = [...order.products, args.product];
     
     // Recalculate totals
     const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-    const total = subtotal + order.deliveryCost;
+    const total = subtotal + (order.deliveryCost || 0);
     
     await ctx.db.patch(args.orderId, {
       products,
       subtotal,
       total,
+      updatedAt: Date.now(),
     });
   },
 });

@@ -9,7 +9,7 @@ async function assertStoreOwnership(
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
-    throw new Error("Unauthorized");
+    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
   }
   
   const store = await ctx.db.get(storeId);
@@ -19,7 +19,7 @@ async function assertStoreOwnership(
   
   // For admin functions, check if user is the owner
   if (store.ownerId !== identity.subject) {
-    throw new Error("Forbidden");
+    throw new Error("Forbidden: You do not have permission to access this store.");
   }
   
   return { identity, store };
@@ -58,13 +58,14 @@ export const subscribeToUserStores = query({
     if (!args.userId) {
       const identity = await ctx.auth.getUserIdentity();
       if (!identity) {
-        throw new Error("Unauthorized");
+        throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
       }
-    const stores = await ctx.db
-      .query("stores")
-      .withIndex("ownerId", (q) => q.eq("ownerId", args.userId as string))
-      .order("desc")
-      .collect();
+      
+      const stores = await ctx.db
+        .query("stores")
+        .withIndex("ownerId", (q) => q.eq("ownerId", identity.subject))
+        .order("desc")
+        .collect();
       return stores;
     }
     
