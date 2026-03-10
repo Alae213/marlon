@@ -13,6 +13,7 @@ import {
   MessageSquare,
   FileText,
   Plus,
+  MoreHorizontal,
 } from "lucide-react";
 import { SlideOver, Badge, Button } from "@/components/core";
 import { LockedData } from "@/components/locked-overlay";
@@ -53,6 +54,10 @@ export function OrderDetails({
   const [showAuditTrail, setShowAuditTrail] = useState(false);
   const [newNote, setNewNote] = useState("");
   const [showAddNote, setShowAddNote] = useState(false);
+  
+  // Customer note inline
+  const [showCustomerNote, setShowCustomerNote] = useState(false);
+  const [customerNoteText, setCustomerNoteText] = useState("");
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -83,6 +88,13 @@ export function OrderDetails({
     setShowAddNote(false);
   };
 
+  const handleAddCustomerNote = async () => {
+    if (!order || !customerNoteText.trim()) return;
+    await onAddAdminNote(order._id, customerNoteText);
+    setCustomerNoteText("");
+    setShowCustomerNote(false);
+  };
+
   return (
     <SlideOver
       isOpen={isOpen}
@@ -98,56 +110,123 @@ export function OrderDetails({
             <span className="text-sm text-[#737373]">{formatDate(order.createdAt)}</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="p-4 bg-[#fafafa] dark:bg-[#171717]">
-              <div className="flex items-center gap-2 text-[#737373] mb-2">
+          <div className="grid grid-cols-1 gap-4">
+            {/* Customer - Phone Priority */}
+            <div className="p-4 bg-[var(--system-100)]">
+              <div className="flex items-center gap-2 text-[var(--system-400)] mb-2">
                 <User className="w-4 h-4" />
                 <span className="text-sm">Customer</span>
               </div>
+              {/* Phone - Large and prominent */}
               <LockedData fallback="***">
-                <p className="font-normal text-[#171717] dark:text-[#fafafa]">{order.customerName}</p>
-                <p className="text-sm text-[#737373]">{order.customerPhone}</p>
+                <p className="text-2xl font-semibold text-[var(--system-600)] mb-2">
+                  {order.customerPhone}
+                </p>
+                <p className="font-normal text-[var(--system-600)]">{order.customerName}</p>
               </LockedData>
+              
+              {/* Inline Add Note */}
+              {showCustomerNote ? (
+                <div className="mt-3 pt-3 border-t border-[var(--system-200)]">
+                  <textarea
+                    value={customerNoteText}
+                    onChange={(e) => setCustomerNoteText(e.target.value)}
+                    placeholder="Add a note..."
+                    className="w-full px-3 py-2 border border-[var(--system-200)] bg-white dark:bg-[#0a0a0a] text-sm resize-none rounded-lg"
+                    rows={2}
+                  />
+                  <div className="flex gap-2 mt-2">
+                    <Button size="sm" variant="outline" onClick={() => setShowCustomerNote(false)}>Cancel</Button>
+                    <Button size="sm" onClick={() => {
+                      if (customerNoteText.trim()) {
+                        handleAddCustomerNote();
+                      }
+                      setShowCustomerNote(false);
+                    }}>Save</Button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setShowCustomerNote(true)}
+                  className="mt-3 pt-3 border-t border-[var(--system-200)] text-sm text-[var(--system-400)] hover:text-[var(--system-600)] transition-colors"
+                >
+                  + Add note
+                </button>
+              )}
             </div>
-            <div className="p-4 bg-[#fafafa] dark:bg-[#171717]">
-              <div className="flex items-center gap-2 text-[#737373] mb-2">
+
+            {/* Address - Separate section */}
+            <div className="p-4 bg-[var(--system-100)]">
+              <div className="flex items-center gap-2 text-[var(--system-400)] mb-2">
                 <MapPin className="w-4 h-4" />
                 <span className="text-sm">Address</span>
               </div>
               <LockedData fallback="***">
-                <p className="text-sm text-[#171717] dark:text-[#fafafa]">{order.customerWilaya}</p>
-                <p className="text-sm text-[#737373]">{order.customerCommune}</p>
+                <p className="text-sm text-[var(--system-600)]">{order.customerWilaya}</p>
+                <p className="text-sm text-[var(--system-400)]">{order.customerCommune}</p>
               </LockedData>
             </div>
           </div>
 
-          <div className="p-4 bg-[#fafafa] dark:bg-[#171717]">
-            <div className="flex items-center gap-2 text-[#737373] mb-3">
-              <Package className="w-4 h-4" />
-              <span className="text-sm">Products</span>
+          <div className="p-4 bg-[var(--system-100)]">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2 text-[var(--system-400)]">
+                <Package className="w-4 h-4" />
+                <span className="text-sm">Products</span>
+              </div>
+              <button className="text-sm text-[var(--info)] hover:underline flex items-center gap-1">
+                <Plus className="w-3 h-3" /> Add product
+              </button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2">
               {(order.products || []).map((item, idx: number) => (
-                <div key={idx} className="flex items-center justify-between">
-                  <div>
-                    <p className="font-normal text-[#171717] dark:text-[#fafafa]">{item.name}</p>
-                    {item.variant && (
-                      <p className="text-sm text-[#737373]">{item.variant} x {item.quantity}</p>
+                <div 
+                  key={idx} 
+                  className="flex items-center gap-3 p-2 hover:bg-[var(--system-200)] dark:hover:bg-[#262626] rounded-lg group transition-colors"
+                >
+                  {/* Thumbnail placeholder */}
+                  <div className="w-12 h-12 bg-[var(--system-200)] dark:bg-[var(--system-400)] rounded-lg flex items-center justify-center flex-shrink-0">
+                    {item.image ? (
+                      <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                    ) : (
+                      <Package className="w-5 h-5 text-[var(--system-400)]" />
                     )}
                   </div>
-                  <p className="font-normal text-[#171717] dark:text-[#fafafa]">
+                  
+                  {/* Product info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="font-normal text-[var(--system-600)] truncate">{item.name}</p>
+                    {item.variant && (
+                      <p className="text-sm text-[var(--system-400)]">{item.variant}</p>
+                    )}
+                    <div className="flex items-center gap-2 mt-1">
+                      <button 
+                        className="text-xs text-[var(--system-400)] hover:text-[var(--system-600)]"
+                      >
+                        Qty: {item.quantity}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Price */}
+                  <p className="font-normal text-[var(--system-600)]">
                     {formatPrice(item.price * item.quantity)}
                   </p>
+                  
+                  {/* 3-dots menu */}
+                  <button className="p-1 opacity-0 group-hover:opacity-100 hover:bg-[var(--system-200)] dark:hover:bg-[var(--system-400)] rounded transition-all">
+                    <MoreHorizontal className="w-4 h-4 text-[var(--system-400)]" />
+                  </button>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-[#e5e5e5] dark:border-[#404040] space-y-2">
+            <div className="mt-4 pt-4 border-t border-[var(--system-200)] dark:border-[var(--system-400)] space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-[#737373]">Subtotal:</span>
+                <span className="text-[var(--system-400)]">Subtotal:</span>
                 <span>{formatPrice(order.subtotal)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-[#737373]">Delivery:</span>
+                <span className="text-[var(--system-400)]">Delivery:</span>
                 <span>{formatPrice(order.deliveryCost)}</span>
               </div>
               <div className="flex justify-between font-normal">

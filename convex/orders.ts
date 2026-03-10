@@ -314,3 +314,88 @@ export const deleteOrder = mutation({
     await ctx.db.delete(args.orderId);
   },
 });
+
+// Update order product quantity
+export const updateOrderProductQuantity = mutation({
+  args: {
+    orderId: v.id("orders"),
+    productIndex: v.number(),
+    quantity: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) throw new Error("Order not found");
+    
+    const products = [...order.products];
+    if (products[args.productIndex]) {
+      products[args.productIndex] = {
+        ...products[args.productIndex],
+        quantity: args.quantity,
+      };
+      
+      // Recalculate totals
+      const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+      const total = subtotal + order.deliveryCost;
+      
+      await ctx.db.patch(args.orderId, {
+        products,
+        subtotal,
+        total,
+      });
+    }
+  },
+});
+
+// Remove product from order
+export const removeOrderProduct = mutation({
+  args: {
+    orderId: v.id("orders"),
+    productIndex: v.number(),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) throw new Error("Order not found");
+    
+    const products = order.products.filter((_, i) => i !== args.productIndex);
+    
+    // Recalculate totals
+    const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    const total = subtotal + order.deliveryCost;
+    
+    await ctx.db.patch(args.orderId, {
+      products,
+      subtotal,
+      total,
+    });
+  },
+});
+
+// Add product to order
+export const addProductToOrder = mutation({
+  args: {
+    orderId: v.id("orders"),
+    product: v.object({
+      productId: v.string(),
+      name: v.string(),
+      price: v.number(),
+      quantity: v.number(),
+      variant: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const order = await ctx.db.get(args.orderId);
+    if (!order) throw new Error("Order not found");
+    
+    const products = [...order.products, args.product];
+    
+    // Recalculate totals
+    const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    const total = subtotal + order.deliveryCost;
+    
+    await ctx.db.patch(args.orderId, {
+      products,
+      subtotal,
+      total,
+    });
+  },
+});
