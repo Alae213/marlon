@@ -11,6 +11,7 @@ import {
   Archive,
   X,
   Check,
+  Filter,
 } from "lucide-react";
 import { Badge } from "@/components/core";
 import { AnimatedTabs } from "@/components/core/animated-tabs";
@@ -104,6 +105,7 @@ interface ListViewProps {
   sortField: SortField;
   sortDirection: SortDirection;
   onSort: (field: SortField) => void;
+  onSortDirectionChange: (direction: SortDirection) => void;
   onOrderClick: (order: Doc<"orders">) => void;
   viewMode: "list" | "state";
   onViewModeChange: (mode: "list" | "state") => void;
@@ -189,6 +191,7 @@ export function ListView({
   sortField,
   sortDirection,
   onSort,
+  onSortDirectionChange,
   onOrderClick,
   viewMode,
   onViewModeChange,
@@ -196,6 +199,15 @@ export function ListView({
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
   const [currentTime, setCurrentTime] = useState(() => Date.now());
+  
+  // Sort dropdown state
+  const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Filter dropdown state
+  const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
+  const [activeFilter, setActiveFilter] = useState<string>("all");
+  const filterDropdownRef = useRef<HTMLDivElement>(null);
 
   // Update currentTime every minute
   useEffect(() => {
@@ -240,6 +252,34 @@ export function ListView({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchOpen, onSearchOpenChange]);
 
+  // Handle click outside sort dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
+        setSortDropdownOpen(false);
+      }
+    }
+    
+    if (sortDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [sortDropdownOpen]);
+
+  // Handle click outside filter dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
+        setFilterDropdownOpen(false);
+      }
+    }
+    
+    if (filterDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [filterDropdownOpen]);
+
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
     
@@ -250,7 +290,11 @@ export function ListView({
         order.customerPhone.includes(searchQuery)
       );
     }
-
+    
+    if (activeFilter !== "all") {
+      filtered = filtered.filter(order => order.status === activeFilter);
+    }
+    
     filtered.sort((a, b) => {
       let comparison = 0;
       switch (sortField) {
@@ -268,7 +312,7 @@ export function ListView({
     });
 
     return filtered;
-  }, [orders, searchQuery, sortField, sortDirection, currentTime]);
+  }, [orders, searchQuery, sortField, sortDirection, activeFilter, currentTime]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -328,14 +372,108 @@ export function ListView({
           )}
         </div>
 
-        {/* Sort */}
-        <button
-          onClick={() => onSort(sortField)}
-          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
-          title="Sort"
-        >
-          <ArrowUpDown className="w-4 h-4" />
-        </button>
+        {/* Filter Dropdown */}
+        <div className="relative" ref={filterDropdownRef}>
+          <button
+            onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+            className={`p-2 rounded-lg transition-colors ${
+              activeFilter !== "all"
+                ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+            }`}
+            title="Filter"
+          >
+            <Filter className="w-4 h-4" />
+          </button>
+          
+          {filterDropdownOpen && (
+            <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
+              <div className="px-3 py-2 text-xs text-[var(--system-400)] uppercase tracking-wide">Filter By State</div>
+              <button
+                onClick={() => {
+                  setActiveFilter("all");
+                  setFilterDropdownOpen(false);
+                }}
+                className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
+                  activeFilter === "all" ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+                }`}
+              >
+                <span className="text-[var(--system-600)]">All</span>
+                <span className="text-xs text-[var(--system-400)]">{orders.length}</span>
+                {activeFilter === "all" && <Check className="w-3.5 h-3.5" />}
+              </button>
+              {statuses.map((status) => {
+                const count = orders.filter(o => o.status === status).length;
+                return (
+                  <button
+                    key={status}
+                    onClick={() => {
+                      setActiveFilter(status);
+                      setFilterDropdownOpen(false);
+                    }}
+                    className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
+                      activeFilter === status ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className={`w-2 h-2 rounded-full ${statusColors[status].dot}`} />
+                      <span className="text-[var(--system-600)]">{STATUS_LABELS[status]?.label || status}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-[var(--system-400)]">{count}</span>
+                      {activeFilter === status && <Check className="w-3.5 h-3.5" />}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Sort Dropdown */}
+        <div className="relative" ref={sortDropdownRef}>
+          <button
+            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+            className={`p-2 rounded-lg transition-colors ${
+              sortField !== "date" || sortDirection !== "desc"
+                ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+            }`}
+            title="Sort"
+          >
+            <ArrowUpDown className="w-4 h-4" />
+          </button>
+          
+          {sortDropdownOpen && (
+            <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
+              <div className="px-3 py-2 text-xs text-[var(--system-400)] uppercase tracking-wide">Sort By</div>
+              {[
+                { id: "date", direction: "desc", label: "Newest first" },
+                { id: "date", direction: "asc", label: "Oldest first" },
+                { id: "total", direction: "desc", label: "Highest value first" },
+                { id: "total", direction: "asc", label: "Lowest value first" },
+              ].map((option) => (
+                <button
+                  key={`${option.id}-${option.direction}`}
+                  onClick={() => {
+                    onSort(option.id as SortField);
+                    onSortDirectionChange(option.direction as SortDirection);
+                    setSortDropdownOpen(false);
+                  }}
+                  className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
+                    sortField === option.id && 
+                    ((option.id === "date" && sortDirection === (option.direction as SortDirection)) ||
+                     (option.id === "total" && sortDirection === (option.direction as SortDirection)))
+                      ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+                  }`}
+                >
+                  <span className="text-[var(--system-600)]">{option.label}</span>
+                  {sortField === option.id && sortDirection === option.direction && <Check className="w-3.5 h-3.5" />}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Settings */}
         <button

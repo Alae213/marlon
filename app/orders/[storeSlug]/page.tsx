@@ -224,6 +224,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
           sortField={sortField}
           sortDirection={sortDirection}
           onSort={handleSort}
+          onSortDirectionChange={setSortDirection}
           onOrderClick={setSelectedOrder}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
