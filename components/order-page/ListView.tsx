@@ -12,10 +12,17 @@ import {
   X,
   Check,
   Filter,
+  Trash2,
+  AlertTriangle,
+  ArrowRightLeft,
 } from "lucide-react";
 import { Badge } from "@/components/core";
+import { Button } from "@/components/core/button";
 import { AnimatedTabs } from "@/components/core/animated-tabs";
 import { LockedData } from "@/components/locked-overlay";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import Image from "next/image";
 import type { 
   SortField, 
@@ -43,6 +50,27 @@ export function getRelativeTime(timestamp: number): string {
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
   }).format(new Date(timestamp));
+}
+
+// Highlight search match
+function highlightMatch(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text;
+  
+  const lowerText = text.toLowerCase();
+  const lowerQuery = query.toLowerCase();
+  const index = lowerText.indexOf(lowerQuery);
+  
+  if (index === -1) return text;
+  
+  return (
+    <>
+      {text.slice(0, index)}
+      <mark className="bg-yellow-200 dark:bg-yellow-800 px-0.5 rounded">
+        {text.slice(index, index + query.length)}
+      </mark>
+      {text.slice(index + query.length)}
+    </>
+  );
 }
 
 // Custom icon components
@@ -95,6 +123,7 @@ interface ListViewProps {
   selectAll: boolean;
   onSelectAll: (checked: boolean) => void;
   onOrderSelect: (orderId: string) => void;
+  onClearSelection: () => void;
   onStatusChange: (orderId: string, newStatus: string) => void;
   onStatusDropdownToggle: (orderId: string, open: boolean) => void;
   statusDropdownOpen: { [key: string]: boolean };
@@ -181,6 +210,7 @@ export function ListView({
   selectAll,
   onSelectAll,
   onOrderSelect,
+  onClearSelection,
   onStatusChange,
   onStatusDropdownToggle,
   statusDropdownOpen,
@@ -208,6 +238,12 @@ export function ListView({
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Delete confirmation state
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  // Delete mutation
+  const deleteOrder = useMutation(api.orders.deleteOrder);
 
   // Update currentTime every minute
   useEffect(() => {
@@ -326,10 +362,60 @@ export function ListView({
     onSelectAll(checked);
   };
 
+  const handleBulkDelete = async (orderIds: string[]) => {
+    try {
+      for (const orderId of orderIds) {
+        await deleteOrder({ orderId: orderId as Id<"orders"> });
+      }
+      // Clear selection after successful delete
+      onClearSelection();
+    } catch (error) {
+      console.error("Failed to delete orders:", error);
+    }
+  };
+
   return (
-    <div className="w-full h-full flex flex-col gap-3">
+    <TooltipProvider>
+    <div className="w-full h-full flex flex-col gap-3 relative">
+      {/* Bulk Action Toolbar */}
+      {selectedOrders.size > 0 && (
+        <div className="absolute top-0 left-0 right-0 z-50 bg-[var(--system-600)] text-white px-4 py-3 flex items-center justify-between rounded-t-xl">
+          <div className="flex items-center gap-4">
+            <span className="body-base font-medium">{selectedOrders.size} selected</span>
+            <div className="flex items-center gap-2">
+              {statuses.map((status) => {
+                const count = orders.filter(o => selectedOrders.has(o._id) && o.status === status).length;
+                if (count === 0) return null;
+                return (
+                  <span key={status} className="flex items-center gap-1 text-sm bg-white/20 px-2 py-1 rounded">
+                    <span className={`w-2 h-2 rounded-full ${statusColors[status].dot}`} />
+                    {count}
+                  </span>
+                );
+              })}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setShowDeleteConfirm(true)}
+            >
+              <Trash2 className="w-4 h-4" />
+              Delete
+            </Button>
+            <button
+              onClick={() => onClearSelection()}
+              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-1">
+      <div className={`flex items-center justify-between gap-1 ${selectedOrders.size > 0 ? 'pt-12' : ''}`}>
         {/* View Toggle */}
         <AnimatedTabs
           tabs={[
@@ -361,30 +447,38 @@ export function ListView({
               </button>
             </div>
           ) : (
-            <button
-              ref={searchButtonRef}
-              onClick={() => onSearchOpenChange(true)}
-              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
-              title="Search"
-            >
-              <Search className="w-4 h-4" />
-            </button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  ref={searchButtonRef}
+                  onClick={() => onSearchOpenChange(true)}
+                  className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+                >
+                  <Search className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>Search orders</TooltipContent>
+            </Tooltip>
           )}
         </div>
 
         {/* Filter Dropdown */}
         <div className="relative" ref={filterDropdownRef}>
-          <button
-            onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-            className={`p-2 rounded-lg transition-colors ${
-              activeFilter !== "all"
-                ? "bg-[var(--system-200)] text-[var(--system-600)]"
-                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-            }`}
-            title="Filter"
-          >
-            <Filter className="w-4 h-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
+                className={`p-2 rounded-lg transition-colors ${
+                  activeFilter !== "all"
+                    ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                    : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+                }`}
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Filter by status</TooltipContent>
+          </Tooltip>
           
           {filterDropdownOpen && (
             <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
@@ -432,17 +526,21 @@ export function ListView({
 
         {/* Sort Dropdown */}
         <div className="relative" ref={sortDropdownRef}>
-          <button
-            onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-            className={`p-2 rounded-lg transition-colors ${
-              sortField !== "date" || sortDirection !== "desc"
-                ? "bg-[var(--system-200)] text-[var(--system-600)]"
-                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-            }`}
-            title="Sort"
-          >
-            <ArrowUpDown className="w-4 h-4" />
-          </button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
+                className={`p-2 rounded-lg transition-colors ${
+                  sortField !== "date" || sortDirection !== "desc"
+                    ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                    : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+                }`}
+              >
+                <ArrowUpDown className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Sort orders</TooltipContent>
+          </Tooltip>
           
           {sortDropdownOpen && (
             <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
@@ -476,20 +574,58 @@ export function ListView({
         </div>
 
         {/* Settings */}
-        <button
-          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
-          title="Settings"
-        >
-          <Settings className="w-4 h-4" />
-        </button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Settings</TooltipContent>
+        </Tooltip>
 
-        {/* Archive */}
-        <button
-          className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
-          title="Archive"
-        >
-          <Archive className="w-4 h-4" />
-        </button>
+        {/* Archive - Blocked Orders */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors relative"
+              onClick={() => {
+                setActiveFilter("blocked");
+                setFilterDropdownOpen(false);
+              }}
+            >
+              <Archive className="w-4 h-4" />
+              {orders.filter(o => o.status === "blocked").length > 0 && (
+                <span className="absolute -top-1 -end-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {orders.filter(o => o.status === "blocked").length}
+                </span>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Blocked orders</TooltipContent>
+        </Tooltip>
+
+        {/* Archive - Router Orders */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors relative"
+              onClick={() => {
+                setActiveFilter("router");
+                setFilterDropdownOpen(false);
+              }}
+            >
+              <ArrowRightLeft className="w-4 h-4" />
+              {orders.filter(o => o.status === "router").length > 0 && (
+                <span className="absolute -top-1 -end-1 bg-yellow-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
+                  {orders.filter(o => o.status === "router").length}
+                </span>
+              )}
+            </button>
+          </TooltipTrigger>
+          <TooltipContent>Router orders</TooltipContent>
+        </Tooltip>
         </div>
       </div>
 
@@ -559,10 +695,10 @@ export function ListView({
                 <div>
                   <LockedData fallback="***">
                     <p className="body-base text-[var(--system-600)]">
-                      {order.customerName}
+                      {highlightMatch(order.customerName, searchQuery)}
                     </p>
                     <p className="body-base text-[var(--system-300)]">
-                      {order.customerPhone}
+                      {highlightMatch(order.customerPhone, searchQuery)}
                     </p>
                   </LockedData>
                 </div>
@@ -599,6 +735,52 @@ export function ListView({
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <>
+          <div 
+            className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm"
+            onClick={() => setShowDeleteConfirm(false)}
+          />
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div 
+              className="w-[360px] bg-[var(--system-100)] rounded-[48px] p-[20px] flex flex-col gap-[12px] items-start"
+              style={{ boxShadow: "var(--shadow-xl-shadow)" }}
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <div className="p-3 bg-red-100 rounded-full">
+                  <AlertTriangle className="w-6 h-6 text-red-600" />
+                </div>
+                <h2 className="headline-2xl text-[var(--system-600)]">Delete Orders</h2>
+              </div>
+              <p className="text-[var(--system-500)] body-base">
+                Are you sure you want to delete {selectedOrders.size} order(s)? This action cannot be undone.
+              </p>
+              <div className="flex gap-2 w-full mt-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="danger"
+                  onClick={async () => {
+                    await handleBulkDelete(Array.from(selectedOrders));
+                    setShowDeleteConfirm(false);
+                  }}
+                  className="flex-1"
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
+    </TooltipProvider>
   );
 }

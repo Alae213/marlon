@@ -173,6 +173,11 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
     setStatusDropdownOpen(prev => ({ ...prev, [orderId]: open }));
   };
 
+  const handleClearSelection = () => {
+    setSelectedOrders(new Set());
+    setSelectAll(false);
+  };
+
   return (
     <div className="h-screen w-full bg-[var(--system-50)]">
     <div className="max-w-6xl mx-auto h-full">
@@ -214,6 +219,7 @@ function OrdersContent({ storeId, storeSlug }: { storeId: string; storeSlug: str
           selectAll={selectAll}
           onSelectAll={handleSelectAll}
           onOrderSelect={handleOrderSelect}
+          onClearSelection={handleClearSelection}
           onStatusChange={handleStatusChange}
           onStatusDropdownToggle={handleStatusDropdownToggle}
           statusDropdownOpen={statusDropdownOpen}

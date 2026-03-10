@@ -303,3 +303,14 @@ export const addAdminNote = mutation({
     return args.orderId;
   },
 });
+
+// Hard delete order (permanent)
+export const deleteOrder = mutation({
+  args: { orderId: v.id("orders") },
+  handler: async (ctx, args) => {
+    // Use the helper to verify ownership
+    await assertOrderOwnership(ctx, args.orderId);
+    
+    await ctx.db.delete(args.orderId);
+  },
+});
