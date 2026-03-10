@@ -21,6 +21,7 @@ import { UserButton } from "@clerk/nextjs";
 import { ThemeToggle } from "@/components/core/theme-toggle";
 import { useTheme } from "@/lib/theme/provider";
 import { ImagePlaceholder } from "@/components/core/image-placeholder";
+import { EditorShell } from "@/components/editor/EditorShell";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -82,7 +83,7 @@ interface Product {
   updatedAt?: number;
 }
 
-function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: string }) {
+function ProductsContent({ storeId, storeSlug, storeName }: { storeId: string; storeSlug: string; storeName?: string }) {
   const router = useRouter();
   const [viewMode, _setViewMode] = useState<"grid" | "list">("grid");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -335,13 +336,50 @@ const handleUpdateProduct = async (product: ProductFormData) => {
     }
   };
 
+  const topBarLeft = (
+    <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--system-300)]">
+      <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-7 w-auto" />
+    </Link>
+  );
+
+  const topBarCenter = (
+    <div className="flex flex-col items-center justify-center text-xs font-semibold leading-tight text-[var(--system-200)]">
+      <span className="truncate">{storeName || storeSlug}</span>
+      <span className="text-[10px] font-medium text-[var(--system-300)]">marlon.app/{storeSlug}</span>
+    </div>
+  );
+
+  const topBarRight = (
+    <div className="flex items-center gap-2">
+      <a
+        href={`/${storeSlug}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-[#e5e5e5] px-3 text-xs font-medium text-[#171717] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:text-[#fafafa] dark:hover:bg-[#171717]"
+      >
+        <ExternalLink className="h-3.5 w-3.5" />
+        معاينة
+      </a>
+      <Button
+        variant="outline"
+        onClick={() => setIsSettingsOpen(true)}
+        aria-label="فتح الإعدادات"
+        className="h-8 rounded-full px-3 text-xs"
+      >
+        <Settings className="h-3.5 w-3.5" />
+        الإعدادات
+      </Button>
+      <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
+    </div>
+  );
+
   return (
-    <div className="bg-sunglasses-pattern min-h-screen">
-      <div className="relative z-10 mx-auto max-w-6xl space-y-6 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pt-8">
-        {/* Header with Logo, Nav, and User Profile */}
-        <header className="flex items-center gap-4 py-5 md:gap-8">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center">
+    <>
+      <EditorShell leftSlot={topBarLeft} centerSlot={topBarCenter} rightSlot={topBarRight}>
+        <div className="space-y-6">
+          {/* Header with Logo and Nav (preview area) */}
+          <header className="flex items-center gap-4 py-4 md:gap-8">
+            <div className="flex items-center gap-3">
               <Image
                 src="/Logo-text.svg"
                 alt="Marlon Logo"
@@ -349,55 +387,30 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                 height={36}
                 className="h-9 w-auto"
               />
-            </Link>
+            </div>
+
+            <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
+              {[{ label: "التصميم", href: "#navbar-preview" }, { label: "الرئيسية", href: "#hero-preview" }, { label: "المنتجات", href: "#products-preview" }].map((link) => (
+                <Link
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm font-medium text-[#404040] transition-colors hover:text-[#171717] dark:text-[#d4d4d4] dark:hover:text-[#fafafa]"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </header>
+
+          {/* Page Title */}
+          <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-white px-4 py-4 shadow-[0_4px_30px_-18px_rgba(0,0,0,0.12)] sm:flex-row sm:items-center sm:justify-between dark:border-[#262626] dark:bg-[#0a0a0a]">
+            <h1 className="text-[22px] leading-[28px] font-semibold tracking-tight text-[#0f0f0f] text-start dark:text-[#fafafa]">المنتجات</h1>
           </div>
 
-          <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
-            {[{ label: "التصميم", href: "#navbar-preview" }, { label: "الرئيسية", href: "#hero-preview" }, { label: "المنتجات", href: "#products-preview" }].map((link) => (
-              <Link
-                key={link.label}
-                href={link.href}
-                className="text-sm font-medium text-[#404040] transition-colors hover:text-[#171717] dark:text-[#d4d4d4] dark:hover:text-[#fafafa]"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
-
-          <div className="ms-auto flex items-center gap-3">
-            <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
-          </div>
-        </header>
-
-        {/* Browser Preview Editor */}
-        <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-white px-4 py-4 shadow-[0_4px_30px_-18px_rgba(0,0,0,0.12)] sm:flex-row sm:items-center sm:justify-between dark:border-[#262626] dark:bg-[#0a0a0a]">
-          <h1 className="text-[22px] leading-[28px] font-semibold tracking-tight text-[#0f0f0f] text-start dark:text-[#fafafa]">المنتجات</h1>
-          <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-            <a
-              href={`/${storeSlug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex h-10 items-center justify-center gap-2 rounded-full border border-[#e5e5e5] px-4 text-sm font-medium text-[#171717] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:text-[#fafafa] dark:hover:bg-[#171717]"
-            >
-              <ExternalLink className="h-4 w-4" />
-              معاينة
-            </a>
-            <Button
-              variant="outline"
-              onClick={() => setIsSettingsOpen(true)}
-              aria-label="فتح الإعدادات"
-              className="rounded-full"
-            >
-              <Settings className="h-4 w-4" />
-              الإعدادات
-            </Button>
-          </div>
-        </div>
-
-        {/* Nav Bar Section Editor */}
-        <section id="navbar-preview">
-          <Card className="mb-6" padding="none">
-            <div className="p-4">
+          {/* Nav Bar Section Editor */}
+          <section id="navbar-preview">
+            <Card className="mb-6" padding="none">
+              <div className="p-4">
 
             <div
               className={`relative overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-[#262626] ${navbarBgClass}`}
@@ -1105,6 +1118,8 @@ const handleUpdateProduct = async (product: ProductFormData) => {
           })()}
         </div>
       </Card>
+        </div>
+      </EditorShell>
 
       {logoCropSrc && (
         <ImageCropper
@@ -1143,8 +1158,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
 
       <BottomNavigation storeSlug={storeSlug} currentPage="products" />
-      </div>
-    </div>
+    </>
   );
 }
 
@@ -1763,7 +1777,7 @@ export default function EditorPage() {
   
   return (
     <RealtimeProvider storeId={storeId}>
-      <ProductsContent storeId={storeId} storeSlug={storeSlug} />
+      <ProductsContent storeId={storeId} storeSlug={storeSlug} storeName={store?.name} />
     </RealtimeProvider>
   );
 }
