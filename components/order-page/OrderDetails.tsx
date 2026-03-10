@@ -251,90 +251,165 @@ export function OrderDetails({
             )}
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-normal text-[#171717] dark:text-[#fafafa] flex items-center gap-2">
+          {/* Call Logs - Always Visible */}
+          <div className="p-4 bg-[var(--system-100)]">
+            <h3 className="font-normal text-[var(--system-600)] mb-3 flex items-center gap-2">
               <Phone className="w-4 h-4" />
-              Call Log
-              <span className="text-sm font-normal text-[#737373]">({order.callLog?.length || 0})</span>
+              Call Logs
             </h3>
-            {order.callLog && order.callLog.length > 0 ? (
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {(order.callLog || []).map((call) => (
-                  <div key={call.id} className="p-3 bg-[#fafafa] dark:bg-[#171717] flex items-start gap-3">
-                    <span className={call.outcome === "answered" ? "text-[#16a34a]" : "text-[#dc2626]"}>
-                      {CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.icon}
-                    </span>
-                    <div className="flex-1">
-                      <p className="text-sm font-normal text-[#171717] dark:text-[#fafafa]">
-                        {CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label}
-                      </p>
-                      {call.notes && (
-                        <p className="text-xs text-[#737373]">{call.notes}</p>
-                      )}
-                      <p className="text-xs text-[#a3a3a3]">{formatDate(call.timestamp)}</p>
-                    </div>
+            
+            {/* 4 slots for call attempts */}
+            <div className="grid grid-cols-4 gap-2 mb-3">
+              {(order.callLog?.slice(-4) || []).map((call, index) => {
+                const bgColor = call?.outcome === "answered" ? "bg-green-500" : 
+                               call?.outcome === "no_answer" ? "bg-yellow-500" : 
+                               call?.outcome === "refused" ? "bg-red-500" : 
+                               call?.outcome === "wrong_number" ? "bg-gray-500" :
+                               "bg-[var(--system-200)]";
+                const outcomeLabel = call ? CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label : "";
+                return (
+                  <div 
+                    key={index}
+                    className={`h-2 rounded-full ${bgColor} transition-colors`}
+                    title={call ? `${outcomeLabel} - ${formatDate(call.timestamp)}` : `Attempt ${index + 1}`}
+                  />
+                );
+              })}
+            </div>
+            
+            {/* Scrollable list on hover */}
+            {order.callLog && order.callLog.length > 0 && (
+              <div className="max-h-24 overflow-y-auto mb-3 space-y-1">
+                {order.callLog.slice().reverse().map((call, idx) => (
+                  <div key={idx} className="flex items-center gap-2 text-xs">
+                    <span className={`w-2 h-2 rounded-full ${
+                      call.outcome === "answered" ? "bg-green-500" : 
+                      call.outcome === "no_answer" ? "bg-yellow-500" : 
+                      call.outcome === "refused" ? "bg-red-500" : "bg-gray-500"
+                    }`} />
+                    <span className="text-[var(--system-400)]">{CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label}</span>
+                    <span className="text-[var(--system-300)] ms-auto">{formatDate(call.timestamp)}</span>
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-[#737373]">No calls recorded</p>
             )}
             
-            <div className="p-4 border border-[#e5e5e5] dark:border-[#404040]">
-              <p className="text-sm font-normal text-[#171717] dark:text-[#fafafa] mb-3">Record Call</p>
-              <div className="flex flex-wrap gap-2 mb-3">
-                {(["answered", "no_answer", "wrong_number", "refused"] as const).map((outcome) => (
-                  <button
-                    key={outcome}
-                    onClick={() => setCallOutcome(outcome)}
-                    className={`px-3 py-1.5 text-sm transition-colors ${
-                      callOutcome === outcome
-                        ? "bg-[#171717] text-white"
-                        : "bg-[#f5f5f5] dark:bg-[#262626] text-[#525252] dark:text-[#a3a3a3] hover:bg-[#e5e5e5] dark:hover:bg-[#404040]"
-                    }`}
-                  >
-                    {CALL_OUTCOME_LABELS[outcome].label}
-                  </button>
-                ))}
-              </div>
-              <textarea
-                value={callNotes}
-                onChange={(e) => setCallNotes(e.target.value)}
-                placeholder="Notes (optional)..."
-                className="w-full px-3 py-2 border border-[#e5e5e5] dark:border-[#404040] bg-white dark:bg-[#171717] text-sm resize-none"
-                rows={2}
-              />
-              <Button
-                onClick={handleAddCallLog}
-                disabled={!callOutcome}
-                className="w-full mt-3"
-                size="sm"
-              >
-                Record Call
-              </Button>
+            {/* Call action buttons */}
+            <div className="flex gap-2">
+              {(["answered", "no_answer", "refused"] as const).map((outcome) => (
+                <Button
+                  key={outcome}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1"
+                  onClick={() => {
+                    setCallOutcome(outcome);
+                    handleAddCallLog();
+                  }}
+                >
+                  {CALL_OUTCOME_LABELS[outcome]?.label}
+                </Button>
+              ))}
             </div>
           </div>
 
-          <div className="space-y-3">
-            <h3 className="font-normal text-[#171717] dark:text-[#fafafa]">Actions</h3>
-            <div className="flex flex-wrap gap-2">
+          {/* State-based Actions */}
+          <div className="p-4 bg-[var(--system-100)]">
+            <h3 className="font-normal text-[var(--system-600)] mb-3">Actions</h3>
+            
+            {order.status === "new" && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  className="h-16 text-lg"
+                  onClick={() => onStatusChange(order._id, "confirmed")}
+                >
+                  Confirm
+                </Button>
+                <Button
+                  variant="danger"
+                  className="h-16 text-lg"
+                  onClick={() => onStatusChange(order._id, "canceled")}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+            
+            {order.status === "confirmed" && (
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAddNote(true)}
+                className="w-full h-16 text-lg"
+                onClick={() => onStatusChange(order._id, "packaged")}
               >
-                <Plus className="w-3.5 h-3.5" />
-                Add Note
+                Send to delivery company
               </Button>
+            )}
+            
+            {order.status === "packaged" && (
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowAuditTrail(!showAuditTrail)}
+                className="w-full h-16 text-lg"
+                onClick={() => onStatusChange(order._id, "shipped")}
               >
-                <FileText className="w-3.5 h-3.5" />
-                Change Log
+                Print label
               </Button>
-            </div>
+            )}
+            
+            {order.status === "shipped" && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  className="h-16 text-lg"
+                  onClick={() => onStatusChange(order._id, "succeeded")}
+                >
+                  Succeed
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-16 text-lg"
+                  onClick={() => onStatusChange(order._id, "router")}
+                >
+                  Router
+                </Button>
+              </div>
+            )}
+            
+            {order.status === "succeeded" && (
+              <p className="text-center text-[var(--system-400)] py-4">Order completed - no actions available</p>
+            )}
+            
+            {order.status === "router" && (
+              <div className="space-y-2">
+                <Button
+                  className="w-full"
+                  onClick={() => onStatusChange(order._id, "confirmed")}
+                >
+                  Return to Confirmed
+                </Button>
+                <Button
+                  variant="danger"
+                  className="w-full"
+                  onClick={() => onStatusChange(order._id, "canceled")}
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+            
+            {order.status === "canceled" && (
+              <Button
+                className="w-full"
+                onClick={() => onStatusChange(order._id, "new")}
+              >
+                Reopen Order
+              </Button>
+            )}
+            
+            {order.status === "blocked" && (
+              <Button
+                className="w-full"
+                onClick={() => onStatusChange(order._id, "new")}
+              >
+                Unblock / Reopen
+              </Button>
+            )}
           </div>
 
           {showAddNote && (
