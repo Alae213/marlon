@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import Script from "next/script";
-import { GeistSans } from "geist/font";
+import { Inter } from "next/font/google";
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
@@ -45,7 +51,7 @@ export default function RootLayout({
           />
         )}
       </head>
-                <body className={`${GeistSans.variable} antialiased`}>
+                <body className={`${inter.variable} antialiased`}>
                   {children}
                 </body>
               </html>
@@ -58,7 +64,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" dir="ltr">
-      <body className={`${GeistSans.variable} antialiased`}>
+      <body className={`${inter.variable} antialiased`}>
         <ConvexClientProvider>
           <ThemeProvider>
             <ToastProvider>

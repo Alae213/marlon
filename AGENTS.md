@@ -1,12 +1,5 @@
 # AGENTS.md - Marlon Development Guide
 
-## ⚠️ PREREQUISITES
-
-**STOP** if `antigravity-awesome-skills` is missing. Request user to install:
-- Global: `npx antigravity-awesome-skills`
-- Workspace: `git clone https://github.com/sickn33/antigravity-awesome-skills.git .agent/skills`
-
----
 
 # GLOBAL RULES (ANTIGRAVITY)
 
@@ -205,7 +198,9 @@ All public-facing routes (storefront, product detail, landing pages) must use:
 - Tailwind CSS v4 exclusively - no inline style={} unless dynamic values require it.
 - Global CSS variables defined in app/globals.css using @theme inline block.
 - Dark mode: use dark: variant (respects prefers-color-scheme).
-- RTL: this is an Arabic-first app. Use logical properties (ps-4, pe-4, ms-auto, me-auto, start-0, end-0) instead of physical left/right properties.
+- LTR: Marlon is an **English-first** app (`dir="ltr"`). Standard physical/logical left-to-right properties apply.
+- **Arabic font**: Use `SF Pro Text` / `SF Pro Display` (native on Apple devices, falls back to `system-ui`). Do not install IBM Plex Sans Arabic or Noto Sans Arabic.
+- **Primary font**: Inter Variable (loaded via `next/font/google`). CSS variable: `--font-inter`.
 
 ### React / Next.js Patterns
 

@@ -210,7 +210,7 @@ function OrdersContent({
                 alt="Marlon Logo"
                 width={118}
                 height={36}
-                className="h-9 w-auto"
+                className="h-[10px] w-auto"
               />
             </Link>
           </div>
@@ -221,15 +221,9 @@ function OrdersContent({
         </div>
 
         {/* Page Title */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <h1 className="headline-2xl">My Orders</h1>
-            {newOrdersCount > 0 && (
-              <span className="flex h-2 w-2">
-                <span className="animate-ping absolute inline-flex h-2 w-2 rounded-full bg-[#2563eb] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-[#2563eb]"></span>
-              </span>
-            )}
           </div>
         </div>
 

@@ -70,7 +70,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
 
         <div className="h-[22px] w-[1px] mx-2 "
             style={{
-            background: "rgba(242, 242, 242, 0.30)",
+            background: "rgba(255, 255, 255, 0.13)",
             boxShadow: "1px 0px 0 0 rgba(0, 0, 0, 0.30)",
         }}/>
         
@@ -85,12 +85,12 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
                   href={item.href}
                   className={`flex flex-row items-center gap-2 px-[14px] py-[8px] rounded-[999px] transition-colors ${
                     item.isActive
-                      ? "text-[var(--system-100)] bg-white/30 dark:text-[#fafafa]"
+                      ? "text-[var(--system-100)] bg-white/15 dark:text-[#fafafa]"
                       : "text-[#a3a3a3] dark:text-[#525252] hover:bg-white/10 "
                   }`}
                   style={{ 
                     fontWeight: '500',
-                    ...(item.isActive && { boxShadow: "0px -1px 0 0px rgba(255, 255, 255, 0.6)" })
+                    ...(item.isActive && { boxShadow: "0px -1px 0 0px rgba(255, 255, 255, 0.5)" })
                   }}
                   
                 >

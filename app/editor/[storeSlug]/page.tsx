@@ -383,7 +383,7 @@ const saveInlineEdit = async () => {
               alt="Marlon Logo" 
               width={118} 
               height={36}
-              className="h-9 w-auto"
+              className="h-[10px] w-auto"
             />
           </Link>
         </div>

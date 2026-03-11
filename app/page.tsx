@@ -169,11 +169,11 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogPortal>
-        <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
+        <DialogOverlay className="fixed inset-0 z-[60] bg-black/0" />
         <div className="fixed inset-0 flex items-center justify-center z-[70]">
           <DialogContent
             style={{ 
-              boxShadow: "var(--shadow-xl-shadow)",
+              boxShadow: "var(--bottom-nav-shadow)",
             } as any}
             className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px]  items-start backdrop-blur-[12px]"
             from="top"
@@ -183,7 +183,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
               damping: 25,
             }}
           >
-            <DialogHeader className="flex flex-row justify-between w-full h-[68px]">
+            <DialogHeader className="flex flex-row justify-between w-full h-[58px]">
               <DialogTitle className="headline-2xl text-white">
                 This is what people
                 <br />
@@ -200,19 +200,21 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
             </DialogHeader>
 
 
-            <hr className="h-px w-full border-0 rounded-full "
+              <hr className="h-px w-full border-0 rounded-full "
                       style={{
                         background: "rgba(242, 242, 242, 0.30)",
                         boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
                       }}/>
 
-                      <p className="body-base text-[var(--system-200)] "> </p>
-
-            <div
+                      <p className="text-[var(--system-300)] body-base">
+                        you can change it late
+                        </p>
+                      
+                  <div
                     style={{ boxShadow: "var(--shadow-xl-shadow)" }}
-                    className="flex flex-col gap-[11px] p-[12px] rounded-[20px] bg-white/10 "
+                    className="flex flex-col gap-[11px] p-[12px] rounded-[22px] bg-white/10 backdrop-blur-[12px] "
                   >
-                    <div className="flex flex-row gap-4 items-center w-full">
+                    <div className="flex flex-row gap-4 items-center w-full h-[27px]">
                       
                         <Image src="/windw.svg" alt="Website" width={33} height={9} />
                         <div className="flex flex-row gap-2 items-center w-full">
@@ -226,14 +228,14 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                             if (hasSubmitted) setError("");
                           }}
                           placeholder="Type . . ."
-                          className={`w-full px-[4px] rounded-[4px]  bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] focus:ring-0 title-xl py-[0px] transition-all duration-300 ease-in-out focus:outline-none hover:bg-white/10`}
+                          className={`w-full px-[4px] rounded-[10px] h-[32px] bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] body-base py-[4px] transition-all duration-300 ease-in-out focus:outline-none hover:bg-white/10 focus:bg-white/5`}
                           autoFocus
                           aria-label="Website name"
                         />  
                         </div>
                     </div>
 
-                    <div>
+                    <div className="h-[32px]">
                       <div className="flex items-center gap-2">
                         <span className="text-[var(--system-200)] body-base">
                           marlon.app/
@@ -252,7 +254,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                                 setError('');
                               }
                             }}
-                            className={`pr-8 ${hasSubmitted && (error || !slug) ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
+                            className={`px-3 py-2 h-[32px] bg-black/30 ${hasSubmitted && (error || !slug) ? 'border-red-500' : 'border-white/0'}`}
                             placeholder="my-website"
                           />
                           {slug && (
@@ -285,22 +287,22 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                     )}
                   </div>
 
-                  <p className="body-base text-[var(--system-200)] py-[2px] text-center w-full">
-                         You can change it Later
-                      </p>
+                  <div className="h-6"></div>
 
                   <div className="flex gap-3 w-full">
                     <Button
                       variant="ghost"
+                      size="md"
                       onClick={onClose}
-                      className=" w-full rounded-[12px]"
+                      className=" w-full"
                     >
                       Cancel
                     </Button>
                     <Button
                       onClick={handleCreate}
                       disabled={isCreating}
-                      className="w-full rounded-[12px]"
+                      size="md"
+                      className="w-full"
                     >
                       {isCreating ? "Creating..." : "Create"}
                     </Button>

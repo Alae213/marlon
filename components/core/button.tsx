@@ -8,7 +8,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: 
-    "bg-[var(--system-300)] text-[var(--system-100)] hover:bg-[var(--system-200)]/50 disabled:bg-muted disabled:text-[var(--system-300)]",
+    "bg-[var(--blue-300)] text-[var(--system-100)] hover:bg-[var(--blue-200)] disabled:bg-muted disabled:text-[var(--system-300)] shadow-[var(--shadow-xl-shadow)] overflow-hidden",
   
   secondary: 
     "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 disabled:opacity-40",
@@ -27,10 +27,10 @@ const variantStyles = {
 };
 
 const sizeStyles = {
-  sm: "h-9 px-4 text-sm rounded-[12px]",
-  md: "h-10 px-6 text-sm rounded-[12px]",
-  lg: "h-12 px-8 text-base rounded-[12px]",
-};
+  sm: "py-1 px-4 text-sm rounded-[14px]",
+  md: "py-2 px-6 text-sm rounded-[14px]",
+  lg: "py-4 px-8 text-base rounded-[14px]",
+};  
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className = "", variant = "primary", size = "md", isLoading, children, disabled, ...props }, ref) => {
