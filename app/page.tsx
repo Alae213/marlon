@@ -174,7 +174,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
           <DialogContent
             style={{ 
               boxShadow: "var(--bottom-nav-shadow)",
-            } as any}
+            } as React.CSSProperties}
             className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px]  items-start backdrop-blur-[12px]"
             from="top"
             transition={{

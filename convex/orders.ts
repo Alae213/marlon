@@ -426,3 +426,38 @@ export const addProductToOrder = mutation({
     });
   },
 });
+
+// Replace product in order (at specific index)
+export const replaceOrderProduct = mutation({
+  args: {
+    orderId: v.id("orders"),
+    productIndex: v.number(),
+    product: v.object({
+      productId: v.string(),
+      name: v.string(),
+      image: v.optional(v.string()),
+      price: v.number(),
+      quantity: v.number(),
+      variant: v.optional(v.string()),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    
+    const products = [...order.products];
+    if (products[args.productIndex]) {
+      products[args.productIndex] = args.product;
+      
+      // Recalculate totals
+      const subtotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+      const total = subtotal + (order.deliveryCost || 0);
+      
+      await ctx.db.patch(args.orderId, {
+        products,
+        subtotal,
+        total,
+        updatedAt: Date.now(),
+      });
+    }
+  },
+});

@@ -129,7 +129,7 @@
   /* Typography tokens */
   /* Font Sizes */
   --font-size-xs: 12px;
-  --font-size-md: 17px;
+  --font-size-md: 16px;
   --font-size-lg: 24px;
   --font-size-xl: 36px;
 
@@ -189,7 +189,7 @@
     font-family: var(--font-sans);
     font-weight: var(--font-weight-regular);
     font-size: var(--font-size-xs);
-    line-height: 170%;
+    line-height: 160%;
     letter-spacing: var(--letter-spacing-normal);
   }
 
@@ -231,6 +231,18 @@ body {
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
   }
 }
 

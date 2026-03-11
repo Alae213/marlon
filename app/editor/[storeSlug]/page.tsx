@@ -1366,7 +1366,7 @@ function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boole
         <DialogOverlay className="fixed inset-0 z-[60] bg-black/40" />
         <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
           <DialogContent
-            style={{ boxShadow: "var(--shadow-xl-shadow)" } as any}
+            style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
             className="w-[600px] max-h-[80vh] overflow-hidden bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
             from="top"
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
@@ -1540,18 +1540,11 @@ function DeliveryIntegrationSettings({ storeId }: { storeId: string }) {
   const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
   const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
 
-  const [provider, setProvider] = useState<"none" | "zr-express" | "yalidine">("none");
-  const [apiKey, setApiKey] = useState<string>("");
-  const [apiToken, setApiToken] = useState<string>("");
-
-  // Sync form state with delivery integration data
-  useEffect(() => {
-    if (deliveryIntegration) {
-      setProvider(deliveryIntegration.provider as "none" | "zr-express" | "yalidine");
-      setApiKey(deliveryIntegration.apiKey ?? "");
-      setApiToken(deliveryIntegration.apiToken ?? "");
-    }
-  }, [deliveryIntegration]);
+  // Initialize form state from delivery integration data
+  const initialProvider = deliveryIntegration?.provider as "none" | "zr-express" | "yalidine" | undefined;
+  const [provider, setProvider] = useState<"none" | "zr-express" | "yalidine">(initialProvider ?? "none");
+  const [apiKey, setApiKey] = useState<string>(deliveryIntegration?.apiKey ?? "");
+  const [apiToken, setApiToken] = useState<string>(deliveryIntegration?.apiToken ?? "");
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);

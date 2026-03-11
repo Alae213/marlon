@@ -172,9 +172,8 @@ function ProductDetailContent() {
   };
 
   // Calculate delivery cost based on wilaya and delivery type
-  const deliveryCost = useMemo(() => {
-    return getDeliveryCost(orderData.deliveryType);
-  }, [findDeliveryPrice, orderData.deliveryType]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const deliveryCost = useMemo(() => getDeliveryCost(orderData.deliveryType), [findDeliveryPrice, orderData.deliveryType]);
 
   // Calculate order totals
   const subtotal = product ? product.basePrice * quantity : 0;
@@ -477,7 +476,7 @@ function ProductDetailContent() {
           <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
           <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
             <DialogContent
-              style={{ boxShadow: "var(--shadow-xl-shadow)" } as any}
+              style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
               className="w-[400px] max-h-[90vh] overflow-y-auto bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
               from="top"
               transition={{ type: "spring", stiffness: 300, damping: 25 }}

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import Image from "next/image";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
 import {
@@ -12,33 +12,48 @@ import {
   CheckCircle,
   MoreHorizontal,
   ChevronDown,
-  Search,
-  Trash2,
-  RefreshCw,
   X,
   PhoneOff,
-  PhoneMissed
+  PhoneMissed,
+  Home,
+  Building2
 } from "lucide-react";
 import { Button } from "@/components/core";
-import {
-  Dropdown,
-  DropdownItem,
-  DropdownSeparator,
-} from "@/components/core/dropdown";
 import { LockedData } from "@/components/locked-overlay";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
-import type { CallLog, AdminNote, OrderStatus } from "@/lib/orders-types";
+import type { AdminNote, CallLog, OrderStatus } from "@/lib/orders-types";
 import {
   STATUS_LABELS,
   CALL_OUTCOME_LABELS,
-  DELIVERY_TYPE_LABELS,
 } from "@/lib/orders-types";
-import type { Order } from "@/lib/orders-types";
 
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
+
+interface OrderProduct {
+  productId: string;
+  name: string;
+  image?: string;
+  price: number;
+  quantity: number;
+  variant?: string;
+}
+
+interface AuditTrailEntry {
+  id: string;
+  timestamp: number;
+  action: string;
+  details: string;
+}
+
+interface CallLogEntry {
+  id: string;
+  timestamp: number;
+  outcome: "answered" | "no_answer" | "wrong_number" | "refused";
+  notes?: string;
+}
 
 interface OrderDetailsProps {
   order: Doc<"orders"> | null;
@@ -51,19 +66,6 @@ interface OrderDetailsProps {
     notes?: string,
   ) => Promise<void>;
   onAddAdminNote: (orderId: string, text: string) => Promise<void>;
-  /** storeId required to fetch available products for the add-product panel */
-  storeId?: string;
-}
-
-interface StoreProduct {
-  _id: string;
-  name: string;
-  basePrice: number;
-  images?: string[];
-  variants?: {
-    name: string;
-    options: { name: string; priceModifier?: number }[];
-  }[];
 }
 
 // ---------------------------------------------------------------------------
@@ -123,15 +125,15 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
   );
 
   return (
-    <div className="flex items-end gap-1.5 h-6">
+    <div className="flex items-end gap-1 h-7">
       {slots.map((call, index) => (
         <HoverCard key={index} openDelay={200} closeDelay={100}>
           <HoverCardTrigger asChild>
             <div
-              className={`w-1 rounded-full transition-colors cursor-default ${
+              className={`w-1.5 rounded-[12px] transition-colors cursor-default ${
                 call ? callOutcomeBg(call.outcome) : "bg-white/10"
               }`}
-              style={{ height: call ? "100%" : "50%" }}
+              style={{ height:"100%" }}
             />
           </HoverCardTrigger>
           {call && (
@@ -167,68 +169,29 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
 // ---------------------------------------------------------------------------
 
 export function OrderDetails({
-  order,
+  order: initialOrder,
   isOpen,
   onClose,
   onStatusChange,
   onAddCallLog,
   onAddAdminNote,
-  storeId,
 }: OrderDetailsProps) {
-  // ── Notes (single unified field) ─────────────────────────────────────────
+  // ── Live Data ─────────────────────────────────────────────────────────────
+  const liveOrder = useQuery(
+    api.orders.getOrder,
+    initialOrder?._id ? { orderId: initialOrder._id as Id<"orders"> } : "skip"
+  );
+  const order = liveOrder || initialOrder;
+
+  // ── Notes (State for Phase 2) ───────────────────────────────────────────
   const [newNote, setNewNote] = useState("");
-  const [showAddNote, setShowAddNote] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
 
   // ── Audit trail toggle ────────────────────────────────────────────────────
   const [showAuditTrail, setShowAuditTrail] = useState(false);
 
-  // ── Inline qty editing ────────────────────────────────────────────────────
-  const [editingQtyIdx, setEditingQtyIdx] = useState<number | null>(null);
-  const [editingQtyValue, setEditingQtyValue] = useState<string>("");
-
-  // ── Variant dropdown per-row ──────────────────────────────────────────────
-  const [variantMenuIdx, setVariantMenuIdx] = useState<number | null>(null);
-
-  // ── 3-dots menu per-row ───────────────────────────────────────────────────
-  const [openMenuIdx, setOpenMenuIdx] = useState<number | null>(null);
-
-  // ── Add / Replace product panel ───────────────────────────────────────────
-  // null = closed | -1 = "add" mode | >= 0 = "replace" mode (index)
-  const [addProductMode, setAddProductMode] = useState<number | null>(null);
-  const [productSearch, setProductSearch] = useState("");
-  const [selectedStoreProduct, setSelectedStoreProduct] =
-    useState<StoreProduct | null>(null);
-  const [selectedVariant, setSelectedVariant] = useState<string>("");
-
-  // ── Convex mutations ──────────────────────────────────────────────────────
-  const updateQtyMutation = useMutation(api.orders.updateOrderProductQuantity);
-  const removeProductMutation = useMutation(api.orders.removeOrderProduct);
-  const addProductMutation = useMutation(api.orders.addProductToOrder);
-
-  // ── Store products (fetched only while panel is open) ────────────────────
-  const storeProducts = useQuery(
-    api.products.getProducts,
-    storeId && addProductMode !== null
-      ? { storeId: storeId as Id<"stores"> }
-      : "skip",
-  ) as StoreProduct[] | undefined;
-
-  const filteredProducts = (storeProducts ?? []).filter((p) =>
-    p.name.toLowerCase().includes(productSearch.toLowerCase()),
-  );
-
-  // Reset panel state when it opens
-  const openAddProductPanel = useCallback((mode: number) => {
-    setProductSearch("");
-    setSelectedStoreProduct(null);
-    setSelectedVariant("");
-    setAddProductMode(mode);
-  }, []);
-
-  const closeAddProductPanel = useCallback(() => {
-    setAddProductMode(null);
-  }, []);
+  // ── Container for Portals ──────────────────────────────────────────────
+  const sheetContentRef = useRef<HTMLDivElement>(null);
 
   // ── Handlers ──────────────────────────────────────────────────────────────
 
@@ -246,354 +209,151 @@ export function OrderDetails({
     try {
       await onAddAdminNote(order._id, newNote);
       setNewNote("");
-      setShowAddNote(false);
     } catch {
       setNoteError("Failed to save note. Please try again.");
     }
   };
 
-  const handleSaveQty = async (idx: number) => {
-    if (!order) return;
-    const parsed = parseInt(editingQtyValue, 10);
-    if (!isNaN(parsed) && parsed > 0) {
-      await updateQtyMutation({
-        orderId: order._id as Id<"orders">,
-        productIndex: idx,
-        quantity: parsed,
-      });
-    }
-    setEditingQtyIdx(null);
-  };
-
-  const handleRemoveProduct = async (idx: number) => {
-    if (!order) return;
-    setOpenMenuIdx(null);
-    await removeProductMutation({
-      orderId: order._id as Id<"orders">,
-      productIndex: idx,
-    });
-  };
-
-  const handleConfirmAddProduct = async () => {
-    if (!order || !selectedStoreProduct) return;
-
-    const product = {
-      productId: selectedStoreProduct._id,
-      name: selectedStoreProduct.name,
-      image: selectedStoreProduct.images?.[0],
-      price: selectedStoreProduct.basePrice,
-      quantity: 1,
-      variant: selectedVariant || undefined,
-    };
-
-    if (addProductMode !== null && addProductMode >= 0) {
-      await removeProductMutation({
-        orderId: order._id as Id<"orders">,
-        productIndex: addProductMode,
-      });
-    }
-
-    await addProductMutation({
-      orderId: order._id as Id<"orders">,
-      product,
-    });
-
-    setAddProductMode(null);
-  };
-
   if (!order) return null;
 
   return (
-    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <SheetContent
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()} >
+      <SheetContent 
+        ref={sheetContentRef}
         side="right"
         showCloseButton={false}
-        style={{
-          boxShadow: "var(--bottom-nav-shadow)",
-          background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
-        }}
-        className="w-full sm:max-w-[420px] h-full flex flex-col p-0 border-s border-white/5 outline-none gap-0"
-      >
-        {/* Accessible hidden title for screen readers */}
-        <SheetTitle className="sr-only">Order #{order.orderNumber} Details</SheetTitle>
-        {/* Header Fixed */}
-            <div className="flex items-center justify-between w-full px-6 pt-6 pb-2 shrink-0">
-               <div className="text-[var(--system-200)] font-sans font-medium tracking-wide uppercase">
-                 #{order.orderNumber}
-               </div>
-               <button onClick={onClose} className="p-2 rounded-full bg-white/5 hover:bg-white/10 transition-colors shrink-0">
-                 <Image src="/icons/CloseIcon.svg" alt="Close" width={14} height={14} className="opacity-70" />
-               </button>
-            </div>
+        className="overflow-hidden bg-[var(--system-600)] w-full sm:max-w-[420px] h-[calc(100vh-1rem)] flex flex-col outline-none gap-0 rounded-[22px] mx-2 my-2"
+      > 
 
-            {/* Scrollable Body */}
-            <div className="flex-1 overflow-y-auto w-full pb-4 scrollbar-hide">
-               
-              {/* ── Customer Info ────────────────────────────────────────────── */}
-              <div className="mx-4 p-4 rounded-[28px] border border-white/5 bg-white/5" style={{ boxShadow: "inset 0px 4px 10px 0px rgba(0,0,0,0.1), inset 0px 1px 0px 0px rgba(255,255,255,0.05)" }}>
-                <div className="flex items-center justify-between mb-4">
-                   <h2 className="text-3xl font-bold tracking-tight text-white m-0">
-                      <LockedData fallback="*** *** ***">
-                        {formatPhoneSpaced(order.customerPhone)}
-                      </LockedData>
-                   </h2>
-                   <div className="px-2 py-0.5 rounded-full border border-[var(--blue-200)] text-[var(--blue-200)] text-xs flex items-center gap-1.5 bg-[var(--blue-200)]/10">
+        {/* Header Fixed */}
+            <div className="flex items-center  w-full shrink-0 p-[12px] bg-white/4 rounded-t-[22px] overflow-hidden gap-4">
+               <div className="flex justify-between items-center w-full">
+               <SheetTitle className="text-[var(--system-300)] body-base font-normal">
+                 #{order.orderNumber}
+               </SheetTitle>
+               <div className="px-2 py-0.5 rounded-full border border-[var(--blue-200)] text-[var(--blue-200)] text-xs flex items-center gap-1.5 bg-[var(--blue-200)]/10">
                       <span className="w-1.5 h-1.5 rounded-full bg-[var(--blue-200)] shadow-[0_0_8px_rgba(93,160,219,0.8)]" />
                       {STATUS_LABELS[order.status as OrderStatus]?.label ?? order.status}
                    </div>
-                </div>
+                   </div>
+               <button onClick={onClose} className="shrink-0">
+                 <Image src="/icons/CloseIcon.svg" alt="Close" width={20} height={20} className="opacity-100 cursor-pointer hover:opacity-70 transition-opacity" />
+               </button>
 
-                <div className="w-full text-sm text-[var(--system-200)] font-medium space-y-3">
+            </div>
+
+            {/* Scrollable Body */}
+            <div className="flex flex-col gap-[8px] px-[20px] overflow-y-auto w-full scrollbar-hide pt-4">
+
+              {/* ── Customer Info ────────────────────────────────────────────── */}
+              <div className="flex flex-col gap-[8px] p-[12px] rounded-[24px] bg-white/5 ">
+                <div className="w-full text-sm text-[var(--system-200)] body-base flex flex-col gap-[8px]">
                    <div className="flex items-center">
                       <span className="min-w-[100px] text-white/50">Full Name</span>
-                      <span className="text-white text-base truncate flex-1">
+                      <span className="text-white flex-1">
                         <LockedData fallback="***">{order.customerName}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
                       <span className="min-w-[100px] text-white/50">Wilaya</span>
-                      <span className="text-white text-base truncate flex-1">
+                      <span className="text-white truncate flex-1">
                         <LockedData fallback="***">{order.customerWilaya}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Address</span>
-                      <span className="text-white text-base truncate flex-1">
+                      <span className="min-w-[100px] text-white/50">Commune</span>
+                      <span className="text-white truncate flex-1">
                         <LockedData fallback="***">{order.customerCommune}</LockedData>
                       </span>
                    </div>
-                   
-                   <div className="flex items-center justify-between pt-3">
-                      <span className="text-xs text-[var(--system-400)]">{formatDate(order.createdAt)}</span>
-                      <button 
-                         onClick={() => setShowAddNote(!showAddNote)}
-                         className="px-3 py-1.5 bg-white/5 hover:bg-white/10 border border-white/5 text-white rounded-full text-xs font-semibold transition-colors"
-                      >
-                         Add Notes
-                      </button>
+                   <div className="flex items-center">
+                      <span className="min-w-[100px] text-white/50">Address</span>
+                      <span className="text-white truncate flex-1">
+                        <LockedData fallback="***">{order.customerAddress}</LockedData>
+                      </span>
+                   </div>
+                   <div className="flex items-center">
+                      <span className="min-w-[100px] text-white/50">Date</span>
+                      <span className="text-white flex-1">
+                         <span className="label-xs text-[var(--system-300)]">{formatDate(order.createdAt)}</span>
+                      </span>
                    </div>
                 </div>
-
-                {/* Inline add-note form */}
-                {showAddNote && (
-                   <div className="mt-4 pt-4 border-t border-white/10">
-                      <textarea
-                        value={newNote}
-                        onChange={(e) => {
-                          setNewNote(e.target.value);
-                          setNoteError(null);
-                        }}
-                        placeholder="Private note (not visible to customer)…"
-                        className="w-full px-3 py-2 border border-white/10 bg-black/20 text-white label-xs resize-none rounded-[12px] focus:outline-none focus:border-white/30"
-                        rows={3}
-                      />
-                      {noteError && (
-                        <p className="label-xs text-destructive mt-1">{noteError}</p>
-                      )}
-                      <div className="flex gap-2 mt-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            setShowAddNote(false);
-                            setNewNote("");
-                            setNoteError(null);
-                          }}
-                          className="flex-1 bg-white/5 hover:bg-white/10 text-white"
-                        >
-                          Cancel
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={handleAddNote}
-                          disabled={!newNote.trim()}
-                          className="flex-1"
-                        >
-                          Save Note
-                        </Button>
-                      </div>
-                   </div>
-                )}
               </div>
 
+              <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
+                      }} />
+
               {/* ── Products Section ─────────────────────────────────────────── */}
-              <div className="mx-4 p-4 rounded-[28px] border border-white/5 bg-white/5 mt-3 space-y-4 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_4px_10px_rgba(0,0,0,0.1)]">
-                 <div className="space-y-4">
-                    {(order.products ?? []).map((item, idx: number) => (
-                       <div key={idx} className="flex items-center gap-4 group relative">
-                          <div className="w-[52px] h-[52px] bg-white/5 border border-white/5 rounded-[14px] flex-shrink-0 flex items-center justify-center overflow-hidden">
+              <div className="flex flex-col gap-2 p-3 rounded-[24px] bg-white/5">
+                 <div className="flex flex-col gap-1.5">
+                     {(order.products ?? []).map((item: OrderProduct, idx: number) => (
+                       <div key={idx} className="group relative flex flex-row gap-3 items-center">
+                          {/* Thumbnail */}
+                          <div className="w-[42px] h-[42px] bg-white/5 rounded-[12px] flex-shrink-0 flex items-center justify-center overflow-hidden">
                              {item.image ? (
-                                <Image src={item.image} alt={item.name} width={52} height={52} className="w-full h-full object-cover" />
+                                <Image src={item.image} alt={item.name} width={42} height={42} className="w-full h-full object-cover" />
                              ) : (
-                                <Package className="w-6 h-6 text-white/30" />
+                                <Package className="w-5 h-5 text-white/30" />
                              )}
                           </div>
-                          <div className="flex-1 min-w-0">
-                             <div className="flex justify-between items-start">
-                                <h4 className="text-white font-medium text-base truncate pr-2">{item.name}</h4>
-                                <span className="text-white font-semibold text-base flex-shrink-0">{formatPrice(item.price * item.quantity).replace('DZD','').trim()}</span>
-                             </div>
-                             <div className="flex items-center gap-2 mt-1">
-                                {editingQtyIdx === idx ? (
-                                   <input
-                                      type="number"
-                                      min={1}
-                                      value={editingQtyValue}
-                                      autoFocus
-                                      onChange={(e) => setEditingQtyValue(e.target.value)}
-                                      onBlur={() => handleSaveQty(idx)}
-                                      onKeyDown={(e) => {
-                                        if (e.key === "Enter") handleSaveQty(idx);
-                                        if (e.key === "Escape") setEditingQtyIdx(null);
-                                      }}
-                                      className="w-10 px-2 leading-none py-0.5 border border-white/20 bg-black/20 text-white text-xs rounded-full outline-none"
-                                    />
-                                ) : (
-                                   <button 
-                                      onClick={() => {
-                                         setEditingQtyIdx(idx);
-                                         setEditingQtyValue(String(item.quantity));
-                                      }}
-                                      className="bg-white/10 hover:bg-white/20 transition-colors border border-white/5 rounded-full px-2.5 py-0.5 text-xs text-white"
-                                   >
-                                      {item.quantity}
-                                   </button>
-                                )}
+
+                          {/* Product Info */}
+                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                             <h4 className="body-base text-[var(--system-100)] truncate font-medium">{item.name}</h4>
+                             <div className="flex items-center gap-2 mt-0.5">
+                                <div className="bg-white/10 border border-white/5 rounded-full px-2 py-0.5 text-[10px] text-white">
+                                   {item.quantity}
+                                </div>
                                 {item.variant && (
-                                   <div className="bg-white/10 border border-white/5 rounded-full px-2.5 py-0.5 text-xs text-white">
+                                   <div className="bg-white/10 border border-white/5 rounded-full px-2 py-0.5 text-[10px] text-white">
                                       {item.variant}
                                    </div>
                                 )}
                                 <div className="bg-white/5 border border-[var(--system-300)]/30 rounded-full px-2 py-0.5 flex items-center justify-center">
-                                   <div className="w-3 h-1 bg-[var(--blue-200)]/80 rounded-full" />
+                                   <div className="w-2.5 h-0.5 bg-[var(--blue-200)]/80 rounded-full" />
                                 </div>
                              </div>
                           </div>
 
-                          {/* 3 dots menu mapped to Dropdown */}
-                          <Dropdown
-                             isOpen={openMenuIdx === idx}
-                             onOpenChange={(open) => setOpenMenuIdx(open ? idx : null)}
-                             trigger={
-                               <button className="absolute right-0 top-1/2 -translate-y-[60%] p-1.5 opacity-0 group-hover:opacity-100 bg-black/60 backdrop-blur-md rounded-xl text-white transition-opacity hover:bg-black/80">
-                                 <MoreHorizontal className="w-[18px] h-[18px]" />
-                               </button>
-                             }
-                           >
-                             <DropdownItem onClick={() => { setOpenMenuIdx(null); openAddProductPanel(idx); }}>
-                               <RefreshCw className="w-3.5 h-3.5" /> Replace
-                             </DropdownItem>
-                             <DropdownSeparator />
-                             <DropdownItem className="text-destructive" onClick={() => handleRemoveProduct(idx)}>
-                               <Trash2 className="w-3.5 h-3.5" /> Delete
-                             </DropdownItem>
-                          </Dropdown>
+                          {/* Price */}
+                          <div className="relative flex items-center justify-end min-w-[65px]">
+                             <span className="text-white font-semibold text-base">
+                                {formatPrice(item.price * item.quantity).replace('DZD','').trim()}
+                             </span>
+                          </div>
                        </div>
                     ))}
                  </div>
 
-                 <div className="flex justify-between items-center pt-2">
-                    <div className="text-sm font-medium text-[var(--system-200)]/80">Cart items</div>
-                    <button 
-                       onClick={() => openAddProductPanel(-1)}
-                       className="px-3 py-1 bg-white/5 border border-white/10 hover:bg-white/10 text-white rounded-full text-xs font-semibold transition-colors"
-                    >
-                       Add items
-                    </button>
+                 <div className="flex justify-between items-center">
+                    <div className="label-xs text-[var(--system-300)]">Cart items</div>
                  </div>
-                 
-                 {/* Product Panel replacing/adding inline block */}
-                 {addProductMode !== null && (
-                    <div className="mt-3 pt-4 border-t border-white/10">
-                      <p className="label-xs text-white/50 mb-2 font-medium">
-                        {addProductMode >= 0 ? "Replace Item" : "Add Item"}
-                      </p>
-                      <div className="relative mb-3">
-                        <Search className="absolute start-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/50" />
-                        <input
-                          type="text"
-                          value={productSearch}
-                          onChange={(e) => setProductSearch(e.target.value)}
-                          placeholder="Search..."
-                          className="w-full ps-8 pe-3 py-2 bg-black/20 border border-white/10 rounded-[12px] label-xs text-white focus:outline-none focus:border-white/30"
-                        />
-                      </div>
-                      <div className="max-h-40 overflow-y-auto space-y-1 mb-3 scrollbar-hide">
-                        {filteredProducts.map((p) => (
-                          <button
-                            key={p._id}
-                            onClick={() => {
-                              setSelectedStoreProduct(p);
-                              setSelectedVariant("");
-                            }}
-                            className={`w-full flex items-center gap-3 px-2 py-2 rounded-[12px] text-start transition-colors border ${
-                              selectedStoreProduct?._id === p._id
-                                ? "bg-[var(--info)]/20 border-[var(--info)]/50"
-                                : "border-transparent hover:bg-white/5"
-                            }`}
-                          >
-                            <div className="w-8 h-8 rounded-[8px] bg-white/5 flex items-center justify-center flex-shrink-0 overflow-hidden">
-                              {p.images?.[0] ? (
-                                <Image src={p.images[0]} alt={p.name} width={32} height={32} className="object-cover" />
-                              ) : (
-                                <Package className="w-4 h-4 text-white/50" />
-                              )}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="label-xs text-white truncate">{p.name}</p>
-                              <p className="text-[10px] text-white/50">{formatPrice(p.basePrice)}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Variant picker */}
-                      {selectedStoreProduct && (selectedStoreProduct.variants ?? []).length > 0 && (
-                        <div className="mb-3 space-y-2">
-                          {selectedStoreProduct.variants!.map((group) => (
-                            <div key={group.name} className="bg-black/10 p-2 rounded-xl">
-                              <p className="text-[10px] text-white/50 mb-2 uppercase tracking-wide">{group.name}</p>
-                              <div className="flex flex-wrap gap-1.5">
-                                {group.options.map((opt) => {
-                                  const value = `${group.name}: ${opt.name}`;
-                                  return (
-                                    <button
-                                      key={opt.name}
-                                      onClick={() => setSelectedVariant(value)}
-                                      className={`text-[11px] px-2.5 py-1 rounded-full border transition-colors ${
-                                        selectedVariant === value
-                                          ? "border-[var(--info)] bg-[var(--info)]/20 text-white"
-                                          : "border-white/10 text-white/70 hover:bg-white/5 hover:text-white"
-                                      }`}
-                                    >
-                                      {opt.name}
-                                    </button>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost" onClick={closeAddProductPanel} className="flex-1 bg-white/5 hover:bg-white/10 text-white">Cancel</Button>
-                        <Button size="sm" onClick={async () => { await handleConfirmAddProduct(); closeAddProductPanel(); }} disabled={!selectedStoreProduct} className="flex-1">
-                          {addProductMode >= 0 ? "Confirm Replace" : "Confirm Add"}
-                        </Button>
-                      </div>
-                    </div>
-                 )}
               </div>
 
               {/* ── Totals Section ───────────────────────────────────────────── */}
-              <div className="mx-4 p-4 rounded-[28px] border border-white/5 bg-white/5 mt-3 space-y-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.05),0_4px_10px_rgba(0,0,0,0.1)]">
+
+              <div className=" p-4 rounded-[24px] border border-white/5 bg-white/5 mt-3 space-y-3 ">
                  <div className="flex justify-between items-center text-[var(--system-200)] text-sm font-medium">
                     <span>Subtotal</span>
                     <span className="text-white">{formatPrice(order.subtotal).replace('DZD', '').trim()}</span>
                  </div>
                  <div className="flex justify-between items-center text-[var(--system-200)] text-sm pb-3 border-b border-white/10 font-medium">
-                    <span>Delivery</span>
+                    <div className="flex items-center gap-2">
+                       <span>Delivery</span>
+                       {order.deliveryType && (
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--system-400)] text-[var(--system-100)] text-[10px]">
+                             {order.deliveryType === "home" ? (
+                                <Home className="w-3 h-3" />
+                             ) : (
+                                <Building2 className="w-3 h-3" />
+                             )}
+                             <span className="capitalize">{order.deliveryType}</span>
+                          </div>
+                       )}
+                    </div>
                     <span className="text-white">{formatPrice(order.deliveryCost).replace('DZD', '').trim()}</span>
                  </div>
                  <div className="flex justify-between items-center text-[var(--system-200)] text-[15px] font-medium pt-1">
@@ -602,11 +362,63 @@ export function OrderDetails({
                  </div>
               </div>
 
-              {/* ── Call Logs Section ────────────────────────────────────────── */}
+              {/* ── Persistent Note Section ─────────────────────────────────── */}
+              <div className="mt-3 p-4 rounded-[24px] bg-white/5 border border-white/5 space-y-3">
+                 <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-white/80">Admin Notes</span>
+                 </div>
+                 
+                 {/* Display existing notes */}
+                 {(order.adminNotes ?? []).length > 0 && (
+                    <div className="space-y-2 max-h-32 overflow-y-auto scrollbar-hide">
+                       {(order.adminNotes ?? []).slice().reverse().map((note: AdminNote) => (
+                          <div key={note.id} className="p-2 rounded-[12px] bg-white/5 border border-white/10">
+                             <p className="text-sm text-white">{note.text}</p>
+                             <p className="text-[10px] text-white/40 mt-1">{formatDate(note.timestamp)}</p>
+                          </div>
+                       ))}
+                    </div>
+                 )}
+                 
+                 <textarea
+                    value={newNote}
+                    onChange={(e) => {
+                      setNewNote(e.target.value);
+                      setNoteError(null);
+                    }}
+                    placeholder="Type a private note here..."
+                    className="w-full px-3 py-2 border border-[var(--system-500)] bg-white/5 text-white label-xs resize-none rounded-[12px] focus:outline-none focus:border-white/30"
+                    rows={3}
+                 />
+                 {noteError && (
+                    <p className="label-xs text-destructive">{noteError}</p>
+                 )}
+                 <Button
+                    size="sm"
+                    onClick={handleAddNote}
+                    disabled={!newNote.trim()}
+                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                 >
+                    Save Note
+                 </Button>
+              </div>
+
+            </div> {/* End Scrollable Body */}
+
+            {/* ── Fixed Footer Actions ─────────────────────────────────────── */}
+            <div className="w-full p-4 pb-6 pt-3 mt-auto shrink-0 z-10 box-border">
+              
+              <div className="flex items-center w-full px-[12px] py-[8px] justify-center rounded-[14px] bg-black/10 mb-1">
+                   <h2 className="text-3xl text-white">
+                      <LockedData fallback="*** *** ***">
+                        {formatPhoneSpaced(order.customerPhone)}
+                      </LockedData>
+                   </h2>
+                </div>
+                 {/* ── Call Logs Section ────────────────────────────────────────── */}
               <div className="mx-4 mt-4 relative pb-2">
-                 <div className="text-[13px] text-white font-medium mb-3 ms-1">Call Log</div>
                  <div className="flex items-center justify-between">
-                    <CallSlotsHover callLog={(order.callLog ?? []).map((c) => ({ ...c, outcome: c.outcome as CallLog["outcome"] }))} />
+                     <CallSlotsHover callLog={(order.callLog ?? []).map((c: CallLogEntry) => ({ ...c, outcome: c.outcome as CallLog["outcome"] }))} />
                     
                     <div className="flex gap-2">
                        <button 
@@ -630,34 +442,7 @@ export function OrderDetails({
                     </div>
                  </div>
               </div>
-              
-              {/* Optional Audit Trail inside body just for completeness if opened later */}
-              {(order.auditTrail?.length ?? 0) > 0 && (
-                <div className="mx-4 mt-4 p-4 rounded-[28px] bg-white/5 border border-white/5">
-                   <button onClick={() => setShowAuditTrail(!showAuditTrail)} className="w-full flex justify-between items-center text-white/80 hover:text-white group">
-                      <span className="text-sm font-medium flex items-center gap-2"><Clock className="w-4 h-4 opacity-70" /> View History</span>
-                      <ChevronDown className={`w-4 h-4 transition-transform ${showAuditTrail ? 'rotate-180' : ''}`} />
-                   </button>
-                   {showAuditTrail && (
-                      <div className="mt-4 space-y-3 max-h-48 overflow-y-auto scrollbar-hide">
-                         {(order.auditTrail ?? []).slice().reverse().map(entry => (
-                            <div key={entry.id} className="flex gap-3 text-white/80">
-                               <CheckCircle className="w-4 h-4 mt-0.5 text-white/50 shrink-0" />
-                               <div>
-                                  <p className="text-sm">{entry.details}</p>
-                                  <p className="text-[10px] text-white/40 mt-0.5">{formatDate(entry.timestamp)}</p>
-                               </div>
-                            </div>
-                         ))}
-                      </div>
-                   )}
-                </div>
-              )}
 
-            </div> {/* End Scrollable Body */}
-
-            {/* ── Fixed Footer Actions ─────────────────────────────────────── */}
-            <div className="w-full p-4 pb-6 pt-3 mt-auto shrink-0 z-10 box-border">
               {order.status === "new" && (
                 <div className="flex gap-4 w-full">
                   <button
