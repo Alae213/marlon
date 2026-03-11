@@ -630,12 +630,12 @@ export function ListView({
       </div>
 
       {/* Table */}
-      <div className=" rounded-xl overflow-visible ">
+      <div className="overflow-visible">
         {/* Table Header - with rounded top corners */}
-        <div className="bg-[var(--system-100)] rounded-xl">
+        <div className="bg-[var(--system-100)] rounded-[12px] py-[6px]">
           <div className="grid grid-cols-12 gap-0">
             {/* Checkbox */}
-            <div className="col-span-1 px-3 py-3">
+            <div className="col-span-1 px-3 flex items-center">
               <input
                 type="checkbox"
                 checked={selectAll}
@@ -644,25 +644,25 @@ export function ListView({
               />
             </div>
             {/* Customer */}
-            <div className="col-span-3 px-3 py-3 body-base text-[var(--system-600)]">Customer</div>
+            <div className="col-span-3 px-3 body-base text-[var(--system-600)] flex items-center">Customer</div>
             {/* Product */}
-            <div className="col-span-3 px-3 py-3 body-base text-[var(--system-600)]">Product</div>
+            <div className="col-span-3 px-3 body-base text-[var(--system-600)] flex items-center">Product</div>
             {/* State */}
-            <div className="col-span-2 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("status")}>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("status")}>
               <div className="flex items-center gap-1">
                 State
                 <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
               </div>
             </div>
             {/* Total */}
-            <div className="col-span-2 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("total")}>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("total")}>
               <div className="flex items-center gap-1">
                 Total
                 <SortIcon field="total" sortField={sortField} sortDirection={sortDirection} />
               </div>
             </div>
             {/* Date */}
-            <div className="col-span-1 px-3 py-3 body-base text-[var(--system-600)] cursor-pointer" onClick={() => onSort("date")}>
+            <div className="col-span-1 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("date")}>
               <div className="flex items-center gap-1">
                 Date
                 <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />

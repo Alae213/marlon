@@ -50,7 +50,7 @@ export function StatusDropdown({
             setIsOpen(false);
           }}
         >
-          <span className={`w-2 h-2 rounded-full ${statusColors[status].dot}`} />
+          <span className={`w-2 h-2 rounded-[12px] ${statusColors[status].dot}`} />
           <span className="flex-1">{STATUS_LABELS[status]?.label || status}</span>
           {currentStatus === status && <Check className="w-3.5 h-3.5" />}
         </DropdownItem>

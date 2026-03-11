@@ -189,7 +189,7 @@
     font-family: var(--font-sans);
     font-weight: var(--font-weight-regular);
     font-size: var(--font-size-xs);
-    line-height: 160%;
+    line-height: 120%;
     letter-spacing: var(--letter-spacing-normal);
   }
 

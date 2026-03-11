@@ -125,12 +125,12 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
   );
 
   return (
-    <div className="flex items-end gap-1 h-7">
+    <div className="flex items-end gap-1 h-[22px]">
       {slots.map((call, index) => (
         <HoverCard key={index} openDelay={200} closeDelay={100}>
           <HoverCardTrigger asChild>
             <div
-              className={`w-1.5 rounded-[12px] transition-colors cursor-default ${
+              className={`w-[5px] border-[1px] border-white/8 rounded-[12px] transition-colors cursor-default  ${
                 call ? callOutcomeBg(call.outcome) : "bg-white/10"
               }`}
               style={{ height:"100%" }}
@@ -147,8 +147,6 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium text-white whitespace-nowrap"
                 style={{
                   background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
-                  boxShadow: "var(--bottom-nav-shadow)",
-                  border: "1px solid rgba(255,255,255,0.08)",
                 }}
               >
                 {CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label}
@@ -183,7 +181,7 @@ export function OrderDetails({
   );
   const order = liveOrder || initialOrder;
 
-  // ── Notes (State for Phase 2) ───────────────────────────────────────────
+  // ── Notes ───────────────────────────────────────────
   const [newNote, setNewNote] = useState("");
   const [noteError, setNoteError] = useState<string | null>(null);
 
@@ -226,71 +224,69 @@ export function OrderDetails({
       > 
 
         {/* Header Fixed */}
-            <div className="flex items-center  w-full shrink-0 p-[12px] bg-white/4 rounded-t-[22px] overflow-hidden gap-4">
-               <div className="flex justify-between items-center w-full">
-               <SheetTitle className="text-[var(--system-300)] body-base font-normal">
-                 #{order.orderNumber}
-               </SheetTitle>
-               <div className="px-2 py-0.5 rounded-full border border-[var(--blue-200)] text-[var(--blue-200)] text-xs flex items-center gap-1.5 bg-[var(--blue-200)]/10">
-                      <span className="w-1.5 h-1.5 rounded-full bg-[var(--blue-200)] shadow-[0_0_8px_rgba(93,160,219,0.8)]" />
-                      {STATUS_LABELS[order.status as OrderStatus]?.label ?? order.status}
+        <div className="absolute top-0 left-0 right-0 z-10 flex items-center w-full p-[12px] bg-[#1F1F1Fcf] backdrop-blur-sm border-b border-white/10 overflow-hidden gap-4">
+          <div className="flex justify-between items-center w-full">
+            <SheetTitle className="text-[var(--system-300)] body-base font-normal">
+              #{order.orderNumber}
+            </SheetTitle>
+            <div className="px-2 py-0.5 rounded-full border border-[var(--blue-200)] text-[var(--blue-200)] text-xs flex items-center gap-1.5 bg-[var(--blue-200)]/10">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--blue-200)] shadow-[0_0_8px_rgba(93,160,219,0.8)]" />
+              {STATUS_LABELS[order.status as OrderStatus]?.label ?? order.status}
+            </div>
                    </div>
-                   </div>
-               <button onClick={onClose} className="shrink-0">
-                 <Image src="/icons/CloseIcon.svg" alt="Close" width={20} height={20} className="opacity-100 cursor-pointer hover:opacity-70 transition-opacity" />
-               </button>
-
             </div>
 
             {/* Scrollable Body */}
-            <div className="flex flex-col gap-[8px] px-[20px] overflow-y-auto w-full scrollbar-hide pt-4">
+            <div className="flex flex-col gap-[12px] px-[20px] overflow-y-auto w-full scrollbar-hide pt-[60px] pb-60 flex-1">
 
               {/* ── Customer Info ────────────────────────────────────────────── */}
-              <div className="flex flex-col gap-[8px] p-[12px] rounded-[24px] bg-white/5 ">
-                <div className="w-full text-sm text-[var(--system-200)] body-base flex flex-col gap-[8px]">
+              <div className="flex flex-col gap-[8px] p-[14px] rounded-[16px] bg-white/5 ">
+                <div className="w-full body-base flex flex-col gap-[12px]">
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Full Name</span>
-                      <span className="text-white flex-1">
+                      <span className="min-w-[120px] text-[var(--system-200)]">Full Name</span>
+                      <span className="flex-1 text-[var(--system-300)]">
                         <LockedData fallback="***">{order.customerName}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Wilaya</span>
-                      <span className="text-white truncate flex-1">
+                      <span className="min-w-[120px] text-[var(--system-200)]">Wilaya</span>
+                      <span className="flex-1 text-[var(--system-300)]">
                         <LockedData fallback="***">{order.customerWilaya}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Commune</span>
-                      <span className="text-white truncate flex-1">
+                      <span className="min-w-[120px] text-[var(--system-200)]">Commune</span>
+                      <span className="flex-1 text-[var(--system-300)]">
                         <LockedData fallback="***">{order.customerCommune}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Address</span>
-                      <span className="text-white truncate flex-1">
+                      <span className="min-w-[120px] text-[var(--system-200)]">Address</span>
+                      <span className="flex-1 text-[var(--system-300)]">
                         <LockedData fallback="***">{order.customerAddress}</LockedData>
                       </span>
                    </div>
                    <div className="flex items-center">
-                      <span className="min-w-[100px] text-white/50">Date</span>
-                      <span className="text-white flex-1">
-                         <span className="label-xs text-[var(--system-300)]">{formatDate(order.createdAt)}</span>
+                      <span className="min-w-[120px] text-[var(--system-200)]">Date</span>
+                      <span className="flex-1 text-[var(--system-300)]">
+                         <LockedData fallback="***">{formatDate(order.createdAt)}</LockedData>
                       </span>
                    </div>
                 </div>
               </div>
 
-              <div className="h-px w-full shrink-0" style={{
+              <div className="h-px w-full px-[22px]">
+                <div className="h-px w-full shrink-0" style={{
                         background: "rgba(242, 242, 242, 0.10)",
                         boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
-                      }} />
+                }} />
+              </div>
 
               {/* ── Products Section ─────────────────────────────────────────── */}
-              <div className="flex flex-col gap-2 p-3 rounded-[24px] bg-white/5">
+              <div className="flex flex-col gap-[6px] p-[14px] rounded-[16px] bg-white/5">
                  <div className="flex flex-col gap-1.5">
                      {(order.products ?? []).map((item: OrderProduct, idx: number) => (
-                       <div key={idx} className="group relative flex flex-row gap-3 items-center">
+                       <div key={idx} className="group relative flex flex-row gap-3 items-center p-[6px]">
                           {/* Thumbnail */}
                           <div className="w-[42px] h-[42px] bg-white/5 rounded-[12px] flex-shrink-0 flex items-center justify-center overflow-hidden">
                              {item.image ? (
@@ -300,21 +296,18 @@ export function OrderDetails({
                              )}
                           </div>
 
-                          {/* Product Info */}
-                          <div className="flex-1 min-w-0 flex flex-col gap-0.5">
-                             <h4 className="body-base text-[var(--system-100)] truncate font-medium">{item.name}</h4>
-                             <div className="flex items-center gap-2 mt-0.5">
-                                <div className="bg-white/10 border border-white/5 rounded-full px-2 py-0.5 text-[10px] text-white">
+                          {/* Info */}
+                          <div className="flex-1 min-w-0 flex flex-col gap-[4px]">
+                             <h4 className="body-base text-[var(--system-100)]">{item.name}</h4>
+                             <div className="flex items-center gap-[4px]">
+                                <div className="bg-white/10 border border-white/5 rounded-[12px] px-3 label-xs text-white">
                                    {item.quantity}
                                 </div>
                                 {item.variant && (
-                                   <div className="bg-white/10 border border-white/5 rounded-full px-2 py-0.5 text-[10px] text-white">
+                                   <div className="bg-white/10 border border-white/5 rounded-[12px] px-3 label-xs text-white">
                                       {item.variant}
                                    </div>
                                 )}
-                                <div className="bg-white/5 border border-[var(--system-300)]/30 rounded-full px-2 py-0.5 flex items-center justify-center">
-                                   <div className="w-2.5 h-0.5 bg-[var(--blue-200)]/80 rounded-full" />
-                                </div>
                              </div>
                           </div>
 
@@ -327,28 +320,31 @@ export function OrderDetails({
                        </div>
                     ))}
                  </div>
+              </div>
 
-                 <div className="flex justify-between items-center">
-                    <div className="label-xs text-[var(--system-300)]">Cart items</div>
-                 </div>
+              <div className="h-px w-full px-[22px]">
+                <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
+                }} />
               </div>
 
               {/* ── Totals Section ───────────────────────────────────────────── */}
 
-              <div className=" p-4 rounded-[24px] border border-white/5 bg-white/5 mt-3 space-y-3 ">
-                 <div className="flex justify-between items-center text-[var(--system-200)] text-sm font-medium">
+              <div className="p-[14px] rounded-[16px] border border-white/5 bg-white/5 flex flex-col gap-[8px]">
+                 <div className="flex justify-between items-center text-[var(--system-200)] body-base">
                     <span>Subtotal</span>
                     <span className="text-white">{formatPrice(order.subtotal).replace('DZD', '').trim()}</span>
                  </div>
-                 <div className="flex justify-between items-center text-[var(--system-200)] text-sm pb-3 border-b border-white/10 font-medium">
+                 <div className="flex justify-between items-center text-[var(--system-200)] body-base">
                     <div className="flex items-center gap-2">
                        <span>Delivery</span>
                        {order.deliveryType && (
-                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[var(--system-400)] text-[var(--system-100)] text-[10px]">
+                          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-[8px] bg-white/10 text-[var(--system-100)] text-[10px]">
                              {order.deliveryType === "home" ? (
-                                <Home className="w-3 h-3" />
-                             ) : (
                                 <Building2 className="w-3 h-3" />
+                             ) : (
+                                <Home className="w-3 h-3" />
                              )}
                              <span className="capitalize">{order.deliveryType}</span>
                           </div>
@@ -356,16 +352,28 @@ export function OrderDetails({
                     </div>
                     <span className="text-white">{formatPrice(order.deliveryCost).replace('DZD', '').trim()}</span>
                  </div>
-                 <div className="flex justify-between items-center text-[var(--system-200)] text-[15px] font-medium pt-1">
+                 <div className="h-px w-full px-[2px]">
+                <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.20)",
+                }} />
+              </div>
+                 <div className="flex justify-between items-center text-[var(--system-200)] body-base pt-1">
                     <span>Total Price</span>
                     <span className="text-white">{formatPrice(order.total).replace('DZD', '').trim()}</span>
                  </div>
               </div>
-
+              
+              <div className="h-px w-full px-[22px]">
+                <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
+                }} />
+              </div>
               {/* ── Persistent Note Section ─────────────────────────────────── */}
-              <div className="mt-3 p-4 rounded-[24px] bg-white/5 border border-white/5 space-y-3">
+              <div className="p-[14px] rounded-[16px] bg-white/5 border border-white/5 space-y-3 items-end">
                  <div className="flex justify-between items-center">
-                    <span className="text-sm font-medium text-white/80">Admin Notes</span>
+                    <span className="body-base   text-white/80">Admin Notes</span>
                  </div>
                  
                  {/* Display existing notes */}
@@ -393,55 +401,65 @@ export function OrderDetails({
                  {noteError && (
                     <p className="label-xs text-destructive">{noteError}</p>
                  )}
-                 <Button
-                    size="sm"
+                 <div className="flex justify-end">
+                 <button
                     onClick={handleAddNote}
                     disabled={!newNote.trim()}
-                    className="w-full bg-white/10 hover:bg-white/20 text-white border border-white/10"
+                    className="px-2 py-1 bg-white/10 hover:bg-white/20 rounded-[10px] w-[100px] text-white border border-white/10 cursor-pointer"
                  >
                     Save Note
-                 </Button>
+                 </button>
+                 </div>
               </div>
 
             </div> {/* End Scrollable Body */}
 
             {/* ── Fixed Footer Actions ─────────────────────────────────────── */}
-            <div className="w-full p-4 pb-6 pt-3 mt-auto shrink-0 z-10 box-border">
+            <div className="absolute  bottom-0 left-0 right-0 w-full p-[20px] flex flex-col gap-[10px] z-10 bg-[#1F1F1Fcf] backdrop-blur-sm border-t border-white/10 pt-[12px]">
               
-              <div className="flex items-center w-full px-[12px] py-[8px] justify-center rounded-[14px] bg-black/10 mb-1">
+              <div className="flex items-center w-full px-[12px] py-[8px] justify-center rounded-[14px] bg-black/30">
                    <h2 className="text-3xl text-white">
                       <LockedData fallback="*** *** ***">
                         {formatPhoneSpaced(order.customerPhone)}
                       </LockedData>
                    </h2>
                 </div>
+
                  {/* ── Call Logs Section ────────────────────────────────────────── */}
-              <div className="mx-4 mt-4 relative pb-2">
-                 <div className="flex items-center justify-between">
+              <div className="px-[8px]">
+                 <div className="flex items-center justify-between ">
                      <CallSlotsHover callLog={(order.callLog ?? []).map((c: CallLogEntry) => ({ ...c, outcome: c.outcome as CallLog["outcome"] }))} />
                     
                     <div className="flex gap-2">
                        <button 
                           onClick={() => handleAddCallLog("answered")}
-                          className="h-9 px-4 rounded-full bg-[#1bc57d] hover:bg-[#1bc57d]/80 text-white flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm transition-colors border border-transparent shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                          className="label-xs h-[26px] py-[4px] px-[8px] rounded-[8px] bg-[#00CF7D] hover:bg-[#00CF7D]/80 text-white flex items-center justify-center gap-[8px] transition-colors cursor-pointer"
                        >
                           <Phone className="w-[14px] h-[14px]" style={{ strokeWidth: 2.5 }} /> Answered
                        </button>
                        <button 
                           onClick={() => handleAddCallLog("no_answer")}
-                          className="h-9 w-[46px] rounded-full bg-[#fa9a34] hover:bg-[#fa9a34]/80 text-white flex items-center justify-center shadow-sm transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                          className="label-xs h-[26px] py-[4px] px-[8px] rounded-[8px] bg-[#FC9239] hover:bg-[#FC9239]/80 text-white flex items-center justify-center gap-[8px] transition-colors cursor-pointer"
                        >
                           <PhoneMissed className="w-[15px] h-[15px]" style={{ strokeWidth: 2.5 }} />
                        </button>
                        <button 
                           onClick={() => handleAddCallLog("refused")}
-                          className="h-9 w-[46px] rounded-full bg-[#f44055] hover:bg-[#f44055]/80 text-white flex items-center justify-center shadow-sm transition-colors shadow-[inset_0_1px_0_rgba(255,255,255,0.3)]"
+                          className="label-xs h-[26px] py-[4px] px-[8px] rounded-[8px] bg-[#E03045] hover:bg-[#E03045]/80 text-white flex items-center justify-center gap-[8px] transition-colors cursor-pointer"
                        >
                           <PhoneOff className="w-[15px] h-[15px]" style={{ strokeWidth: 2.5 }} />
                        </button>
                     </div>
                  </div>
               </div>
+
+              <div className="h-px w-full px-[22px]">
+                <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
+                }} />
+              </div>
+
 
               {order.status === "new" && (
                 <div className="flex gap-4 w-full">
