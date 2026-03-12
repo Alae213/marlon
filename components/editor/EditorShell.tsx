@@ -23,7 +23,7 @@ export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: Edito
           background: "var(--gradient-popup)",
           boxShadow: "var(--shadow-xl-shadow)",
         }}
-        className="mx-auto flex h-[96vh] w-full max-w-7xl flex-col gap-[8px] overflow-hidden rounded-t-[20px] px-[12px] pb-[0px] pt-[8px]"
+        className="flex flex-col gap-[8px] w-full h-[96vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
       >
         {/* Top Bar */}
         <div className="flex items-center justify-between px-[8px]">
@@ -34,7 +34,7 @@ export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: Edito
               alt="Window"
               width={24}
               height={24}
-              className="h-6 w-6 cursor-pointer"
+              className="h-6 w-8 cursor-pointer"
             />
             {leftSlot}
           </div>
@@ -62,7 +62,7 @@ export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: Edito
         <ScrollArea.Root className="h-full w-full overflow-hidden rounded-[12px] rounded-b-[0px] bg-none">
           <ScrollArea.Viewport
             style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-            className="h-full flex-1 overflow-hidden overflow-y-auto rounded-[12px] rounded-b-[0px] border-t-[1px] border-[var(--system-400)] bg-[var(--system-100)]"
+            className="h-full flex-1 overflow-hidden overflow-y-auto rounded-[12px] rounded-b-[0px] bg-[var(--system-100)]"
           >
             <div className="min-h-full px-6 py-10 sm:px-10 lg:px-16">
               {children}

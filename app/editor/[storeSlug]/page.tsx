@@ -338,7 +338,6 @@ const handleUpdateProduct = async (product: ProductFormData) => {
 
   const topBarLeft = (
     <Link href="/" className="flex items-center gap-2 text-sm font-semibold text-[var(--system-300)]">
-      <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-7 w-auto" />
     </Link>
   );
 
@@ -355,20 +354,21 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         href={`/${storeSlug}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex h-8 items-center justify-center gap-2 rounded-md border border-[#e5e5e5] px-3 text-xs font-medium text-[#171717] transition-colors hover:bg-[#f5f5f5] dark:border-[#404040] dark:text-[#fafafa] dark:hover:bg-[#171717]"
-      >
-        <ExternalLink className="h-3.5 w-3.5" />
-        معاينة
-      </a>
-      <Button
-        variant="outline"
-        onClick={() => setIsSettingsOpen(true)}
+        title="معاينة"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white transition-all duration-150 hover:-translate-y-[1px] hover:bg-[var(--system-400)] dark:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
         aria-label="فتح الإعدادات"
-        className="h-8 rounded-full px-3 text-xs"
       >
-        <Settings className="h-3.5 w-3.5" />
-        الإعدادات
-      </Button>
+        <ExternalLink className="h-4 w-4" />
+      </a>
+      <button
+        type="button"
+        onClick={() => setIsSettingsOpen(true)}
+        title="الإعدادات"
+        className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white transition-all duration-150 hover:-translate-y-[1px] hover:bg-[var(--system-400)] dark:hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
+        aria-label="فتح الإعدادات"
+      >
+        <Settings className="h-4 w-4" />
+      </button>
       <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-8 h-8" } }} />
     </div>
   );
