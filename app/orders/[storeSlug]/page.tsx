@@ -106,7 +106,7 @@ function OrdersContent({
               {
                 id: `call_${Date.now()}`,
                 timestamp: Date.now(),
-                outcome,
+                outcome: outcome as CallLog["outcome"],
                 notes,
               },
             ],
@@ -265,7 +265,6 @@ function OrdersContent({
           onStatusChange={handleStatusChange}
           onAddCallLog={handleAddCallLog}
           onAddAdminNote={handleAddAdminNote}
-          storeId={storeId}
         />
 
         <BottomNavigation storeSlug={storeSlug} currentPage="orders" />

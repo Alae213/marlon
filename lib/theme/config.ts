@@ -64,6 +64,8 @@ export interface ThemeRadius {
   sm: string;
   md: string;
   lg: string;
+  xl: string;
+  "2xl": string;
   full: string;
 }
 
@@ -145,10 +147,12 @@ export const lightTheme: Theme = {
   },
   radius: {
     none: "0",
-    sm: "0",
-    md: "0",
-    lg: "0",
-    full: "0",
+    sm: "0.125rem",
+    md: "0.375rem",
+    lg: "0.5rem",
+    xl: "0.75rem",
+    "2xl": "1rem",
+    full: "9999px",
   },
   shadows: {
     sm: "none",

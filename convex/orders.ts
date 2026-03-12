@@ -232,7 +232,16 @@ export const addCallLog = mutation({
     const { order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
-    // Use immutable spread instead of mutating array
+    
+    // Add to callLog array
+    const callLog = [...(order.callLog || []), {
+      id: `call_${now}`,
+      timestamp: now,
+      outcome: args.outcome,
+      notes: args.notes,
+    }];
+
+    // Add to timeline
     const timeline = [...(order.timeline || []), {
       status: "call_log",
       timestamp: now,
@@ -243,6 +252,7 @@ export const addCallLog = mutation({
       callAttempts: (order.callAttempts || 0) + 1,
       lastCallOutcome: args.outcome,
       lastCallAt: now,
+      callLog,
       timeline,
       updatedAt: now,
     });

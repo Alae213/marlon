@@ -108,6 +108,10 @@ function applyTheme(themeName: ThemeName) {
   Object.entries(theme.colors).forEach(([key, value]) => {
     root.style.setProperty(`--${kebabCase(key)}`, value);
   });
+
+  Object.entries(theme.radius).forEach(([key, value]) => {
+    root.style.setProperty(`--radius-${kebabCase(key)}`, value);
+  });
 }
 
 function kebabCase(str: string): string {
