@@ -15,7 +15,7 @@ interface EditorShellProps {
 
 export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: EditorShellProps) {
   return (
-    <div className="fixed inset-0 flex h-screen w-screen flex-col bg-[var(--system-200)]">
+    <div className="fixed inset-0 flex h-screen w-screen flex-col bg-[var(--system-50)]">
       <div className="flex-1" />
 
       <div
@@ -64,7 +64,7 @@ export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: Edito
             style={{ boxShadow: "var(--shadow-inside-shadow)" }}
             className="h-full flex-1 overflow-hidden overflow-y-auto rounded-[12px] rounded-b-[0px] bg-[var(--system-100)]"
           >
-            <div className="min-h-full px-6 py-10 sm:px-10 lg:px-16">
+            <div className="min-h-full px-0 py-6">
               {children}
             </div>
           </ScrollArea.Viewport>

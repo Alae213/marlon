@@ -50,7 +50,7 @@ function StoreCard({ store }: { store: StoreData }) {
 
   return (
     <Link href={`/editor/${store.slug}`} className="group block">
-      <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px]"
+      <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
             style={{ borderRadius: '32px' }}>
 
               <div className="flex items-center justify-between">

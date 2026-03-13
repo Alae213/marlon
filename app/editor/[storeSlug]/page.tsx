@@ -376,37 +376,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
   return (
     <>
       <EditorShell leftSlot={topBarLeft} centerSlot={topBarCenter} rightSlot={topBarRight}>
-        <div className="space-y-6">
-          {/* Header with Logo and Nav (preview area) */}
-          <header className="flex items-center gap-4 py-4 md:gap-8">
-            <div className="flex items-center gap-3">
-              <Image
-                src="/Logo-text.svg"
-                alt="Marlon Logo"
-                width={118}
-                height={36}
-                className="h-9 w-auto"
-              />
-            </div>
-
-            <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
-              {[{ label: "التصميم", href: "#navbar-preview" }, { label: "الرئيسية", href: "#hero-preview" }, { label: "المنتجات", href: "#products-preview" }].map((link) => (
-                <Link
-                  key={link.label}
-                  href={link.href}
-                  className="text-sm font-medium text-[#404040] transition-colors hover:text-[#171717] dark:text-[#d4d4d4] dark:hover:text-[#fafafa]"
-                >
-                  {link.label}
-                </Link>
-              ))}
-            </nav>
-          </header>
-
-          {/* Page Title */}
-          <div className="flex flex-col gap-3 rounded-xl border border-[#e5e5e5] bg-white px-4 py-4 shadow-[0_4px_30px_-18px_rgba(0,0,0,0.12)] sm:flex-row sm:items-center sm:justify-between dark:border-[#262626] dark:bg-[#0a0a0a]">
-            <h1 className="text-[22px] leading-[28px] font-semibold tracking-tight text-[#0f0f0f] text-start dark:text-[#fafafa]">المنتجات</h1>
-          </div>
-
+        <div className="space-y-4">
           {/* Nav Bar Section Editor */}
           <section id="navbar-preview">
             <Card className="mb-6" padding="none">
