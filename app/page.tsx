@@ -316,10 +316,86 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   );
 }
 
+// Agency Mode Modal - Shown when user tries to create a second store
+function AgencyModeModal({ isOpen, onClose }: { 
+  isOpen: boolean; 
+  onClose: () => void;
+}) {
+  if (!isOpen) return null;
+
+  return (
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogPortal>
+        <DialogOverlay className="fixed inset-0 z-[60] bg-black/0" />
+        <div className="fixed inset-0 flex items-center justify-center z-[70]">
+          <DialogContent
+            style={{ 
+              boxShadow: "var(--bottom-nav-shadow)",
+            } as React.CSSProperties}
+            className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
+            from="top"
+            transition={{
+              type: "spring",
+              stiffness: 300,
+              damping: 25,
+            }}
+          >
+            <DialogHeader className="flex flex-row justify-between w-full h-[58px]">
+              <DialogTitle className="headline-2xl text-white">
+                Agency Mode
+              </DialogTitle>
+              <div 
+                onClick={onClose} 
+                className="w-5 h-5 cursor-pointer transition-opacity hover:opacity-60"
+              >
+                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+                </svg>
+              </div>
+            </DialogHeader>
+
+            <hr className="h-px w-full border-0 rounded-full "
+              style={{
+                background: "rgba(242, 242, 242, 0.30)",
+                boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
+              }}/>
+
+            <p className="text-[var(--system-300)] body-base">
+              You already have a store. To manage multiple stores, you need to apply for Agency Mode.
+            </p>
+
+            <div className="h-6"></div>
+
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="ghost"
+                size="md"
+                onClick={onClose}
+                className="w-full"
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled
+                size="md"
+                className="w-full opacity-50 cursor-not-allowed"
+              >
+                Coming Soon
+              </Button>
+            </div>
+
+          </DialogContent>
+        </div>
+      </DialogPortal>
+    </Dialog>
+  );
+}
+
 // Dashboard Content Component - Main dashboard view with store list and create button
 function DashboardContent() {
   const { user, isLoaded } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isAgencyModalOpen, setIsAgencyModalOpen] = useState(false);
   const { isConnected } = useRealtime();
 
   const stores = useQuery(api.stores.getUserStores, user ? { userId: user.id } : "skip");
@@ -334,6 +410,14 @@ function DashboardContent() {
     status: store.status || "active",
     subscription: store.subscription || "trial",
   })) || [];
+
+  const handleNewStoreClick = () => {
+    if (storesData.length >= 1) {
+      setIsAgencyModalOpen(true);
+    } else {
+      setIsCreateModalOpen(true);
+    }
+  };
 
   if (!isLoaded) {
     return (
@@ -354,7 +438,7 @@ function DashboardContent() {
           <SignedIn>
         <div className="flex flex-row gap-4 ">
           <button
-            onClick={() => setIsCreateModalOpen(true)}
+            onClick={handleNewStoreClick}
             className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
             style={{ borderRadius: '32px' }}
           >
@@ -372,6 +456,7 @@ function DashboardContent() {
         </div>
 
       </SignedIn><CreateStoreModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSuccess={() => { } } />
+      <AgencyModeModal isOpen={isAgencyModalOpen} onClose={() => setIsAgencyModalOpen(false)} />
 
         <p className="label-xs text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
     </div>

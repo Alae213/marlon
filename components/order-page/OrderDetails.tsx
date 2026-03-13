@@ -25,6 +25,7 @@ import {
   STATUS_LABELS,
   CALL_OUTCOME_LABELS,
 } from "@/lib/orders-types";
+import { STATUS_CONFIG } from "@/lib/status-icons";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -217,10 +218,21 @@ export function OrderDetails({
           <SheetTitle className="text-[var(--system-300)] body-base font-normal">
             #{order.orderNumber}
           </SheetTitle>
-          <div className="px-2 py-0.5 rounded-full border border-[var(--blue-200)] text-[var(--blue-200)] text-xs flex items-center gap-1.5 bg-[var(--blue-200)]/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--blue-200)] shadow-[0_0_8px_rgba(93,160,219,0.8)]" />
-            {STATUS_LABELS[order.status as OrderStatus]?.label ?? order.status}
-          </div>
+          {(() => {
+            const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
+            return (
+              <span 
+                className="overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                style={{ 
+                  backgroundColor: statusConfig?.bgColor || '#6b728028',
+                  color: statusConfig?.textColor || '#ffffff33',
+                }}
+              >
+                {statusConfig?.icon}
+                {statusConfig?.label || order.status}
+              </span>
+            );
+          })()}
         </div>
 
         {/* Scrollable Content */}
@@ -331,8 +343,8 @@ export function OrderDetails({
             {(order.adminNotes ?? []).length > 0 && (
               <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
                 {(order.adminNotes ?? []).slice().reverse().map((note: any) => (
-                  <div key={note.id} className="p-2.5 rounded-xl bg-white/5 border border-white/10">
-                    <p className="text-sm text-white/90">{note.text}</p>
+                  <div key={note.id} className="p-2.5 rounded-xl bg-[var(--note-bg)] border border-[var(--note-border)] ">
+                    <p className="text-sm text-[var(--note-text)]">{note.text}</p>
                     <p className="text-[10px] text-white/40 mt-1">{formatDate(note.timestamp)}</p>
                   </div>
                 ))}
@@ -423,11 +435,6 @@ export function OrderDetails({
 // Helper Components (Local)
 // ---------------------------------------------------------------------------
 
-function Separator({ className }: { className?: string }) {
-  return (
-    <div className={cn("h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent", className)} />
-  );
-}
 
 function CallButton({ outcome, icon, label, bg, onClick }: { 
   outcome: string, icon: React.ReactNode, label?: string, bg: string, onClick: () => void 
@@ -454,13 +461,13 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
         <div className="flex gap-3 w-full">
           <ActionButton
             label="Confirm"
-            variant="success"
+            targetStatus="confirmed"
             icon={<CheckCircle className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "confirmed")}
           />
           <ActionButton
             label="Cancel"
-            variant="danger"
+            targetStatus="canceled"
             icon={<X className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "canceled")}
           />
@@ -470,7 +477,7 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
       return (
         <ActionButton
           label="Send to delivery company"
-          variant="info"
+          targetStatus="packaged"
           icon={<Package className="w-5 h-5" />}
           onClick={() => onStatusChange(orderId, "packaged")}
         />
@@ -479,7 +486,8 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
       return (
         <ActionButton
           label="Print label"
-          variant="secondary"
+          targetStatus="shipped"
+          icon={<Package className="w-5 h-5" />}
           onClick={() => onStatusChange(orderId, "shipped")}
         />
       );
@@ -488,12 +496,14 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
         <div className="flex gap-3 w-full">
           <ActionButton
             label="Succeed"
-            variant="success"
+            targetStatus="succeeded"
+            icon={<CheckCircle className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "succeeded")}
           />
           <ActionButton
             label="Return (Router)"
-            variant="danger"
+            targetStatus="router"
+            icon={<Package className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "router")}
           />
         </div>
@@ -505,12 +515,14 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
         <div className="flex gap-3 w-full">
           <ActionButton
             label="Return to Confirmed"
-            variant="info"
+            targetStatus="confirmed"
+            icon={<CheckCircle className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "confirmed")}
           />
           <ActionButton
             label="Cancel Order"
-            variant="danger"
+            targetStatus="canceled"
+            icon={<X className="w-5 h-5" />}
             onClick={() => onStatusChange(orderId, "canceled")}
           />
         </div>
@@ -520,7 +532,8 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
       return (
         <ActionButton
           label="Reopen Order"
-          variant="secondary"
+          targetStatus="new"
+          icon={<CheckCircle className="w-5 h-5" />}
           onClick={() => onStatusChange(orderId, "new")}
         />
       );
@@ -529,27 +542,41 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
   }
 }
 
-function ActionButton({ label, variant = "default", icon, onClick }: {
-  label: string, variant?: "default" | "secondary" | "success" | "danger" | "warning" | "info", icon?: React.ReactNode, onClick: () => void
+function ActionButton({ label, targetStatus, icon, onClick }: {
+  label: string, targetStatus: OrderStatus, icon?: React.ReactNode, onClick: () => void
 }) {
-  const styles = {
-    default: "bg-white/10 border-white/30 text-white hover:bg-white/20",
-    secondary: "bg-white/10 border-white/30 text-white hover:bg-white/20",
-    success: "bg-[#1bc57d]/10 border-[#1bc57d]/40 text-[#1bc57d] hover:bg-[#1bc57d]/20",
-    danger: "bg-[#f44055]/10 border-[#f44055]/40 text-[#f44055] hover:bg-[#f44055]/20",
-    warning: "bg-[#fa9a34]/10 border-[#fa9a34]/40 text-[#fa9a34] hover:bg-[#fa9a34]/20",
-    info: "bg-[#5da0db]/10 border-[#5da0db]/40 text-[#5da0db] hover:bg-[#5da0db]/20",
-  };
+  const statusConfig = STATUS_CONFIG[targetStatus];
+  
+  if (!statusConfig) {
+    // Fallback styling if status config not found
+    return (
+      <button
+        onClick={onClick}
+        className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20"
+      >
+        {icon && <div className="p-1">{icon}</div>}
+        {label}
+      </button>
+    );
+  }
 
   return (
     <button
       onClick={onClick}
-      className={cn(
-        "flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer",
-        styles[variant]
-      )}
+      className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer overflow-hidden"
+      style={{
+        backgroundColor: statusConfig.bgColor,
+        borderColor: statusConfig.textColor + '40', // Add opacity to border
+        color: statusConfig.textColor,
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = statusConfig.textColor + '20'; // Darker on hover
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = statusConfig.bgColor;
+      }}
     >
-      {icon && <div className="p-1">{icon}</div>}
+      {icon && <div className="p-1" style={{ color: statusConfig.textColor }}>{icon}</div>}
       {label}
     </button>
   );

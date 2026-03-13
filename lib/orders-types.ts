@@ -2,6 +2,18 @@
  * Order Types for Marlon E-commerce Platform
  */
 
+import {
+  CircleDotDashed,
+  CircleCheckBig,
+  PackageCheck,
+  Truck,
+  Banknote,
+  MessageCircleX,
+  Ban,
+  BanknoteX,
+  LucideIcon,
+} from "lucide-react";
+
 // Order item in an order
 export interface OrderItem {
   id: string;
@@ -75,16 +87,16 @@ export type OrderStatus =
 export type SortField = "date" | "total" | "status";
 export type SortDirection = "asc" | "desc";
 
-// Status labels for display
+// Status labels for display (without icons - icons are in status-icons.tsx)
 export const STATUS_LABELS: Record<OrderStatus, { label: string; variant: "default" | "success" | "warning" | "danger" | "info" }> = {
   new: { label: "New", variant: "info" },
-  confirmed: { label: "Confirmed", variant: "default" },
-  packaged: { label: "Packaged", variant: "default" },
-  shipped: { label: "Shipped", variant: "warning" },
+  confirmed: { label: "Confirmed", variant: "success" },
+  packaged: { label: "Packaged", variant: "warning" },
+  shipped: { label: "Shipped", variant: "info" },
   succeeded: { label: "Succeeded", variant: "success" },
   canceled: { label: "Canceled", variant: "danger" },
   blocked: { label: "Blocked", variant: "danger" },
-  router: { label: "Router", variant: "warning" },
+  router: { label: "Router", variant: "danger" },
 };
 
 // Call outcome labels

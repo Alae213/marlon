@@ -80,7 +80,7 @@
   --ring: oklch(0.708 0 0);
   --success: #16a34a;
   --warning: #d97706;
-  --info: #2563eb;
+  --info: #2764e7;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -112,12 +112,14 @@
   --note-border: #fcd34d;
   --note-text: #78350f;
   --bottom-nav-shadow:
-    inset 0px 1px 0px 0px #ffffff1a, inset 0px 0px 13px 10px #e5e2d61a,
-    inset 0px 0px 0px 1px #ffffff40, 0px 268px 75px 0px #00000000,
-    0px 172px 69px 0px #00000005, 0px 11px 24px 0px #00000024;
+    inset 0px 1px 0px 0px #ffffff34,
+    inset 0px 0px 13px 10px #e5e2d621,
+    inset 0px 0px 0px 1px #ffffff53,
+    0px 68px 75px 0px #00000012,
+    0px 72px 69px 0px #00000023,
+    0px 11px 24px 0px #0000001f;
 
   --shadow-xl-shadow:
-
     inset 0.2px 4px 10px 0px #ffffff05,
     inset 0.2px 1px 0px 0px #ffffff40,
     inset -0.2px -1px 0px 0px #0000004d,
@@ -126,6 +128,12 @@
     0px 107px 64px 0px #0000000d,
     0px 190px 76px 0px #00000003,
     0px 297px 83px 0px #00000000;
+
+    --shadow-badge:
+    inset 0px -1px 0px 1px #0e0e0e05,
+    inset 0px -1px 3px 2px #12121205,
+    inset 0px -1px 3px 1px #ffffff1c,
+    inset 0px 1px 0px 0px #ffffff18;
 
 
   /* Typography tokens */
@@ -167,7 +175,7 @@
     font-weight: var(--font-weight-extrabold);
     font-size: var(--font-size-lg);
     line-height: var(--line-height-normal);
-    letter-spacing: var(--letter-spacing-snug);
+    letter-spacing: var(--letter-spacing-tight);
   }
 
   .title-xl {
@@ -176,7 +184,7 @@
     font-size: 20px;
     /* Bridge between LG and MD */
     line-height: var(--line-height-normal);
-    letter-spacing: var(--letter-spacing-snug);
+    letter-spacing: var(--letter-spacing-tight);
   }
 
   .body-base {

@@ -97,6 +97,7 @@ function ProductsContent({ storeId, storeSlug }: { storeId: string; storeSlug: s
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [settingsActiveTab, setSettingsActiveTab] = useState("preferences");
   const [isNavbarHovered, setIsNavbarHovered] = useState(false);
   const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -1137,7 +1138,7 @@ const saveInlineEdit = async () => {
         )}
       </Modal>
 
-      <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} />
+      <SettingsDialog isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} storeId={storeId} storeSlug={storeSlug} initialTab={settingsActiveTab} />
 
       <BottomNavigation storeSlug={storeSlug} currentPage="products" />
     </div>
@@ -1357,8 +1358,8 @@ function PreferencesSettings() {
   );
 }
 
-function SettingsDialog({ isOpen, onClose, storeId, storeSlug }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string }) {
-  const [activeTab, setActiveTab] = useState("preferences");
+function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab }: { isOpen: boolean; onClose: () => void; storeId: string; storeSlug: string; initialTab?: string }) {
+  const [activeTab, setActiveTab] = useState(initialTab || "preferences");
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>

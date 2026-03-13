@@ -185,7 +185,7 @@ function StorefrontContent() {
       )}
 
       {/* Product Catalog Section */}
-      <div className="max-w-6xl mx-auto my-[32px]">
+      <div className="max-w-6xl mx-auto  min-h-screen">
         <h2 className="headline-2xl mb-6">Products</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 ">
         {filteredProducts.map((product) => (

@@ -137,6 +137,9 @@ export const generateSlugSuggestions = query({
   },
 });
 
+// Maximum stores a user can create without Agency Mode
+const MAX_STORES_PER_USER = 1;
+
 // Create a new store
 export const createStore = mutation({
   args: {
@@ -154,6 +157,16 @@ export const createStore = mutation({
     
     const ownerId = identity.subject;
     const now = Date.now();
+
+    // Check store count limit
+    const existingStores = await ctx.db
+      .query("stores")
+      .withIndex("ownerId", (q) => q.eq("ownerId", ownerId))
+      .collect();
+
+    if (existingStores.length >= MAX_STORES_PER_USER) {
+      throw new Error("Store limit reached. Please apply for Agency Mode.");
+    }
     
     // Check if slug already exists
     const existing = await ctx.db

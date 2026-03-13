@@ -15,12 +15,20 @@ import {
   Trash2,
   AlertTriangle,
   ArrowRightLeft,
+  Eye,
+  EyeOff,
+  Zap,
+  SlidersHorizontal,
+  ChevronsUpDown,
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/core";
 import { Button } from "@/components/core/button";
 import { AnimatedTabs } from "@/components/core/animated-tabs";
 import { LockedData } from "@/components/locked-overlay";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Checkbox, CheckboxIndicator } from "@/components/animate-ui/primitives/headless/checkbox";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Image from "next/image";
@@ -28,9 +36,12 @@ import type {
   SortField, 
   SortDirection, 
   OrderStatus,
+  CallLog,
 } from "@/lib/orders-types";
-import { STATUS_LABELS } from "@/lib/orders-types";
+import { STATUS_LABELS, CALL_OUTCOME_LABELS } from "@/lib/orders-types";
+import { STATUS_CONFIG } from "@/lib/status-icons";
 import { ProductCell } from "./ProductCell";
+import { cn } from "@/lib/utils";
 
 // Relative time helper
 export function getRelativeTime(timestamp: number): string {
@@ -97,19 +108,99 @@ const KanbanIcon = () => (
   </svg>
 );
 
-// Status colors for dropdown
-const statusColors: Record<OrderStatus, { dot: string }> = {
-  new: { dot: "bg-blue-500" },
-  confirmed: { dot: "bg-gray-500" },
-  packaged: { dot: "bg-gray-500" },
-  shipped: { dot: "bg-yellow-500" },
-  succeeded: { dot: "bg-green-500" },
-  canceled: { dot: "bg-red-500" },
-  blocked: { dot: "bg-red-500" },
-  router: { dot: "bg-yellow-500" },
-};
-
 const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "router"];
+
+// Max call slots to display
+const MAX_CALL_SLOTS = 4;
+
+// Date formatter
+const DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+function formatDate(timestamp: number): string {
+  return DATE_FORMATTER.format(new Date(timestamp));
+}
+
+function getCallOutcomeBg(outcome?: string): string {
+  switch (outcome) {
+    case "answered":
+      return "bg-[#0BEEC1]";
+    case "no_answer":
+      return "bg-[#FFA86B]";
+    case "refused":
+      return "bg-[#FF5978]";
+    default:
+      return "bg-[var(--system-200)]";
+  }
+}
+
+// CallSlotsHover Component - same design as OrderDetails
+function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
+  const slots = useMemo(() => {
+    const relevant = callLog.slice(-MAX_CALL_SLOTS);
+    return Array.from({ length: MAX_CALL_SLOTS }, (_, i) => relevant[i] ?? null);
+  }, [callLog]);
+
+  const hasCalls = callLog.length > 0;
+
+  return (
+    <HoverCard openDelay={200} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <div className="flex items-end gap-0.5 h-[18px] cursor-pointer">
+          {slots.map((call, index) => (
+            <div
+              key={index}
+              className={cn(
+                "w-[5px] h-full border border-black/8 rounded-full transition-colors",
+                call ? getCallOutcomeBg(call.outcome) : "bg-black/10"
+              )}
+            />
+          ))}
+        </div>
+      </HoverCardTrigger>
+      {hasCalls && (
+        <HoverCardContent
+          side="top"
+          align="start"
+          sideOffset={8}
+          className="w-auto min-w-0 p-0 border-0 bg-transparent shadow-none"
+        >
+          <div
+            className="px-3 py-2 rounded-lg text-xs text-white whitespace-nowrap"
+            style={{
+              background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
+            }}
+          >
+            <div className="text-[var(--system-200)] text-[10px] mb-1.5 font-medium">
+              Call History
+            </div>
+            {callLog.slice().map((call, idx) => (
+              <div key={call.id} className="flex items-center gap-2 py-0.5">
+                <span className="text-[var(--system-300)] text-[10px] w-4">
+                  #{idx + 1}
+                </span>
+                <span
+                  className={cn(
+                    "w-2 h-2 rounded-full",
+                    getCallOutcomeBg(call.outcome)
+                  )}
+                />
+                <span className="text-white/90">
+                  {CALL_OUTCOME_LABELS[call.outcome]?.label || call.outcome}
+                </span>
+                <span className="text-white/40 text-[10px]">
+                  {formatDate(call.timestamp)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </HoverCardContent>
+      )}
+    </HoverCard>
+  );
+}
 
 // Sort icon component
 function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {
@@ -146,13 +237,15 @@ function StatusCell({
   status, 
   isOpen, 
   onToggle, 
-  onStatusChange 
+  onStatusChange,
+  callLog,
 }: { 
   orderId: string; 
   status: string; 
   isOpen: boolean; 
   onToggle: (open: boolean) => void;
   onStatusChange: (status: string) => void;
+  callLog?: CallLog[];
 }) {
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -169,37 +262,69 @@ function StatusCell({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen, onToggle]);
 
+  const statusConfig = STATUS_CONFIG[status as OrderStatus];
+  const statusLabel = STATUS_LABELS[status as OrderStatus];
+
   return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => onToggle(!isOpen)}
-        className="cursor-pointer"
-      >
-        <Badge variant={STATUS_LABELS[status as OrderStatus]?.variant || "default"}>
-          {STATUS_LABELS[status as OrderStatus]?.label || status}
-        </Badge>
-      </button>
+    <div className="relative w-full" ref={dropdownRef}>
+      <div className="flex flex-row items-center justify-between">
+        <button
+          onClick={() => onToggle(!isOpen)}
+          className="cursor-pointer flex flex-row items-center gap-2 p-1 hover:bg-black/5 rounded-[12px]"
+        >
+          <Badge 
+            bgColor={statusConfig?.bgColor}
+            textColor={statusConfig?.textColor}
+            icon={statusConfig?.icon}
+          >
+            {statusConfig?.label || statusLabel?.label || status}
+          </Badge>
+        </button>
+        
+        {/* Call Log Slots */}
+        {callLog && callLog.length > -1 && (
+          <CallSlotsHover callLog={callLog} />
+        )}
+      </div>
       
-      {isOpen && (
-        <div className="absolute top-full mt-1 left-0 z-[9999] min-w-[160px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
-          {statuses.map((s) => (
-            <button
-              key={s}
-              onClick={() => {
-                onStatusChange(s);
-                onToggle(false);
-              }}
-              className={`w-full px-3 py-2 text-start body-base flex items-center gap-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
-                status === s ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
-              }`}
-            >
-              <span className={`w-2 h-2 rounded-full ${statusColors[s].dot}`} />
-              <span className="flex-1 text-[var(--system-600)]">{STATUS_LABELS[s]?.label || s}</span>
-              {status === s && <Check className="w-3.5 h-3.5" />}
-            </button>
-          ))}
-        </div>
-      )}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            transition={{ duration: 0.15 }}
+            className="absolute top-full -mt-8 -left-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
+          >
+            {statuses.map((s) => {
+              const sConfig = STATUS_CONFIG[s];
+              return (
+                <button
+                  key={s}
+                  onClick={() => {
+                    onStatusChange(s);
+                    onToggle(false);
+                  }}
+                  className={`w-full p-1 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
+                    status === s ? "bg-black/0" : ""
+                  }`}
+                >
+                  <span 
+                    className="overflow-hidden inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-[10px] shadow-[var(--shadow-badge)]"
+                    style={{ 
+                      backgroundColor: sConfig?.bgColor || '#6b728015',
+                      color: sConfig?.textColor || '#ffffff01',
+                    }}
+                  >
+                    {sConfig?.icon}
+                    {sConfig?.label || s}
+                  </span>
+                </button>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -238,6 +363,30 @@ export function ListView({
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const filterDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Date filter state
+  const [dateFilterOpen, setDateFilterOpen] = useState(false);
+  const [activeDateFilter, setActiveDateFilter] = useState<"all" | "today" | "week" | "month">("all");
+  const dateFilterRef = useRef<HTMLDivElement>(null);
+  
+  // Settings dropdown state
+  const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
+  const settingsDropdownRef = useRef<HTMLDivElement>(null);
+  
+  // Hidden statuses state (persisted in localStorage)
+  const [hiddenStatuses, setHiddenStatuses] = useState<Set<OrderStatus>>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("marlon-hidden-statuses");
+      if (saved) {
+        try {
+          return new Set(JSON.parse(saved));
+        } catch {
+          return new Set();
+        }
+      }
+    }
+    return new Set();
+  });
   
   // Delete confirmation state
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -316,8 +465,60 @@ export function ListView({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [filterDropdownOpen]);
 
+  // Handle click outside date filter dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
+        setDateFilterOpen(false);
+      }
+    }
+    
+    if (dateFilterOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [dateFilterOpen]);
+
+  // Handle click outside settings dropdown
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsDropdownRef.current && !settingsDropdownRef.current.contains(event.target as Node)) {
+        setSettingsDropdownOpen(false);
+      }
+    }
+    
+    if (settingsDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [settingsDropdownOpen]);
+
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
+    
+    // Filter by hidden statuses
+    filtered = filtered.filter(order => !hiddenStatuses.has(order.status as OrderStatus));
+    
+    // Filter by date
+    const now = Date.now();
+    const startOfToday = new Date();
+    startOfToday.setHours(0, 0, 0, 0);
+    const startOfTodayMs = startOfToday.getTime();
+    
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+    const startOfWeekMs = startOfWeek.getTime();
+    
+    const startOfMonth = new Date(startOfToday.getFullYear(), startOfToday.getMonth(), 1);
+    const startOfMonthMs = startOfMonth.getTime();
+    
+    if (activeDateFilter === "today") {
+      filtered = filtered.filter(order => order.createdAt >= startOfTodayMs);
+    } else if (activeDateFilter === "week") {
+      filtered = filtered.filter(order => order.createdAt >= startOfWeekMs);
+    } else if (activeDateFilter === "month") {
+      filtered = filtered.filter(order => order.createdAt >= startOfMonthMs);
+    }
     
     if (searchQuery) {
       filtered = filtered.filter(order =>
@@ -348,7 +549,7 @@ export function ListView({
     });
 
     return filtered;
-  }, [orders, searchQuery, sortField, sortDirection, activeFilter, currentTime]);
+  }, [orders, searchQuery, sortField, sortDirection, activeFilter, currentTime, hiddenStatuses, activeDateFilter]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -374,21 +575,62 @@ export function ListView({
     }
   };
 
+  // Toggle hidden status and persist to localStorage
+  const toggleHiddenStatus = (status: OrderStatus) => {
+    setHiddenStatuses(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(status)) {
+        newSet.delete(status);
+      } else {
+        newSet.add(status);
+      }
+      localStorage.setItem("marlon-hidden-statuses", JSON.stringify([...newSet]));
+      return newSet;
+    });
+  };
+
+  // Pre-compute selected orders by status for bulk toolbar
+  const selectedOrdersByStatus = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const status of statuses) {
+      counts[status] = 0;
+    }
+    for (const order of orders) {
+      if (selectedOrders.has(order._id)) {
+        const orderStatus = order.status as OrderStatus;
+        if (counts[orderStatus] !== undefined) {
+          counts[orderStatus]++;
+        }
+      }
+    }
+    return counts;
+  }, [orders, selectedOrders]);
+
   return (
     <TooltipProvider>
     <div className="w-full h-full flex flex-col gap-3 relative">
+
+
       {/* Bulk Action Toolbar */}
       {selectedOrders.size > 0 && (
-        <div className="absolute top-0 left-0 right-0 z-50 bg-[var(--system-600)] text-white px-4 py-3 flex items-center justify-between rounded-t-xl">
-          <div className="flex items-center gap-4">
-            <span className="body-base font-medium">{selectedOrders.size} selected</span>
-            <div className="flex items-center gap-2">
+        <div className="absolute -top-1 left-1 z-50 bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] text-[var(--system-600)] py-1 px-2 flex items-center justify-between">
+          <div className="flex items-center gap-1 ">
+            <span className="body-base text-[var(--system-500)] mr-2 ">{selectedOrders.size} selected</span>
+            <div className="flex items-center gap-1.5">
               {statuses.map((status) => {
-                const count = orders.filter(o => selectedOrders.has(o._id) && o.status === status).length;
+                const count = selectedOrdersByStatus[status];
                 if (count === 0) return null;
+                const sConfig = STATUS_CONFIG[status];
                 return (
-                  <span key={status} className="flex items-center gap-1 text-sm bg-white/20 px-2 py-1 rounded">
-                    <span className={`w-2 h-2 rounded-full ${statusColors[status].dot}`} />
+                  <span 
+                    key={status}
+                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px] lable-xs font-medium"
+                    style={{ 
+                      backgroundColor: sConfig?.bgColor || '#6b7280',
+                      color: sConfig?.textColor || '#ffffff',
+                    }}
+                  >
+                    {sConfig?.icon}
                     {count}
                   </span>
                 );
@@ -396,26 +638,18 @@ export function ListView({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              variant="danger"
-              size="sm"
+            <button
+              className="ml-2 cursor-pointer p-2 rounded-lg transition-colors text-red-500 hover:bg-red-500/20"
               onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="w-4 h-4" />
-              Delete
-            </Button>
-            <button
-              onClick={() => onClearSelection()}
-              className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-            >
-              <X className="w-4 h-4" />
             </button>
           </div>
         </div>
       )}
 
       {/* Toolbar */}
-      <div className={`flex items-center justify-between gap-1 ${selectedOrders.size > 0 ? 'pt-12' : ''}`}>
+      <div className="flex items-center justify-between gap-1">
         {/* View Toggle */}
         <AnimatedTabs
           tabs={[
@@ -427,38 +661,55 @@ export function ListView({
         />
         
         <div className="flex items-center gap-1">
-          {/* Search */}
-          <div id="search-container" className="relative">
-          {isSearchOpen ? (
-            <div className="flex items-center">
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => onSearchQueryChange(e.target.value)}
-                placeholder="Search orders..."
-                className="w-48 h-8 px-3 pe-8 bg-white dark:bg-[#171717] border border-[#e5e5e5] dark:border-[#404040] text-[var(--system-600)] placeholder:text-[var(--system-300)] text-sm focus:outline-none focus:border-[var(--system-600)] rounded-lg"
-              />
-              <button
-                onClick={() => onSearchOpenChange(false)}
-                className="absolute end-2 text-[var(--system-300)] hover:text-[var(--system-600)]"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ) : (
-            <Tooltip>
-              <TooltipTrigger asChild>
+        
+        {/* Date Filter Dropdown */}
+        <div className="relative" ref={dateFilterRef}>
+          <button
+            onClick={() => setDateFilterOpen(!dateFilterOpen)}
+            className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+              activeDateFilter !== "all"
+                ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+            }`}
+          >
+            <span>
+              {activeDateFilter === "all" ? "All" : 
+               activeDateFilter === "today" ? "Today" :
+               activeDateFilter === "week" ? "Last Week" : "This Month"}
+            </span>
+            <ChevronsUpDown className="w-4 h-4" /> 
+          </button>
+          
+          {dateFilterOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
+            >
+              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Filter By Date</div>
+              {[
+                { id: "all", label: "All" },
+                { id: "today", label: "Today (24h)" },
+                { id: "week", label: "This Week (7 days)" },
+                { id: "month", label: "This Month" },
+              ].map((option) => (
                 <button
-                  ref={searchButtonRef}
-                  onClick={() => onSearchOpenChange(true)}
-                  className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+                  key={option.id}
+                  onClick={() => {
+                    setActiveDateFilter(option.id as typeof activeDateFilter);
+                    setDateFilterOpen(false);
+                  }}
+                  className={`w-full py-1.5 px-3 justify-between text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
+                    activeDateFilter === option.id ? "bg-black/5" : ""
+                  }`}
                 >
-                  <Search className="w-4 h-4" />
+                  <span className="text-[var(--system-600)]">{option.label}</span>
+                  {activeDateFilter === option.id && <Check className="w-3.5 h-3.5" />}
                 </button>
-              </TooltipTrigger>
-              <TooltipContent>Search orders</TooltipContent>
-            </Tooltip>
+              ))}
+            </motion.div>
           )}
         </div>
 
@@ -468,9 +719,9 @@ export function ListView({
             <TooltipTrigger asChild>
               <button
                 onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`cursor-pointer p-2 rounded-lg transition-colors ${
                   activeFilter !== "all"
-                    ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                    ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
                     : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
                 }`}
               >
@@ -481,46 +732,63 @@ export function ListView({
           </Tooltip>
           
           {filterDropdownOpen && (
-            <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
-              <div className="px-3 py-2 text-xs text-[var(--system-400)] uppercase tracking-wide">Filter By State</div>
-              <button
-                onClick={() => {
-                  setActiveFilter("all");
-                  setFilterDropdownOpen(false);
-                }}
-                className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
-                  activeFilter === "all" ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
-                }`}
-              >
-                <span className="text-[var(--system-600)]">All</span>
-                <span className="text-xs text-[var(--system-400)]">{orders.length}</span>
-                {activeFilter === "all" && <Check className="w-3.5 h-3.5" />}
-              </button>
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[200px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
+            >
+              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Filter By State</div>
               {statuses.map((status) => {
+                const sConfig = STATUS_CONFIG[status];
                 const count = orders.filter(o => o.status === status).length;
+                const isHidden = hiddenStatuses.has(status);
+                
                 return (
-                  <button
-                    key={status}
-                    onClick={() => {
-                      setActiveFilter(status);
-                      setFilterDropdownOpen(false);
-                    }}
-                    className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
-                      activeFilter === status ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className={`w-2 h-2 rounded-full ${statusColors[status].dot}`} />
-                      <span className="text-[var(--system-600)]">{STATUS_LABELS[status]?.label || status}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs text-[var(--system-400)]">{count}</span>
-                      {activeFilter === status && <Check className="w-3.5 h-3.5" />}
-                    </div>
-                  </button>
+                  <div key={status} className="flex items-center ">
+                    <button
+                      onClick={() => {
+                        setFilterDropdownOpen(false);
+                      }}
+                      className={`flex-1 px-3 py-1 text-start body-base flex items-center justify-between transition-colors ${
+                        activeFilter === status ? "bg-[#f5f5f5]" : ""
+                      }`}
+                    >
+                      <span 
+                        className="overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                        style={{ 
+                          backgroundColor: sConfig?.bgColor || '#6b7280',
+                          color: sConfig?.textColor || '#ffffff',
+                        }}
+                      >
+                        {sConfig?.icon}
+                        {sConfig?.label || status}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="label-xs text-[var(--system-400)]">{count}</span>
+                        {activeFilter === status && <Check className="w-3.5 h-3.5" />}
+                      </div>
+                    </button>
+                    {/* Eye toggle button */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleHiddenStatus(status);
+                      }}
+                      className="cursor-pointer p-2 hover:bg-[var(--system-100)] transition-colors rounded-[8px]"
+                      title={isHidden ? "Show this state" : "Hide this state"}
+                    >
+                      {isHidden ? (
+                        <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
+                      ) : (
+                        <Eye className="w-4 h-4 text-[var(--system-400)]" />
+                      )}
+                    </button>
+                  </div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </div>
 
@@ -530,9 +798,9 @@ export function ListView({
             <TooltipTrigger asChild>
               <button
                 onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className={`p-2 rounded-lg transition-colors ${
+                className={`cursor-pointer p-2 rounded-lg transition-colors ${
                   sortField !== "date" || sortDirection !== "desc"
-                    ? "bg-[var(--system-200)] text-[var(--system-600)]"
+                    ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
                     : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
                 }`}
               >
@@ -543,8 +811,8 @@ export function ListView({
           </Tooltip>
           
           {sortDropdownOpen && (
-            <div className="absolute top-full mt-1 right-0 z-[9999] min-w-[180px] bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden py-1">
-              <div className="px-3 py-2 text-xs text-[var(--system-400)] uppercase tracking-wide">Sort By</div>
+            <div className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[200px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1">
+              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Sort By</div>
               {[
                 { id: "date", direction: "desc", label: "Newest first" },
                 { id: "date", direction: "asc", label: "Oldest first" },
@@ -558,11 +826,11 @@ export function ListView({
                     onSortDirectionChange(option.direction as SortDirection);
                     setSortDropdownOpen(false);
                   }}
-                  className={`w-full px-3 py-2 text-start body-base flex items-center justify-between hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors ${
+                  className={`w-full py-1 px-2 justify-between text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
                     sortField === option.id && 
                     ((option.id === "date" && sortDirection === (option.direction as SortDirection)) ||
                      (option.id === "total" && sortDirection === (option.direction as SortDirection)))
-                      ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+                      ? "bg-black/5" : ""
                   }`}
                 >
                   <span className="text-[var(--system-600)]">{option.label}</span>
@@ -573,59 +841,91 @@ export function ListView({
           )}
         </div>
 
-        {/* Settings */}
+          {/* Search */}
+          <div id="search-container" className="relative">
+          {isSearchOpen ? (
+            <div className="flex items-center">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search orders..."
+                value={searchQuery}
+                onChange={(e) => onSearchQueryChange(e.target.value)}
+                className="w-48 h-8 px-3 pe-8 bg-white border border-[#e5e5e5] text-[var(--system-600)] placeholder:text-[var(--system-300)] text-sm focus:outline-none focus:border-[var(--system-200)] rounded-lg"
+              />
+              <button
+                onClick={() => onSearchOpenChange(false)}
+                className="cursor-pointer absolute end-2 text-[var(--system-300)] hover:text-[var(--system-600)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="relative group">
+              <button
+                ref={searchButtonRef}
+                onClick={() => onSearchOpenChange(true)}
+                className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+        </div>  
+
+        {/*Integration (Placeholder) */}
         <Tooltip>
           <TooltipTrigger asChild>
             <button
-              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+              className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
             >
-              <Settings className="w-4 h-4" />
+              <Zap className="w-4 h-4" />
             </button>
           </TooltipTrigger>
-          <TooltipContent>Settings</TooltipContent>
+          <TooltipContent>Delivery Integration</TooltipContent>
         </Tooltip>
 
-        {/* Archive - Blocked Orders */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors relative"
-              onClick={() => {
-                setActiveFilter("blocked");
-                setFilterDropdownOpen(false);
-              }}
+        {/* Settings Dropdown (Placeholder) */}
+        <div className="relative" ref={settingsDropdownRef}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
+                className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+              >
+                <SlidersHorizontal className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>More</TooltipContent>
+          </Tooltip>
+          
+          {settingsDropdownOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.15 }}
+              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
             >
-              <Archive className="w-4 h-4" />
-              {orders.filter(o => o.status === "blocked").length > 0 && (
-                <span className="absolute -top-1 -end-1 bg-red-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {orders.filter(o => o.status === "blocked").length}
-                </span>
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Blocked orders</TooltipContent>
-        </Tooltip>
+              <button
+                onClick={() => setSettingsDropdownOpen(false)}
+                className="w-full py-2 px-3 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-colors"
+              >
+                <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
+                <span className="text-[var(--system-600)]">Black List</span>
+              </button>
+              <button
+                onClick={() => setSettingsDropdownOpen(false)}
+                className="w-full py-2 px-3 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-colors"
+              >
+                <ArrowRightLeft className="w-4 h-4 text-[var(--system-400)]" />
+                <span className="text-[var(--system-600)]">Delivery Costs</span>
+              </button>
+            </motion.div>
+          )}
+        </div>
 
-        {/* Archive - Router Orders */}
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              className="p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors relative"
-              onClick={() => {
-                setActiveFilter("router");
-                setFilterDropdownOpen(false);
-              }}
-            >
-              <ArrowRightLeft className="w-4 h-4" />
-              {orders.filter(o => o.status === "router").length > 0 && (
-                <span className="absolute -top-1 -end-1 bg-yellow-500 text-white text-xs rounded-full w-4 h-4 flex items-center justify-center">
-                  {orders.filter(o => o.status === "router").length}
-                </span>
-              )}
-            </button>
-          </TooltipTrigger>
-          <TooltipContent>Router orders</TooltipContent>
-        </Tooltip>
+        
         </div>
       </div>
 
@@ -633,40 +933,32 @@ export function ListView({
       <div className="overflow-visible">
         {/* Table Header - with rounded top corners */}
         <div className="bg-[var(--system-100)] rounded-[12px] py-[6px]">
-          <div className="grid grid-cols-12 gap-0">
+          <div className="grid grid-cols-12 gap-[12px]">
             {/* Checkbox */}
-            <div className="col-span-1 px-3 flex items-center">
-              <input
-                type="checkbox"
+            <div className="col-span-[1.3]  px-3 flex items-center">
+              <Checkbox
                 checked={selectAll}
-                onChange={(e) => handleSelectAll(e.target.checked)}
-                className="w-4 h-4 rounded border-[var(--system-200)]"
-              />
+                onChange={(checked) => handleSelectAll(checked === true)}
+                className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] hover:border-[var(--system-400)]"
+              >
+                <CheckboxIndicator className="text-white w-3 h-3" />
+              </Checkbox>
             </div>
             {/* Customer */}
             <div className="col-span-3 px-3 body-base text-[var(--system-600)] flex items-center">Customer</div>
             {/* Product */}
-            <div className="col-span-3 px-3 body-base text-[var(--system-600)] flex items-center">Product</div>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">Product</div>
             {/* State */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("status")}>
-              <div className="flex items-center gap-1">
-                State
-                <SortIcon field="status" sortField={sortField} sortDirection={sortDirection} />
-              </div>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
+              State
             </div>
             {/* Total */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("total")}>
-              <div className="flex items-center gap-1">
-                Total
-                <SortIcon field="total" sortField={sortField} sortDirection={sortDirection} />
-              </div>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
+              Total
             </div>
             {/* Date */}
-            <div className="col-span-1 px-3 body-base text-[var(--system-600)] cursor-pointer flex items-center" onClick={() => onSort("date")}>
-              <div className="flex items-center gap-1">
-                Date
-                <SortIcon field="date" sortField={sortField} sortDirection={sortDirection} />
-              </div>
+            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
+              Date
             </div>
           </div>
         </div>
@@ -676,19 +968,20 @@ export function ListView({
           {filteredOrders.map((order, index) => (
             <div 
               key={order._id}
-              className={`grid grid-cols-12 gap-0 hover:bg-[#f5f5f5] dark:hover:bg-[#171717]/50 transition-colors cursor-pointer ${
-                selectedOrders.has(order._id) ? "bg-[#f5f5f5] dark:bg-[#262626]" : ""
+              className={`grid grid-cols-12 gap-[12px] hover:bg-[var(--system-100)]/40 rounded-[16px] transition-colors cursor-pointer ${
+                selectedOrders.has(order._id) ? "bg-[var(--system-100)]" : ""
               } ${index === filteredOrders.length - 1 ? 'rounded-b-xl' : ''}`}
               onClick={() => onOrderClick(order)}
             >
               {/* Checkbox */}
-              <div className="col-span-1 px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
-                <input
-                  type="checkbox"
+              <div className="col-span-[1.3] px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
+                <Checkbox
                   checked={selectedOrders.has(order._id)}
                   onChange={() => onOrderSelect(order._id)}
-                  className="w-4 h-4 rounded border-[#e5e5e5] dark:border-[#404040]"
-                />
+                  className="cursor-pointer w-4 h-4 rounded   bg-[var(--system-200)]/40 hover:bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
+                >
+                  <CheckboxIndicator className="text-white w-3 h-3" />
+                </Checkbox>
               </div>
               {/* Customer */}
               <div className="col-span-3 px-3 py-3 flex items-center">
@@ -704,7 +997,7 @@ export function ListView({
                 </div>
               </div>
               {/* Product */}
-              <div className="col-span-3 px-3 py-3 flex items-center">
+              <div className="col-span-2 px-3 py-3 flex items-center">
                 <ProductCell items={order.products || []} />
               </div>
               {/* State */}
@@ -715,6 +1008,7 @@ export function ListView({
                   isOpen={!!statusDropdownOpen[order._id]}
                   onToggle={(open) => onStatusDropdownToggle(order._id, open)}
                   onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                  callLog={(order.callLog as CallLog[]) || []}
                 />
               </div>
               {/* Total */}
@@ -722,7 +1016,7 @@ export function ListView({
                 {formatPrice(order.total)}
               </div>
               {/* Date */}
-              <div className="col-span-1 px-3 py-3 flex items-center body-base text-[var(--system-300)]">
+              <div className="col-span-2 px-3 py-3 flex items-center body-base text-[var(--system-300)]">
                 {getRelativeTime(order.createdAt)}
               </div>
             </div>
