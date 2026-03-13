@@ -59,10 +59,10 @@ export function EditorShell({ leftSlot, centerSlot, rightSlot, children }: Edito
         </div>
 
         {/* Scrollable Viewport */}
-        <ScrollArea.Root className="h-full w-full overflow-hidden rounded-[12px] rounded-b-[0px] bg-none">
+        <ScrollArea.Root className="h-full w-full overflow-hidden rounded-[12px] rounded-b-[0px] bg-[var(--system-50)]">
           <ScrollArea.Viewport
             style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-            className="h-full flex-1 overflow-hidden overflow-y-auto rounded-[12px] rounded-b-[0px] bg-[var(--system-100)]"
+            className="h-full flex-1 overflow-hidden overflow-y-auto rounded-[12px] rounded-b-[0px] bg-[var(--card)]"
           >
             <div className="min-h-full px-0 py-6">
               {children}

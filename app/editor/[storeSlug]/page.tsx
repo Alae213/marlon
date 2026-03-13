@@ -379,17 +379,17 @@ const handleUpdateProduct = async (product: ProductFormData) => {
         <div className="space-y-4">
           {/* Nav Bar Section Editor */}
           <section id="navbar-preview">
-            <Card className="mb-6" padding="none">
-              <div className="p-4">
+            <Card className="mb-6 bg-transparent border-0 shadow-none" padding="none">
+              <div className="p-4 bg-transparent">
 
             <div
-              className={`relative overflow-hidden rounded-xl border border-[#e5e5e5] dark:border-[#262626] ${navbarBgClass}`}
+              className={`relative overflow-hidden rounded-[12px] bg-transparent shadow-none transition-colors hover:bg-[color-mix(in_srgb,var(--muted)_10%,transparent)] ${navbarBgClass}`}
               onMouseEnter={() => setIsNavbarHovered(true)}
               onMouseLeave={() => setIsNavbarHovered(false)}
             >
-              <div className="flex items-center justify-between px-4 py-3">
+              <div className="flex items-center justify-between px-6 py-4">
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-[#f5f5f5] dark:bg-[#171717]">
+                  <div className="relative flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-transparent">
                     {navbarLogoUrl ? (
                       <Image src={navbarLogoUrl} alt="logo" fill className="object-cover" />
                     ) : (
@@ -398,15 +398,15 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                   </div>
                 </div>
 
-                <div className="hidden items-center justify-center gap-5 sm:flex">
-                  <span className={`text-sm ${navbarTextClass}`}>المتجر</span>
-                  <span className={`text-sm ${navbarTextClass}`}>الأسئلة</span>
-                  <span className={`text-sm ${navbarTextClass}`}>مساعدة</span>
+                <div className="hidden items-center justify-center gap-6 sm:flex">
+                  <span className={`text-sm font-medium ${navbarTextClass}`}>المتجر</span>
+                  <span className={`text-sm font-medium ${navbarTextClass}`}>الأسئلة</span>
+                  <span className={`text-sm font-medium ${navbarTextClass}`}>مساعدة</span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <button
-                    className={`flex h-9 w-9 items-center justify-center rounded-full border border-[#e5e5e5] dark:border-[#262626] ${navbarTextClass}`}
+                    className={`flex h-9 w-9 items-center justify-center rounded-full bg-transparent text-[var(--foreground)] transition-all hover:-translate-y-[1px] hover:bg-[color-mix(in_srgb,var(--muted)_10%,transparent)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color-mix(in_srgb,var(--foreground)_30%,transparent)] ${navbarTextClass}`}
                     aria-label="السلة"
                   >
                     <ShoppingCart className="h-4 w-4" />
@@ -480,9 +480,9 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       </section>
  
         {/* Hero Section Editor */}
-        <section id="hero-preview">
-          <Card className="mb-6" padding="none">
-            <div className="p-4">
+          <section id="hero-preview">
+          <Card className="mb-6 bg-transparent border-0 shadow-none" padding="none">
+            <div className="p-4 bg-transparent">
             <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الرئيسية (Hero)</h2>
               <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
@@ -503,7 +503,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
                     : "items-center text-center mx-auto";
 
               return (
-                <div className="group relative overflow-hidden rounded-2xl border border-[#e5e5e5] dark:border-[#262626]">
+                <div className="group relative overflow-hidden rounded-2xl border-0 bg-transparent">
                   <div
                     className={`relative isolate flex min-h-[320px] w-full flex-col justify-center px-6 py-10 sm:px-10 lg:px-14 ${heroBgUrl ? "" : "bg-sunglasses-pattern"}`}
                     style={heroBgUrl ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: "cover", backgroundPosition: "center" } : {}}
@@ -650,7 +650,7 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       </section>
         {/* Products Catalog Section Editor */}
         <section id="products-preview">
-          <Card padding="none">
+          <Card padding="none" className="bg-transparent border-0 shadow-none">
             {activeProducts.length === 0 ? (
               <EmptyState
                 icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
@@ -908,8 +908,8 @@ const handleUpdateProduct = async (product: ProductFormData) => {
       </section>
 
         {/* Footer Section Editor */}
-        <Card className="mb-6" padding="none">
-          <div className="p-4">
+          <Card className="mb-6 bg-transparent border-0 shadow-none" padding="none">
+            <div className="p-4">
             <div className="flex items-center justify-between mb-3">
             <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
             <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
