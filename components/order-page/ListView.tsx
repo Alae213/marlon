@@ -965,7 +965,7 @@ export function ListView({
                 key={order._id}
                 index={index}
                 className={`cursor-pointer ${
-                  selectedOrders.has(order._id) ? "bg-[var(--system-100)]" : ""
+                  selectedOrders.has(order._id) ? "bg-[var(--system-100)] rounded-[16px]" : ""
                 }`}
                 onClick={() => onOrderClick(order)}
               >
@@ -973,7 +973,7 @@ export function ListView({
                   <Checkbox
                     checked={selectedOrders.has(order._id)}
                     onChange={() => onOrderSelect(order._id)}
-                    className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)]/40 hover:bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
+                    className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)]/40 hover:bg-[var(--system-300)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
                   >
                     <CheckboxIndicator className="text-white w-3 h-3" />
                   </Checkbox>
