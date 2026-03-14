@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Settings, ExternalLink, Eye, Copy, Check, Globe } from "lucide-react";
+import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check, Globe } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -212,9 +212,12 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
   // ── Render ──────────────────────────────────────────────────
 
   return (
-    <div className="max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between py-4">
+    <div className="h-screen w-full">
+
+      {/* Browser Chrome Window */}
+      <div className="flex flex-col items-center justify-center bg-[var(--system-50)]">
+        {/* Header */}
+      <div className="px-[12px] w-full flex items-center justify-between py-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center">
             <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
@@ -223,28 +226,6 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
         <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
       </div>
 
-      {/* Page Title + Actions */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-xl font-normal text-[#171717] dark:text-[#fafafa]">المنتجات</h1>
-        <div className="flex items-center gap-3">
-          <a
-            href={`/${storeSlug}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-2 font-medium transition-all h-10 px-4 text-sm border border-[#e5e5e5] dark:border-[#404040] text-[#171717] dark:text-[#fafafa] hover:bg-[#f5f5f5] dark:hover:bg-[#171717]"
-          >
-            <ExternalLink className="w-4 h-4" />
-            معاينة
-          </a>
-          <Button variant="outline" onClick={() => setIsSettingsOpen(true)} aria-label="فتح الإعدادات">
-            <Settings className="w-4 h-4" />
-            الإعدادات
-          </Button>
-        </div>
-      </div>
-
-      {/* Browser Chrome Window */}
-      <div className="fixed inset-0 flex flex-col h-screen w-screen bg-[var(--system-200)]">
         <div className="flex-1" />
         <div
           style={{
@@ -256,15 +237,16 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           {/* Browser Window Header */}
           <div className="px-[8px] flex items-center justify-between">
             {/* Left */}
-            <div className="w-[120px]">
-              <div className="flex flex-row gap-[16px]">
-                <button
-                  onClick={() => router.push("/")}
-                  className="flex items-center justify-center w-8 h-8 rounded-lg hover:bg-white/10 transition-all cursor-pointer"
-                >
-                  <Globe className="w-4 h-4 text-[var(--system-300)]" />
-                </button>
-              </div>
+            <div className="w-[120px] flex items-center gap-2">
+              <button
+                onClick={() => router.push("/")}
+                className="flex items-center justify-center cursor-pointer"
+              >
+                <Image src="/windw.svg" alt="marlon" width={34} height={34} />
+              </button>
+              <Button variant="outline" size="sm" onClick={() => setIsSettingsOpen(true)} aria-label="Settings">
+                <Settings className="w-4 h-4" />
+              </Button>
             </div>
 
             {/* Center */}
@@ -284,47 +266,6 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                   </p>
                 </div>
 
-                <div className="relative">
-                  <AnimatePresence mode="wait">
-                    {!copied ? (
-                      <motion.button
-                        key="copy"
-                        onClick={handleCopy}
-                        className="group relative w-6 h-6 flex items-center justify-center rounded-lg hover:bg-[var(--system-300)] transition-all duration-200"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                        whileHover={{
-                          backgroundColor: "rgba(0, 0, 0, 0.05)",
-                        }}
-                        whileTap={{ scale: 0.9 }}
-                        title="Copy URL"
-                      >
-                        <Copy className="w-3.5 h-3.5 text-[var(--system-300)]" />
-                      </motion.button>
-                    ) : (
-                      <motion.div
-                        key="check"
-                        className="w-6 h-6 flex items-center justify-center"
-                        initial={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          filter: "blur(0px)",
-                          transition: { duration: 0.3, type: "spring", stiffness: 500, damping: 25 },
-                        }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.5,
-                          filter: "blur(4px)",
-                          transition: { duration: 0.2 },
-                        }}
-                      >
-                        <Check className="w-3.5 h-3.5 text-[var(--success-200)]" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
               </div>
             </div>
 
@@ -335,10 +276,10 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                   e.preventDefault();
                   window.open(`/${storeSlug}`, "_blank");
                 }}
-                className="font-semibold justify-center items-center flex flex-row gap-[8px] caption-text text-[var(--system-300)] bg-white/5 w-fit h-6 px-[8px] rounded-md hover:bg-white/20 hover:text-[var(--system-200)] transition-all focus:outline-none"
+                className="cursor-pointer justify-center items-center flex flex-row gap-[8px] caption-text text-[var(--system-300)] bg-white/5 w-fit h-6 px-[8px] rounded-md hover:bg-white/20 hover:text-[var(--system-200)] transition-all focus:outline-none"
               >
                 <Eye className="w-3 h-3 stroke-[3px]" />
-                عرض
+                Preview
               </button>
             </div>
           </div>
@@ -347,7 +288,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           <ScrollAreaRoot className="w-full h-full overflow-hidden rounded-t-[12px]">
             <ScrollAreaViewport
               style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-              className="py-12 px-24 bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-400)]"
+              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-400)]"
             >
               {/* Navbar Editor */}
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />

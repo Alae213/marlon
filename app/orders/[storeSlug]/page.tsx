@@ -200,25 +200,17 @@ function OrdersContent({
 
   return (
     <div className="h-screen w-full bg-[var(--system-50)]">
-      <div className="max-w-6xl mx-auto h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between py-4">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="flex items-center">
-              <Image
-                src="/Logo-text.svg"
-                alt="Marlon Logo"
-                width={118}
-                height={36}
-                className="h-[10px] w-auto"
-              />
-            </Link>
-          </div>
-          <UserButton
-            afterSignOutUrl="/"
-            appearance={{ elements: { avatarBox: "w-9 h-9" } }}
-          />
+       {/* Header */}
+      <div className="sticky top-0 px-[12px] w-full flex items-center justify-between py-4">
+        <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center">
+            <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
+          </Link>
         </div>
+        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+      </div>
+      <div className="max-w-6xl mx-auto h-full">
+        
 
         {/* Page Title */}
         <div className="flex items-center justify-between mb-4">
