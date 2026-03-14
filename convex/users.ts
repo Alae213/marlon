@@ -101,14 +101,16 @@ export const updateUserTheme = mutation({
       .first();
     
     if (!user) {
-      throw new Error("User not found");
+      // User not yet synced from Clerk webhook — theme is already saved
+      // in localStorage, so this is safe to skip.
+      return null;
     }
-    
+
     await ctx.db.patch(user._id, {
       theme: args.theme,
       updatedAt: Date.now(),
     });
-    
+
     return user._id;
   },
 });

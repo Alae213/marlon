@@ -24,11 +24,13 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/core";
 import { Button } from "@/components/core/button";
-import { AnimatedTabs } from "@/components/core/animated-tabs";
 import { LockedData } from "@/components/locked-overlay";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/animate-ui/components/animate/tooltip";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Checkbox, CheckboxIndicator } from "@/components/animate-ui/primitives/headless/checkbox";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { SubtleTab, SubtleTabItem } from "@/components/ui/subtle-tab";
+import type { LucideIcon } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Image from "next/image";
@@ -651,14 +653,13 @@ export function ListView({
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-1">
         {/* View Toggle */}
-        <AnimatedTabs
-          tabs={[
-            { id: "list", label: "List", icon: <ListIcon /> },
-            { id: "state", label: "By State", icon: <KanbanIcon /> },
-          ]}
-          activeTab={viewMode}
-          onChange={(tabId) => onViewModeChange(tabId as "list" | "state")}
-        />
+        <SubtleTab
+          selectedIndex={viewMode === "list" ? 0 : 1}
+          onSelect={(index) => onViewModeChange(index === 0 ? "list" : "state")}
+        >
+          <SubtleTabItem index={0} icon={ListIcon as unknown as LucideIcon} label="List" />
+          <SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />
+        </SubtleTab>
         
         <div className="flex items-center gap-1">
         
@@ -931,61 +932,53 @@ export function ListView({
 
       {/* Table */}
       <div className="overflow-visible">
-        {/* Table Header - with rounded top corners */}
-        <div className="bg-[var(--system-100)] rounded-[12px] py-[6px]">
-          <div className="grid grid-cols-12 gap-[12px]">
-            {/* Checkbox */}
-            <div className="col-span-[1.3]  px-3 flex items-center">
-              <Checkbox
-                checked={selectAll}
-                onChange={(checked) => handleSelectAll(checked === true)}
-                className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] hover:border-[var(--system-400)]"
-              >
-                <CheckboxIndicator className="text-white w-3 h-3" />
-              </Checkbox>
-            </div>
-            {/* Customer */}
-            <div className="col-span-3 px-3 body-base text-[var(--system-600)] flex items-center">Customer</div>
-            {/* Product */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">Product</div>
-            {/* State */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
-              State
-            </div>
-            {/* Total */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
-              Total
-            </div>
-            {/* Date */}
-            <div className="col-span-2 px-3 body-base text-[var(--system-600)] flex items-center">
-              Date
-            </div>
-          </div>
-        </div>
-
-        {/* Table Body */}
-        <div className="divide-y-0">
-          {filteredOrders.map((order, index) => (
-            <div 
-              key={order._id}
-              className={`grid grid-cols-12 gap-[12px] hover:bg-[var(--system-100)]/40 rounded-[16px] transition-colors cursor-pointer ${
-                selectedOrders.has(order._id) ? "bg-[var(--system-100)]" : ""
-              } ${index === filteredOrders.length - 1 ? 'rounded-b-xl' : ''}`}
-              onClick={() => onOrderClick(order)}
-            >
-              {/* Checkbox */}
-              <div className="col-span-[1.3] px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
+        <Table className="table-fixed">
+          <colgroup>
+            <col style={{ width: "48px" }} />
+            <col style={{ width: "25%" }} />
+            <col style={{ width: "16.7%" }} />
+            <col style={{ width: "16.7%" }} />
+            <col style={{ width: "16.7%" }} />
+            <col style={{ width: "16.7%" }} />
+          </colgroup>
+          <TableHeader>
+            <tr className="bg-[var(--system-100)] rounded-[12px]">
+              <th className="rounded-l-[12px] px-3 py-[10px] text-left">
                 <Checkbox
-                  checked={selectedOrders.has(order._id)}
-                  onChange={() => onOrderSelect(order._id)}
-                  className="cursor-pointer w-4 h-4 rounded   bg-[var(--system-200)]/40 hover:bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
+                  checked={selectAll}
+                  onChange={(checked) => handleSelectAll(checked === true)}
+                  className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] hover:border-[var(--system-400)]"
                 >
                   <CheckboxIndicator className="text-white w-3 h-3" />
                 </Checkbox>
-              </div>
-              {/* Customer */}
-              <div className="col-span-3 px-3 py-3 flex items-center">
-                <div>
+              </th>
+              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Customer</th>
+              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Product</th>
+              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">State</th>
+              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Total</th>
+              <th className="rounded-r-[12px] px-3 py-[10px] text-left body-base text-[var(--system-600)]">Date</th>
+            </tr>
+          </TableHeader>
+          <TableBody>
+            {filteredOrders.map((order, index) => (
+              <TableRow
+                key={order._id}
+                index={index}
+                className={`cursor-pointer ${
+                  selectedOrders.has(order._id) ? "bg-[var(--system-100)]" : ""
+                }`}
+                onClick={() => onOrderClick(order)}
+              >
+                <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                  <Checkbox
+                    checked={selectedOrders.has(order._id)}
+                    onChange={() => onOrderSelect(order._id)}
+                    className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)]/40 hover:bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
+                  >
+                    <CheckboxIndicator className="text-white w-3 h-3" />
+                  </Checkbox>
+                </TableCell>
+                <TableCell className="py-3">
                   <LockedData fallback="***">
                     <p className="body-base text-[var(--system-600)]">
                       {highlightMatch(order.customerName, searchQuery)}
@@ -994,34 +987,30 @@ export function ListView({
                       {highlightMatch(order.customerPhone, searchQuery)}
                     </p>
                   </LockedData>
-                </div>
-              </div>
-              {/* Product */}
-              <div className="col-span-2 px-3 py-3 flex items-center">
-                <ProductCell items={order.products || []} />
-              </div>
-              {/* State */}
-              <div className="col-span-2 px-3 py-3 flex items-center" onClick={(e) => e.stopPropagation()}>
-                <StatusCell
-                  orderId={order._id}
-                  status={order.status}
-                  isOpen={!!statusDropdownOpen[order._id]}
-                  onToggle={(open) => onStatusDropdownToggle(order._id, open)}
-                  onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
-                  callLog={(order.callLog as CallLog[]) || []}
-                />
-              </div>
-              {/* Total */}
-              <div className="col-span-2 px-3 py-3 flex items-center body-base text-[var(--system-600)]">
-                {formatPrice(order.total)}
-              </div>
-              {/* Date */}
-              <div className="col-span-2 px-3 py-3 flex items-center body-base text-[var(--system-300)]">
-                {getRelativeTime(order.createdAt)}
-              </div>
-            </div>
-          ))}
-        </div>
+                </TableCell>
+                <TableCell className="py-3">
+                  <ProductCell items={order.products || []} />
+                </TableCell>
+                <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
+                  <StatusCell
+                    orderId={order._id}
+                    status={order.status}
+                    isOpen={!!statusDropdownOpen[order._id]}
+                    onToggle={(open) => onStatusDropdownToggle(order._id, open)}
+                    onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                    callLog={(order.callLog as CallLog[]) || []}
+                  />
+                </TableCell>
+                <TableCell className="py-3 body-base text-[var(--system-600)]">
+                  {formatPrice(order.total)}
+                </TableCell>
+                <TableCell className="py-3 body-base text-[var(--system-300)]">
+                  {getRelativeTime(order.createdAt)}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
 
         {filteredOrders.length === 0 && (
           <div className="p-12 text-center body-base text-[var(--system-300)]">

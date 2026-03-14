@@ -1,8 +1,9 @@
 "use client";
 
-import { AnimatedTabs } from "@/components/core/animated-tabs";
+import { SubtleTab, SubtleTabItem } from "@/components/ui/subtle-tab";
+import type { LucideIcon } from "lucide-react";
 
-// Custom icon components
+// Custom icon components - SVG icons styled to match text color via currentColor
 const ListIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_164_2937)">
@@ -37,14 +38,13 @@ export function KanbanView({ viewMode, onViewModeChange }: KanbanViewProps) {
       {/* Toolbar */}
       <div className="flex items-center justify-start gap-1">
         {/* View Toggle */}
-        <AnimatedTabs
-          tabs={[
-            { id: "list", label: "List", icon: <ListIcon /> },
-            { id: "state", label: "By State", icon: <KanbanIcon /> },
-          ]}
-          activeTab={viewMode}
-          onChange={(tabId) => onViewModeChange(tabId as "list" | "state")}
-        />
+        <SubtleTab
+          selectedIndex={viewMode === "list" ? 0 : 1}
+          onSelect={(index) => onViewModeChange(index === 0 ? "list" : "state")}
+        >
+          <SubtleTabItem index={0} icon={ListIcon as unknown as LucideIcon} label="List" />
+          <SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />
+        </SubtleTab>
       </div>
 
       {/* Content */}
