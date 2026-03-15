@@ -48,7 +48,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
     <TooltipProvider>
       
       <div 
-      className="fixed flex flex-row items-center backdrop-blur-[4px] overflow-hidden justify-center bottom-4 left-1/2 bg-[image:var(--gradient-popup)] -translate-x-1/2  rounded-[999px] p-[5px] z-40 w-fit"
+      className="fixed flex flex-row items-center backdrop-blur-[4px] overflow-hidden justify-center bottom-4 left-1/2 bg-[var(--system-600)] -translate-x-1/2  rounded-[999px] p-[5px] z-40 w-fit"
       style={{
         boxShadow: 'var(--bottom-nav-shadow)',
       }}>
@@ -108,7 +108,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
         
       </div>
       
-      <div className="h-[22px]"></div>
+     
     </TooltipProvider>
   );
 }

@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check, Globe } from "lucide-react";
+import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check, Globe, CopyIcon } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -215,7 +215,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     <div className="h-screen w-full">
 
       {/* Browser Chrome Window */}
-      <div className="flex flex-col items-center justify-center bg-[var(--system-50)]">
+      <div className="flex flex-col items-center justify-center bg-[var(--system-50)] h-full">
         {/* Header */}
       <div className="px-[12px] w-full flex items-center justify-between py-4">
         <div className="flex items-center gap-3">
@@ -235,52 +235,98 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           className="flex flex-col gap-[8px] w-full h-[96vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
         >
           {/* Browser Window Header */}
-          <div className="px-[8px] flex items-center justify-between">
+          <div className="px-[8px] flex items-center justify-between h-[24px]">
             {/* Left */}
-            <div className="w-[120px] flex items-center gap-2">
+            <div className="w-[150px] flex items-center gap-2">
               <button
                 onClick={() => router.push("/")}
                 className="flex items-center justify-center cursor-pointer"
               >
-                <Image src="/windw.svg" alt="marlon" width={34} height={34} />
+                <Image src="/windw.svg" alt="marlon" width={24} height={24} className="w-8" />
               </button>
-              <Button variant="outline" size="sm" onClick={() => setIsSettingsOpen(true)} aria-label="Settings">
-                <Settings className="w-4 h-4" />
-              </Button>
+              
             </div>
 
             {/* Center */}
-            <div className="flex-1 flex justify-center">
+            <div className="flex-1 flex justify-center h-[26px]">
               <div
                 style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-                className="bg-black/40 flex flex-row justify-between items-center gap-2 rounded-[8px] p-[3px] pl-[8px] w-[300px]"
+                className="h-full bg-black/40 flex flex-row justify-between items-center gap-2 rounded-[8px] p-[3px] pl-[6px] py-1 w-[300px]"
               >
-                <Globe className="w-4 h-4 text-[var(--system-200)]" />
-
+                <div className="flex items-center gap-2 w-[50px]">
+                  <Image src="/favicon.svg" alt="Marlon" width={27} height={27} className="w-4 h-4" />
+                </div>
                 <div className="group relative cursor-pointer">
-                  <p className="caption-text text-[var(--system-200)] font-semibold">
+                  <p className="label-xs text-[var(--system-300)]">
                     {store?.name ?? storeSlug}
-                    <span className="absolute left-[-42px] top-[42px] mt-1 w-max bg-[var(--system-100)] text-[var(--system-400)] rounded-[6px] text-xs py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none shadow-lg z-50">
+                    <span className="absolute left-[-42px] top-[42px] mt-1 w-max bg-[var(--system-100)] text-[var(--system-400)] rounded-[6px] label-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none shadow-lg z-50">
                       marlon.app/{storeSlug}
                     </span>
                   </p>
                 </div>
-
+                <div className="w-[50px] flex justify-end">
+                <button
+                  onClick={handleCopy}
+                  className="cursor-pointer w-4 h-4 flex items-center justify-center rounded hover:bg-white/10 transition-all duration-200"
+                  title="Copy URL"
+                >
+                  <AnimatePresence mode="wait">
+                    {!copied ? (
+                      <motion.div
+                        key="copy"
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.8 }}
+                      >
+                        <Copy className="w-3 h-3 text-[var(--system-300)]" />
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="check"
+                        initial={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
+                        animate={{
+                          opacity: 1,
+                          scale: 1,
+                          filter: "blur(0px)",
+                          transition: { duration: 0.1, type: "spring", stiffness: 500, damping: 25 },
+                        }}
+                        exit={{
+                          opacity: 0,
+                          scale: 0.5,
+                          filter: "blur(4px)",
+                          transition: { duration: 0.1 },
+                        }}
+                      >
+                        <Check className="w-3 h-3 text-[#17CFAA] stroke-[3px]" />
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </button>
+                </div>
               </div>
             </div>
-
+ 
             {/* Right */}
-            <div className="w-[120px] flex justify-end">
+            <div className="flex justify-end gap-1 w-[150px]">
               <button
                 onClick={(e) => {
                   e.preventDefault();
                   window.open(`/${storeSlug}`, "_blank");
                 }}
-                className="cursor-pointer justify-center items-center flex flex-row gap-[8px] caption-text text-[var(--system-300)] bg-white/5 w-fit h-6 px-[8px] rounded-md hover:bg-white/20 hover:text-[var(--system-200)] transition-all focus:outline-none"
+                className="cursor-pointer label-xs justify-center items-center flex flex-row gap-[8px]  text-white bg-white/5 w-fit h-6 px-[8px] rounded-[10px] hover:bg-white/10 transition-all focus:outline-none"
               >
-                <Eye className="w-3 h-3 stroke-[3px]" />
+                <Eye className="w-3 h-3 stroke-[2px]" />
                 Preview
               </button>
+              
+              <button
+                onClick={() => setIsSettingsOpen(true)}
+                aria-label="Settings"
+                className="cursor-pointer label-xs justify-center items-center flex flex-row gap-[8px]  text-white bg-white/5 w-fit h-6 px-[8px] rounded-[10px] hover:bg-white/10 transition-all focus:outline-none"
+              >
+                <Settings className="w-3.5 h-3.5 stroke-[2px]" />
+              </button>
+              
             </div>
           </div>
 
@@ -288,7 +334,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           <ScrollAreaRoot className="w-full h-full overflow-hidden rounded-t-[12px]">
             <ScrollAreaViewport
               style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-400)]"
+              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-600)] overflow-hidden"
             >
               {/* Navbar Editor */}
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />
@@ -320,7 +366,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                     action={
                       <Button onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="w-4 h-4" />
-                        إضافة منتج
+                         Add Product
                       </Button>
                     }
                   />
@@ -378,7 +424,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               orientation="vertical"
               className="flex w-2 touch-none select-none p-[1px] transition-colors"
             >
-              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-400)]" />
+              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-300)]" />
             </ScrollAreaScrollbar>
           </ScrollAreaRoot>
 

@@ -40,16 +40,21 @@ export interface ProductFormData {
 
 // ── Site Content Types ─────────────────────────────────────────
 
+export interface NavbarLink {
+  id: string;
+  text: string;
+  url: string;
+  isDefault: boolean;
+  enabled: boolean;
+}
+
 export interface NavbarContent {
   logoStorageId?: string;
   logoUrl?: string;
-  links: Array<{
-    text: string;
-    url: string;
-    enabled: boolean;
-  }>;
-  background?: string;
-  textColor?: string;
+  background?: "dark" | "light" | "glass";
+  textColor?: "dark" | "light";
+  showCart?: boolean;
+  links: NavbarLink[];
 }
 
 export interface HeroContent {

@@ -5,18 +5,24 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 
 // Type definitions for site content
+
+// Navbar link structure
+interface NavbarLink {
+  id: string;
+  text: string;
+  url: string;
+  isDefault: boolean;
+  enabled: boolean;
+}
+
 interface NavbarContent {
   logo?: string;
   logoStorageId?: string;
   logoUrl?: string;
-  background?: "dark" | "light" | "transparent";
+  background?: "dark" | "light" | "glass";
   textColor?: "dark" | "light";
   showCart?: boolean;
-  links: Array<{
-    text: string;
-    url: string;
-    enabled: boolean;
-  }>;
+  links: NavbarLink[];
 }
 
 interface HeroContent {
@@ -165,7 +171,7 @@ export const generateUploadUrl = mutation({
 export const setNavbarStyles = mutation({
   args: {
     storeId: v.id("stores"),
-    background: v.optional(v.union(v.literal("dark"), v.literal("light"), v.literal("transparent"))),
+    background: v.optional(v.union(v.literal("dark"), v.literal("light"), v.literal("glass"))),
     textColor: v.optional(v.union(v.literal("dark"), v.literal("light"))),
   },
   handler: async (ctx, args) => {
@@ -177,10 +183,19 @@ export const setNavbarStyles = mutation({
     const now = Date.now();
     const baseContent = existing?.content as NavbarContent ?? DEFAULT_NAVBAR;
 
+    // Lock text color based on background mode
+    let nextTextColor = args.textColor;
+    if (args.background === "light") {
+      nextTextColor = "dark"; // Lock to dark for light mode
+    } else if (args.background === "dark") {
+      nextTextColor = "light"; // Lock to light for dark mode
+    }
+    // For glass mode, allow text color to be set
+
     const nextContent: NavbarContent = {
       ...baseContent,
       ...(args.background ? { background: args.background } : {}),
-      ...(args.textColor ? { textColor: args.textColor } : {}),
+      ...(nextTextColor ? { textColor: nextTextColor } : {}),
     };
 
     if (existing) {
@@ -194,6 +209,187 @@ export const setNavbarStyles = mutation({
       content: nextContent,
       updatedAt: now,
     });
+  },
+});
+
+// Set all navbar links (for reordering)
+export const setNavbarLinks = mutation({
+  args: {
+    storeId: v.id("stores"),
+    links: v.array(v.object({
+      id: v.string(),
+      text: v.string(),
+      url: v.string(),
+      isDefault: v.boolean(),
+      enabled: v.boolean(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
+      .first();
+
+    const now = Date.now();
+    const baseContent = existing?.content as NavbarContent ?? DEFAULT_NAVBAR;
+
+    const nextContent: NavbarContent = {
+      ...baseContent,
+      links: args.links,
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("siteContent", {
+      storeId: args.storeId,
+      section: "navbar",
+      content: nextContent,
+      updatedAt: now,
+    });
+  },
+});
+
+// Add a single navbar link
+export const addNavbarLink = mutation({
+  args: {
+    storeId: v.id("stores"),
+    link: v.object({
+      id: v.string(),
+      text: v.string(),
+      url: v.string(),
+      isDefault: v.boolean(),
+      enabled: v.boolean(),
+    }),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
+      .first();
+
+    const now = Date.now();
+    const baseContent = existing?.content as NavbarContent ?? DEFAULT_NAVBAR;
+
+    const nextContent: NavbarContent = {
+      ...baseContent,
+      links: [...baseContent.links, args.link],
+    };
+
+    if (existing) {
+      await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
+      return existing._id;
+    }
+
+    return await ctx.db.insert("siteContent", {
+      storeId: args.storeId,
+      section: "navbar",
+      content: nextContent,
+      updatedAt: now,
+    });
+  },
+});
+
+// Remove a navbar link by ID
+export const removeNavbarLink = mutation({
+  args: {
+    storeId: v.id("stores"),
+    linkId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
+      .first();
+
+    if (!existing) return null;
+
+    const now = Date.now();
+    const baseContent = existing.content as NavbarContent;
+
+    // Filter out the link, but preserve default links
+    const nextLinks = baseContent.links.filter(
+      (link) => link.isDefault || link.id !== args.linkId
+    );
+
+    const nextContent: NavbarContent = {
+      ...baseContent,
+      links: nextLinks,
+    };
+
+    await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
+    return existing._id;
+  },
+});
+
+// Update a navbar link
+export const updateNavbarLink = mutation({
+  args: {
+    storeId: v.id("stores"),
+    linkId: v.string(),
+    text: v.optional(v.string()),
+    url: v.optional(v.string()),
+    enabled: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
+      .first();
+
+    if (!existing) return null;
+
+    const now = Date.now();
+    const baseContent = existing.content as NavbarContent;
+
+    const nextLinks = baseContent.links.map((link) => {
+      if (link.id === args.linkId) {
+        return {
+          ...link,
+          ...(args.text !== undefined ? { text: args.text } : {}),
+          ...(args.url !== undefined ? { url: args.url } : {}),
+          ...(args.enabled !== undefined ? { enabled: args.enabled } : {}),
+        };
+      }
+      return link;
+    });
+
+    const nextContent: NavbarContent = {
+      ...baseContent,
+      links: nextLinks,
+    };
+
+    await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
+    return existing._id;
+  },
+});
+
+// Delete logo (remove from navbar)
+export const deleteNavbarLogo = mutation({
+  args: {
+    storeId: v.id("stores"),
+  },
+  handler: async (ctx, args) => {
+    const existing = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
+      .first();
+
+    if (!existing) return null;
+
+    const now = Date.now();
+    const baseContent = existing.content as NavbarContent;
+
+    const nextContent: NavbarContent = {
+      ...baseContent,
+      logoStorageId: undefined,
+      logoUrl: undefined,
+    };
+
+    await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
+    return existing._id;
   },
 });
 
@@ -516,9 +712,9 @@ export const DEFAULT_NAVBAR: NavbarContent = {
   background: "light",
   textColor: "dark",
   links: [
-    { text: "الرئيسية", url: "/", enabled: true },
-    { text: "المنتجات", url: "/#products", enabled: true },
-    { text: "تواصل معنا", url: "/#contact", enabled: true },
+    { id: "link-shop", text: "Shop", url: "#products", isDefault: true, enabled: true },
+    { id: "link-faq", text: "FAQ", url: "/", isDefault: true, enabled: true },
+    { id: "link-help", text: "Help", url: "/", isDefault: true, enabled: true },
   ],
   showCart: true,
 };

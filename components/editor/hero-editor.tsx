@@ -115,15 +115,11 @@ export function HeroEditor({
         : "text-center items-center";
 
   return (
-    <Card className="mb-6" padding="none">
-      <div className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الرئيسية (Hero)</h2>
-          <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
-        </div>
+    <>
+      <div>
 
         <div
-          className="relative border border-[#e5e5e5] dark:border-[#262626] overflow-hidden min-h-[200px] flex flex-col items-center justify-center p-8"
+          className="relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center p-8"
           style={
             heroBgUrl
               ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
@@ -204,8 +200,8 @@ export function HeroEditor({
           </div>
         </div>
 
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <div className="text-xs text-[#737373]">تغيير صورة الخلفية</div>
+        <div className="flex items-center justify-between gap-3">
+         
           <div className="flex items-center gap-2">
             <input
               id="hero-bg-upload"
@@ -225,6 +221,6 @@ export function HeroEditor({
           <p className="mt-2 text-xs text-red-500">{uploadError}</p>
         )}
       </div>
-    </Card>
+    </>
   );
 }

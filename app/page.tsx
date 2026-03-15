@@ -211,8 +211,8 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                         </p>
                       
                   <div
-                    style={{ boxShadow: "var(--shadow-xl-shadow)" }}
-                    className="flex flex-col gap-[11px] p-[12px] rounded-[22px] bg-white/10 backdrop-blur-[12px] "
+                    style={{ boxShadow: "var(--shadow-shadow)" }}
+                    className="flex flex-col gap-[11px] p-[12px] rounded-[22px] bg-white/10 overflow-visible"
                   >
                     <div className="flex flex-row gap-4 items-center w-full h-[27px]">
                       

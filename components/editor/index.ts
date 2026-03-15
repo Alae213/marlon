@@ -13,13 +13,14 @@ export { DeliveryIntegrationSettings } from "./delivery-integration-settings";
 export { StoreInfoSettings } from "./store-info-settings";
 export { useInlineEdit } from "./hooks/use-inline-edit";
 export { useImageUpload } from "./hooks/use-image-upload";
-export { formatPrice } from "./utils";
+export { formatPrice, generateId } from "./utils";
 export type {
   Variant,
   VariantOption,
   Product,
   ProductFormData,
   NavbarContent,
+  NavbarLink,
   HeroContent,
   FooterContent,
   EditableField,

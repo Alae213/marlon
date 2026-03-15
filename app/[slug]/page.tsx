@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, Package } from "lucide-react";
+import { Search, Package, Menu, X } from "lucide-react";
 import { CartIcon } from "@/components/core/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
@@ -21,6 +21,22 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
+// Types matching the backend
+interface NavbarLink {
+  id: string;
+  text: string;
+  url: string;
+  isDefault: boolean;
+  enabled: boolean;
+}
+
+interface NavbarContent {
+  logoUrl?: string;
+  background?: "dark" | "light" | "glass";
+  textColor?: "dark" | "light";
+  links?: NavbarLink[];
+}
+
 export default function StorefrontPage() {
   return (
     <CartProvider>
@@ -33,6 +49,7 @@ function StorefrontContent() {
   const params = useParams();
   const slug = params?.slug as string;
   const [searchQuery, setSearchQuery] = useState("");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { addItem, itemCount, isOpen, openCart, closeCart } = useCart();
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
@@ -63,10 +80,11 @@ function StorefrontContent() {
     product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const currentNavbar = navbarContent?.content as { background?: string; textColor?: string; logoUrl?: string } | undefined;
+  const currentNavbar = navbarContent?.content as NavbarContent | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
   const navbarText = currentNavbar?.textColor ?? "dark";
   const navbarLogoUrl = currentNavbar?.logoUrl;
+  const navbarLinks = currentNavbar?.links ?? [];
 
   // Hero content
   const currentHero = heroContent?.content as { 
@@ -100,17 +118,22 @@ function StorefrontContent() {
 
   const navbarBgClass =
     navbarBg === "dark"
-      ? "bg-[var(--system-700)]"
-      : navbarBg === "transparent"
-        ? "bg-transparent"
+      ? "bg-[#0a0a0a]"
+      : navbarBg === "glass"
+        ? "bg-white/80"
         : "bg-white";
 
-  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-600)]";
+  const navbarGlassStyle = navbarBg === "glass" ? {
+    backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
+  } : {};
+
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[#171717]";
 
   return (
     <div className="w-full bg-[var(--system-50)]">
       {/* Navbar */}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`}>
+      <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`} style={navbarGlassStyle}>
         <div className="flex items-center max-w-6xl mx-auto justify-between px-4 py-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-full bg-[var(--system-100)] overflow-hidden flex items-center justify-center flex-shrink-0">
@@ -128,13 +151,29 @@ function StorefrontContent() {
             </div>
           </div>
 
-          <div className="hidden sm:flex items-center gap-5">
-            <span className={`body-base ${navbarTextClass}`}>Shop</span>
-            <span className={`body-base ${navbarTextClass}`}>FAQ</span>
-            <span className={`body-base ${navbarTextClass}`}>Help</span>
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex items-center gap-5">
+            {navbarLinks.filter(link => link.enabled).map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                className={`body-base ${navbarTextClass} hover:opacity-70 transition-opacity`}
+              >
+                {link.text}
+              </a>
+            ))}
           </div>
 
           <div className="flex items-center gap-2">
+            {/* Mobile Menu Button */}
+            <button 
+              onClick={() => setMobileMenuOpen(true)}
+              className={`lg:hidden w-9 h-9 flex items-center justify-center ${navbarTextClass}`}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            
+            {/* Cart Button */}
             <button 
               onClick={openCart}
               className={`w-9 h-9 flex items-center justify-center relative ${navbarTextClass}`}
@@ -149,6 +188,45 @@ function StorefrontContent() {
           </div>
         </div>
       </div>
+
+      {/* Mobile Menu Drawer */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Drawer */}
+          <div className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[#0a0a0a] shadow-xl z-50 lg:hidden flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
+              <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">القائمة</h2>
+              <button
+                onClick={() => setMobileMenuOpen(false)}
+                className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Links */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-2">
+              {navbarLinks.filter(link => link.enabled).map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block p-3 rounded-lg bg-[#f5f5f5] dark:bg-[#171717] text-[#171717] dark:text-[#fafafa]"
+                >
+                  {link.text}
+                </a>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Hero Section */}
       {heroTitle && (
@@ -260,15 +338,15 @@ function StorefrontContent() {
 
           {/* Links */}
           <div className="flex flex-col items-start gap-6">
-              <p className="body-base text-[var(--system-400)]">
-                Shop
-              </p>
-              <p className="body-base text-[var(--system-400)]">
-                FAQ
-              </p>
-              <p className="body-base text-[var(--system-400)]">
-                Help
-              </p>
+            {navbarLinks.filter(link => link.enabled).map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                className="body-base text-[var(--system-400)] hover:text-[var(--system-600)] transition-colors"
+              >
+                {link.text}
+              </a>
+            ))}
           </div>
 
 
