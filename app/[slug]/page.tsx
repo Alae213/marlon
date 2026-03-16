@@ -155,7 +155,7 @@ function StorefrontContent() {
           <div className="hidden lg:flex items-center gap-5">
             {navbarLinks.filter(link => link.enabled).map((link) => (
               <a
-                key={link.id}
+                key={`desktop-${link.id}`}
                 href={link.url}
                 className={`body-base ${navbarTextClass} hover:opacity-70 transition-opacity`}
               >
@@ -215,7 +215,7 @@ function StorefrontContent() {
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
               {navbarLinks.filter(link => link.enabled).map((link) => (
                 <a
-                  key={link.id}
+                  key={`mobile-${link.id}`}
                   href={link.url}
                   onClick={() => setMobileMenuOpen(false)}
                   className="block p-3 rounded-lg bg-[#f5f5f5] dark:bg-[#171717] text-[#171717] dark:text-[#fafafa]"
@@ -340,7 +340,7 @@ function StorefrontContent() {
           <div className="flex flex-col items-start gap-6">
             {navbarLinks.filter(link => link.enabled).map((link) => (
               <a
-                key={link.id}
+                key={`footer-${link.id}`}
                 href={link.url}
                 className="body-base text-[var(--system-400)] hover:text-[var(--system-600)] transition-colors"
               >

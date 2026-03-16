@@ -561,6 +561,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                     {mobileReorderMode && (
                       <div className="flex items-center gap-1">
                         <button
+                          key={`up-${link.id}`}
                           onClick={() => handleMoveLink(index, "up")}
                           disabled={index === 0}
                           className="p-1 disabled:opacity-30"
@@ -568,6 +569,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                           <ChevronUp className="w-4 h-4" />
                         </button>
                         <button
+                          key={`down-${link.id}`}
                           onClick={() => handleMoveLink(index, "down")}
                           disabled={index === links.length - 1}
                           className="p-1 disabled:opacity-30"
