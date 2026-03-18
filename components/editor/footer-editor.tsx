@@ -38,7 +38,7 @@ export function FooterEditor({
   const footerLogoUrl = (navbarContent?.content as NavbarContent | undefined)?.logoUrl;
   const contactPhone = currentFooter?.contactPhone ?? "";
   const contactEmail = currentFooter?.contactEmail ?? "";
-  const copyright = currentFooter?.copyright ?? "جميع الحقوق محفوظة";
+  const copyright = currentFooter?.copyright ?? "All rights reserved";
   const socialLinks = useMemo(() => currentFooter?.socialLinks ?? [], [currentFooter?.socialLinks]);
 
   const isEditingPhone = editingField?.field === "footerPhone";
@@ -111,8 +111,8 @@ export function FooterEditor({
     <Card className="mb-6" padding="none">
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">قسم الفوتر (Footer)</h2>
-          <div className="text-xs text-[#737373]">المعاينة + التحرير</div>
+          <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">Footer Section</h2>
+          <div className="text-xs text-[#737373]">Preview + Edit</div>
         </div>
 
         <div className="border border-[#e5e5e5] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#171717] p-6">
@@ -127,14 +127,14 @@ export function FooterEditor({
                 )}
               </div>
               <div>
-                <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">متجرك</div>
-                <div className="text-xs text-[#737373]">الشعار مُزامَن من Navbar</div>
+                <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">Your Store</div>
+                <div className="text-xs text-[#737373]">Logo synced from Navbar</div>
               </div>
             </div>
 
             {/* Contact Info */}
             <div className="space-y-3">
-              <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">معلومات التواصل</div>
+              <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">Contact Info</div>
 
               {/* Phone - Inline Edit */}
               {isEditingPhone ? (
@@ -146,7 +146,7 @@ export function FooterEditor({
                   onBlur={handlePhoneBlur}
                   onKeyDown={handlePhoneKeyDown}
                   className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                  placeholder="رقم الهاتف"
+                  placeholder="Phone number"
                 />
               ) : (
                 <div
@@ -154,7 +154,7 @@ export function FooterEditor({
                   onClick={() => onStartEditing("footerPhone", contactPhone)}
                 >
                   <span className="text-[#737373]">📱</span>
-                  <span>{contactPhone || "أضف رقم الهاتف"}</span>
+                  <span>{contactPhone || "Add phone number"}</span>
                 </div>
               )}
 
@@ -168,7 +168,7 @@ export function FooterEditor({
                   onBlur={handleEmailBlur}
                   onKeyDown={handleEmailKeyDown}
                   className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                  placeholder="البريد الإلكتروني"
+                  placeholder="Email address"
                 />
               ) : (
                 <div
@@ -176,7 +176,7 @@ export function FooterEditor({
                   onClick={() => onStartEditing("footerEmail", contactEmail)}
                 >
                   <span className="text-[#737373]">✉️</span>
-                  <span>{contactEmail || "أضف البريد الإلكتروني"}</span>
+                  <span>{contactEmail || "Add email address"}</span>
                 </div>
               )}
             </div>
@@ -192,7 +192,7 @@ export function FooterEditor({
                   onBlur={handleCopyrightBlur}
                   onKeyDown={handleCopyrightKeyDown}
                   className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                  placeholder="نص الحقوق"
+                  placeholder="Copyright text"
                 />
               ) : (
                 <div
@@ -208,7 +208,7 @@ export function FooterEditor({
           {/* Social Links Row */}
           <div className="mt-6 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[#737373]">روابط التواصل الاجتماعي</span>
+              <span className="text-sm text-[#737373]">Social Media Links</span>
               <div className="flex items-center gap-2">
                 {SOCIAL_PLATFORMS.map((platform) => {
                   const link = socialLinks.find((l) => l.platform === platform);

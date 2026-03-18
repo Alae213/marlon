@@ -43,13 +43,13 @@ export function ProductCard({
   const isDeleting = deletingProductId === product._id;
 
   return (
-    <div className="group relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] overflow-hidden hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200">
+    <div className="group relative bg-white dark:bg-[var(--system-700)] border border-[var(--system-200)] dark:border-[var(--system-600)] overflow-hidden hover:border-[var(--system-700)] dark:hover:border-[var(--system-50)] transition-all duration-200">
       {/* Image */}
-      <div className="aspect-square bg-[#f5f5f5] dark:bg-[#171717] flex items-center justify-center relative">
+      <div className="aspect-square bg-[var(--system-50)] dark:bg-[var(--system-700)] flex items-center justify-center relative">
         {product.images?.[0] ? (
           <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
         ) : (
-          <ImageIcon className="w-8 h-8 text-[#d4d4d4]" />
+          <ImageIcon className="w-8 h-8 text-[var(--system-300)]" />
         )}
       </div>
 
@@ -64,11 +64,11 @@ export function ProductCard({
             onChange={(e) => onEditValueChange(e.target.value)}
             onBlur={onSaveEdit}
             onKeyDown={onKeyDown}
-            className="w-full font-normal text-[#171717] dark:text-[#fafafa] mb-2 px-1 py-0.5 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+            className="w-full body-base text-[var(--system-700)] dark:text-[var(--system-50)] mb-2 px-1 py-0.5 border border-[var(--system-700)] dark:border-[var(--system-50)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
           />
         ) : (
           <h3
-            className="font-normal text-[#171717] dark:text-[#fafafa] mb-2 line-clamp-2 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+            className="body-base text-[var(--system-700)] dark:text-[var(--system-50)] mb-2 line-clamp-2 cursor-pointer hover:text-[var(--system-400)] dark:hover:text-[var(--system-200)]"
             onClick={() => onStartEditing(product._id, "name", product.name)}
           >
             {product.name}
@@ -85,11 +85,11 @@ export function ProductCard({
               onChange={(e) => onEditValueChange(e.target.value)}
               onBlur={onSaveEdit}
               onKeyDown={onKeyDown}
-              className="font-medium text-[#171717] dark:text-[#fafafa] px-1 py-0.5 w-24 border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+              className="body-base font-semibold text-[var(--system-700)] dark:text-[var(--system-50)] tabular-nums px-1 py-0.5 w-24 border border-[var(--system-700)] dark:border-[var(--system-50)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
             />
           ) : (
             <span
-              className="font-medium text-[#171717] dark:text-[#fafafa] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+              className="body-base font-semibold text-[var(--system-700)] dark:text-[var(--system-50)] tabular-nums cursor-pointer hover:text-[var(--system-400)] dark:hover:text-[var(--system-200)]"
               onClick={() => onStartEditing(product._id, "basePrice", product.basePrice)}
             >
               {formatPrice(product.basePrice)}
@@ -106,12 +106,12 @@ export function ProductCard({
                 onChange={(e) => onEditValueChange(e.target.value)}
                 onBlur={onSaveEdit}
                 onKeyDown={onKeyDown}
-                className="text-sm text-[#a3a3a3] line-through px-1 py-0.5 w-24 border border-[#a3a3a3] bg-white dark:bg-[#0a0a0a] focus:outline-none"
-                placeholder="السعر القديم"
+                className="label-xs text-[var(--system-300)] line-through tabular-nums px-1 py-0.5 w-24 border border-[var(--system-300)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
+                placeholder="Old price"
               />
             ) : (
               <span
-                className="text-sm text-[#a3a3a3] line-through cursor-pointer hover:text-[#737373]"
+                className="label-xs text-[var(--system-300)] line-through cursor-pointer hover:text-[var(--system-400)]"
                 onClick={() => onStartEditing(product._id, "oldPrice", product.oldPrice || "")}
               >
                 {formatPrice(product.oldPrice)}
@@ -128,10 +128,10 @@ export function ProductCard({
             e.stopPropagation();
             onEdit(product);
           }}
-          className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
-          title="تعديل"
+          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-[var(--system-50)] dark:hover:bg-[var(--system-600)] transition-colors"
+          title="Edit"
         >
-          <Edit className="w-4 h-4 text-[#525252]" />
+          <Edit className="w-4 h-4 text-[var(--system-400)]" />
         </button>
         <button
           onClick={(e) => {
@@ -139,13 +139,13 @@ export function ProductCard({
             e.stopPropagation();
             onToggleArchive(product._id, product.isArchived);
           }}
-          className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] transition-colors"
-          title={product.isArchived ? "تفعيل" : "تعطيل"}
+          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-[var(--system-50)] dark:hover:bg-[var(--system-600)] transition-colors"
+          title={product.isArchived ? "Activate" : "Deactivate"}
         >
           {product.isArchived ? (
-            <Eye className="w-4 h-4 text-[#16a34a]" />
+            <Eye className="w-4 h-4 text-[var(--success)]" />
           ) : (
-            <EyeOff className="w-4 h-4 text-[#d97706]" />
+            <EyeOff className="w-4 h-4 text-[var(--warning)]" />
           )}
         </button>
         <button
@@ -154,10 +154,10 @@ export function ProductCard({
             e.stopPropagation();
             onRequestDelete(product._id);
           }}
-          className="p-2 bg-white/90 dark:bg-[#0a0a0a]/90 hover:bg-[#fee2e2] dark:hover:bg-[#7f1d1d]/20 transition-colors"
-          title="حذف"
+          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          title="Delete"
         >
-          <Trash2 className="w-4 h-4 text-[#dc2626]" />
+          <Trash2 className="w-4 h-4 text-[var(--destructive)]" />
         </button>
       </div>
 

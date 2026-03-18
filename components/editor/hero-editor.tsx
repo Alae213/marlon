@@ -35,8 +35,8 @@ export function HeroEditor({
   const { uploadToStorage } = useImageUpload();
 
   const currentHero = (heroContent?.content ?? undefined) as HeroContent | undefined;
-  const heroTitle = currentHero?.title ?? "متجرنا الإلكتروني";
-  const heroCtaText = currentHero?.ctaText ?? "تسوق الآن";
+  const heroTitle = currentHero?.title ?? "Our Online Store";
+  const heroCtaText = currentHero?.ctaText ?? "Shop Now";
   const heroCtaColor = currentHero?.ctaColor ?? "#171717";
   const heroLayout = currentHero?.layout ?? "center";
   const heroBgUrl = currentHero?.backgroundImageUrl;
@@ -99,7 +99,7 @@ export function HeroEditor({
           await setHeroStyles({ storeId, backgroundImageStorageId: storageId });
         } catch (error) {
           console.error("Failed to upload hero background:", error);
-          setUploadError("فشل في رفع صورة الخلفية");
+          setUploadError("Failed to upload background image");
         }
       };
       reader.readAsDataURL(file);
@@ -141,7 +141,7 @@ export function HeroEditor({
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
                 className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] focus:outline-none text-center"
-                placeholder="عنوان الصفحة"
+                placeholder="Page title"
               />
             ) : (
               <h1
@@ -163,7 +163,7 @@ export function HeroEditor({
                 onKeyDown={handleCtaKeyDown}
                 className="px-6 py-3 text-white font-medium bg-transparent border-b-2 focus:outline-none"
                 style={{ backgroundColor: heroCtaColor }}
-                placeholder="نص الزر"
+                placeholder="Button text"
               />
             ) : (
               <button
@@ -178,24 +178,24 @@ export function HeroEditor({
 
           {/* Layout Toggle - Show on hover */}
           <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
-            <span className="text-xs text-[#737373]">الموقع:</span>
+            <span className="text-xs text-[#737373]">Position:</span>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "left" })}
               className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
             >
-              يسار
+              Left
             </button>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "center" })}
               className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
             >
-              وسط
+              Center
             </button>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "right" })}
               className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
             >
-              يمين
+              Right
             </button>
           </div>
         </div>
@@ -212,7 +212,7 @@ export function HeroEditor({
             />
             <Button variant="outline" onClick={() => document.getElementById("hero-bg-upload")?.click()}>
               <Upload className="w-4 h-4" />
-              رفع صورة
+              Upload Image
             </Button>
           </div>
         </div>

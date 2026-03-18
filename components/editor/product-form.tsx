@@ -66,39 +66,39 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
   return (
     <div className="space-y-5">
       <div>
-        <label className="block text-sm mb-2">اسم المنتج</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="قميص رجالي قطني" />
+        <label className="block label-xs mb-2">Product Name</label>
+        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Cotton men shirt" />
       </div>
 
       <div>
-        <label className="block text-sm mb-2">الوصف</label>
+        <label className="block label-xs mb-2">Description</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="وصف المنتج..."
+          placeholder="Product description..."
           rows={3}
         />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm mb-2">السعر (د.ج)</label>
+          <label className="block label-xs mb-2">Price (DZD)</label>
           <Input type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="2500" />
         </div>
         <div>
-          <label className="block text-sm mb-2">السعر القديم (اختياري)</label>
+          <label className="block label-xs mb-2">Old Price (optional)</label>
           <Input type="number" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} placeholder="3000" />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">صور المنتج</label>
+        <label className="block text-sm font-medium text-[var(--system-400)] dark:text-[var(--system-200)] mb-2">Product Images</label>
         <ImageUploader images={images} onImagesChange={setImages} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[#525252] dark:text-[#d4d4d4] mb-2">
-          الخيارات (مثل: المقاس، اللون)
+        <label className="block text-sm font-medium text-[var(--system-400)] dark:text-[var(--system-200)] mb-2">
+          Options (e.g., Size, Color)
         </label>
         <InlineVariantEditor variants={variants} onChange={setVariants} />
       </div>
@@ -111,10 +111,10 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
 
       <div className="flex gap-3 pt-2">
         <Button variant="outline" onClick={onClose} className="flex-1">
-          إلغاء
+          Cancel
         </Button>
         <Button onClick={handleSubmit} disabled={!name || !basePrice} className="flex-1">
-          {isEditing ? "حفظ التغييرات" : "إضافة المنتج"}
+          {isEditing ? "Save Changes" : "Add Product"}
         </Button>
       </div>
     </div>

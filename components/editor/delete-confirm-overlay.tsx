@@ -9,7 +9,7 @@ export function DeleteConfirmOverlay({ onCancel, onConfirm }: DeleteConfirmOverl
   return (
     <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
       <div className="text-center p-4">
-        <p className="text-white font-normal mb-3">حذف المنتج؟</p>
+        <p className="text-white font-normal mb-3">Delete product?</p>
         <div className="flex gap-2 justify-center">
           <button
             onClick={(e) => {
@@ -17,9 +17,9 @@ export function DeleteConfirmOverlay({ onCancel, onConfirm }: DeleteConfirmOverl
               e.stopPropagation();
               onCancel();
             }}
-            className="px-3 py-1.5 bg-white text-[#171717] text-sm"
+            className="px-3 py-1.5 bg-white text-[var(--system-700)] text-sm"
           >
-            إلغاء
+            Cancel
           </button>
           <button
             onClick={(e) => {
@@ -27,9 +27,9 @@ export function DeleteConfirmOverlay({ onCancel, onConfirm }: DeleteConfirmOverl
               e.stopPropagation();
               onConfirm();
             }}
-            className="px-3 py-1.5 bg-[#dc2626] text-white text-sm"
+            className="px-3 py-1.5 bg-[var(--destructive)] text-white text-sm"
           >
-            حذف
+            Delete
           </button>
         </div>
       </div>

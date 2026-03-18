@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -12,20 +12,12 @@ import {
   Upload,
   Trash2,
   Crop,
-  GripVertical,
-  Plus,
   X,
   Menu,
-  ChevronUp,
-  ChevronDown,
-  Link2,
-  Edit3,
 } from "lucide-react";
 import { CartIcon } from "@/components/core/cart-icon";
-import { Button } from "@/components/core/button";
 import { ImageCropper } from "@/components/image-cropper";
 import { useImageUpload } from "./hooks/use-image-upload";
-import { generateId } from "./utils";
 import type { NavbarContent, NavbarLink } from "./types";
 
 interface NavbarEditorProps {
@@ -33,44 +25,23 @@ interface NavbarEditorProps {
   navbarContent: { content: unknown } | null | undefined;
 }
 
-// Preset link options
-const LINK_PRESETS = [
-  { id: "preset-home", text: "الرئيسية", url: "/" },
-  { id: "preset-products", text: "المنتجات", url: "#products" },
-  { id: "preset-about", text: "من نحن", url: "/about" },
-  { id: "preset-contact", text: "تواصل معنا", url: "/contact" },
-  { id: "preset-privacy", text: "سياسة الخصوصية", url: "/privacy" },
-];
-
 export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
   // ── UI State ──────────────────────────────────────────────────
   const [isHovered, setIsHovered] = useState(false);
   const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
   const [isUploadingLogo, setIsUploadingLogo] = useState(false);
   const [logoToolbarOpen, setLogoToolbarOpen] = useState(false);
-  const [styleToolbarOpen, setStyleToolbarOpen] = useState(false);
-  
-  // Link editing state
+
+  // Inline text editing state - store linkId with text to avoid stale closures
   const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
-  const [linkFormOpen, setLinkFormOpen] = useState(false);
-  const [editingLink, setEditingLink] = useState<NavbarLink | null>(null);
-  const [linkText, setLinkText] = useState("");
-  const [linkUrl, setLinkUrl] = useState("");
-  
+  const [editingText, setEditingText] = useState("");
+  const [editingLinkIdForSave, setEditingLinkIdForSave] = useState<string | null>(null);
+
   // Mobile state
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [mobileReorderMode, setMobileReorderMode] = useState(false);
-  const [draggedLinkId, setDraggedLinkId] = useState<string | null>(null);
-  
-  // Refs for drag
-  const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
 
   // ── Mutations ─────────────────────────────────────────────────
   const setNavbarStyles = useMutation(api.siteContent.setNavbarStyles);
-  const setNavbarLinks = useMutation(api.siteContent.setNavbarLinks);
-  const addNavbarLink = useMutation(api.siteContent.addNavbarLink);
-  const removeNavbarLink = useMutation(api.siteContent.removeNavbarLink);
   const updateNavbarLink = useMutation(api.siteContent.updateNavbarLink);
   const setLogoAndSyncFooter = useMutation(api.siteContent.setLogoAndSyncFooter);
   const deleteNavbarLogo = useMutation(api.siteContent.deleteNavbarLogo);
@@ -168,111 +139,43 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
     }
   }, [deleteNavbarLogo, storeId]);
 
-  // ── Link Handlers ─────────────────────────────────────────────
-  const handleOpenLinkForm = useCallback((link?: NavbarLink) => {
-    if (link) {
-      setEditingLink(link);
-      setLinkText(link.text);
-      setLinkUrl(link.url);
-    } else {
-      setEditingLink(null);
-      setLinkText("");
-      setLinkUrl("");
-    }
-    setLinkFormOpen(true);
+  // ── Inline Text Editing ───────────────────────────────────────
+  const handleStartEditing = useCallback((link: NavbarLink) => {
+    setEditingLinkId(link.id);
+    setEditingLinkIdForSave(link.id);
+    setEditingText(link.text);
   }, []);
 
-  const handleSaveLink = useCallback(async () => {
-    if (!linkText.trim() || !linkUrl.trim()) return;
-
-    try {
-      if (editingLink) {
-        // Update existing link
-        await updateNavbarLink({
-          storeId,
-          linkId: editingLink.id,
-          text: linkText.trim(),
-          url: linkUrl.trim(),
-        });
-      } else {
-        // Add new link
-        await addNavbarLink({
-          storeId,
-          link: {
-            id: generateId(),
-            text: linkText.trim(),
-            url: linkUrl.trim(),
-            isDefault: false,
-            enabled: true,
-          },
-        });
-      }
-      setLinkFormOpen(false);
-      setEditingLink(null);
-      setLinkText("");
-      setLinkUrl("");
-    } catch (error) {
-      console.error("Failed to save link:", error);
-    }
-  }, [editingLink, linkText, linkUrl, updateNavbarLink, addNavbarLink, storeId]);
-
-  const handleDeleteLink = useCallback(async (linkId: string) => {
-    try {
-      await removeNavbarLink({ storeId, linkId });
-    } catch (error) {
-      console.error("Failed to delete link:", error);
-    }
-  }, [removeNavbarLink, storeId]);
-
-  // ── Drag & Drop Handlers ─────────────────────────────────────
-  const handleDragStart = useCallback((index: number) => {
-    dragItem.current = index;
-    setDraggedLinkId(links[index].id);
-  }, [links]);
-
-  const handleDragEnter = useCallback((index: number) => {
-    dragOverItem.current = index;
-  }, []);
-
-  const handleDragEnd = useCallback(async () => {
-    if (dragItem.current === null || dragOverItem.current === null) {
-      dragItem.current = null;
-      dragOverItem.current = null;
-      setDraggedLinkId(null);
+  const handleSaveText = useCallback(async () => {
+    const linkId = editingLinkIdForSave;
+    const trimmed = editingText.trim();
+    if (!linkId || !trimmed) {
+      setEditingLinkId(null);
+      setEditingLinkIdForSave(null);
       return;
     }
-
-    const newLinks = [...links];
-    const draggedItem = newLinks[dragItem.current];
-    newLinks.splice(dragItem.current, 1);
-    newLinks.splice(dragOverItem.current, 0, draggedItem);
-
     try {
-      await setNavbarLinks({ storeId, links: newLinks });
+      await updateNavbarLink({ storeId, linkId, text: trimmed });
     } catch (error) {
-      console.error("Failed to reorder links:", error);
+      console.error("Failed to update link text:", error);
     }
+    setEditingLinkId(null);
+    setEditingLinkIdForSave(null);
+  }, [editingLinkIdForSave, editingText, updateNavbarLink, storeId]);
 
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setDraggedLinkId(null);
-  }, [links, setNavbarLinks, storeId]);
-
-  // ── Mobile Reorder ────────────────────────────────────────────
-  const handleMoveLink = useCallback(async (index: number, direction: "up" | "down") => {
-    const newLinks = [...links];
-    const targetIndex = direction === "up" ? index - 1 : index + 1;
-    
-    if (targetIndex < 0 || targetIndex >= newLinks.length) return;
-    
-    [newLinks[index], newLinks[targetIndex]] = [newLinks[targetIndex], newLinks[index]];
-    
-    try {
-      await setNavbarLinks({ storeId, links: newLinks });
-    } catch (error) {
-      console.error("Failed to reorder links:", error);
-    }
-  }, [links, setNavbarLinks, storeId]);
+  const handleTextKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        handleSaveText();
+      }
+      if (e.key === "Escape") {
+        setEditingLinkId(null);
+        setEditingLinkIdForSave(null);
+      }
+    },
+    [handleSaveText]
+  );
 
   // ── Render ───────────────────────────────────────────────────
   return (
@@ -283,7 +186,6 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
         onMouseLeave={() => {
           setIsHovered(false);
           setLogoToolbarOpen(false);
-          setStyleToolbarOpen(false);
         }}
       >
         {/* Navbar */}
@@ -321,7 +223,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                       <button
                         onClick={() => document.getElementById("navbar-logo-upload")?.click()}
                         className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded flex items-center gap-1 text-xs text-[#525252] dark:text-[#d4d4d4]"
-                        title="تغيير"
+                        title="Change"
                       >
                         <Upload className="w-3.5 h-3.5" />
                       </button>
@@ -335,14 +237,14 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                           }
                         }}
                         className="p-1.5 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded flex items-center gap-1 text-xs text-[#525252] dark:text-[#d4d4d4]"
-                        title="قص"
+                        title="Crop"
                       >
                         <Crop className="w-3.5 h-3.5" />
                       </button>
                       <button
-                        onClick={() => handleDeleteLogo}
+                        onClick={handleDeleteLogo}
                         className="p-1.5 hover:bg-red-50 dark:hover:bg-red-900/20 rounded flex items-center gap-1 text-xs text-red-500"
-                        title="حذف"
+                        title="Delete"
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -370,61 +272,37 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
 
             {/* Desktop Navigation Links */}
             <div className="hidden lg:flex items-center gap-1">
-              {links.map((link, index) => (
-                <div
-                  key={link.id}
-                  className="relative group"
-                  draggable
-                  onDragStart={() => handleDragStart(index)}
-                  onDragEnter={() => handleDragEnter(index)}
-                  onDragEnd={handleDragEnd}
-                  onDragOver={(e) => e.preventDefault()}
-                >
-                  <a
-                    href={link.url}
-                    className={`flex items-center gap-1 px-3 py-2 text-sm ${getTextClass()} hover:opacity-70 transition-opacity`}
-                  >
-                    <GripVertical className="w-3.5 h-3.5 opacity-0 group-hover:opacity-50 cursor-grab" />
-                    {link.text}
-                  </a>
-                  
-                  {/* Edit/Delete for custom links on hover */}
-                  {!link.isDefault && (
-                    <div className="absolute top-full mt-1 left-0 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded shadow-lg p-1 z-50">
-                      <button
-                        onClick={() => handleOpenLinkForm(link)}
-                        className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded"
-                        title="تعديل"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-[#525252]" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteLink(link.id)}
-                        className="p-1 hover:bg-red-50 dark:hover:bg-red-900/20 rounded"
-                        title="حذف"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                      </button>
-                    </div>
+              {links.map((link) => (
+                <div key={link.id} className="relative group">
+                  {editingLinkId === link.id ? (
+                    <input
+                      key={`input-${link.id}`}
+                      type="text"
+                      value={editingText}
+                      onChange={(e) => setEditingText(e.target.value)}
+                      onBlur={handleSaveText}
+                      onKeyDown={handleTextKeyDown}
+                      autoFocus
+                      className={`px-3 py-2 text-sm bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] outline-none ${getTextClass()} w-24`}
+                    />
+                  ) : (
+                    <button
+                      key={`btn-${link.id}`}
+                      onClick={() => handleStartEditing(link)}
+                      className={`px-3 py-2 text-sm ${getTextClass()} hover:opacity-70 transition-opacity cursor-text`}
+                    >
+                      {link.text}
+                    </button>
                   )}
                 </div>
               ))}
-
-              {/* Add Link Button */}
-              <button
-                onClick={() => handleOpenLinkForm()}
-                className={`flex items-center gap-1 px-3 py-2 text-sm ${getTextClass()} hover:opacity-70 transition-opacity`}
-              >
-                <Plus className="w-4 h-4" />
-                إضافة رابط
-              </button>
             </div>
 
             {/* Cart Icon */}
             <div className="flex items-center gap-2">
               <button
                 className={`w-9 h-9 flex items-center justify-center border border-[#e5e5e5] dark:border-[#262626] ${getTextClass()}`}
-                aria-label="السلة"
+                aria-label="Cart"
               >
                 <CartIcon className="w-4 h-4" />
               </button>
@@ -438,7 +316,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 10 }}
-                className="absolute bottom-2 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border border-[#e5e5e5] dark:border-[#262626] px-3 py-2 rounded-full shadow-lg z-40"
+                className="absolute left-1/2 -translate-x-1/2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 backdrop-blur-md border border-[#e5e5e5] dark:border-[#262626] px-3 py-2 rounded-full shadow-lg z-40"
               >
                 {/* Background Mode Toggle */}
                 <div className="flex items-center gap-1">
@@ -488,7 +366,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                             : "border-[#e5e5e5] text-[#525252] hover:border-[#171717]"
                         }`}
                       >
-                        نص داكن
+                        Dark text
                       </button>
                       <button
                         onClick={() => handleSetTextColor("light")}
@@ -498,7 +376,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                             : "border-[#e5e5e5] text-[#525252] hover:border-[#fafafa]"
                         }`}
                       >
-                        نص فاتح
+                        Light text
                       </button>
                     </div>
                   </>
@@ -521,7 +399,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
               className="fixed inset-0 bg-black/50 z-50 lg:hidden"
               onClick={() => setMobileMenuOpen(false)}
             />
-            
+
             {/* Drawer */}
             <motion.div
               initial={{ x: "100%" }}
@@ -532,7 +410,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
             >
               {/* Header */}
               <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-                <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">القائمة</h2>
+                <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">Menu</h2>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
                   className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg"
@@ -543,166 +421,33 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
 
               {/* Links */}
               <div className="flex-1 overflow-y-auto p-4 space-y-2">
-                {links.map((link, index) => (
+                {links.map((link) => (
                   <div
                     key={link.id}
-                    className={`flex items-center justify-between p-3 rounded-lg bg-[#f5f5f5] dark:bg-[#171717] ${
-                      draggedLinkId === link.id ? "opacity-50" : ""
-                    }`}
+                    className="p-3 rounded-lg bg-[#f5f5f5] dark:bg-[#171717]"
                   >
-                    <a
-                      href={link.url}
-                      className="text-[#171717] dark:text-[#fafafa] flex-1"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      {link.text}
-                    </a>
-                    
-                    {mobileReorderMode && (
-                      <div className="flex items-center gap-1">
-                        <button
-                          key={`up-${link.id}`}
-                          onClick={() => handleMoveLink(index, "up")}
-                          disabled={index === 0}
-                          className="p-1 disabled:opacity-30"
-                        >
-                          <ChevronUp className="w-4 h-4" />
-                        </button>
-                        <button
-                          key={`down-${link.id}`}
-                          onClick={() => handleMoveLink(index, "down")}
-                          disabled={index === links.length - 1}
-                          className="p-1 disabled:opacity-30"
-                        >
-                          <ChevronDown className="w-4 h-4" />
-                        </button>
-                      </div>
+                    {editingLinkId === link.id ? (
+                      <input
+                        key={`input-${link.id}`}
+                        type="text"
+                        value={editingText}
+                        onChange={(e) => setEditingText(e.target.value)}
+                        onBlur={handleSaveText}
+                        onKeyDown={handleTextKeyDown}
+                        autoFocus
+                        className="w-full bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] outline-none text-[#171717] dark:text-[#fafafa]"
+                      />
+                    ) : (
+                      <button
+                        key={`btn-${link.id}`}
+                        onClick={() => handleStartEditing(link)}
+                        className="text-[#171717] dark:text-[#fafafa] w-full text-left cursor-text"
+                      >
+                        {link.text}
+                      </button>
                     )}
                   </div>
                 ))}
-
-                {/* Add Link Button */}
-                <button
-                  onClick={() => {
-                    setMobileMenuOpen(false);
-                    handleOpenLinkForm();
-                  }}
-                  className="w-full flex items-center justify-center gap-2 p-3 rounded-lg border border-dashed border-[#d4d4d4] dark:border-[#404040] text-[#525252] dark:text-[#d4d4d4] hover:border-[#171717] dark:hover:border-[#fafafa]"
-                >
-                  <Plus className="w-4 h-4" />
-                  إضافة رابط
-                </button>
-
-                {/* Reorder Toggle */}
-                <button
-                  onClick={() => setMobileReorderMode(!mobileReorderMode)}
-                  className={`w-full flex items-center justify-center gap-2 p-3 rounded-lg border ${
-                    mobileReorderMode
-                      ? "border-[#171717] bg-[#171717] text-white"
-                      : "border-[#e5e5e5] dark:border-[#262626] text-[#525252] dark:text-[#d4d4d4]"
-                  }`}
-                >
-                  <GripVertical className="w-4 h-4" />
-                  {mobileReorderMode ? "تم" : "ترتيب الروابط"}
-                </button>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Link Form Modal */}
-      <AnimatePresence>
-        {linkFormOpen && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50"
-              onClick={() => setLinkFormOpen(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-md bg-white dark:bg-[#0a0a0a] rounded-2xl shadow-xl z-50 p-6"
-            >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">
-                  {editingLink ? "تعديل الرابط" : "إضافة رابط"}
-                </h3>
-                <button
-                  onClick={() => setLinkFormOpen(false)}
-                  className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {/* Link Text */}
-                <div>
-                  <label className="block text-sm text-[#525252] dark:text-[#d4d4d4] mb-1">
-                    نص الرابط
-                  </label>
-                  <input
-                    type="text"
-                    value={linkText}
-                    onChange={(e) => setLinkText(e.target.value)}
-                    placeholder="مثال: العروض"
-                    className="w-full px-3 py-2 border border-[#e5e5e5] dark:border-[#262626] rounded-lg bg-white dark:bg-[#171717] text-[#171717] dark:text-[#fafafa] focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
-                  />
-                </div>
-
-                {/* URL */}
-                <div>
-                  <label className="block text-sm text-[#525252] dark:text-[#d4d4d4] mb-1">
-                    <Link2 className="w-4 h-4 inline ml-1" />
-                    الرابط
-                  </label>
-                  <input
-                    type="text"
-                    value={linkUrl}
-                    onChange={(e) => setLinkUrl(e.target.value)}
-                    placeholder="/about أو https://..."
-                    className="w-full px-3 py-2 border border-[#e5e5e5] dark:border-[#262626] rounded-lg bg-white dark:bg-[#171717] text-[#171717] dark:text-[#fafafa] focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa]"
-                  />
-                  
-                  {/* Quick Presets */}
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {LINK_PRESETS.map((preset) => (
-                      <button
-                        key={preset.id}
-                        onClick={() => {
-                          setLinkText(preset.text);
-                          setLinkUrl(preset.url);
-                        }}
-                        className="text-xs px-2 py-1 bg-[#f5f5f5] dark:bg-[#171717] rounded hover:bg-[#e5e5e5] dark:hover:bg-[#262626] text-[#525252] dark:text-[#d4d4d4]"
-                      >
-                        {preset.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 pt-4">
-                  <Button
-                    variant="outline"
-                    onClick={() => setLinkFormOpen(false)}
-                    className="flex-1"
-                  >
-                    إلغاء
-                  </Button>
-                  <Button
-                    onClick={handleSaveLink}
-                    disabled={!linkText.trim() || !linkUrl.trim()}
-                    className="flex-1"
-                  >
-                    {editingLink ? "حفظ" : "إضافة"}
-                  </Button>
-                </div>
               </div>
             </motion.div>
           </>

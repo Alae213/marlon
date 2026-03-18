@@ -4,7 +4,7 @@ import { useState, useMemo, useCallback } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check, Globe, CopyIcon } from "lucide-react";
+import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -26,12 +26,23 @@ import type { Product, ProductFormData } from "./types";
 import { useInlineEdit } from "./hooks/use-inline-edit";
 import { useImageUpload } from "./hooks/use-image-upload";
 import { ProductCard } from "./product-card";
-import { ProductListItem } from "./product-list-item";
 import { ProductForm } from "./product-form";
 import { NavbarEditor } from "./navbar-editor";
 import { HeroEditor } from "./hero-editor";
 import { FooterEditor } from "./footer-editor";
 import { SettingsDialog } from "./settings-dialog";
+
+// Convex ID validation helper
+function isValidConvexId(id: string): boolean {
+  return typeof id === "string" && id.length > 0 && /^[a-zA-Z0-9]+$/.test(id);
+}
+
+function toProductId(id: string, context: string): Id<"products"> {
+  if (!isValidConvexId(id)) {
+    throw new Error(`Invalid ID provided for ${context}`);
+  }
+  return id as unknown as Id<"products">;
+}
 
 interface ProductsContentProps {
   storeId: Id<"stores">;
@@ -102,69 +113,88 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
 
   // ── Product Handlers ────────────────────────────────────────
 
-  const handleAddProduct = useCallback(
-    async (product: ProductFormData) => {
-      setError(null);
+  // Shared helper for saving product (create or update)
+  const saveProduct = useCallback(
+    async (
+      product: ProductFormData,
+      mutation: typeof createProduct | typeof updateProduct,
+      options: {
+        isUpdate: boolean;
+        onSuccess: () => void;
+        setError: (error: string | null) => void;
+      }
+    ) => {
+      options.setError(null);
       setIsSaving(true);
       try {
         const storageIds = await resolveImageStorageIds(product.images);
 
-        await createProduct({
-          storeId,
-          name: product.name,
-          description: product.description || undefined,
-          basePrice: product.basePrice,
-          oldPrice: product.oldPrice || undefined,
-          images: storageIds,
-          variants: product.variants,
-        });
-        setIsAddModalOpen(false);
+        if (options.isUpdate) {
+          if (!product.productId) {
+            throw new Error("Product ID is required for updates");
+          }
+          await updateProduct({
+            productId: product.productId,
+            name: product.name,
+            description: product.description || undefined,
+            basePrice: product.basePrice,
+            oldPrice: product.oldPrice || undefined,
+            images: storageIds,
+            variants: product.variants,
+          });
+        } else {
+          await createProduct({
+            storeId,
+            name: product.name,
+            description: product.description || undefined,
+            basePrice: product.basePrice,
+            oldPrice: product.oldPrice || undefined,
+            images: storageIds,
+            variants: product.variants,
+          });
+        }
+        options.onSuccess();
       } catch (err) {
-        console.error("Failed to create product:", err);
-        const message = err instanceof Error ? err.message : "فشل في إضافة المنتج";
-        setError(message);
+        console.error("Failed to save product:", err);
+        const message = err instanceof Error ? err.message : "Failed to save product";
+        options.setError(message);
       } finally {
         setIsSaving(false);
       }
     },
-    [createProduct, resolveImageStorageIds, storeId]
+    [createProduct, updateProduct, resolveImageStorageIds, storeId]
+  );
+
+  const handleAddProduct = useCallback(
+    async (product: ProductFormData) => {
+      await saveProduct(product, createProduct, {
+        isUpdate: false,
+        onSuccess: () => setIsAddModalOpen(false),
+        setError: setError,
+      });
+    },
+    [saveProduct]
   );
 
   const handleUpdateProduct = useCallback(
     async (product: ProductFormData) => {
-      setUpdateError(null);
-      setIsSaving(true);
-      try {
-        const storageIds = await resolveImageStorageIds(product.images);
-
-        await updateProduct({
-          productId: product.productId!,
-          name: product.name,
-          description: product.description || undefined,
-          basePrice: product.basePrice,
-          oldPrice: product.oldPrice || undefined,
-          images: storageIds,
-          variants: product.variants,
-        });
-        setEditingProduct(null);
-      } catch (err) {
-        console.error("Failed to update product:", err);
-        const message = err instanceof Error ? err.message : "فشل في تحديث المنتج";
-        setUpdateError(message);
-      } finally {
-        setIsSaving(false);
-      }
+      await saveProduct(product, updateProduct, {
+        isUpdate: true,
+        onSuccess: () => setEditingProduct(null),
+        setError: setUpdateError,
+      });
     },
-    [updateProduct, resolveImageStorageIds]
+    [saveProduct]
   );
 
   const handleToggleArchive = useCallback(
     async (productId: string, currentStatus?: boolean) => {
       try {
+        const validId = toProductId(productId, "toggle archive");
         if (currentStatus) {
-          await unarchiveProduct({ productId: productId as Id<"products"> });
+          await unarchiveProduct({ productId: validId });
         } else {
-          await archiveProduct({ productId: productId as Id<"products"> });
+          await archiveProduct({ productId: validId });
         }
       } catch (error) {
         console.error("Failed to toggle archive:", error);
@@ -176,7 +206,8 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
   const handleDeleteProduct = useCallback(
     async (productId: string) => {
       try {
-        await archiveProduct({ productId: productId as Id<"products"> });
+        const validId = toProductId(productId, "delete product");
+        await archiveProduct({ productId: validId });
         setDeletingProductId(null);
       } catch (error) {
         console.error("Failed to delete product:", error);
@@ -267,8 +298,8 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                 <div className="w-[50px] flex justify-end">
                 <button
                   onClick={handleCopy}
+                  aria-label="Copy store URL"
                   className="cursor-pointer w-4 h-4 flex items-center justify-center rounded hover:bg-white/10 transition-all duration-200"
-                  title="Copy URL"
                 >
                   <AnimatePresence mode="wait">
                     {!copied ? (
@@ -361,8 +392,8 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                 {activeProducts.length === 0 ? (
                   <EmptyState
                     icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
-                    title="لا توجد منتجات"
-                    description="ابدأ بإضافة أول منتج لمتجرك"
+                    title="No products yet"
+                    description="Start by adding your first product"
                     action={
                       <Button onClick={() => setIsAddModalOpen(true)}>
                         <Plus className="w-4 h-4" />
@@ -394,6 +425,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                     {/* Add Product Button */}
                     <button
                       onClick={() => setIsAddModalOpen(true)}
+                      aria-label="Add new product"
                       className="aspect-[1/1.3] bg-white dark:bg-[#0a0a0a] border border-dashed border-[#d4d4d4] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200 flex flex-col items-center justify-center gap-2"
                     >
                       <Plus className="w-8 h-8 text-[#d4d4d4] dark:text-[#525252]" />
@@ -441,7 +473,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           setIsAddModalOpen(false);
           setError(null);
         }}
-        title="إضافة منتج جديد"
+        title="Add new product"
       >
         <ProductForm
           onClose={() => {
@@ -457,7 +489,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
       <Modal
         isOpen={!!editingProduct}
         onClose={() => setEditingProduct(null)}
-        title="تعديل المنتج"
+        title="Edit product"
       >
         {editingProduct && (
           <ProductForm
