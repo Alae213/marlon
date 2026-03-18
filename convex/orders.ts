@@ -1,20 +1,27 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id, Doc } from "./_generated/dataModel";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbWithGet = { db: { get: (id: any) => Promise<any> } };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
+type CtxWithDb = DbWithGet & AuthWithIdentity;
 
 // Helper to verify store ownership via order
-async function assertOrderOwnership(ctx: { db: any; auth: any }, orderId: any) {
+async function assertOrderOwnership(ctx: CtxWithDb, orderId: Id<"orders">) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
   }
   
-  const order = await ctx.db.get(orderId);
+  const order = await ctx.db.get(orderId) as Doc<"orders"> | null;
   if (!order) {
     throw new Error("Order not found");
   }
   
   // Get the store and verify ownership
-  const store = await ctx.db.get(order.storeId);
+  const store = await ctx.db.get(order.storeId as Id<"stores">) as Doc<"stores"> | null;
   if (!store || store.ownerId !== identity.subject) {
     throw new Error("Forbidden: You do not have permission to access this store's orders.");
   }
@@ -23,13 +30,13 @@ async function assertOrderOwnership(ctx: { db: any; auth: any }, orderId: any) {
 }
 
 // Helper to verify store ownership directly
-async function assertStoreOwnership(ctx: { db: any; auth: any }, storeId: any) {
+async function assertStoreOwnership(ctx: CtxWithDb, storeId: Id<"stores">) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
   }
   
-  const store = await ctx.db.get(storeId);
+  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
   if (!store) {
     throw new Error("Store not found");
   }
@@ -391,10 +398,13 @@ export const removeOrderProduct = mutation({
   handler: async (ctx, args) => {
     const { order } = await assertOrderOwnership(ctx, args.orderId);
     
-    const products = order.products.filter((_: any, i: number) => i !== args.productIndex);
+    // Type for product in order
+    type OrderProduct = { price: number; quantity: number };
+    
+    const products = order.products.filter((_: OrderProduct, i: number) => i !== args.productIndex);
     
     // Recalculate totals
-    const subtotal = products.reduce((sum: number, p: any) => sum + (p.price * p.quantity), 0);
+    const subtotal = products.reduce((sum: number, p: OrderProduct) => sum + (p.price * p.quantity), 0);
     const total = subtotal + (order.deliveryCost || 0);
     
     await ctx.db.patch(args.orderId, {

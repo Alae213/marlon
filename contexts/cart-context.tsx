@@ -39,10 +39,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
     try {
       const stored = localStorage.getItem("cart");
       if (stored) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating from localStorage on mount is intentional
         setItems(JSON.parse(stored));
       }
-    } catch (e) {
-      console.error("Failed to parse cart from localStorage:", e);
+    } catch {
+      // Invalid JSON in localStorage, ignore
     }
     setIsLoaded(true);
   }, []);

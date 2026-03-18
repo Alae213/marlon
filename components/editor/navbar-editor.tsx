@@ -52,11 +52,15 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
   const navbarBg = currentNavbar?.background ?? "light";
   const navbarText = currentNavbar?.textColor ?? "dark";
   const navbarLogoUrl = currentNavbar?.logoUrl;
-  const links: NavbarLink[] = currentNavbar?.links ?? [
+  // Ensure each link has a unique ID - fall back to index if id is missing/duplicate
+  const getLinkKey = (link: NavbarLink, index: number) => {
+    return link?.id ?? `link-${index}`;
+  };
+  const links: NavbarLink[] = (currentNavbar?.links ?? [
     { id: "link-shop", text: "Shop", url: "#products", isDefault: true, enabled: true },
     { id: "link-faq", text: "FAQ", url: "/", isDefault: true, enabled: true },
     { id: "link-help", text: "Help", url: "/", isDefault: true, enabled: true },
-  ];
+  ]).map((link, index) => ({ ...link, id: getLinkKey(link, index) }));
 
   // ── Background Classes ────────────────────────────────────────
   const getBackgroundClass = () => {

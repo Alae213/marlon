@@ -64,6 +64,7 @@ const Table = forwardRef<HTMLTableElement, TableProps>(
           <AnimatePresence>
             {activeRect && (
               <motion.div
+                // eslint-disable-next-line react-hooks/refs
                 key={sessionRef.current}
                 className="absolute bg-[var(--system-200)]/20 pointer-events-none rounded-[16px]"
                 initial={{

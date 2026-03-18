@@ -58,7 +58,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
           <TooltipTrigger asChild>
             <Link
               href="/"
-              className="flex  flex-row items-center gap-2 px-[14px] py-[10px] rounded-[999px] transition-colors text-[#a3a3a3] dark:text-[#525252] hover:bg-white/10"
+              className="flex  flex-row items-center gap-2 px-[14px] py-[10px] rounded-[999px] transition-colors text-[var(--system-300)] dark:text-[var(--system-400)] hover:bg-white/10"
             >
               <Home className="w-5 h-5" />
             </Link>
@@ -85,8 +85,8 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
                   href={item.href}
                   className={`flex flex-row items-center gap-2 px-[14px] py-[8px] rounded-[999px] transition-colors ${
                     item.isActive
-                      ? "text-[var(--system-100)] bg-white/15 dark:text-[#fafafa]"
-                      : "text-[#a3a3a3] dark:text-[#525252] hover:bg-white/10 "
+                      ? "text-[var(--system-100)] bg-white/15 dark:text-[var(--system-50)]"
+                      : "text-[var(--system-300)] dark:text-[var(--system-400)] hover:bg-white/10 "
                   }`}
                   style={{ 
                     fontWeight: '500',

@@ -1,21 +1,27 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
-import { Doc } from "./_generated/dataModel";
+import { Id, Doc } from "./_generated/dataModel";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbWithGet = { db: { get: (id: any) => Promise<any> } };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
+type CtxWithDb = DbWithGet & AuthWithIdentity;
 
 // Helper to verify product/store ownership via product
-async function assertProductOwnership(ctx: { db: any; auth: any }, productId: any) {
+async function assertProductOwnership(ctx: CtxWithDb, productId: Id<"products">) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Unauthorized");
   }
   
-  const product = await ctx.db.get(productId);
+  const product = await ctx.db.get(productId) as Doc<"products"> | null;
   if (!product) {
     throw new Error("Product not found");
   }
   
   // Get the store and verify ownership
-  const store = await ctx.db.get(product.storeId);
+  const store = await ctx.db.get(product.storeId as Id<"stores">) as Doc<"stores"> | null;
   if (!store || store.ownerId !== identity.subject) {
     throw new Error("Forbidden");
   }
@@ -24,13 +30,13 @@ async function assertProductOwnership(ctx: { db: any; auth: any }, productId: an
 }
 
 // Helper to verify store ownership
-async function assertStoreOwnership(ctx: { db: any; auth: any }, storeId: any) {
+async function assertStoreOwnership(ctx: CtxWithDb, storeId: Id<"stores">) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Unauthorized");
   }
   
-  const store = await ctx.db.get(storeId);
+  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
   if (!store || store.ownerId !== identity.subject) {
     throw new Error("Forbidden");
   }
@@ -39,7 +45,8 @@ async function assertStoreOwnership(ctx: { db: any; auth: any }, storeId: any) {
 }
 
 // Helper to resolve product images
-async function resolveProductImages(ctx: any, product: Doc<"products">) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function resolveProductImages(ctx: { storage: { getUrl: (id: any) => Promise<string | null> } }, product: Doc<"products">) {
   if (!product.images || product.images.length === 0) return product;
   
   const resolvedImages = await Promise.all(
@@ -47,7 +54,7 @@ async function resolveProductImages(ctx: any, product: Doc<"products">) {
       if (img.startsWith("http")) return img;
       try {
         return await ctx.storage.getUrl(img);
-      } catch (e) {
+      } catch {
         return null;
       }
     })

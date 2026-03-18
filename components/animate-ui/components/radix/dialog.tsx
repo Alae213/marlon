@@ -55,27 +55,47 @@ function DialogOverlay({ className, ...props }: DialogOverlayProps) {
 
 type DialogContentProps = DialogContentPrimitiveProps & {
   showCloseButton?: boolean;
+  from?: 'top' | 'bottom' | 'left' | 'right';
 };
 
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  from = 'top',
   ...props
 }: DialogContentProps) {
   return (
     <DialogPortalPrimitive>
-      <DialogOverlay />
+      <DialogOverlay className="backdrop-blur-sm" />
       <DialogContentPrimitive
         className={cn(
-          'bg-background fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg sm:max-w-lg',
+          // AGENTS.md UI Contract: glassmorphism popup
+          'bg-[image:var(--gradient-popup)] bg-[var(--system-100)]',
+          '[corner-shape:squircle] rounded-[48px]',
+          'backdrop-blur-[12px]',
+          'style={{ boxShadow: "var(--shadow-xl-shadow)" }}',
+          // Positioning
+          'fixed top-[50%] left-[50%] z-50',
+          'translate-x-[-50%] translate-y-[-50%]',
+          'w-full max-w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto',
+          'p-8',
+          // Animation from top with spring
+          'data-[state=open]:animate-in data-[state=closed]:animate-out',
+          'data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0',
+          'data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95',
+          'data-[state=closed]:slide-out-to-top-[20deg] data-[state=open]:slide-in-from-top-[20deg]',
           className,
         )}
+        from={from}
+        style={{
+          boxShadow: 'var(--shadow-xl-shadow)',
+        }}
         {...props}
       >
         {children}
         {showCloseButton && (
-          <DialogClosePrimitive className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4">
+          <DialogClosePrimitive className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-6 right-6 rounded-full opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-5 text-white/70 hover:text-white">
             <XIcon />
             <span className="sr-only">Close</span>
           </DialogClosePrimitive>

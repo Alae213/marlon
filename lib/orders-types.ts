@@ -2,17 +2,7 @@
  * Order Types for Marlon E-commerce Platform
  */
 
-import {
-  CircleDotDashed,
-  CircleCheckBig,
-  PackageCheck,
-  Truck,
-  Banknote,
-  MessageCircleX,
-  Ban,
-  BanknoteX,
-  LucideIcon,
-} from "lucide-react";
+// Order status icons are managed in status-icons.tsx
 
 // Order item in an order
 export interface OrderItem {

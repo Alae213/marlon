@@ -1,9 +1,6 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 
-// Import types from the generated API
-import type { Doc } from "./_generated/dataModel";
-
 // Type definitions for site content
 
 // Navbar link structure
@@ -58,8 +55,6 @@ interface DeliveryIntegrationContent {
 }
 
 type SiteContent = NavbarContent | HeroContent | FooterContent | DeliveryIntegrationContent;
-
-type SiteContentSection = "navbar" | "hero" | "footer";
 
 // Get site content for a store
 export const getSiteContent = query({

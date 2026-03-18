@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { algeriaWilayas, Wilaya, Commune, getWilayaDisplay } from "@/lib/algeria-data";
 import { ChevronDown } from "lucide-react";
 
@@ -15,17 +15,6 @@ interface WilayaSelectProps {
 export function WilayaSelect({ value, onChange, label, required, error }: WilayaSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [selectedWilaya, setSelectedWilaya] = useState<Wilaya | null>(null);
-
-  useEffect(() => {
-    if (value) {
-      const wilaya = algeriaWilayas.find(w => getWilayaDisplay(w) === value);
-      setSelectedWilaya(wilaya || null);
-    } else {
-      setSelectedWilaya(null);
-    }
-  }, [value]);
-
   const filteredWilayas = algeriaWilayas.filter(w => {
     const display = getWilayaDisplay(w).toLowerCase();
     const searchLower = search.toLowerCase();
@@ -36,7 +25,6 @@ export function WilayaSelect({ value, onChange, label, required, error }: Wilaya
 
   const handleSelect = (wilaya: Wilaya) => {
     onChange(getWilayaDisplay(wilaya));
-    setSelectedWilaya(wilaya);
     setIsOpen(false);
     setSearch("");
   };
@@ -111,23 +99,23 @@ interface CommuneSelectProps {
 export function CommuneSelect({ wilayaValue, value, onChange, label, required, error, disabled }: CommuneSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [communes, setCommunes] = useState<Commune[]>([]);
 
-  useEffect(() => {
-    if (wilayaValue) {
-      const wilaya = algeriaWilayas.find(w => getWilayaDisplay(w) === wilayaValue);
-      setCommunes(wilaya?.communes || []);
-    } else {
-      setCommunes([]);
-    }
+  // Derive communes from wilayaValue - no need for useEffect
+  const communes = useMemo(() => {
+    if (!wilayaValue) return [];
+    const wilaya = algeriaWilayas.find(w => getWilayaDisplay(w) === wilayaValue);
+    return wilaya?.communes || [];
   }, [wilayaValue]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
+  // Reset UI state when disabled changes
   useEffect(() => {
     if (!disabled) {
       setIsOpen(false);
       setSearch("");
     }
   }, [disabled]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const filteredCommunes = communes.filter(c => {
     const searchLower = search.toLowerCase();

@@ -41,27 +41,33 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   // Update theme mutation
   const updateThemeMutation = useMutation(api.users.updateUserTheme);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   // Set initial theme based on user preference or fallback
   useEffect(() => {
     if (isSignedIn && userData) {
       // Priority: user's saved preference > system preference > light
       const userTheme = userData.theme as ThemeName;
-      if (userTheme && (userTheme === "light" || userTheme === "dark")) {
-        setThemeState(userTheme);
-        localStorage.setItem("marlon-theme", userTheme);
-      } else {
-        const systemTheme = getSystemTheme();
-        setThemeState(systemTheme);
-        localStorage.setItem("marlon-theme", systemTheme);
+      const nextTheme = (userTheme && (userTheme === "light" || userTheme === "dark"))
+        ? userTheme
+        : getSystemTheme();
+      
+      // Only update if different to avoid unnecessary renders
+      if (theme !== nextTheme) {
+        setThemeState(nextTheme);
       }
+      localStorage.setItem("marlon-theme", nextTheme);
       setIsLoading(false);
     } else if (!isSignedIn) {
       // Not signed in, use localStorage or system preference
       const fallbackTheme = getInitialTheme();
-      setThemeState(fallbackTheme);
+      if (theme !== fallbackTheme) {
+        setThemeState(fallbackTheme);
+      }
       setIsLoading(false);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSignedIn, userData]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   useLayoutEffect(() => {
     if (!isLoading) {

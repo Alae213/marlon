@@ -1,26 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { X } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { useUser, SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
+import { useUser, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id, Doc } from "@/convex/_generated/dataModel";
 import { 
   Plus, 
-  Store, 
   ExternalLink, 
-  Package,
   Loader2,
-  Wifi,
-  WifiOff,
 } from "lucide-react";
-import { CircleX } from "@/components/animate-ui/icons/circle-x";
 import { Button, Input } from "@/components/core";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
-import { AnimatePresence } from 'motion/react';
 import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle } from "@/components/animate-ui/primitives/radix/dialog";
 
 // Types
@@ -50,11 +43,13 @@ function StoreCard({ store }: { store: StoreData }) {
 
   return (
     <Link href={`/editor/${store.slug}`} className="group block">
-      <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px]"
+      <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px] active:scale-[0.96] transition-transform duration-150"
             style={{ borderRadius: '32px' }}>
 
-              <div className="flex items-center justify-between">
-          <ExternalLink className="w-3.5 h-3.5" />
+            <div className="flex items-center justify-between">
+          <span className="w-9 h-9 flex items-center justify-center -m-2">
+            <ExternalLink className="w-3.5 h-3.5" />
+          </span>
         </div>
 
         <h3 className="font-medium text-[var(--system-50)]">
@@ -191,7 +186,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
               </DialogTitle>
               <div 
                 onClick={onClose} 
-                className="w-5 h-5 cursor-pointer transition-opacity hover:opacity-60"
+                className="w-10 h-10 -m-2 flex items-center justify-center cursor-pointer rounded-full hover:bg-white/10 transition-colors duration-150 active:scale-[0.96]"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
@@ -228,7 +223,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
                             if (hasSubmitted) setError("");
                           }}
                           placeholder="Type . . ."
-                          className={`w-full px-[4px] rounded-[10px] h-[32px] bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] body-base py-[4px] transition-all duration-300 ease-in-out focus:outline-none hover:bg-white/10 focus:bg-white/5`}
+                          className={`w-full px-[4px] rounded-[10px] h-[32px] bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] body-base py-[4px] transition-colors duration-300 ease-in-out focus:outline-none hover:bg-white/10 focus:bg-white/5`}
                           autoFocus
                           aria-label="Website name"
                         />  
@@ -346,7 +341,7 @@ function AgencyModeModal({ isOpen, onClose }: {
               </DialogTitle>
               <div 
                 onClick={onClose} 
-                className="w-5 h-5 cursor-pointer transition-opacity hover:opacity-60"
+                className="w-10 h-10 -m-2 flex items-center justify-center cursor-pointer rounded-full hover:bg-white/10 transition-colors duration-150 active:scale-[0.96]"
               >
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
@@ -439,7 +434,7 @@ function DashboardContent() {
         <div className="flex flex-row gap-4 ">
           <button
             onClick={handleNewStoreClick}
-            className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px]"
+            className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-100)] p-[20px] active:scale-[0.96] transition-transform duration-150"
             style={{ borderRadius: '32px' }}
           >
             <div className="w-12 h-12 bg-[var(--system-200)] flex items-center justify-center rounded-[26px]">

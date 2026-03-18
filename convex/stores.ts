@@ -1,18 +1,25 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { Id, Doc } from "./_generated/dataModel";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type DbWithGet = { db: { get: (id: any) => Promise<any> } };
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
+type CtxWithDb = DbWithGet & AuthWithIdentity;
 
 // Helper to verify store ownership
 async function assertStoreOwnership(
-  ctx: { db: any; auth: any },
-  storeId: any,
-  requireAdmin = false
+  ctx: CtxWithDb,
+  storeId: Id<"stores">,
+  _requireAdmin = false
 ) {
   const identity = await ctx.auth.getUserIdentity();
   if (!identity) {
     throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
   }
   
-  const store = await ctx.db.get(storeId);
+  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
   if (!store) {
     throw new Error("Store not found");
   }
@@ -209,7 +216,7 @@ export const updateStore = mutation({
     wilaya: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { store } = await assertStoreOwnership(ctx, args.storeId);
+    const { store: _store } = await assertStoreOwnership(ctx, args.storeId);
     
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),

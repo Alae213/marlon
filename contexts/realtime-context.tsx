@@ -85,6 +85,7 @@ const triggerUpdate = () => {
     }));
   }, [realtimeOrders, lastUpdate]);
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   // Update notifications when new data comes in
   useEffect(() => {
     if (notificationsFromNewOrders.length > 0) {
@@ -104,6 +105,7 @@ const triggerUpdate = () => {
 
     setIsConnected(hasConnection);
   }, [hasConnection]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   return (
     <RealtimeContext.Provider value={{ 
