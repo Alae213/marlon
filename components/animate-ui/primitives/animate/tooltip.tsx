@@ -250,15 +250,19 @@ function TooltipOverlay() {
   const { refs, x, y, strategy, context, update } = useFloating({
     placement: align === 'center' ? side : `${side}-${align}`,
     whileElementsMounted: autoUpdate,
-    middleware: [
-      floatingOffset({
-        mainAxis: rendered.data?.sideOffset ?? 0,
-        crossAxis: rendered.data?.alignOffset ?? 0,
-      }),
-      flip(),
-      shift({ padding: 8 }),
-      floatingArrow({ element: arrowRef }),
-    ],
+    middleware: React.useMemo(
+      () => [
+        floatingOffset({
+          mainAxis: rendered.data?.sideOffset ?? 0,
+          crossAxis: rendered.data?.alignOffset ?? 0,
+        }),
+        flip(),
+        shift({ padding: 8 }),
+        floatingArrow({ element: arrowRef }),
+      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    ),
   });
 
   React.useEffect(() => {

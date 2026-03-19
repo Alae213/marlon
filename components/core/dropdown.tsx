@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
   useFloating,
@@ -32,13 +32,22 @@ export function Dropdown({
     open: isOpen,
     onOpenChange,
     placement,
-    middleware: [
-      flip({ padding: 8 }),
-      shift({ padding: 8 }),
-      arrow({ element: arrowRef }),
-    ],
+    middleware: useMemo(
+      () => [
+        flip({ padding: 8 }),
+        shift({ padding: 8 }),
+        arrow({ element: arrowRef }),
+      ],
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+      [],
+    ),
     whileElementsMounted: autoUpdate,
   });
+
+  const setFloatingRef = useCallback(
+    (node: HTMLElement | null) => refs.setFloating(node),
+    [refs],
+  );
 
   // Handle click outside
   useEffect(() => {
@@ -73,7 +82,7 @@ export function Dropdown({
       {isOpen &&
         createPortal(
           <div
-            ref={refs.setFloating}
+            ref={setFloatingRef}
             style={floatingStyles}
             className="z-[9999]"
           >

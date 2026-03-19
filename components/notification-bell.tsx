@@ -48,7 +48,7 @@ export function NotificationBell(_props: NotificationBellProps) {
   const [notifications, setNotifications] = useState<Notification[]>(DEMO_NOTIFICATIONS);
   const [isOpen, setIsOpen] = useState(false);
 
-  const currentTime = Date.now();
+  const [currentTime] = useState(() => Date.now());
 
   const unreadCount = useMemo(() => {
     return notifications.filter(n => !n.read).length;

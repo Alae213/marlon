@@ -365,7 +365,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           <ScrollAreaRoot className="w-full h-full overflow-hidden rounded-t-[12px]">
             <ScrollAreaViewport
               style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-600)] overflow-hidden"
+              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-600)] "
             >
               {/* Navbar Editor */}
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />

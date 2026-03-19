@@ -32,7 +32,7 @@ const DRAG_DEAD_ZONE = 2;
 
 const Switch = forwardRef<HTMLDivElement, SwitchProps>(
   ({ label, checked, onToggle, disabled = false, className, ...props }, ref) => {
-    const hasMounted = useRef(false);
+    const [hasMounted, setHasMounted] = useState(false);
     const [hovered, setHovered] = useState(false);
     const [pressed, setPressed] = useState(false);
 
@@ -49,8 +49,10 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
       checked ? THUMB_OFFSET + THUMB_TRAVEL : THUMB_OFFSET
     );
 
+    // Set mounted flag after first render (scheduled after paint to avoid cascading renders)
     useEffect(() => {
-      hasMounted.current = true;
+      const raf = requestAnimationFrame(() => setHasMounted(true));
+      return () => cancelAnimationFrame(raf);
     }, []);
 
     // Compute thumb shape
@@ -69,12 +71,8 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
     // Sync motionX when thumbX changes (hover/press/checked) and not dragging
     useEffect(() => {
       if (dragging.current) return;
-      if (!hasMounted.current) {
-        motionX.set(thumbX);
-      } else {
-        animate(motionX, thumbX, springs.moderate);
-      }
-    }, [thumbX, motionX]);
+      animate(motionX, thumbX, hasMounted ? springs.moderate : { duration: 0 });
+    }, [thumbX, motionX, hasMounted]);
 
     // --- Pointer handlers ---
 
@@ -206,7 +204,7 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
                 width: thumbWidth,
                 height: thumbHeight,
               }}
-              transition={hasMounted.current ? springs.moderate : { duration: 0 }}
+              transition={hasMounted ? springs.moderate : ({ duration: 0 } as unknown as typeof springs.moderate)}
             />
           </SwitchPrimitive.Thumb>
         </SwitchPrimitive.Root>

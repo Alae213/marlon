@@ -110,9 +110,9 @@ export function ImageCropper({
         <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
         <div className="fixed inset-0 flex items-center justify-center z-[70]">
           <DialogContent
-            style={{ 
+            style={{
               boxShadow: "var(--shadow-xl-shadow)",
-            } as any}
+            } satisfies React.CSSProperties}
             className="w-[90vw] max-w-[640px] bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[16px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
             from="top"
             transition={{

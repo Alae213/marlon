@@ -44,10 +44,9 @@ interface SubtleTabProps extends Omit<HTMLAttributes<HTMLDivElement>, "onSelect"
 
 const SubtleTab = forwardRef<HTMLDivElement, SubtleTabProps>(
   ({ children, selectedIndex, onSelect, idPrefix: idPrefixProp, className, ...props }, ref) => {
-    const containerRef = useRef<HTMLDivElement>(null);
-    const isMouseInside = useRef(false);
-    const generatedId = useId();
-    const idPrefix = idPrefixProp || generatedId;
+  const containerRef = useRef<HTMLDivElement>(null);
+  const generatedId = useId();
+  const idPrefix = idPrefixProp || generatedId;
 
     const {
       activeIndex: hoveredIndex,
@@ -62,20 +61,21 @@ const SubtleTab = forwardRef<HTMLDivElement, SubtleTabProps>(
       measureTabs();
     }, [measureTabs, children]);
 
+    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
+    const [isMouseInside, setIsMouseInside] = useState(false);
+
     const handleMouseMove = useCallback(
       (e: React.MouseEvent) => {
-        isMouseInside.current = true;
+        setIsMouseInside(true);
         handlers.onMouseMove(e);
       },
       [handlers]
     );
 
     const handleMouseLeave = useCallback(() => {
-      isMouseInside.current = false;
+      setIsMouseInside(false);
       handlers.onMouseLeave();
     }, [handlers]);
-
-    const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
 
     const selectedRect = tabRects[selectedIndex];
     const hoverRect = hoveredIndex !== null ? tabRects[hoveredIndex] : null;
@@ -110,7 +110,7 @@ const SubtleTab = forwardRef<HTMLDivElement, SubtleTabProps>(
           onBlur={(e) => {
             if (containerRef.current?.contains(e.relatedTarget as Node)) return;
             setFocusedIndex(null);
-            if (isMouseInside.current) return;
+            if (isMouseInside) return;
             setHoveredIndex(null);
           }}
           onKeyDown={(e) => {
@@ -180,7 +180,7 @@ const SubtleTab = forwardRef<HTMLDivElement, SubtleTabProps>(
                   opacity: 0.4,
                 }}
                 exit={
-                  !isMouseInside.current && selectedRect
+                  !isMouseInside && selectedRect
                     ? {
                         left: selectedRect.left,
                         width: selectedRect.width,

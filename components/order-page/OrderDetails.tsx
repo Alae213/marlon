@@ -25,6 +25,22 @@ import {
   STATUS_LABELS,
   CALL_OUTCOME_LABELS,
 } from "@/lib/orders-types";
+
+interface OrderProductItem {
+  productId: string;
+  name: string;
+  image?: string;
+  price: number;
+  quantity: number;
+  variant?: string;
+}
+
+interface AdminNoteItem {
+  id: string;
+  text: string;
+  timestamp: number;
+  merchantId: string;
+}
 import { STATUS_CONFIG } from "@/lib/status-icons";
 import { cn } from "@/lib/utils";
 
@@ -267,7 +283,7 @@ export function OrderDetails({
           {/* Products Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
             <div className="space-y-3">
-              {(order.products ?? []).map((item: any, idx: number) => (
+              {(order.products ?? []).map((item: OrderProductItem, idx: number) => (
                 <div key={idx} className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-white/5 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10">
                     {item.image ? (
@@ -342,7 +358,7 @@ export function OrderDetails({
             
             {(order.adminNotes ?? []).length > 0 && (
               <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
-                {(order.adminNotes ?? []).slice().reverse().map((note: any) => (
+                {(order.adminNotes ?? []).slice().reverse().map((note: AdminNoteItem) => (
                   <div key={note.id} className="p-2.5 rounded-xl bg-[var(--note-bg)] border border-[var(--note-border)] ">
                     <p className="text-sm text-[var(--note-text)]">{note.text}</p>
                     <p className="text-[10px] text-white/40 mt-1">{formatDate(note.timestamp)}</p>

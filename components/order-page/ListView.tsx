@@ -502,7 +502,6 @@ export function ListView({
     filtered = filtered.filter(order => !hiddenStatuses.has(order.status as OrderStatus));
     
     // Filter by date
-    const now = Date.now();
     const startOfToday = new Date();
     startOfToday.setHours(0, 0, 0, 0);
     const startOfTodayMs = startOfToday.getTime();
@@ -551,7 +550,7 @@ export function ListView({
     });
 
     return filtered;
-  }, [orders, searchQuery, sortField, sortDirection, activeFilter, currentTime, hiddenStatuses, activeDateFilter]);
+  }, [orders, searchQuery, sortField, sortDirection, activeFilter, hiddenStatuses, activeDateFilter]);
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {

@@ -76,6 +76,10 @@ Multi-tenant SaaS for Algerian COD e-commerce. Stack: Next.js 16 (App Router), T
 - Primary: Inter Variable (`--font-inter`)
 - Arabic fallback: `SF Pro Text` / `SF Pro Display` → `system-ui`
 
+### Text Transitions
+- For fluid text transitions (e.g., counter animations, dynamic labels): use `calligraph` — shared characters slide to new positions, new characters fade in, removed ones fade out.
+- Install: `npm install calligraph`
+
 ---
 
 ## FORBIDDEN PATHS (DO NOT READ)

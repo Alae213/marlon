@@ -77,7 +77,7 @@ export default function MarketingPage() {
             Marketing <span className="text-[var(--system-300)]">&</span> Growth
           </h1>
           <p className="body-base text-[var(--system-400)] max-w-xl mx-auto">
-            We're building a powerful suite of tools to help you reach more customers and scale your Algerian COD business effortlessly.
+            We are building a powerful suite of tools to help you reach more customers and scale your Algerian COD business effortlessly.
           </p>
         </motion.div>
 

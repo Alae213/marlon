@@ -58,6 +58,19 @@ function mergeProps<T extends HTMLElement>(
   return merged;
 }
 
+// Cache motion-wrapped components to avoid re-creation during render.
+const motionCache = new WeakMap<object, React.ElementType>();
+
+function getMotionComponent(type: React.ElementType, isMotion: boolean): React.ElementType {
+  if (isMotion) return type;
+  // Narrow to object so WeakMap key type is satisfied
+  const key = type as object;
+  if (!motionCache.has(key)) {
+    motionCache.set(key, motion.create(type as React.ComponentType<unknown>));
+  }
+  return motionCache.get(key)!;
+}
+
 function Slot<T extends HTMLElement = HTMLElement>({
   children,
   ref,
@@ -68,13 +81,8 @@ function Slot<T extends HTMLElement = HTMLElement>({
     children.type !== null &&
     isMotionComponent(children.type);
 
-  const Base = React.useMemo(
-    () =>
-      isAlreadyMotion
-        ? (children.type as React.ElementType)
-        : motion.create(children.type as React.ElementType),
-    [isAlreadyMotion, children.type],
-  );
+  // eslint-disable-next-line react-hooks/static-components
+  const Base = getMotionComponent(children.type as React.ElementType, isAlreadyMotion);
 
   if (!React.isValidElement(children)) return null;
 
@@ -83,6 +91,7 @@ function Slot<T extends HTMLElement = HTMLElement>({
   const mergedProps = mergeProps(childProps, props);
 
   return (
+    // eslint-disable-next-line react-hooks/static-components
     <Base {...mergedProps} ref={mergeRefs(childRef as React.Ref<T>, ref)} />
   );
 }

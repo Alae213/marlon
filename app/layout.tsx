@@ -11,6 +11,8 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
 import { ThemeProvider } from "@/lib/theme";
+import { Analytics } from "@vercel/analytics/react";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -53,6 +55,8 @@ export default function RootLayout({
       </head>
                 <body className={`${inter.variable} antialiased`}>
                   {children}
+                  <Analytics />
+                  <SpeedInsights />
                 </body>
               </html>
             </ToastProvider>
@@ -72,6 +76,8 @@ export default function RootLayout({
             </ToastProvider>
           </ThemeProvider>
         </ConvexClientProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
