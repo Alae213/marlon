@@ -1,13 +1,136 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "edit": "allow",
+    "bash": "allow",
+    "webfetch": "allow"
+  },
   "mcp": {
-    "chrome-devtools": {
+    "puppeteer": {
       "type": "local",
-      "command": [
-        "npx",
-        "-y",
-        "chrome-devtools-mcp@latest"
-      ]
+      "command": ["npx", "-y", "puppeteer-mcp-server"],
+      "enabled": true
+    },
+    "context7": {
+      "type": "remote",
+      "url": "https://mcp.context7.com/mcp",
+      "enabled": true
+    }
+  },
+  "agent": {
+    "scope-checker": {
+      "description": "Validates requests against project scope - determines if feature is in v1 plan",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "edit": false,
+        "write": false,
+        "bash": false
+      },
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "deny"
+      }
+    },
+    "feature-planner": {
+      "description": "Turns feature ideas into detailed specs with user stories, edge cases, and task breakdown",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "write": true,
+        "edit": true,
+        "bash": false
+      }
+    },
+    "code-reviewer": {
+      "description": "Reviews code for quality, security, and correctness before committing",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "edit": false,
+        "write": false,
+        "bash": true
+      },
+      "permission": {
+        "edit": "deny",
+        "bash": "ask"
+      }
+    },
+    "test-writer": {
+      "description": "Writes automated tests for completed features",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "write": true,
+        "edit": true,
+        "bash": true
+      }
+    },
+    "context-updater": {
+      "description": "Syncs context files after build work - keeps documentation up to date",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "write": true,
+        "edit": true,
+        "bash": false
+      }
+    },
+    "next-action": {
+      "description": "Reads task list and roadmap to determine what to work on next",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "edit": false,
+        "write": false,
+        "bash": false
+      },
+      "permission": {
+        "edit": "deny",
+        "bash": "deny"
+      }
+    },
+    "uat-guide": {
+      "description": "Generates plain-English browser test checklist for users to validate features",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "write": true,
+        "edit": false,
+        "bash": false
+      }
+    },
+    "explore": {
+      "description": "Explores and analyzes existing codebases - detects tech stack, maps features, identifies structure",
+      "mode": "subagent",
+      "tools": {
+        "read": true,
+        "glob": true,
+        "grep": true,
+        "edit": false,
+        "write": false,
+        "bash": false
+      },
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "webfetch": "deny"
+      }
     }
   }
 }

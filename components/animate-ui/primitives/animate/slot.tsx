@@ -59,11 +59,22 @@ function mergeProps<T extends HTMLElement>(
 }
 
 // Cache motion-wrapped components to avoid re-creation during render.
+// Use a regular Map for string/component names, WeakMap for component references
 const motionCache = new WeakMap<object, React.ElementType>();
+const stringCache = new Map<string, React.ElementType>();
 
 function getMotionComponent(type: React.ElementType, isMotion: boolean): React.ElementType {
   if (isMotion) return type;
-  // Narrow to object so WeakMap key type is satisfied
+  
+  // Handle string element types (e.g., "div", "button")
+  if (typeof type === 'string') {
+    if (!stringCache.has(type)) {
+      stringCache.set(type, motion.create(type));
+    }
+    return stringCache.get(type)!;
+  }
+  
+  // Handle component references (objects/functions)
   const key = type as object;
   if (!motionCache.has(key)) {
     motionCache.set(key, motion.create(type as React.ComponentType<unknown>));

@@ -138,6 +138,14 @@
     inset 0px 1px 0px 0px #ffffff18;
 
 
+  /* Semantic alias for common hardcoded colors - avoid these, use system tokens */
+  --color-ink: #171717;
+  --color-paper: #fafafa;
+  --color-slate: #0a0a0a;
+  --color-border-light: #e5e5e5;
+  --color-brand: #00853f;
+  --color-muted-hex: #737373;
+
   /* Typography tokens */
   /* Font Sizes */
   --font-size-xs: 12px;
@@ -286,6 +294,14 @@ body {
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
+
+  /* Dark mode aliases */
+  --color-ink: #fafafa;
+  --color-paper: #0a0a0a;
+  --color-slate: #000000;
+  --color-border-light: #262626;
+  --color-muted-hex: #a3a3a3;
+
   --chart-1: oklch(0.488 0.243 264.376);
   --chart-2: oklch(0.696 0.17 162.48);
   --chart-3: oklch(0.769 0.188 70.08);

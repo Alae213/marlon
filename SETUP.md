@@ -10,7 +10,7 @@
 
 As you learn things about the project, write them immediately to a temp file:
 
-  .claude/setup-scratchpad.md
+  .opencode/setup-scratchpad.md
 
 Create this file at the start of Phase 1 and update it after every answer.
 Before asking any question in any phase, read the scratchpad first.
@@ -20,6 +20,17 @@ The scratchpad format:
 
 ```
 # Setup Scratchpad
+
+## Mode Detection
+- mode: [new | capture | resume | setup-only]
+- detection confidence: [1-10]
+- exploration report: [yes/no - read]
+
+## What I found in the code (CAPTURE/RESUME)
+- detected stack: [list from explore agent]
+- detected features: [list from explore agent]
+- code status: [working | partial | broken | unknown]
+- missing pieces: [what the explore agent identified]
 
 ## What they told me in Phase 1
 - platform: [web app / mobile / internal tool / etc]
@@ -42,6 +53,7 @@ The scratchpad format:
 
 ## Features (Phase 3)
 - [feature name]: [one line description, scope, status]
+- [from code]: [feature detected from explore agent]
 
 ## Design (Phase 4)
 - tone: [words they used]
@@ -56,21 +68,87 @@ and ask for the detail you don't have yet.
 
 ---
 
-## Phase 0 — Orientation
+## Phase 0 — Project Detection
 
-Before asking anything, say this to the user:
+**IMPORTANT:** Before asking any questions, you MUST detect the project state.
 
-  "Hey! I'm going to help you set up your project context — this is the foundation
-   I'll use throughout the entire build to make sure I always understand what we're
-   creating and why.
+### Step 0.1 — Check What Exists
 
-   We'll go through this in a few stages. First I'll ask about the technical setup,
-   then we'll dig into your idea in detail. There are no wrong answers — the more
-   specific you are, the better I can help.
+Look at the project folder and determine what you're working with:
 
-   Ready? Let's start."
+1. **Check the root folder** — Are there source files? (src/, app/, pages/, *.js, *.ts, etc.)
+2. **Check context/** — Do any files have real content, or are they just empty stubs?
+3. **Check for package.json** — Is there a Node.js project with dependencies?
+4. **Check existing docs** — Is there a README.md with project info?
 
-Create the scratchpad file now: .claude/setup-scratchpad.md
+### Step 0.2 — Determine Mode
+
+Based on what you find, select the appropriate mode:
+
+| What You Find | Mode | Description |
+|---------------|------|-------------|
+| Empty folder, no code, empty context | **NEW** | Fresh project, no code yet |
+| Has code, but context/ is empty stubs | **CAPTURE** | Existing code, need to analyze and fill context |
+| Has code, context/ is partially filled | **RESUME** | Partial setup, should analyze what's there |
+| No code, but context/ has real content | **SETUP-ONLY** | Just setting up context for future code |
+| Has code, context/ has real content | **RESUME** | Existing project with working context |
+
+Write the detected mode to: `.opencode/setup-mode.txt`
+
+### Capture Mode — Auto-Analyze
+
+If you detect CAPTURE or RESUME mode:
+
+1. **Invoke the explore agent** to analyze the codebase:
+   ```
+   Use the explore agent to generate a comprehensive code analysis.
+   Ask it to detect: tech stack, features, structure, code quality.
+   ```
+
+2. **Before asking ANY questions**, read the exploration report
+3. **Use hybrid questions** — verify what you found, ask what you couldn't determine
+
+Example hybrid questions (instead of "what stack do you want?"):
+- "I see you're using Next.js + Supabase. Is that correct?"
+- "I detected user authentication — is that fully working or does it need work?"
+- "The dashboard feature looks complete. What's not working about it?"
+
+---
+
+## Phase 1 — Orientation (or skip for CAPTURE/RESUME)
+
+**If NEW mode:**
+Tell the user about the setup process:
+
+```
+Hey! I'm going to help you set up your project context — this is the foundation
+I'll use throughout the entire build to make sure I always understand what we're
+creating and why.
+
+We'll go through this in a few stages. First I'll ask about the technical setup,
+then we'll dig into your idea in detail. There are no wrong answers — the more
+specific you are, the better I can help.
+
+Ready? Let's start.
+```
+
+**If CAPTURE or RESUME mode:**
+Skip the orientation. Start by showing the user what you found:
+
+```
+I can see this project already has code. Let me analyze what's here first,
+then I'll verify what I found and ask about the missing pieces.
+
+Working on it now — this will take a moment.
+```
+
+After analysis, show the user:
+- What tech stack you detected
+- What features you found
+- What's working vs what's broken
+- What's missing that needs to be documented
+
+Create the scratchpad file now: .opencode/setup-scratchpad.md
 
 ---
 
@@ -78,11 +156,25 @@ Create the scratchpad file now: .claude/setup-scratchpad.md
 
 **Goal:** Populate context/technical/STACK.md and context/technical/ENVIRONMENT.md
 
-Ask these questions conversationally. Explain technical terms in plain English.
-After each answer, update the scratchpad immediately.
+**IMPORTANT:** The questions you ask depend on the mode:
 
-### 1.1 — Platform
+### If NEW mode:
+Ask all questions as written below. Explain technical terms in plain English.
 
+### If CAPTURE or RESUME mode:
+Before asking, read the exploration report from the explore agent.
+Then use HYBRID questions — verify what you found, ask what you couldn't determine.
+
+Example hybrid questions:
+- "I see you're using Next.js + Supabase. Is that correct?" (instead of "what stack?")
+- "The database schema has users and posts tables — is that complete or missing something?"
+- "I didn't find any hosting config. Where do you plan to deploy?"
+
+---
+
+### 1.1 — Platform (NEW) / Verification (CAPTURE/RESUME)
+
+**For NEW mode:**
 1. What kind of thing are we building?
    (For example: a website people visit in their browser, a mobile app on their phone,
    an internal tool for a team, a browser extension, something else?)
@@ -95,10 +187,15 @@ After each answer, update the scratchpad immediately.
 3. Where do you want this to live when it's live?
    (For example: Vercel, Netlify, your own server, AWS, not sure yet)
 
+**For CAPTURE/RESUME mode:**
+Skip asking if exploration report has this info.
+Ask only: "What did I miss about the platform or hosting?"
+
 Update scratchpad: platform, stack preference, hosting.
 
-### 1.2 — Data and Backend
+### 1.2 — Data and Backend (NEW) / Verification (CAPTURE/RESUME)
 
+**For NEW mode:**
 4. Will this app need to store information?
    (User accounts, saved data, content that changes — or is it purely something
    people use without anything being saved?)
@@ -109,10 +206,17 @@ Update scratchpad: platform, stack preference, hosting.
 6. Will there be user accounts and logins?
    (And if so — email, Google, magic links, something else?)
 
+**For CAPTURE/RESUME mode:**
+Verification questions:
+- "The database has X tables. Are they complete?"
+- "Auth is implemented with Y. Is it working or do you need help?"
+- "What data should I know about that isn't in the database?"
+
 Update scratchpad: storage needs, auth.
 
-### 1.3 — Developer Setup
+### 1.3 — Developer Setup (NEW) / Verification (CAPTURE/RESUME)
 
+**For NEW mode:**
 7. Will you be building this alone or with a team?
 
 8. Are there any tools you already know you want to use?
@@ -121,6 +225,10 @@ Update scratchpad: storage needs, auth.
 
 9. Is there a rough budget for third-party services, or should we stick to
    free tiers where possible?
+
+**For CAPTURE/RESUME mode:**
+- "What's the team situation? Anyone else working on this?"
+- "Any third-party services you're already paying for?"
 
 Update scratchpad: team size, tools, budget.
 
@@ -148,7 +256,25 @@ The scratchpad already has the platform type from Phase 1.
 Do NOT ask "what are you building?" if they already told you it's a web app,
 a mobile app, or whatever they said. That would feel like you forgot.
 
-Instead, OPEN Phase 2 by acknowledging what you know and bridging to what you need:
+### For CAPTURE/RESUME mode:
+
+If the explore agent found features or functionality, you can often INFER the project purpose:
+
+- If there's a "billing/invoice" feature → this is likely a business/finance app
+- If there's "user-dashboard" → this is a user-facing SaaS
+- If there's "admin" → this has admin privileges
+
+Use what you found to make better questions:
+
+Example bridge for CAPTURE mode:
+"I see this has invoice and billing features — so this is for businesses to get paid?
+Let me make sure I understand the problem you're solving."
+
+---
+
+### For NEW mode:
+
+OPEN Phase 2 by acknowledging what you know and bridging to what you need:
 
 Example bridge if they said "a web app for freelancers":
   "So we're building a web app for freelancers — great foundation.
@@ -321,7 +447,7 @@ Generate:
 - context/developer/CONVENTIONS.md — sensible defaults based on the stack
 - context/developer/WORKFLOW.md — solo or team workflow based on what was shared
 
-Delete the scratchpad: .claude/setup-scratchpad.md
+Delete the scratchpad: .opencode/setup-scratchpad.md
 (It was a working document — the real outputs are the context/ files.)
 
 Then present the Setup Complete summary:

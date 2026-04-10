@@ -118,7 +118,7 @@ function StorefrontContent() {
 
   const navbarBgClass =
     navbarBg === "dark"
-      ? "bg-[#0a0a0a]"
+      ? "bg-slate-950"
       : navbarBg === "glass"
         ? "bg-white/80"
         : "bg-white";
@@ -128,7 +128,7 @@ function StorefrontContent() {
     WebkitBackdropFilter: "blur(24px)",
   } : {};
 
-  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[#171717]";
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-foreground";
 
   return (
     <div className="w-full bg-[var(--system-50)]">
@@ -199,13 +199,13 @@ function StorefrontContent() {
           />
           
           {/* Drawer */}
-          <div className="fixed top-0 right-0 h-full w-72 bg-white dark:bg-[#0a0a0a] shadow-xl z-50 lg:hidden flex flex-col">
+          <div className="fixed top-0 right-0 h-full w-72 bg-background dark:bg-slate-950 shadow-xl z-50 lg:hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[#e5e5e5] dark:border-[#262626]">
-              <h2 className="text-lg font-medium text-[#171717] dark:text-[#fafafa]">القائمة</h2>
+            <div className="flex items-center justify-between p-4 border-b border-border dark:border-slate-800">
+              <h2 className="text-lg font-medium text-foreground dark:text-background">القائمة</h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg"
+                className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -218,7 +218,7 @@ function StorefrontContent() {
                   key={`mobile-${link.id || `link-${index}`}`}
                   href={link.url}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block p-3 rounded-lg bg-[#f5f5f5] dark:bg-[#171717] text-[#171717] dark:text-[#fafafa]"
+                  className="block p-3 rounded-lg bg-muted dark:bg-slate-800 text-foreground dark:text-background"
                 >
                   {link.text}
                 </a>

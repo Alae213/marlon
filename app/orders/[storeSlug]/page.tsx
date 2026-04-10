@@ -58,7 +58,7 @@ function OrdersContent({
 
   const orders = useQuery(
     api.orders.getOrders,
-    storeId ? { storeId: storeId as Id<"stores"> } : "skip",
+    storeId && isLoaded ? { storeId: storeId as Id<"stores"> } : "skip",
   );
 
   const updateOrderStatus = useMutation(api.orders.updateOrderStatus);

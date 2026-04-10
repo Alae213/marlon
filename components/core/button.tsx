@@ -8,7 +8,7 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantStyles = {
   primary: 
-    "bg-[var(--blue-300)] text-[var(--system-100)] hover:bg-[var(--blue-200)] disabled:bg-muted disabled:text-[var(--system-300)] shadow-[var(--shadow-xl-shadow)] overflow-hidden",
+    "bg-primary text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground shadow-[var(--shadow-xl-shadow)] overflow-hidden",
   
   secondary: 
     "bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/80 disabled:opacity-40",
@@ -17,19 +17,19 @@ const variantStyles = {
     "border border-border text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground dark:bg-input/30 dark:border-input dark:hover:bg-input/50 dark:aria-invalid:ring-destructive/20 dark:aria-invalid:border-destructive/40",
   
   ghost: 
-    "body-base text-[var(--system-100)] hover:bg-white/10 dark:hover:bg-white/10",
+    "text-foreground hover:bg-accent/50 dark:hover:bg-accent/50",
   
   link: 
-    "body-base underline-offset-4 hover:underline",
+    "text-primary underline-offset-4 hover:underline",
   
   danger: 
     "bg-destructive text-destructive-foreground shadow-xs hover:bg-destructive/90 disabled:bg-destructive/50",
 };
 
 const sizeStyles = {
-  sm: "py-1 px-4 text-sm rounded-[14px]",
-  md: "py-2 px-6 text-sm rounded-[14px]",
-  lg: "py-4 px-8 text-base rounded-[14px]",
+  sm: "h-8 px-4 text-sm rounded-xl",
+  md: "h-9 px-6 text-sm rounded-xl",
+  lg: "h-11 px-8 text-base rounded-2xl",
 };  
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
