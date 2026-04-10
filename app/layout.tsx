@@ -8,7 +8,7 @@ const inter = Inter({
   display: "swap",
 });
 import { ClerkProvider } from "@clerk/nextjs";
-import { ConvexClientProvider } from "@/components/convex-client-provider";
+import { ConvexClientProvider } from "@/components/pages/providers/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
 import { ThemeProvider } from "@/lib/theme";
 import { Analytics } from "@vercel/analytics/react";

@@ -6,8 +6,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
 import { Loader2 } from "lucide-react";
-import { BottomNavigation } from "@/components/core/bottom-navigation";
-import { AnimatedTabContent } from "@/components/core/animated-tabs";
+import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
+import { AnimatedTabContent } from "@/components/primitives/core/layout/animated-tabs";
 import { useBilling, BillingProvider } from "@/contexts/billing-context";
 import {
   useUser,
@@ -20,7 +20,7 @@ import Link from "next/link";
 import Image from "next/image";
 import type { SortField, SortDirection, CallLog } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
-import { ListView, KanbanView, OrderDetails } from "@/components/order-page";
+import { ListView, KanbanView, OrderDetails } from "@/components/pages/orders/views";
 
 function OrdersContent({
   storeId,

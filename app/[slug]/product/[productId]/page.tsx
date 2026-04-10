@@ -5,16 +5,16 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Package, Check } from "lucide-react";
-import { CartIcon } from "@/components/core/cart-icon";
+import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { WilayaSelect, CommuneSelect } from "@/components/wilaya-select";
-import { ImageCarousel } from "@/components/image-carousel";
+import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
+import { ImageCarousel } from "@/components/features/shared/image-carousel";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
-import { Button } from "@/components/core/button";
-import { CartSidebar } from "@/components/cart-sidebar";
+import { Button } from "@/components/primitives/core/buttons/button";
+import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import {
   Dialog,
   DialogPortal,
@@ -22,7 +22,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from "@/components/animate-ui/primitives/radix/dialog";
+} from "@/components/primitives/animate-ui/primitives/radix/dialog";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {

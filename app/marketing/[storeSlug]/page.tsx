@@ -2,7 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { Megaphone, Calendar, TrendingUp, Users, Target, Zap, Sparkles } from "lucide-react";
-import { BottomNavigation } from "@/components/core/bottom-navigation";
+import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
 import { motion, Variants } from "framer-motion";
 
 const containerVariants: Variants = {

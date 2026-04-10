@@ -5,13 +5,13 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Search, Package, Menu, X } from "lucide-react";
-import { CartIcon } from "@/components/core/cart-icon";
+import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { CartSidebar } from "@/components/cart-sidebar";
-import { Button } from "@/components/core/button";
+import { CartSidebar } from "@/components/features/cart/cart-sidebar";
+import { Button } from "@/components/primitives/core/buttons/button";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {

@@ -12,9 +12,10 @@ import {
   ExternalLink, 
   Loader2,
 } from "lucide-react";
-import { Button, Input } from "@/components/core";
+import { Button } from "@/components/primitives/core/buttons/button";
+import { Input } from "@/components/primitives/core/inputs/input";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
-import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle } from "@/components/animate-ui/primitives/radix/dialog";
+import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle } from "@/components/primitives/animate-ui/primitives/radix/dialog";
 
 // Types
 interface StoreData {
