@@ -50,18 +50,18 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-[#171717] dark:text-[#fafafa]">Store Information</h3>
-        <p className="text-sm text-[#737373] mt-1">Basic information about your store</p>
+        <h3 className="font-semibold text-[--system-700]">Store Information</h3>
+        <p className="text-sm text-[--system-400] mt-1">Basic information about your store</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2 text-[#525252] dark:text-[#d4d4d4]">Store Name</label>
+          <label className="block text-sm font-medium mb-2 text-[--system-500]">Store Name</label>
           <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2 text-[#525252] dark:text-[#d4d4d4]">Description</label>
+          <label className="block text-sm font-medium mb-2 text-[--system-500]">Description</label>
           <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -71,18 +71,18 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2 text-[#525252] dark:text-[#d4d4d4]">Phone Number</label>
+          <label className="block text-sm font-medium mb-2 text-[--system-500]">Phone Number</label>
           <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
         </div>
       </div>
 
-      <div className="p-4 bg-[#f5f5f5] dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
-        <p className="text-xs text-[#737373] mb-1">Store URL</p>
-        <p className="font-medium text-[#171717] dark:text-[#fafafa]">marlon.com/{storeSlug}</p>
+      <div className="p-4 bg-[--system-100] rounded-xl border border-[--system-200]">
+        <p className="text-xs text-[--system-400] mb-1">Store URL</p>
+        <p className="font-medium text-[--system-700]">marlon.com/{storeSlug}</p>
       </div>
 
       {savedMessage && (
-        <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 text-sm font-medium">
+        <div className="p-3 rounded-lg bg-[--color-success-bg] text-[--color-success] text-sm font-medium">
           ✓ Changes saved successfully
         </div>
       )}

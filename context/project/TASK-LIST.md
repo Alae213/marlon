@@ -26,7 +26,14 @@ Tasks currently being worked on or up next.
 
 | # | Status | Task | Feature | Notes |
 |---|--------|------|---------|-------|
-| T1 | `[ ]` | — | — | Add your first task |
+ | T1 | `[x]` | Populate task list from PRD | Setup | Converting PRD specs to actionable tasks |
+ | T2 | `[x]` | Connect Orders API to Convex mutation | orders | Orders already created via client mutation (unused API route is stubbed) |
+ | T3 | `[x]` | Implement Chargily webhook (unlock store) | billing | Now activates store via metadata.storeId |
+ | T4 | `[~]` | Fix Delivery API per-store credentials | delivery | Currently uses env vars, needs per-store |
+ | T5 | `[ ]` | Populate OVERVIEW.md from PRD | context | Current state: empty stub |
+ | T6 | `[ ]` | Populate SCOPE.md (in/out of scope) | context | Define v1 boundaries |
+ | T7 | `[ ]` | Populate ROADMAP.md phases | context | v1 Core, v1.1 Polish, v2 Expansion |
+ | T8 | `[ ]` | Populate DATA_MODELS.md | context | Current: empty stub |
 
 ---
 

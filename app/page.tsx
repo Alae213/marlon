@@ -34,9 +34,9 @@ function StoreCard({ store }: { store: StoreData }) {
   const getStatusBadge = () => {
     switch (store.subscription) {
       case "active":
-        return <span className="text-xs text-[#16a34a]">Active</span>;
+        return <span className="text-xs text-[--color-success]">Active</span>;
       case "trial":
-        return <span className="text-xs text-[#737373]">Trial</span>;
+        return <span className="text-xs text-[--system-400]">Trial</span>;
       default:
         return null;
     }

@@ -7,7 +7,6 @@ export { NavbarEditor } from "./components/navbar-editor";
 export { HeroEditor } from "./components/hero-editor";
 export { FooterEditor } from "./components/footer-editor";
 export { SettingsDialog } from "./components/settings-dialog";
-export { PreferencesSettings } from "./settings/preferences-settings";
 export { DeliveryPricingSettings } from "./settings/delivery-pricing-settings";
 export { DeliveryIntegrationSettings } from "./settings/delivery-integration-settings";
 export { StoreInfoSettings } from "./settings/store-info-settings";

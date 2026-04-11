@@ -36,7 +36,7 @@ export function NavLinks({
               onBlur={onSaveText}
               onKeyDown={onTextKeyDown}
               autoFocus
-              className={`px-3 py-2 text-sm bg-transparent border-b-2 border-[var(--system-600)] dark:border-[var(--system-50)] outline-none ${textClass} w-auto min-w-[80px]`}
+              className={`px-3 py-2 text-sm bg-transparent border-b-2 border-[var(--system-600)] outline-none ${textClass} w-auto min-w-[80px]`}
             />
           ) : (
             <button

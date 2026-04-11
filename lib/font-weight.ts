@@ -1,6 +1,9 @@
 export const fontWeights = {
-  normal: "'wght' 400",
-  medium: "'wght' 450",
-  semibold: "'wght' 550",
-  bold: "'wght' 700",
+  caption: 400,
+  bodySm: 400,
+  body: 450,
+  headingSm: 450,
+  heading: 550,
+  modal: 700,
+  page: 700,
 } as const;

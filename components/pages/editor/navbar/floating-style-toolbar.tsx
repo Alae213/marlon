@@ -119,7 +119,7 @@ export function FloatingStyleToolbar({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onSetTextColor("light")}
-                  className="relative w-[12px] h-[12px] rounded-full bg-white border border-[#171717] hover:scale-125 transition-transform"
+className="relative w-[12px] h-[12px] rounded-full bg-[--system-gray-6] border border-[#171717] hover:scale-125 transition-transform"
                 >
                   {navbarText === "light" && (
                     <motion.div

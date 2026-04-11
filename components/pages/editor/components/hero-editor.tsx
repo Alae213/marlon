@@ -37,7 +37,7 @@ export function HeroEditor({
   const currentHero = (heroContent?.content ?? undefined) as HeroContent | undefined;
   const heroTitle = currentHero?.title ?? "Our Online Store";
   const heroCtaText = currentHero?.ctaText ?? "Shop Now";
-  const heroCtaColor = currentHero?.ctaColor ?? "#171717";
+  const heroCtaColor = currentHero?.ctaColor ?? "var(--system-700)";
   const heroLayout = currentHero?.layout ?? "center";
   const heroBgUrl = currentHero?.backgroundImageUrl;
 
@@ -127,7 +127,7 @@ export function HeroEditor({
           }
         >
           {!heroBgUrl && (
-            <div className="absolute inset-0 bg-gradient-to-br from-[#f5f5f5] to-[#e5e5e5] dark:from-[#171717] dark:to-[#262626]" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[--system-100] to-[--system-200]" />
           )}
 
           <div className={`relative z-10 text-center w-full ${layoutClass} flex flex-col`}>
@@ -140,12 +140,12 @@ export function HeroEditor({
                 onChange={(e) => onEditValueChange(e.target.value)}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] bg-transparent border-b-2 border-[#171717] dark:border-[#fafafa] focus:outline-none text-center"
+                className="text-3xl font-bold text-[--system-700] bg-transparent border-b-2 border-[--system-700] focus:outline-none text-center"
                 placeholder="Page title"
               />
             ) : (
               <h1
-                className="text-3xl font-bold text-[#171717] dark:text-[#fafafa] mb-4 cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                className="text-3xl font-bold text-[--system-700] mb-4 cursor-pointer hover:text-[--system-500]"
                 onClick={() => onStartEditing("heroTitle", heroTitle)}
               >
                 {heroTitle}
@@ -177,23 +177,23 @@ export function HeroEditor({
           </div>
 
           {/* Layout Toggle - Show on hover */}
-          <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 dark:bg-[#0a0a0a]/90 border border-[#e5e5e5] dark:border-[#262626] px-2 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
-            <span className="text-xs text-[#737373]">Position:</span>
+          <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 border border-[--system-200] px-2 py-1.5 rounded-lg opacity-0 hover:opacity-100 transition-opacity">
+            <span className="text-xs text-[--system-400]">Position:</span>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "left" })}
-              className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+              className={`px-2 py-1 text-xs border ${heroLayout === "left" ? "border-[--system-700]" : "border-[--system-200]"}`}
             >
               Left
             </button>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "center" })}
-              className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+              className={`px-2 py-1 text-xs border ${heroLayout === "center" ? "border-[--system-700]" : "border-[--system-200]"}`}
             >
               Center
             </button>
             <button
               onClick={() => setHeroStyles({ storeId, layout: "right" })}
-              className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[#171717]" : "border-[#e5e5e5]"}`}
+              className={`px-2 py-1 text-xs border ${heroLayout === "right" ? "border-[--system-700]" : "border-[--system-200]"}`}
             >
               Right
             </button>

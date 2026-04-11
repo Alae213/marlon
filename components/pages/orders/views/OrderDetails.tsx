@@ -227,7 +227,7 @@ export function OrderDetails({
       <SheetContent 
         side="right"
         showCloseButton={false}
-        className="overflow-hidden bg-[var(--system-600)] w-full sm:max-w-[420px] h-[calc(100vh-1rem)] flex flex-col outline-none gap-0 rounded-[22px] mx-2 my-2 p-0 border-none"
+        className="overflow-hidden bg-[var(--system-600)] w-full sm:max-w-[420px] h-[calc(100vh-1rem)] flex flex-col outline-none gap-0 rounded-2xl mx-2 my-2 p-0 border-none"
       > 
         {/* Header - Sticky using Flex */}
         <div className="flex items-center justify-between w-full p-4 bg-[var(--system-600)]/80 backdrop-blur-md border-b border-white/10 z-20">
@@ -252,7 +252,7 @@ export function OrderDetails({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-4 p-5">
+        <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-2 p-5">
           {/* Customer Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
             <div className="space-y-3 body-base">

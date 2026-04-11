@@ -86,7 +86,7 @@ export function Dropdown({
             style={floatingStyles}
             className="z-[9999]"
           >
-            <div className="bg-white dark:bg-[#1a1a1a] border border-[#e5e5e5] dark:border-[#404040] shadow-lg rounded-lg overflow-hidden min-w-[160px] py-1">
+            <div className="bg-[--system-gray-6] border border-[#e5e5e5] shadow-lg rounded-lg overflow-hidden min-w-[160px] py-1">
               {children}
             </div>
           </div>,
@@ -113,7 +113,7 @@ export function DropdownItem({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`w-full px-3 py-2 text-start text-sm flex items-center gap-2 hover:bg-[#f5f5f5] dark:hover:bg-[#262626] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
+      className={`w-full px-3 py-2 text-start text-sm flex items-center gap-2 hover:bg-[--system-gray-5] transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
     >
       {children}
     </button>
@@ -122,6 +122,6 @@ export function DropdownItem({
 
 export function DropdownSeparator() {
   return (
-    <div className="h-px bg-[#e5e5e5] dark:bg-[#404040] my-1" />
+    <div className="h-px bg-[--system-gray-4] my-1" />
   );
 }

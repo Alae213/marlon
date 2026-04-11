@@ -69,7 +69,7 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-xl font-bold text-[--system-700]">
           إعدادات شركات التوصيل
         </h2>
       </div>

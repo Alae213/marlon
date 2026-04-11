@@ -11,7 +11,7 @@ interface LogoButtonProps {
 export function LogoButton({ logoUrl, onClick }: LogoButtonProps) {
   return (
     <button onClick={onClick} className="cursor-pointer">
-      <div className="w-9 h-9 bg-[var(--system-100)] dark:bg-[var(--system-600)] flex items-center justify-center flex-shrink-0 relative">
+      <div className="w-9 h-9 bg-[var(--system-100)] flex items-center justify-center flex-shrink-0 relative">
         {logoUrl ? (
           <Image src={logoUrl} alt="logo" fill className="object-cover" />
         ) : (

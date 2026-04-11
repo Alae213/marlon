@@ -6,15 +6,15 @@ export default function NotFound() {
   return (
     <div className="min-h-[70vh] flex items-center justify-center p-4">
       <div className="text-center max-w-md">
-        <div className="w-20 h-20 bg-[#f5f5f5] dark:bg-[#171717] rounded-full flex items-center justify-center mx-auto mb-6">
-          <span className="text-4xl font-normal text-[#a3a3a3]">404</span>
+        <div className="w-20 h-20 bg-[--system-100] rounded-full flex items-center justify-center mx-auto mb-6">
+          <span className="text-4xl font-normal text-[--system-300]">404</span>
         </div>
         
-        <h2 className="text-xl font-normal text-[#171717] dark:text-[#fafafa] mb-2">
+        <h2 className="text-xl font-normal text-[--system-700] mb-2">
           Page Not Found
         </h2>
         
-        <p className="text-[#737373] mb-6">
+        <p className="text-[--system-400] mb-6">
           The page you are looking for does not exist or has been moved.
         </p>
 

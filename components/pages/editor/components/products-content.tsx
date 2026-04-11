@@ -246,7 +246,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     <div className="h-screen w-full">
 
       {/* Browser Chrome Window */}
-      <div className="flex flex-col items-center justify-center bg-[var(--system-50)] h-full">
+      <div className="flex flex-col items-center justify-center bg-[var(--system-200)] h-full">
         {/* Header */}
       <div className="px-[12px] w-full flex items-center justify-between py-4">
         <div className="flex items-center gap-3">
@@ -260,7 +260,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
         <div className="flex-1" />
         <div
           style={{
-            background: "var(--gradient-popup)",
+            background: "linear-gradient(0deg, #434545 100%, #212525 0%)",
             boxShadow: "var(--shadow-xl-shadow)",
           }}
           className="flex flex-col gap-[8px] w-full h-[96vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
@@ -328,7 +328,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                           transition: { duration: 0.1 },
                         }}
                       >
-                        <Check className="w-3 h-3 text-[#17CFAA] stroke-[3px]" />
+                        <Check className="w-3 h-3 text-[--color-success] stroke-[3px]" />
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -391,7 +391,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               <Card padding="none">
                 {activeProducts.length === 0 ? (
                   <EmptyState
-                    icon={<ImageIcon className="w-6 h-6 text-[#a3a3a3]" />}
+                    icon={<ImageIcon className="w-6 h-6 text-[--system-300]" />}
                     title="No products yet"
                     description="Start by adding your first product"
                     action={
@@ -426,9 +426,9 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                     <button
                       onClick={() => setIsAddModalOpen(true)}
                       aria-label="Add new product"
-                      className="aspect-[1/1.3] bg-white dark:bg-[#0a0a0a] border border-dashed border-[#d4d4d4] dark:border-[#404040] hover:border-[#171717] dark:hover:border-[#fafafa] transition-all duration-200 flex flex-col items-center justify-center gap-2"
+                      className="aspect-[1/1.3] bg-white border border-dashed border-[--system-300] hover:border-[--system-700] transition-all duration-200 flex flex-col items-center justify-center gap-2"
                     >
-                      <Plus className="w-8 h-8 text-[#d4d4d4] dark:text-[#525252]" />
+                      <Plus className="w-8 h-8 text-[--system-300]" />
                     </button>
                   </div>
                 )}

@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-
-const CHARGILY_API_URL = "https://api.chargily.com/dashboard/api/v2/checkouts";
+import { getPaymentProvider, CreateCheckoutParams } from "@/lib/payment-service";
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { storeName, amount } = body;
+    const { storeId, storeName, amount } = body;
 
     if (!amount || amount <= 0) {
       return NextResponse.json(
@@ -14,57 +13,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const chargilyApiKey = process.env.CHARGILY_API_KEY;
-    const webhookUrl = process.env.CHARGILY_WEBHOOK_URL;
-    const returnUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const provider = getPaymentProvider();
+    
+    const params: CreateCheckoutParams = {
+      storeId,
+      storeName,
+      amount,
+      currency: "dzd",
+      customerEmail: "customer@example.com",
+      description: `اشتراك ${storeName} - خطة سنوية`,
+    };
 
-    if (!chargilyApiKey) {
-      console.warn("Chargily API key not configured, using mock response");
-      return NextResponse.json({
-        checkoutUrl: null,
-        success: true,
-        message: "Demo mode - payment would be created",
-      });
-    }
+    const result = await provider.createCheckout(params);
 
-    const response = await fetch(CHARGILY_API_URL, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${chargilyApiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        data: {
-          attributes: {
-            amount: amount * 100,
-            currency: "dzd",
-            description: `اشتراك ${storeName} - خطة سنوية`,
-            webhook_url: webhookUrl,
-            success_url: `${returnUrl}/dashboard?payment=success`,
-            failed_url: `${returnUrl}/dashboard?payment=failed`,
-            customer: {
-              name: storeName,
-              email: "customer@example.com",
-            },
-          },
-        },
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error("Chargily API error:", error);
+    if (!result.success) {
       return NextResponse.json(
-        { error: "Failed to create payment" },
-        { status: response.status }
+        { error: result.error || "Failed to create payment" },
+        { status: 500 }
       );
     }
 
-    const data = await response.json();
-    
     return NextResponse.json({
-      checkoutUrl: data.data?.attributes?.checkout_url,
-      checkoutId: data.data?.id,
+      checkoutUrl: result.checkoutUrl,
+      checkoutId: result.checkoutId,
+      success: true,
+      message: result.message,
     });
   } catch (error) {
     console.error("Payment error:", error);

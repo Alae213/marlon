@@ -111,30 +111,30 @@ export function FooterEditor({
     <Card className="mb-6" padding="none">
       <div className="p-4">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">Footer Section</h2>
-          <div className="text-xs text-[#737373]">Preview + Edit</div>
+          <h2 className="text-sm font-medium text-[--system-700]">Footer Section</h2>
+          <div className="text-xs text-[--system-400]">Preview + Edit</div>
         </div>
 
-        <div className="border border-[#e5e5e5] dark:border-[#262626] bg-[#f5f5f5] dark:bg-[#171717] p-6">
+        <div className="border border-[--system-200] bg-[--system-100] p-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Logo Section */}
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-white dark:bg-[#0a0a0a] overflow-hidden flex items-center justify-center flex-shrink-0 relative">
+              <div className="w-12 h-12 rounded-full bg-white overflow-hidden flex items-center justify-center flex-shrink-0 relative">
                 {footerLogoUrl ? (
                   <Image src={footerLogoUrl} alt="logo" fill className="object-cover" />
                 ) : (
-                  <Package className="w-5 h-5 text-[#a3a3a3]" />
+                  <Package className="w-5 h-5 text-[--system-300]" />
                 )}
               </div>
               <div>
-                <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa]">Your Store</div>
-                <div className="text-xs text-[#737373]">Logo synced from Navbar</div>
+                <div className="text-sm font-medium text-[--system-700]">Your Store</div>
+                <div className="text-xs text-[--system-400]">Logo synced from Navbar</div>
               </div>
             </div>
 
             {/* Contact Info */}
             <div className="space-y-3">
-              <div className="text-sm font-medium text-[#171717] dark:text-[#fafafa] mb-2">Contact Info</div>
+              <div className="text-sm font-medium text-[--system-700] mb-2">Contact Info</div>
 
               {/* Phone - Inline Edit */}
               {isEditingPhone ? (
@@ -145,15 +145,15 @@ export function FooterEditor({
                   onChange={(e) => onEditValueChange(e.target.value)}
                   onBlur={handlePhoneBlur}
                   onKeyDown={handlePhoneKeyDown}
-                  className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                  className="w-full px-2 py-1 text-sm border border-[--system-700] bg-white focus:outline-none"
                   placeholder="Phone number"
                 />
               ) : (
                 <div
-                  className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                  className="flex items-center gap-2 text-sm text-[--system-500] cursor-pointer hover:text-[--system-700]"
                   onClick={() => onStartEditing("footerPhone", contactPhone)}
                 >
-                  <span className="text-[#737373]">📱</span>
+                  <span className="text-[--system-400]">📱</span>
                   <span>{contactPhone || "Add phone number"}</span>
                 </div>
               )}
@@ -167,15 +167,15 @@ export function FooterEditor({
                   onChange={(e) => onEditValueChange(e.target.value)}
                   onBlur={handleEmailBlur}
                   onKeyDown={handleEmailKeyDown}
-                  className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                  className="w-full px-2 py-1 text-sm border border-[--system-700] bg-white focus:outline-none"
                   placeholder="Email address"
                 />
               ) : (
                 <div
-                  className="flex items-center gap-2 text-sm text-[#525252] dark:text-[#d4d4d4] cursor-pointer hover:text-[#171717] dark:hover:text-[#fafafa]"
+                  className="flex items-center gap-2 text-sm text-[--system-500] cursor-pointer hover:text-[--system-700]"
                   onClick={() => onStartEditing("footerEmail", contactEmail)}
                 >
-                  <span className="text-[#737373]">✉️</span>
+                  <span className="text-[--system-400]">✉️</span>
                   <span>{contactEmail || "Add email address"}</span>
                 </div>
               )}
@@ -191,12 +191,12 @@ export function FooterEditor({
                   onChange={(e) => onEditValueChange(e.target.value)}
                   onBlur={handleCopyrightBlur}
                   onKeyDown={handleCopyrightKeyDown}
-                  className="w-full px-2 py-1 text-sm border border-[#171717] dark:border-[#fafafa] bg-white dark:bg-[#0a0a0a] focus:outline-none"
+                  className="w-full px-2 py-1 text-sm border border-[--system-700] bg-white focus:outline-none"
                   placeholder="Copyright text"
                 />
               ) : (
                 <div
-                  className="text-sm text-[#737373] cursor-pointer hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                  className="text-sm text-[--system-400] cursor-pointer hover:text-[--system-500]"
                   onClick={() => onStartEditing("footerCopyright", copyright)}
                 >
                   &copy; {copyright}
@@ -206,9 +206,9 @@ export function FooterEditor({
           </div>
 
           {/* Social Links Row */}
-          <div className="mt-6 pt-4 border-t border-[#e5e5e5] dark:border-[#262626]">
+          <div className="mt-6 pt-4 border-t border-[--system-200]">
             <div className="flex items-center justify-between">
-              <span className="text-sm text-[#737373]">Social Media Links</span>
+              <span className="text-sm text-[--system-400]">Social Media Links</span>
               <div className="flex items-center gap-2">
                 {SOCIAL_PLATFORMS.map((platform) => {
                   const link = socialLinks.find((l) => l.platform === platform);
@@ -217,8 +217,8 @@ export function FooterEditor({
                       key={platform}
                       className={`w-8 h-8 flex items-center justify-center border ${
                         link?.enabled
-                          ? "border-[#171717] dark:border-[#fafafa]"
-                          : "border-[#e5e5e5] dark:border-[#262626]"
+                          ? "border-[--system-700]"
+                          : "border-[--system-200]"
                       }`}
                       onClick={() => handleToggleSocial(platform)}
                       title={platform}

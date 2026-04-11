@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\.5905c96f4c9345a5f9fa4ac36784293c636bb40c-audit.json",
+    "files": [
+        {
+            "date": 1775843459250,
+            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-10.log",
+            "hash": "3d7e9dd66e587e2f7889131c0dd63a659d010c9c92ccf5ab74b5e252faa90411"
+        },
+        {
+            "date": 1775931067755,
+            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-11.log",
+            "hash": "f23e57b774ab14636f1d3afad34e6b183510b4f65e6639ef7b02e173f1888ee7"
+        }
+    ],
+    "hashType": "sha256"
+}

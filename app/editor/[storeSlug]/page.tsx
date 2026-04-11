@@ -22,7 +22,7 @@ export default function EditorPage() {
   if (!store && storeSlug) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-6 h-6 animate-spin text-[#171717] dark:text-[#fafafa]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[--system-gray-900]" />
       </div>
     );
   }
@@ -30,8 +30,8 @@ export default function EditorPage() {
   if (!storeId) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] p-12 text-center">
-          <p className="text-[#737373]">المتجر غير موجود</p>
+        <div className="bg-[--system-gray-6] border border-[--system-gray-4] p-12 text-center">
+          <p className="text-[--system-gray-600]">المتجر غير موجود</p>
         </div>
       </div>
     );

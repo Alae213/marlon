@@ -244,7 +244,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
 
             {/* Cart Icon */}
             <button
-              className={`w-9 h-9 flex items-center justify-center border border-border dark:border-slate-800 ${textClass}`}
+              className={`w-9 h-9 flex items-center justify-center border border-[--system-gray-200] ${textClass}`}
               aria-label="Cart"
             >
               <CartIcon className="w-4 h-4" />

@@ -10,5 +10,4 @@ export { AnimatedTabs, AnimatedTabContent } from "./layout/animated-tabs";
 export { EmptyState } from "./feedback/empty-state";
 export { BottomNavigation } from "./layout/bottom-navigation";
 export { AnimatedTabs as Tabs } from "./layout/animated-tabs";
-export { ThemeToggle } from "./layout/theme-toggle";
 export { CartIcon } from "./media/cart-icon";

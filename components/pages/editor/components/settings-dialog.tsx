@@ -10,16 +10,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/primitives/animate-ui/primitives/radix/dialog";
-import { PreferencesSettings } from "../settings/preferences-settings";
 import { DeliveryPricingSettings } from "../settings/delivery-pricing-settings";
 import { DeliveryIntegrationSettings } from "../settings/delivery-integration-settings";
 import { StoreInfoSettings } from "../settings/store-info-settings";
 import { Id } from "@/convex/_generated/dataModel";
 
-type SettingsTab = "preferences" | "delivery" | "integration" | "store";
+type SettingsTab = "delivery" | "integration" | "store";
 
 const TABS: Array<{ id: SettingsTab; label: string }> = [
-  { id: "preferences", label: "Preferences" },
   { id: "delivery", label: "Delivery Pricing" },
   { id: "integration", label: "Courier" },
   { id: "store", label: "Store Info" },
@@ -34,7 +32,7 @@ interface SettingsDialogProps {
 }
 
 export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab }: SettingsDialogProps) {
-  const [activeTab, setActiveTab] = useState<SettingsTab>((initialTab as SettingsTab) || "preferences");
+  const [activeTab, setActiveTab] = useState<SettingsTab>((initialTab as SettingsTab) || "delivery");
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -49,27 +47,27 @@ export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab
           >
             <DialogHeader className="w-full">
               <div className="flex items-center justify-between w-full">
-                <DialogTitle className="text-lg font-semibold text-[#171717] dark:text-[#fafafa]">
+                <DialogTitle className="text-lg font-semibold text-[--system-700]">
                   Store Settings
                 </DialogTitle>
                 <button
                   onClick={onClose}
-                  className="p-1 hover:bg-[#f5f5f5] dark:hover:bg-[#171717] rounded-lg transition-colors"
+                  className="p-1 hover:bg-[--system-100] rounded-lg transition-colors"
                 >
-                  <X className="w-5 h-5 text-[#525252] dark:text-[#d4d4d4]" />
+                  <X className="w-5 h-5 text-[--system-500]" />
                 </button>
               </div>
             </DialogHeader>
 
-            <div className="flex border-b border-[#e5e5e5] dark:border-[#262626] w-full">
+            <div className="flex border-b border-[--system-200] w-full">
               {TABS.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex-1 py-3 text-sm font-medium transition-colors ${
                     activeTab === tab.id
-                      ? "border-b-2 border-[#171717] dark:border-[#fafafa] text-[#171717] dark:text-[#fafafa]"
-                      : "text-[#737373] hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                      ? "border-b-2 border-[--system-700] text-[--system-700]"
+                      : "text-[--system-400] hover:text-[--system-500]"
                   }`}
                 >
                   {tab.label}
@@ -78,7 +76,6 @@ export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab
             </div>
 
             <div className="p-4 overflow-y-auto max-h-[60vh] w-full">
-              {activeTab === "preferences" && <PreferencesSettings />}
               {activeTab === "delivery" && <DeliveryPricingSettings storeId={storeId} />}
               {activeTab === "integration" && <DeliveryIntegrationSettings storeId={storeId} />}
               {activeTab === "store" && <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />}

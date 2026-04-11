@@ -199,13 +199,13 @@ function StorefrontContent() {
           />
           
           {/* Drawer */}
-          <div className="fixed top-0 right-0 h-full w-72 bg-background dark:bg-slate-950 shadow-xl z-50 lg:hidden flex flex-col">
+          <div className="fixed top-0 right-0 h-full w-72 bg-[--system-gray-6] shadow-xl z-50 lg:hidden flex flex-col">
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-border dark:border-slate-800">
-              <h2 className="text-lg font-medium text-foreground dark:text-background">القائمة</h2>
+            <div className="flex items-center justify-between p-4 border-b border-[--system-gray-4]">
+              <h2 className="text-lg font-medium text-[--system-gray-900]">القائمة</h2>
               <button
                 onClick={() => setMobileMenuOpen(false)}
-                className="p-2 hover:bg-muted dark:hover:bg-slate-800 rounded-lg"
+                className="p-2 hover:bg-[--system-gray-5] rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -218,7 +218,7 @@ function StorefrontContent() {
                   key={`mobile-${link.id || `link-${index}`}`}
                   href={link.url}
                   onClick={() => setMobileMenuOpen(false)}
-                  className="block p-3 rounded-lg bg-muted dark:bg-slate-800 text-foreground dark:text-background"
+                  className="block p-3 rounded-lg bg-[--system-gray-5] text-[--system-gray-900]"
                 >
                   {link.text}
                 </a>

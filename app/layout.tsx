@@ -10,7 +10,6 @@ const inter = Inter({
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/pages/providers/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
-import { ThemeProvider } from "@/lib/theme";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -35,9 +34,8 @@ export default function RootLayout({
     return (
       <ClerkProvider publishableKey={publishableKey}>
         <ConvexClientProvider>
-          <ThemeProvider>
-            <ToastProvider>
-              <html lang="en" dir="ltr">
+          <ToastProvider>
+            <html lang="en" dir="ltr">
       <head>
         {process.env.NODE_ENV === "development" && (
           <Script
@@ -53,15 +51,14 @@ export default function RootLayout({
           />
         )}
       </head>
-                <body className={`${inter.variable} antialiased`}>
+<body className={`${inter.variable} antialiased`}>
                   {children}
                   <Analytics />
                   <SpeedInsights />
                 </body>
               </html>
             </ToastProvider>
-          </ThemeProvider>
-        </ConvexClientProvider>
+          </ConvexClientProvider>
       </ClerkProvider>
     );
   }
@@ -70,11 +67,9 @@ export default function RootLayout({
     <html lang="en" dir="ltr">
       <body className={`${inter.variable} antialiased`}>
         <ConvexClientProvider>
-          <ThemeProvider>
-            <ToastProvider>
-              {children}
-            </ToastProvider>
-          </ThemeProvider>
+          <ToastProvider>
+            {children}
+          </ToastProvider>
         </ConvexClientProvider>
         <Analytics />
         <SpeedInsights />

@@ -43,13 +43,13 @@ export function ProductCard({
   const isDeleting = deletingProductId === product._id;
 
   return (
-    <div className="group relative bg-white dark:bg-[var(--system-700)] border border-[var(--system-200)] dark:border-[var(--system-600)] overflow-hidden hover:border-[var(--system-700)] dark:hover:border-[var(--system-50)] transition-all duration-200">
+    <div className="group relative bg-white border border-[--system-200] overflow-hidden hover:border-[--system-700] transition-all duration-200">
       {/* Image */}
-      <div className="aspect-square bg-[var(--system-50)] dark:bg-[var(--system-700)] flex items-center justify-center relative">
+      <div className="aspect-square bg-[--system-50] flex items-center justify-center relative">
         {product.images?.[0] ? (
           <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
         ) : (
-          <ImageIcon className="w-8 h-8 text-[var(--system-300)]" />
+          <ImageIcon className="w-8 h-8 text-[--system-300]" />
         )}
       </div>
 
@@ -64,11 +64,11 @@ export function ProductCard({
             onChange={(e) => onEditValueChange(e.target.value)}
             onBlur={onSaveEdit}
             onKeyDown={onKeyDown}
-            className="w-full body-base text-[var(--system-700)] dark:text-[var(--system-50)] mb-2 px-1 py-0.5 border border-[var(--system-700)] dark:border-[var(--system-50)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
+            className="w-full text-body text-[--system-700] mb-2 px-1 py-0.5 border border-[--system-700] bg-white focus:outline-none"
           />
         ) : (
           <h3
-            className="body-base text-[var(--system-700)] dark:text-[var(--system-50)] mb-2 line-clamp-2 cursor-pointer hover:text-[var(--system-400)] dark:hover:text-[var(--system-200)]"
+            className="text-body text-[--system-700] mb-2 line-clamp-2 cursor-pointer hover:text-[--system-400]"
             onClick={() => onStartEditing(product._id, "name", product.name)}
           >
             {product.name}
@@ -85,11 +85,11 @@ export function ProductCard({
               onChange={(e) => onEditValueChange(e.target.value)}
               onBlur={onSaveEdit}
               onKeyDown={onKeyDown}
-              className="body-base font-semibold text-[var(--system-700)] dark:text-[var(--system-50)] tabular-nums px-1 py-0.5 w-24 border border-[var(--system-700)] dark:border-[var(--system-50)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
+              className="text-body font-semibold text-[--system-700] tabular-nums px-1 py-0.5 w-24 border border-[--system-700] bg-white focus:outline-none"
             />
           ) : (
             <span
-              className="body-base font-semibold text-[var(--system-700)] dark:text-[var(--system-50)] tabular-nums cursor-pointer hover:text-[var(--system-400)] dark:hover:text-[var(--system-200)]"
+              className="text-body font-semibold text-[--system-700] tabular-nums cursor-pointer hover:text-[--system-400]"
               onClick={() => onStartEditing(product._id, "basePrice", product.basePrice)}
             >
               {formatPrice(product.basePrice)}
@@ -106,12 +106,12 @@ export function ProductCard({
                 onChange={(e) => onEditValueChange(e.target.value)}
                 onBlur={onSaveEdit}
                 onKeyDown={onKeyDown}
-                className="label-xs text-[var(--system-300)] line-through tabular-nums px-1 py-0.5 w-24 border border-[var(--system-300)] bg-white dark:bg-[var(--system-700)] focus:outline-none"
+                className="text-xs text-[--system-300] line-through tabular-nums px-1 py-0.5 w-24 border border-[--system-300] bg-white focus:outline-none"
                 placeholder="Old price"
               />
             ) : (
               <span
-                className="label-xs text-[var(--system-300)] line-through cursor-pointer hover:text-[var(--system-400)]"
+                className="text-xs text-[--system-300] line-through cursor-pointer hover:text-[--system-400]"
                 onClick={() => onStartEditing(product._id, "oldPrice", product.oldPrice || "")}
               >
                 {formatPrice(product.oldPrice)}
@@ -128,10 +128,10 @@ export function ProductCard({
             e.stopPropagation();
             onEdit(product);
           }}
-          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-[var(--system-50)] dark:hover:bg-[var(--system-600)] transition-colors"
+          className="p-2 bg-white/90 hover:bg-[--system-50] transition-colors"
           title="Edit"
         >
-          <Edit className="w-4 h-4 text-[var(--system-400)]" />
+          <Edit className="w-4 h-4 text-[--system-400]" />
         </button>
         <button
           onClick={(e) => {
@@ -139,13 +139,13 @@ export function ProductCard({
             e.stopPropagation();
             onToggleArchive(product._id, product.isArchived);
           }}
-          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-[var(--system-50)] dark:hover:bg-[var(--system-600)] transition-colors"
+          className="p-2 bg-white/90 hover:bg-[--system-50] transition-colors"
           title={product.isArchived ? "Activate" : "Deactivate"}
         >
           {product.isArchived ? (
-            <Eye className="w-4 h-4 text-[var(--success)]" />
+            <Eye className="w-4 h-4 text-[--color-success]" />
           ) : (
-            <EyeOff className="w-4 h-4 text-[var(--warning)]" />
+            <EyeOff className="w-4 h-4 text-[--color-warning]" />
           )}
         </button>
         <button
@@ -154,10 +154,10 @@ export function ProductCard({
             e.stopPropagation();
             onRequestDelete(product._id);
           }}
-          className="p-2 bg-white/90 dark:bg-[var(--system-700)]/90 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="p-2 bg-white/90 hover:bg-red-50 transition-colors"
           title="Delete"
         >
-          <Trash2 className="w-4 h-4 text-[var(--destructive)]" />
+          <Trash2 className="w-4 h-4 text-[--destructive]" />
         </button>
       </div>
 

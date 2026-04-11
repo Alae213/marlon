@@ -215,7 +215,7 @@ function OrdersContent({
         {/* Page Title */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <h1 className="headline-2xl">My Orders</h1>
+            <h1 className="text-modal text-bold">My Orders</h1>
           </div>
         </div>
 
@@ -279,7 +279,7 @@ export default function OrdersPage() {
   if (!store && storeSlug) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-6 h-6 animate-spin text-[#171717] dark:text-[#fafafa]" />
+        <Loader2 className="w-6 h-6 animate-spin text-[--system-gray-900]" />
       </div>
     );
   }
@@ -287,8 +287,8 @@ export default function OrdersPage() {
   if (!storeId) {
     return (
       <div className="max-w-6xl mx-auto">
-        <div className="bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] p-12 text-center">
-          <p className="text-[#737373]">Store not found</p>
+        <div className="bg-[--system-gray-6] border border-[--system-gray-4] p-12 text-center">
+          <p className="text-[--system-gray-600]">Store not found</p>
         </div>
       </div>
     );

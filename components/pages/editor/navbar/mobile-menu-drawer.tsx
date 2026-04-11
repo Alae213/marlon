@@ -46,14 +46,14 @@ export function MobileMenuDrawer({
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 200 }}
-            className="fixed top-0 right-0 h-full w-72 bg-[var(--system-50)] dark:bg-[var(--system-700)] shadow-xl z-50 lg:hidden flex flex-col pt-[env(safe-area-inset-top)]"
+            className="fixed top-0 right-0 h-full w-72 bg-[var(--system-50)] shadow-xl z-50 lg:hidden flex flex-col pt-[env(safe-area-inset-top)]"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--system-200)] dark:border-[var(--system-600)]">
-              <h2 className="text-lg font-medium text-[var(--system-600)] dark:text-[var(--system-50)]">Menu</h2>
+            <div className="flex items-center justify-between p-4 border-b border-[--system-gray-200]">
+              <h2 className="text-lg font-medium text-[--system-gray-600]">Menu</h2>
               <button
                 onClick={onClose}
-                className="p-2 hover:bg-[var(--system-100)] dark:hover:bg-[var(--system-600)] rounded-lg"
+                className="p-2 hover:bg-[--system-gray-100] rounded-lg"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -64,7 +64,7 @@ export function MobileMenuDrawer({
               {links.map((link) => (
                 <div
                   key={link.id}
-                  className="p-3 rounded-lg bg-[var(--system-100)] dark:bg-[var(--system-600)]"
+                  className="p-3 rounded-lg bg-[--system-gray-100]"
                 >
                   {editingLinkId === link.id ? (
                     <input
@@ -75,13 +75,13 @@ export function MobileMenuDrawer({
                       onBlur={onSaveText}
                       onKeyDown={onTextKeyDown}
                       autoFocus
-                      className="w-full bg-transparent border-b-2 border-[var(--system-600)] dark:border-[var(--system-50)] outline-none text-[var(--system-600)] dark:text-[var(--system-50)]"
+                      className="w-full bg-transparent border-b-2 border-[--system-gray-600] outline-none text-[--system-gray-600]"
                     />
                   ) : (
                     <button
                       key={`btn-${link.id}`}
                       onClick={() => onStartEditing(link)}
-                      className="text-[var(--system-600)] dark:text-[var(--system-50)] w-full text-left cursor-text"
+                      className="text-[--system-gray-600] w-full text-left cursor-text"
                     >
                       {link.text}
                     </button>

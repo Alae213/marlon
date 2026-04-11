@@ -92,20 +92,20 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--system-400)] dark:text-[var(--system-200)] mb-2">Product Images</label>
+        <label className="block text-sm font-medium text-[var(--system-400)] mb-2">Product Images</label>
         <ImageUploader images={images} onImagesChange={setImages} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--system-400)] dark:text-[var(--system-200)] mb-2">
+        <label className="block text-sm font-medium text-[var(--system-400)] mb-2">
           Options (e.g., Size, Color)
         </label>
         <InlineVariantEditor variants={variants} onChange={setVariants} />
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-          <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
 

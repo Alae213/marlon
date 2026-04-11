@@ -34,12 +34,11 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
 
-  // Sync state when query data arrives (only when data actually changes)
+  // Sync state when query data arrives
   const prevDataRef = useRef<typeof deliveryIntegration>(undefined);
   useEffect(() => {
     if (deliveryIntegration && deliveryIntegration !== prevDataRef.current) {
       prevDataRef.current = deliveryIntegration;
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- Syncing Convex reactive query to form state
       setProvider((deliveryIntegration.provider as Provider) || "none");
       setApiKey(deliveryIntegration.apiKey ?? "");
       setApiToken(deliveryIntegration.apiToken ?? "");
@@ -101,21 +100,21 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="font-semibold text-[#171717] dark:text-[#fafafa]">Courier Integration</h3>
-          <p className="text-sm text-[#737373] mt-1">Connect your store to a courier service</p>
+          <h3 className="font-semibold text-[--system-700]">Courier Integration</h3>
+          <p className="text-sm text-[--system-400] mt-1">Connect your store to a courier service</p>
         </div>
-        {savedMessage && <span className="text-sm font-medium text-green-600">✓ Saved</span>}
+        {savedMessage && <span className="text-sm font-medium text-[--color-success]">✓ Saved</span>}
       </div>
 
-      <div className="flex gap-3 p-1 bg-[#f5f5f5] dark:bg-[#171717] rounded-xl">
+      <div className="flex gap-3 p-1 bg-[--system-100] rounded-xl">
         {PROVIDERS.map((opt) => (
           <button
             key={opt.value}
             onClick={() => handleProviderChange(opt.value)}
             className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${
               provider === opt.value
-                ? "bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] shadow-sm border border-[#e5e5e5] dark:border-[#262626]"
-                : "text-[#737373] hover:text-[#525252] dark:hover:text-[#d4d4d4]"
+                ? "bg-white text-[--system-700] shadow-sm border border-[--system-200]"
+                : "text-[--system-400] hover:text-[--system-500]"
             }`}
           >
             {opt.label}
@@ -124,26 +123,26 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
       </div>
 
       {provider !== "none" && (
-        <div className="space-y-4 p-5 bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-xl">
+        <div className="space-y-4 p-5 bg-white border border-[--system-200] rounded-xl">
           <div>
-            <label className="block text-sm font-medium mb-2 text-[#525252] dark:text-[#d4d4d4]">API Key</label>
+            <label className="block text-sm font-medium mb-2 text-[--system-500]">API Key</label>
             <input
               type="password"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
               onBlur={handleSaveCredentials}
-              className="w-full h-11 px-4 border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded-lg focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#171717]/10 dark:focus:ring-[#fafafa]/10 transition-all"
+              className="w-full h-11 px-4 border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
               placeholder="Enter API key"
             />
           </div>
           <div>
-            <label className="block text-sm font-medium mb-2 text-[#525252] dark:text-[#d4d4d4]">API Token</label>
+            <label className="block text-sm font-medium mb-2 text-[--system-500]">API Token</label>
             <input
               type="password"
               value={apiToken}
               onChange={(e) => setApiToken(e.target.value)}
               onBlur={handleSaveCredentials}
-              className="w-full h-11 px-4 border border-[#e5e5e5] dark:border-[#262626] bg-white dark:bg-[#0a0a0a] text-[#171717] dark:text-[#fafafa] rounded-lg focus:outline-none focus:border-[#171717] dark:focus:border-[#fafafa] focus:ring-2 focus:ring-[#171717]/10 dark:focus:ring-[#fafafa]/10 transition-all"
+              className="w-full h-11 px-4 border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
               placeholder="Enter API token"
             />
           </div>
@@ -166,15 +165,15 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
             <div
               className={`p-4 rounded-xl text-sm font-medium ${
                 testResult.success
-                  ? "bg-green-50 dark:bg-green-900/20 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800"
-                  : "bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800"
+                  ? "bg-[--color-success-bg] text-[--color-success] border border-[--color-success]"
+                  : "bg-[--color-error-bg] text-[--color-error] border border-[--color-error]"
               }`}
             >
               {testResult.message}
             </div>
           )}
 
-          <p className="text-xs text-[#737373] pt-2 border-t border-[#e5e5e5] dark:border-[#262626]">
+          <p className="text-xs text-[--system-400] pt-2 border-t border-[--system-200]">
             {provider === "zr-express" && "Get your API key from ZR Express dashboard"}
             {provider === "yalidine" && "Get your API key and token from Yalidine dashboard"}
           </p>
@@ -182,8 +181,8 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
       )}
 
       {provider === "none" && (
-        <div className="p-5 bg-[#f5f5f5] dark:bg-[#171717] rounded-xl border border-[#e5e5e5] dark:border-[#262626]">
-          <p className="text-sm text-[#737373]">No courier selected. Shipping will be handled manually.</p>
+        <div className="p-5 bg-[--system-100] rounded-xl border border-[--system-200]">
+          <p className="text-sm text-[--system-400]">No courier selected. Shipping will be handled manually.</p>
         </div>
       )}
     </div>

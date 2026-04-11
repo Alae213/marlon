@@ -107,7 +107,7 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
 
           <div className="flex items-center justify-center gap-2 text-sm text-zinc-500">
             <Shield className="w-4 h-4" />
-            <span>الدفع آمن عبر Chargily</span>
+            <span>الدفع آمن</span>
           </div>
 
           <Button 

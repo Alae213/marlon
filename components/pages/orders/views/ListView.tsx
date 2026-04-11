@@ -640,7 +640,7 @@ export function ListView({
           </div>
           <div className="flex items-center gap-2">
             <button
-              className="ml-2 cursor-pointer p-2 rounded-lg transition-colors text-red-500 hover:bg-red-500/20"
+              className="ml-2 cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
               onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="w-4 h-4" />
@@ -657,7 +657,7 @@ export function ListView({
           onSelect={(index) => onViewModeChange(index === 0 ? "list" : "state")}
         >
           <SubtleTabItem index={0} icon={ListIcon as unknown as LucideIcon} label="List" />
-          <SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />
+           {/*<SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />*/}
         </SubtleTab>
         
         <div className="flex items-center gap-1">
@@ -941,7 +941,7 @@ export function ListView({
             <col style={{ width: "16.7%" }} />
           </colgroup>
           <TableHeader>
-            <tr className="bg-[var(--system-100)] rounded-[12px]">
+            <tr className="bg-[var(--system-200)]/60 rounded-[12px]">
               <th className="rounded-l-[12px] px-3 py-[10px] text-left">
                 <Checkbox
                   checked={selectAll}
@@ -951,11 +951,11 @@ export function ListView({
                   <CheckboxIndicator className="text-white w-3 h-3" />
                 </Checkbox>
               </th>
-              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Customer</th>
-              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Product</th>
-              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">State</th>
-              <th className="px-3 py-[10px] text-left body-base text-[var(--system-600)]">Total</th>
-              <th className="rounded-r-[12px] px-3 py-[10px] text-left body-base text-[var(--system-600)]">Date</th>
+              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Customer</th>
+              <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Product</th>
+              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">State</th>
+              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Total</th>
+              <th className="rounded-r-[12px] px-3 py-[10px] text-left text-[var(--system-600)]">Date</th>
             </tr>
           </TableHeader>
           <TableBody>
@@ -1000,10 +1000,10 @@ export function ListView({
                     callLog={(order.callLog as CallLog[]) || []}
                   />
                 </TableCell>
-                <TableCell className="py-3 body-base text-[var(--system-600)]">
+                <TableCell className="py-3 text-[var(--system-600)]">
                   {formatPrice(order.total)}
                 </TableCell>
-                <TableCell className="py-3 body-base text-[var(--system-300)]">
+                <TableCell className="py-3 text-[var(--system-300)]">
                   {getRelativeTime(order.createdAt)}
                 </TableCell>
               </TableRow>
@@ -1012,7 +1012,7 @@ export function ListView({
         </Table>
 
         {filteredOrders.length === 0 && (
-          <div className="p-12 text-center body-base text-[var(--system-300)]">
+          <div className="p-12 text-center text-[var(--system-300)]">
             No orders found
           </div>
         )}

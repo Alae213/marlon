@@ -31,7 +31,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   // If only one image, don't show carousel controls
   if (images.length === 1) {
     return (
-      <div className="relative aspect-square bg-[var(--system-100)] dark:bg-[var(--system-600)] rounded-2xl overflow-hidden">
+      <div className="relative aspect-square bg-[--system-100] rounded-2xl overflow-hidden">
         <Image
           src={images[0]}
           alt={alt}
@@ -47,7 +47,7 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
   return (
     <div className="relative">
       {/* Main Image */}
-      <div className="relative aspect-square bg-[var(--system-100)] dark:bg-[var(--system-600)] rounded-2xl overflow-hidden">
+      <div className="relative aspect-square bg-[--system-100] rounded-2xl overflow-hidden">
         <Image
           src={images[currentIndex]}
           alt={`${alt} - Image ${currentIndex + 1}`}
@@ -60,18 +60,18 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
         {/* Navigation Arrows */}
         <button
           onClick={goToPrevious}
-          className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/50 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-black/70 transition-colors shadow-lg"
+          className="absolute start-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 flex items-center justify-center rounded-full hover:bg-white transition-colors shadow-lg"
           aria-label="Previous image"
         >
-          <ChevronLeft className="w-5 h-5 text-[var(--system-600)] dark:text-[var(--system-50)]" />
+          <ChevronLeft className="w-5 h-5 text-[--system-600]" />
         </button>
         
         <button
           onClick={goToNext}
-          className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-black/50 flex items-center justify-center rounded-full hover:bg-white dark:hover:bg-black/70 transition-colors shadow-lg"
+          className="absolute end-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 flex items-center justify-center rounded-full hover:bg-white transition-colors shadow-lg"
           aria-label="Next image"
         >
-          <ChevronRight className="w-5 h-5 text-[var(--system-600)] dark:text-[var(--system-50)]" />
+          <ChevronRight className="w-5 h-5 text-[--system-600]" />
         </button>
       </div>
 
@@ -84,8 +84,8 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
               onClick={() => goToSlide(index)}
               className={`relative w-16 h-16 flex-shrink-0 rounded-xl overflow-hidden border-2 transition-colors ${
                 index === currentIndex
-                  ? "border-[var(--system-600)] dark:border-[var(--system-50)]"
-                  : "border-transparent hover:border-[var(--system-300)]"
+                  ? "border-[--system-600]"
+                  : "border-transparent hover:border-[--system-300]"
               }`}
             >
               <Image
@@ -109,8 +109,8 @@ export function ImageCarousel({ images, alt }: ImageCarouselProps) {
               onClick={() => goToSlide(index)}
               className={`w-2 h-2 rounded-full transition-colors ${
                 index === currentIndex
-                  ? "bg-[var(--system-600)] dark:bg-[var(--system-50)]"
-                  : "bg-[var(--system-200)] dark:bg-[var(--system-400)]"
+                  ? "bg-[--system-600]"
+                  : "bg-[--system-200]"
               }`}
               aria-label={`Go to image ${index + 1}`}
             />
