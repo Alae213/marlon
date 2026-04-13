@@ -1,20 +1,19 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import dynamic from "next/dynamic";
-import { Menu } from "lucide-react";
+import Image from "next/image";
+import { ChevronDown, ImageIcon, MoonStar, Package, SunMedium, Upload } from "lucide-react";
+import { Button } from "@/components/primitives/core/buttons/button";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/primitives/ui/switch";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
-import { TooltipProvider } from "@/components/primitives/animate-ui/components/animate/tooltip";
+import { cn } from "@/lib/utils";
 import { useImageUpload } from "../hooks/use-image-upload";
 import type { NavbarContent, NavbarLink } from "../types";
-import { FloatingStyleToolbar } from "../navbar/floating-style-toolbar";
-import { LogoButton } from "../navbar/logo-button";
-import { LogoToolbar } from "../navbar/logo-toolbar";
-import { NavLinks } from "../navbar/nav-links";
-import { MobileMenuDrawer } from "../navbar/mobile-menu-drawer";
 
 const ImageCropper = dynamic(() =>
   import("@/components/features/shared/image-cropper").then((mod) => mod.ImageCropper),
@@ -31,70 +30,58 @@ interface NavbarEditorProps {
   navbarContent: { content: unknown } | null | undefined;
 }
 
-export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
-  // ── UI State ──────────────────────────────────────────────────
-  const [isHovered, setIsHovered] = useState(false);
-  const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
-  const [logoToolbarOpen, setLogoToolbarOpen] = useState(false);
-  const [editingLinkId, setEditingLinkId] = useState<string | null>(null);
-  const [editingText, setEditingText] = useState("");
-  const [editingLinkIdForSave, setEditingLinkIdForSave] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+type NavbarMode = "light" | "dark";
+type RenderableNavbarLink = NavbarLink & { renderKey: string };
 
-  // ── Mutations ─────────────────────────────────────────────────
+export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
+
   const setNavbarStyles = useMutation(api.siteContent.setNavbarStyles);
-  const updateNavbarLink = useMutation(api.siteContent.updateNavbarLink);
   const setLogoAndSyncFooter = useMutation(api.siteContent.setLogoAndSyncFooter);
-  const deleteNavbarLogo = useMutation(api.siteContent.deleteNavbarLogo);
   const { uploadToStorage } = useImageUpload();
 
-  // ── Derived Data ─────────────────────────────────────────────
   const currentNavbar = (navbarContent?.content ?? undefined) as NavbarContent | undefined;
-  const navbarBg = currentNavbar?.background ?? "light";
-  const navbarText = currentNavbar?.textColor ?? "dark";
-  const navbarLogoUrl = currentNavbar?.logoUrl;
+  const mode = (currentNavbar?.background === "dark" ? "dark" : "light") as NavbarMode;
+  const logoUrl = currentNavbar?.logoUrl;
+  const showCart = currentNavbar?.showCart ?? true;
+  const links = useMemo<RenderableNavbarLink[]>(
+    () =>
+      DEFAULT_LINKS.map((link, index) => ({
+        ...link,
+        renderKey: `${link.id || "link"}-${index}`,
+      })),
+    []
+  );
 
-  const links: NavbarLink[] = useMemo(() => {
-    return (currentNavbar?.links ?? DEFAULT_LINKS).map((link: NavbarLink, index: number) => ({
-      ...link,
-      id: link?.id ?? `link-${index}`,
-    }));
-  }, [currentNavbar?.links]);
+  const previewClasses =
+    mode === "dark"
+      ? "border-white/12 bg-[color:rgb(23_23_23_/_0.82)] text-white"
+      : "border-white/70 bg-[color:rgb(255_255_255_/_0.82)] text-[var(--system-700)]";
+  const actionChipClasses =
+    mode === "dark"
+      ? " hover:bg-[color:rgb(255_255_255_/_0.08)]"
+      : " hover:bg-[color:rgb(15_23_42_/_0.04)]";
+  const cartClasses =
+    mode === "dark"
+      ? "bg-transparent hover:bg-white/10"
+      : "bg-transparent hover:bg-black/5";
+  const panelCardClasses = "rounded-md border bg-[var(--system-600)] p-2";
 
-  const glassEffect = useMemo(() => {
-    if (navbarBg !== "glass") return {};
-    return {
-      background: "rgba(255, 255, 255, 0.01)",
-      backdropFilter: "blur(24px)",
-    };
-  }, [navbarBg]);
-
-  const backgroundClass =
-    navbarBg === "dark" ? "bg-slate-950"
-    : navbarBg === "glass" ? "bg-transparent"
-    : "bg-white";
-
-  const textClass = navbarText === "light" ? "text-white" : "text-foreground";
-
-  // ── Handlers ──────────────────────────────────────────────────
-  const handleSetBackground = useCallback(
-    async (background: "light" | "dark" | "glass") => {
-      try {
-        await setNavbarStyles({ storeId, background });
-      } catch (error) {
-        console.error("Failed to update navbar style:", error);
-      }
+  const handleModeChange = useCallback(
+    async (nextMode: NavbarMode) => {
+      await setNavbarStyles({
+        storeId,
+        background: nextMode,
+        textColor: nextMode === "dark" ? "light" : "dark",
+      });
     },
     [setNavbarStyles, storeId]
   );
 
-  const handleSetTextColor = useCallback(
-    async (textColor: "dark" | "light") => {
-      try {
-        await setNavbarStyles({ storeId, textColor });
-      } catch (error) {
-        console.error("Failed to update text color:", error);
-      }
+  const handleCartToggle = useCallback(
+    async (enabled: boolean) => {
+      await setNavbarStyles({ storeId, showCart: enabled });
     },
     [setNavbarStyles, storeId]
   );
@@ -109,176 +96,178 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
 
   const handleApplyLogoCrop = useCallback(
     async (croppedDataUrl: string) => {
-      try {
-        const storageId = await uploadToStorage(croppedDataUrl);
-        await setLogoAndSyncFooter({ storeId, logoStorageId: storageId });
-        setLogoCropSrc(null);
-      } catch (error) {
-        console.error("Failed to upload logo:", error);
-      }
+      const storageId = await uploadToStorage(croppedDataUrl);
+      await setLogoAndSyncFooter({ storeId, logoStorageId: storageId });
+      setLogoCropSrc(null);
     },
-    [uploadToStorage, setLogoAndSyncFooter, storeId]
+    [setLogoAndSyncFooter, storeId, uploadToStorage]
   );
 
-  const handleDeleteLogo = useCallback(async () => {
-    try {
-      await deleteNavbarLogo({ storeId });
-      setLogoToolbarOpen(false);
-    } catch (error) {
-      console.error("Failed to delete logo:", error);
-    }
-  }, [deleteNavbarLogo, storeId]);
-
-  const handleCropFromInput = useCallback(() => {
-    const fileInput = document.getElementById("navbar-logo-upload") as HTMLInputElement | null;
-    if (fileInput?.files?.[0]) {
-      const reader = new FileReader();
-      reader.onload = () => setLogoCropSrc(reader.result as string);
-      reader.readAsDataURL(fileInput.files[0]);
-    }
-  }, []);
-
-  const handleStartEditing = useCallback((link: NavbarLink) => {
-    setEditingLinkId(link.id);
-    setEditingLinkIdForSave(link.id);
-    setEditingText(link.text);
-  }, []);
-
-  const handleSaveText = useCallback(async () => {
-    const linkId = editingLinkIdForSave;
-    const trimmed = editingText.trim();
-    if (!linkId || !trimmed) {
-      setEditingLinkId(null);
-      setEditingLinkIdForSave(null);
-      return;
-    }
-    try {
-      await updateNavbarLink({ storeId, linkId, text: trimmed });
-    } catch (error) {
-      console.error("Failed to update link text:", error);
-    }
-    setEditingLinkId(null);
-    setEditingLinkIdForSave(null);
-  }, [editingLinkIdForSave, editingText, updateNavbarLink, storeId]);
-
-  const handleTextKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        handleSaveText();
-      }
-      if (e.key === "Escape") {
-        setEditingLinkId(null);
-        setEditingLinkIdForSave(null);
-      }
-    },
-    [handleSaveText]
-  );
-
-  const handleMouseEnter = useCallback(() => setIsHovered(true), []);
-  const handleMouseLeave = useCallback(() => {
-    setIsHovered(false);
-    setLogoToolbarOpen(false);
-  }, []);
-
-  // ── Shared link editing props ─────────────────────────────────
-  const linkEditingProps = {
-    editingLinkId,
-    editingText,
-    onStartEditing: handleStartEditing,
-    onTextChange: setEditingText,
-    onSaveText: handleSaveText,
-    onTextKeyDown: handleTextKeyDown,
-  };
-
-  // ── Render ───────────────────────────────────────────────────
   return (
-    <TooltipProvider>
-      {/* Outer wrapper: positioning context for the toolbar + hover detection */}
-      <div
-        className="relative"
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-      >
-        {/* Navbar */}
-        <div className={`${backgroundClass}`} style={glassEffect}>
-          <div className="max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6 py-3 min-h-[56px]">
-            {/* Logo Section + Mobile Button */}
-            <div className="flex items-center min-w-0">
-              {/* Logo Button + Logo Toolbar — hover container (also keeps toolbar outside glass navbar div) */}
-              <div
-                className="relative"
-                onMouseEnter={() => setLogoToolbarOpen(true)}
-                onMouseLeave={() => setLogoToolbarOpen(false)}
-              >
-                <LogoButton
-                  logoUrl={navbarLogoUrl}
-                  onClick={() => document.getElementById("navbar-logo-upload")?.click()}
-                />
-                <LogoToolbar
-                  isOpen={logoToolbarOpen}
-                  onUpload={() => { document.getElementById("navbar-logo-upload")?.click(); }}
-                  onCrop={handleCropFromInput}
-                  onDelete={handleDeleteLogo}
-                />
-                <input
-                  id="navbar-logo-upload"
-                  type="file"
-                  accept="image/*"
-                  onChange={handleSelectLogoFile}
-                  className="hidden"
-                />
-              </div>
-
-              {/* Mobile Menu Button */}
+    <>
+      <Popover open={isPanelOpen} onOpenChange={setIsPanelOpen}>
+        <div className="sticky top-3 z-40 ">
+          <div className="relative mx-auto h-full max-w-5xl">
+            <PopoverTrigger asChild>
               <button
-                className="lg:hidden p-2 ml-2"
-                onClick={() => setMobileMenuOpen(true)}
+                type="button"
+                aria-label="Open navbar settings"
+                className={`cursor-pointer group absolute inset-x-0 top-0 z-20 flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left backdrop-blur-xl transition-all duration-200 ${previewClasses}`}
               >
-                <Menu className={`w-5 h-5 ${textClass}`} />
+                <span
+                  className={cn(
+                    "pointer-events-none absolute inset-0 rounded-2xl transition-colors duration-200 -m-2 cursor-pointer",
+                    isPanelOpen
+                      ? "bg-[color:rgb(0_112_243_/_0.2)]"
+                      : "bg-transparent group-hover:bg-[color:rgb(0_112_243_/_0.2)]"
+                  )}
+                />
+
+                <div className="relative z-20 flex min-w-0 flex-1 items-center">
+                  {logoUrl ? (
+                    <Image
+                      src={logoUrl}
+                      alt="Store logo"
+                      width={160}
+                      height={40}
+                      className="h-10 w-auto rounded-md object-contain"
+                    />
+                  ) : (
+                    <span
+                      className={`flex h-10 w-10 items-center justify-center rounded-full border ${actionChipClasses}`}
+                    >
+                      <Package className="h-4 w-4" />
+                    </span>
+                  )}
+                </div>
+
+                <nav className="relative z-20 hidden flex-1 items-center justify-center gap-2 lg:flex">
+                  {links.map((link) => (
+                    <span key={link.renderKey} className="truncate rounded-full px-3 py-2 text-body font-bold">
+                      {link.text}
+                    </span>
+                  ))}
+                </nav>
+
+                <div className="relative z-20 flex flex-1 items-center justify-end gap-2">
+                  <span
+                    className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full border lg:hidden ${actionChipClasses}`}
+                  >
+                    <ChevronDown className="h-4 w-4" />
+                  </span>
+                  {showCart && (
+                    <span className={`flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ${cartClasses}`}>
+                      <CartIcon className="h-4 w-4" />
+                    </span>
+                  )}
+                </div>
               </button>
-            </div>
+            </PopoverTrigger>
 
-            {/* Desktop Navigation Links */}
-            <NavLinks links={links} textClass={textClass} {...linkEditingProps} />
-
-            {/* Cart Icon */}
-            <button
-              className={`w-9 h-9 flex items-center justify-center border border-[--system-gray-200] ${textClass}`}
-              aria-label="Cart"
+            <PopoverContent
+              align="center"
+              side="bottom"
+              sideOffset={10}
+              className="w-[min(340px,calc(100vw-24px))] rounded-lg border-[var(--system-700)] bg-[var(--system-800)] p-2 text-[var(--system-100)] shadow-[var(--shadow-lg)]"
             >
-              <CartIcon className="w-4 h-4" />
-            </button>
+              <div className="space-y-2">
+                <div className={cn(panelCardClasses, "min-w-0")}>
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="text-caption text-[var(--system-300)]">Brand</span>
+                    <span className="flex h-7 w-7 items-center justify-center rounded-sm bg-[var(--system-600)] text-[var(--system-300)]">
+                      <ImageIcon className="h-3.5 w-3.5" />
+                    </span>
+                  </div>
+
+                  <div className="flex h-16 items-center justify-center rounded-sm border border-dashed border-[var(--system-600)] bg-[var(--system-800)] px-3">
+                    {logoUrl ? (
+                      <Image
+                        src={logoUrl}
+                        alt="Store logo preview"
+                        width={170}
+                        height={40}
+                        className="h-10 w-auto object-contain"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-2 text-caption text-[var(--system-300)]">
+                        <Package className="h-3.5 w-3.5" />
+                        No logo
+                      </div>
+                    )}
+                  </div>
+
+                  <input
+                    id="navbar-logo-upload"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleSelectLogoFile}
+                    className="hidden"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => document.getElementById("navbar-logo-upload")?.click()}
+                    className="mt-2 h-9 w-full rounded-sm border-[var(--system-600)] bg-[var(--system-700)] text-[var(--system-100)] hover:bg-[var(--system-600)]"
+                  >
+                    <Upload className="h-3.5 w-3.5" />
+                    {logoUrl ? "Replace Logo" : "Upload Logo"}
+                  </Button>
+                </div>
+
+                <div className={panelCardClasses}>
+                  <p className="mb-2 text-caption text-[var(--system-300)]">Appearance</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["light", "dark"] as NavbarMode[]).map((option) => {
+                      const selected = mode === option;
+                      const Icon = option === "light" ? SunMedium : MoonStar;
+
+                      return (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => handleModeChange(option)}
+                          className={cn(
+                            "min-h-9 rounded-sm border px-2 py-1.5 text-left transition-colors duration-200",
+                            selected
+                              ? "border-[var(--color-primary)] bg-[color:rgb(0_112_243_/_0.2)] text-[var(--system-100)]"
+                              : "border-[var(--system-600)] bg-[var(--system-800)] text-[var(--system-300)] hover:bg-[var(--system-600)] hover:text-[var(--system-100)]"
+                          )}
+                          >
+                            <span className="flex items-center gap-2">
+                              <Icon className="h-3.5 w-3.5" />
+                              <span className="text-caption capitalize">{option}</span>
+                            </span>
+                          </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div className={panelCardClasses}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-caption text-[var(--system-300)]">Cart</p>
+                    <Switch
+                      label=""
+                      checked={showCart}
+                      onToggle={() => handleCartToggle(!showCart)}
+                      className="-mr-3 px-0 py-0"
+                    />
+                  </div>
+                </div>
+              </div>
+            </PopoverContent>
           </div>
         </div>
+      </Popover>
 
-        {/* Floating Style Toolbar — sibling of navbar div, not inside it */}
-        <FloatingStyleToolbar
-          isHovered={isHovered}
-          navbarBg={navbarBg}
-          navbarText={navbarText}
-          onSetBackground={handleSetBackground}
-          onSetTextColor={handleSetTextColor}
-        />
-      </div>
-
-      {/* Mobile Menu Drawer */}
-      <MobileMenuDrawer
-        isOpen={mobileMenuOpen}
-        links={links}
-        {...linkEditingProps}
-        onClose={() => setMobileMenuOpen(false)}
-      />
-
-      {/* Image Cropper Modal */}
       {logoCropSrc && (
         <ImageCropper
           imageSrc={logoCropSrc}
-          aspectRatio={1}
+          aspectRatio={0}
           onCancel={() => setLogoCropSrc(null)}
           onCropComplete={handleApplyLogoCrop}
         />
       )}
-    </TooltipProvider>
+    </>
   );
 }

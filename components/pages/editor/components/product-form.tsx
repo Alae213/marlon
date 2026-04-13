@@ -64,14 +64,14 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
   }, [name, description, basePrice, oldPrice, images, variants, product, onSubmit, onClose]);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-[var(--spacing-md)] text-[--system-700]">
       <div>
-        <label className="block label-xs mb-2">Product Name</label>
+        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Product Name</label>
         <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Cotton men shirt" />
       </div>
 
       <div>
-        <label className="block label-xs mb-2">Description</label>
+        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Description</label>
         <Textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -80,36 +80,36 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-[var(--spacing-md)]">
         <div>
-          <label className="block label-xs mb-2">Price (DZD)</label>
+          <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Price (DZD)</label>
           <Input type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="2500" />
         </div>
         <div>
-          <label className="block label-xs mb-2">Old Price (optional)</label>
+          <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Old Price (optional)</label>
           <Input type="number" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} placeholder="3000" />
         </div>
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--system-400)] mb-2">Product Images</label>
+        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Product Images</label>
         <ImageUploader images={images} onImagesChange={setImages} />
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-[var(--system-400)] mb-2">
+        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">
           Options (e.g., Size, Color)
         </label>
         <InlineVariantEditor variants={variants} onChange={setVariants} />
       </div>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-600">{error}</p>
+        <div className="rounded-[var(--radius-md)] border border-[--color-error] bg-[--color-error-bg] p-[var(--spacing-sm)]">
+          <p className="text-body-sm text-[--color-error]">{error}</p>
         </div>
       )}
 
-      <div className="flex gap-3 pt-2">
+      <div className="flex gap-[var(--spacing-sm)] pt-[var(--spacing-xs)]">
         <Button variant="outline" onClick={onClose} className="flex-1">
           Cancel
         </Button>

@@ -1,12 +1,6 @@
 import type { Metadata } from "next";
+import type { CSSProperties } from "react";
 import Script from "next/script";
-import { Inter } from "next/font/google";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/pages/providers/convex-client-provider";
 import { ToastProvider } from "@/contexts/toast-context";
@@ -24,6 +18,9 @@ export const metadata: Metadata = {
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isClerkConfigured = publishableKey && !publishableKey.includes("placeholder");
+const fontVariables = {
+  "--font-inter": "Inter, -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
+} as CSSProperties;
 
 export default function RootLayout({
   children,
@@ -51,7 +48,7 @@ export default function RootLayout({
           />
         )}
       </head>
-<body className={`${inter.variable} antialiased`}>
+<body className="antialiased" style={fontVariables}>
                   {children}
                   <Analytics />
                   <SpeedInsights />
@@ -65,7 +62,7 @@ export default function RootLayout({
 
   return (
     <html lang="en" dir="ltr">
-      <body className={`${inter.variable} antialiased`}>
+      <body className="antialiased" style={fontVariables}>
         <ConvexClientProvider>
           <ToastProvider>
             {children}

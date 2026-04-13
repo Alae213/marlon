@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { ConvexHttpClient } from "convex/browser";
 import { getPaymentProvider } from "@/lib/payment-service";
 
@@ -64,7 +65,7 @@ async function activateStore(storeId: string) {
     const paidUntil = Date.now() + thirtyDaysMs;
 
     await convex.mutation(api.stores.updateSubscription, {
-      storeId: storeId as any,
+      storeId: storeId as Id<"stores">,
       subscription: "active",
       paidUntil,
     });

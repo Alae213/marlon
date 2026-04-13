@@ -65,12 +65,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
         (i) => i.productId === item.productId && i.variant === item.variant
       );
       if (existing) {
+        // Return new array (immutable) - update existing item quantity
         return prev.map((i) =>
           i.id === existing.id
             ? { ...i, quantity: i.quantity + item.quantity }
             : i
         );
       }
+      // Return new array (immutable) - add new item
       return [...prev, item];
     });
     // Auto-open cart when adding item

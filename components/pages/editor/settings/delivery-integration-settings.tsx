@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -18,32 +18,29 @@ interface DeliveryIntegrationSettingsProps {
   storeId: Id<"stores">;
 }
 
-export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSettingsProps) {
-  const deliveryIntegration = useQuery(
-    api.siteContent.getDeliveryIntegration,
-    { storeId }
-  );
+interface DeliveryIntegrationFormProps {
+  storeId: Id<"stores">;
+  initialProvider: Provider;
+  initialApiKey: string;
+  initialApiToken: string;
+}
+
+function DeliveryIntegrationForm({
+  storeId,
+  initialProvider,
+  initialApiKey,
+  initialApiToken,
+}: DeliveryIntegrationFormProps) {
   const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
   const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
 
-  const [provider, setProvider] = useState<Provider>("none");
-  const [apiKey, setApiKey] = useState("");
-  const [apiToken, setApiToken] = useState("");
+  const [provider, setProvider] = useState<Provider>(initialProvider);
+  const [apiKey, setApiKey] = useState(initialApiKey);
+  const [apiToken, setApiToken] = useState(initialApiToken);
   const [isSaving, setIsSaving] = useState(false);
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
   const [savedMessage, setSavedMessage] = useState(false);
-
-  // Sync state when query data arrives
-  const prevDataRef = useRef<typeof deliveryIntegration>(undefined);
-  useEffect(() => {
-    if (deliveryIntegration && deliveryIntegration !== prevDataRef.current) {
-      prevDataRef.current = deliveryIntegration;
-      setProvider((deliveryIntegration.provider as Provider) || "none");
-      setApiKey(deliveryIntegration.apiKey ?? "");
-      setApiToken(deliveryIntegration.apiToken ?? "");
-    }
-  }, [deliveryIntegration]);
 
   const handleProviderChange = useCallback(
     async (newProvider: Provider) => {
@@ -186,5 +183,32 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         </div>
       )}
     </div>
+  );
+}
+
+export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSettingsProps) {
+  const deliveryIntegration = useQuery(api.siteContent.getDeliveryIntegration, { storeId });
+
+  if (deliveryIntegration === undefined) {
+    return (
+      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-5">
+        <p className="text-sm text-[--system-400]">Loading courier settings...</p>
+      </div>
+    );
+  }
+
+  const initialProvider = (deliveryIntegration?.provider as Provider) || "none";
+  const initialApiKey = deliveryIntegration?.apiKey ?? "";
+  const initialApiToken = deliveryIntegration?.apiToken ?? "";
+  const formKey = `${initialProvider}:${initialApiKey}:${initialApiToken}`;
+
+  return (
+    <DeliveryIntegrationForm
+      key={formKey}
+      storeId={storeId}
+      initialProvider={initialProvider}
+      initialApiKey={initialApiKey}
+      initialApiToken={initialApiToken}
+    />
   );
 }

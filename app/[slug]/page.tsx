@@ -4,7 +4,7 @@ import { useState, useMemo } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Search, Package, Menu, X } from "lucide-react";
+import { Package, Menu, X } from "lucide-react";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
 import { useQuery } from "convex/react";
@@ -35,7 +35,14 @@ interface NavbarContent {
   background?: "dark" | "light" | "glass";
   textColor?: "dark" | "light";
   links?: NavbarLink[];
+  showCart?: boolean;
 }
+
+const DEFAULT_NAVBAR_LINKS: NavbarLink[] = [
+  { id: "link-shop", text: "Shop", url: "#products", isDefault: true, enabled: true },
+  { id: "link-faq", text: "FAQ", url: "/", isDefault: true, enabled: true },
+  { id: "link-help", text: "Help", url: "/", isDefault: true, enabled: true },
+];
 
 export default function StorefrontPage() {
   return (
@@ -48,9 +55,8 @@ export default function StorefrontPage() {
 function StorefrontContent() {
   const params = useParams();
   const slug = params?.slug as string;
-  const [searchQuery, setSearchQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { addItem, itemCount, isOpen, openCart, closeCart } = useCart();
+  const { itemCount, isOpen, openCart, closeCart } = useCart();
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
 
@@ -76,15 +82,19 @@ function StorefrontContent() {
 
   const productsData = useMemo(() => products || [], [products]);
 
-  const filteredProducts = productsData.filter(product =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = productsData;
 
   const currentNavbar = navbarContent?.content as NavbarContent | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
-  const navbarText = currentNavbar?.textColor ?? "dark";
+  const navbarText =
+    navbarBg === "dark"
+      ? "light"
+      : navbarBg === "light"
+        ? "dark"
+        : (currentNavbar?.textColor ?? "dark");
   const navbarLogoUrl = currentNavbar?.logoUrl;
-  const navbarLinks = currentNavbar?.links ?? [];
+  const navbarLinks = DEFAULT_NAVBAR_LINKS;
+  const showCart = currentNavbar?.showCart ?? true;
 
   // Hero content
   const currentHero = heroContent?.content as { 
@@ -94,8 +104,13 @@ function StorefrontContent() {
     layout?: "left" | "center" | "right";
     backgroundImageUrl?: string;
   } | undefined;
-  const heroTitle = currentHero?.title ?? "";
-  const heroCtaText = currentHero?.ctaText ?? "";
+  // Sanitize user-provided content - React escapes by default, but we add extra protection
+  // by stripping any HTML tags if strict mode is needed
+  const sanitizeText = (text: string): string => {
+    return text.replace(/<[^>]*>/g, "");
+  };
+  const heroTitle = sanitizeText(currentHero?.title ?? "");
+  const heroCtaText = sanitizeText(currentHero?.ctaText ?? "");
   const heroCtaColor = currentHero?.ctaColor ?? "#171717";
   const heroLayout = currentHero?.layout ?? "center";
   const heroBgUrl = currentHero?.backgroundImageUrl;
@@ -114,77 +129,79 @@ function StorefrontContent() {
   const footerDescription = currentFooter?.description ?? "";
   const footerPhone = currentFooter?.contactPhone ?? "";
   const footerEmail = currentFooter?.contactEmail ?? "";
-  const footerCopyright = currentFooter?.copyright ?? "";
-
-  const navbarBgClass =
+  const navbarSurfaceClass =
     navbarBg === "dark"
-      ? "bg-slate-950"
-      : navbarBg === "glass"
-        ? "bg-white/80"
-        : "bg-white";
+      ? "border-white/12 bg-[color:rgb(23_23_23_/_0.72)]"
+      : "border-white/70 bg-[color:rgb(255_255_255_/_0.72)]";
 
-  const navbarGlassStyle = navbarBg === "glass" ? {
+  const navbarGlassStyle = {
     backdropFilter: "blur(24px)",
     WebkitBackdropFilter: "blur(24px)",
-  } : {};
+  };
 
-  const navbarTextClass = navbarText === "light" ? "text-white" : "text-foreground";
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-700)]";
+  const cartClasses =
+    navbarBg === "dark"
+      ? "bg-transparent hover:bg-white/10"
+      : "bg-transparent hover:bg-black/5";
 
   return (
     <div className="w-full bg-[var(--system-50)]">
       {/* Navbar */}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`} style={navbarGlassStyle}>
-        <div className="flex items-center max-w-6xl mx-auto justify-between px-4 py-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-[var(--system-100)] overflow-hidden flex items-center justify-center flex-shrink-0">
-              {navbarLogoUrl ? (
-                <Image
-                  src={navbarLogoUrl}
-                  alt="logo"
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <Package className="w-5 h-5 text-[var(--system-400)]" />
-              )}
-            </div>
+      <div className="fixed inset-x-0 top-5 z-50 px-4">
+        <div
+          className={`mx-auto flex max-w-5xl items-center gap-4 rounded-2xl border px-4 py-3 shadow-[var(--shadow-lg)] ${navbarSurfaceClass}`}
+          style={navbarGlassStyle}
+        >
+          <div className="flex min-w-0 flex-1 items-center">
+            {navbarLogoUrl ? (
+              <Image
+                src={navbarLogoUrl}
+                alt="logo"
+                width={160}
+                height={40}
+                className="h-10 w-auto max-w-[170px] rounded-md object-contain"
+              />
+            ) : (
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:rgb(255_255_255_/_0.14)]">
+                <Package className={`w-5 h-5 ${navbarTextClass}`} />
+              </div>
+            )}
           </div>
 
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex items-center gap-5">
-            {navbarLinks.filter(link => link.enabled).map((link, index) => (
+          <div className="hidden lg:flex flex-1 items-center justify-center gap-2">
+            {navbarLinks.map((link, index) => (
               <a
                 key={`desktop-${link.id || `link-${index}`}`}
                 href={link.url}
-                className={`body-base ${navbarTextClass} hover:opacity-70 transition-opacity`}
+                className={`rounded-full px-3 py-2 text-body-sm ${navbarTextClass} hover:opacity-70 transition-opacity`}
               >
                 {link.text}
               </a>
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            {/* Mobile Menu Button */}
-            <button 
+          <div className="flex flex-1 items-center justify-end gap-2">
+            <button
               onClick={() => setMobileMenuOpen(true)}
-              className={`lg:hidden w-9 h-9 flex items-center justify-center ${navbarTextClass}`}
+              className={`lg:hidden flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[color:rgb(255_255_255_/_0.08)] ${navbarTextClass}`}
             >
               <Menu className="w-5 h-5" />
             </button>
-            
-            {/* Cart Button */}
-            <button 
-              onClick={openCart}
-              className={`w-9 h-9 flex items-center justify-center relative ${navbarTextClass}`}
-            >
-              <CartIcon className="w-4 h-4" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
-            </button>
+
+            {showCart && (
+              <button
+                onClick={openCart}
+                className={`relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ${cartClasses} ${navbarTextClass}`}
+              >
+                <CartIcon className="w-4 h-4" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-medium text-white">
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -213,7 +230,7 @@ function StorefrontContent() {
 
             {/* Links */}
             <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {navbarLinks.filter(link => link.enabled).map((link, index) => (
+              {navbarLinks.map((link, index) => (
                 <a
                   key={`mobile-${link.id || `link-${index}`}`}
                   href={link.url}
@@ -309,12 +326,14 @@ function StorefrontContent() {
         </div>
       )}
 
-      <CartSidebar 
-        isOpen={isOpen} 
-        onClose={closeCart}
-        storeId={store?._id as string}
-        storeSlug={slug}
-      />
+      {showCart && (
+        <CartSidebar 
+          isOpen={isOpen} 
+          onClose={closeCart}
+          storeId={store?._id as string}
+          storeSlug={slug}
+        />
+      )}
 
       {/* Footer */}
       <footer className="mt-16 p-8 pb-[180px]">
@@ -338,7 +357,7 @@ function StorefrontContent() {
 
           {/* Links */}
           <div className="flex flex-col items-start gap-6">
-            {navbarLinks.filter(link => link.enabled).map((link, index) => (
+            {navbarLinks.map((link, index) => (
               <a
                 key={`footer-${link.id || `link-${index}`}`}
                 href={link.url}

@@ -2,7 +2,6 @@ export { ProductsContent } from "./components/products-content";
 export { ProductForm } from "./components/product-form";
 export { ProductCard } from "./components/product-card";
 export { ProductListItem } from "./components/product-list-item";
-export { DeleteConfirmOverlay } from "./components/delete-confirm-overlay";
 export { NavbarEditor } from "./components/navbar-editor";
 export { HeroEditor } from "./components/hero-editor";
 export { FooterEditor } from "./components/footer-editor";

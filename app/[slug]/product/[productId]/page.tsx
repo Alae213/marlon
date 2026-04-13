@@ -15,14 +15,7 @@ import { ImageCarousel } from "@/components/features/shared/image-carousel";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
-import {
-  Dialog,
-  DialogPortal,
-  DialogOverlay,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/primitives/animate-ui/primitives/radix/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -31,6 +24,12 @@ const formatPrice = (price: number) => {
     minimumFractionDigits: 0,
   }).format(price);
 };
+
+const FIXED_NAVBAR_LINKS = [
+  { id: "link-shop", text: "Shop", url: "#products" },
+  { id: "link-faq", text: "FAQ", url: "/" },
+  { id: "link-help", text: "Help", url: "/" },
+];
 
 export default function ProductDetailPage() {
   return (
@@ -89,19 +88,32 @@ function ProductDetailContent() {
     return products.find((p) => p._id === productId);
   }, [products, productId]);
 
-  const currentNavbar = navbarContent?.content as { background?: string; textColor?: string; logoUrl?: string } | undefined;
+  const currentNavbar = navbarContent?.content as {
+    background?: string;
+    textColor?: string;
+    logoUrl?: string;
+    showCart?: boolean;
+  } | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
-  const navbarText = currentNavbar?.textColor ?? "dark";
-  const navbarLogoUrl = currentNavbar?.logoUrl;
-
-  const navbarBgClass =
+  const navbarText =
     navbarBg === "dark"
-      ? "bg-[var(--system-700)]"
-      : navbarBg === "transparent"
-        ? "bg-transparent"
-        : "bg-white";
+      ? "light"
+      : navbarBg === "light"
+        ? "dark"
+        : (currentNavbar?.textColor ?? "dark");
+  const navbarLogoUrl = currentNavbar?.logoUrl;
+  const showCart = currentNavbar?.showCart ?? true;
 
-  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-600)]";
+  const navbarSurfaceClass =
+    navbarBg === "dark"
+      ? "border-white/12 bg-[color:rgb(23_23_23_/_0.72)]"
+      : "border-white/70 bg-[color:rgb(255_255_255_/_0.72)]";
+
+  const navbarTextClass = navbarText === "light" ? "text-white" : "text-[var(--system-700)]";
+  const cartClasses =
+    navbarBg === "dark"
+      ? "bg-transparent hover:bg-white/10"
+      : "bg-transparent hover:bg-black/5";
 
   // Footer content
   const currentFooter = footerContent?.content as {
@@ -283,45 +295,58 @@ function ProductDetailContent() {
 
   return (
     <>
-    <div className="w-full pt-16">
+    <div className="w-full pt-24">
       {/* Navbar */}
-      <div className={`fixed top-0 left-0 right-0 z-50 ${navbarBgClass}`}>
-        <div className="flex items-center max-w-6xl mx-auto justify-between px-4 py-3">
-          <Link href={`/${slug}`} className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-[var(--system-100)] overflow-hidden flex items-center justify-center flex-shrink-0">
+      <div className="fixed inset-x-0 top-5 z-50 px-4">
+        <div
+          className={`mx-auto flex max-w-5xl items-center gap-4 rounded-2xl border px-4 py-3 shadow-[var(--shadow-lg)] ${navbarSurfaceClass}`}
+          style={{ backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)" }}
+        >
+          <div className="flex min-w-0 flex-1 items-center">
+            <Link href={`/${slug}`} className="flex items-center gap-3 min-w-0">
               {navbarLogoUrl ? (
                 <Image
                   src={navbarLogoUrl}
                   alt="logo"
-                  width={40}
+                  width={160}
                   height={40}
-                  className="w-full h-full object-cover"
+                  className="h-10 w-auto max-w-[170px] rounded-md object-contain"
                 />
               ) : (
-                <Package className="w-5 h-5 text-[var(--system-400)]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[color:rgb(255_255_255_/_0.14)]">
+                  <Package className={`w-5 h-5 ${navbarTextClass}`} />
+                </div>
               )}
+            </Link>
+          </div>
+
+          <div className="flex flex-1 items-center justify-center gap-3 overflow-x-auto">
+            {FIXED_NAVBAR_LINKS.map((link) => (
+              <a
+                key={link.id}
+                href={link.url}
+                className={`rounded-full px-3 py-2 text-body-sm whitespace-nowrap ${navbarTextClass}`}
+              >
+                {link.text}
+              </a>
+            ))}
+          </div>
+
+          {showCart && (
+            <div className="flex flex-1 items-center justify-end gap-2">
+              <button
+                onClick={openCart}
+                className={`relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ${cartClasses} ${navbarTextClass}`}
+              >
+                <CartIcon className="w-4 h-4" />
+                {itemCount > 0 && (
+                  <span className="absolute -top-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-medium text-white">
+                    {itemCount > 9 ? "9+" : itemCount}
+                  </span>
+                )}
+              </button>
             </div>
-          </Link>
-
-          <div className="hidden sm:flex items-center gap-5">
-            <Link href={`/${slug}`} className={`body-base ${navbarTextClass}`}>Shop</Link>
-            <span className={`body-base ${navbarTextClass}`}>FAQ</span>
-            <span className={`body-base ${navbarTextClass}`}>Help</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button 
-              onClick={openCart}
-              className={`w-9 h-9 flex items-center justify-center relative ${navbarTextClass}`}
-            >
-              <CartIcon className="w-4 h-4" />
-              {itemCount > 0 && (
-                <span className="absolute -top-1 -end-1 w-4 h-4 bg-red-500 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
-                  {itemCount > 9 ? "9+" : itemCount}
-                </span>
-              )}
-            </button>
-          </div>
+          )}
         </div>
       </div>
 
@@ -409,14 +434,16 @@ function ProductDetailContent() {
           </div>
 
           <div className="flex gap-4">
-            <Button
-              variant="outline"
-              onClick={handleAddToCart}
-              className="flex-1 flex items-center justify-center gap-2 h-12"
-            >
-              <CartIcon className="w-5 h-5" />
-              Add to Cart
-            </Button>
+            {showCart && (
+              <Button
+                variant="outline"
+                onClick={handleAddToCart}
+                className="flex-1 flex items-center justify-center gap-2 h-12"
+              >
+                <CartIcon className="w-5 h-5" />
+                Add to Cart
+              </Button>
+            )}
             <Button
               onClick={() => setShowOrderForm(true)}
               className="flex-1 flex items-center justify-center gap-2 h-12"
@@ -472,20 +499,16 @@ function ProductDetailContent() {
 
       {/* Confirm Order Dialog */}
       <Dialog open={showOrderForm} onOpenChange={(open) => !open && setShowOrderForm(false)}>
-        <DialogPortal>
-          <DialogOverlay className="fixed inset-0 z-[60] bg-black/30" />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <DialogContent
-              style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
-              className="w-[400px] max-h-[90vh] overflow-y-auto bg-[--system-100] [corner-shape:squircle] rounded-[48px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
-              from="top"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            >
-              <DialogHeader>
-                <DialogTitle className="title-xl text-[var(--system-600)] mb-2">Confirm Order</DialogTitle>
-              </DialogHeader>
-              
-              <div className="space-y-4 w-full">
+        <DialogContent
+          overlayClassName="bg-black/30"
+          style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
+          className="max-w-[400px] gap-[12px] overflow-hidden rounded-[48px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
+        >
+          <DialogHeader>
+            <DialogTitle className="title-xl mb-2 text-white">Confirm Order</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 w-full">
                 <div>
                   <label className="block label-xs mb-1 text-[var(--system-500)]">Full Name</label>
                   <input
@@ -610,31 +633,29 @@ function ProductDetailContent() {
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="flex gap-4 mt-4 w-full">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowOrderForm(false)}
-                  className="flex-1 h-10"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={handleBuyNow}
-                  disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
-                  className="flex-1 h-10"
-                >
-                  Confirm Order
-                </Button>
-              </div>
-            </DialogContent>
           </div>
-        </DialogPortal>
+
+          <div className="flex gap-4 mt-4 w-full">
+            <Button
+              variant="outline"
+              onClick={() => setShowOrderForm(false)}
+              className="flex-1 h-10"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleBuyNow}
+              disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
+              className="flex-1 h-10"
+            >
+              Confirm Order
+            </Button>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* Cart Sidebar */}
-      {store && (
+      {showCart && store && (
         <CartSidebar
           isOpen={isOpen}
           onClose={closeCart}

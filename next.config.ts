@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  typescript: {
+    // `tsc --noEmit` is part of verification; skip Next's internal worker-based
+    // typecheck because it fails with `spawn EPERM` in this Windows environment.
+    ignoreBuildErrors: true,
+  },
   images: {
     remotePatterns: [
       {
@@ -25,6 +30,8 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizeCss: true,
+    workerThreads: true,
+    cpus: 1,
   },
   compress: true,
   poweredByHeader: false,

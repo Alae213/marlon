@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Truck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/primitives/core/buttons/button";
-import { Modal } from "@/components/primitives/core/feedback/modal";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface DeliveryActionProps {
   orderId: string;
@@ -71,11 +71,11 @@ export function DeliveryAction({
         onSuccess?.(data.trackingNumber);
       } else {
         setResult("error");
-        setErrorMessage(data.error || "فشل إرسال الطلب");
+        setErrorMessage(data.error || "ÙØ´Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨");
       }
     } catch (_error) {
       setResult("error");
-      setErrorMessage("حدث خطأ في الاتصال بالخادم");
+      setErrorMessage("Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù…");
     } finally {
       setIsLoading(false);
     }
@@ -101,98 +101,103 @@ export function DeliveryAction({
     <>
       <Button variant="outline" size="sm" onClick={() => setIsOpen(true)}>
         <Truck className="w-4 h-4" />
-        إرسال للتوصيل
+        Ø¥Ø±Ø³Ø§Ù„ Ù„Ù„ØªÙˆØµÙŠÙ„
       </Button>
 
-      <Modal
-        isOpen={isOpen}
-        onClose={() => {
-          setIsOpen(false);
-          setResult(null);
+      <Dialog
+        open={isOpen}
+        onOpenChange={(open) => {
+          setIsOpen(open);
+          if (!open) setResult(null);
         }}
-        title="إرسال الطلب للتوصيل"
-        description={`طلب ${orderNumber}`}
       >
-        {result === "success" ? (
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-            </div>
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-              تم الإرسال بنجاح
-            </h3>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-              تم إرسال الطلب لشركة التوصيل بنجاح.
-            </p>
-            <Button onClick={() => setIsOpen(false)} className="w-full">
-              حسناً
-            </Button>
-          </div>
-        ) : result === "error" ? (
-          <div className="text-center py-6">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
-            </div>
-            <h3 className="text-xl font-bold text-zinc-900 dark:text-zinc-50 mb-2">
-              فشل الإرسال
-            </h3>
-            <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-              {errorMessage}
-            </p>
-            <Button onClick={() => setIsOpen(false)} className="w-full">
-              إغلاق
-            </Button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-4 space-y-2">
-              <p className="text-sm text-zinc-500">المستلم</p>
-              <p className="font-medium text-zinc-900 dark:text-zinc-50">{customerName}</p>
-              <p className="text-sm text-zinc-500">{customerPhone}</p>
-            </div>
-            
-            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-4 space-y-2">
-              <p className="text-sm text-zinc-500">العنوان</p>
-              <p className="text-sm text-zinc-900 dark:text-zinc-50">
-                {customerWilaya} - {customerCommune}
+        <DialogContent className="max-w-[480px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+          <DialogHeader className="pr-10">
+            <DialogTitle>Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨ Ù„Ù„ØªÙˆØµÙŠÙ„</DialogTitle>
+            <DialogDescription>Ø·Ù„Ø¨ {orderNumber}</DialogDescription>
+          </DialogHeader>
+
+          {result === "success" ? (
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+                ØªÙ… Ø§Ù„Ø¥Ø±Ø³Ø§Ù„ Ø¨Ù†Ø¬Ø§Ø­
+              </h3>
+              <p className="mb-4 text-zinc-600 dark:text-zinc-400">
+                ØªÙ… Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨ Ù„Ø´Ø±ÙƒØ© Ø§Ù„ØªÙˆØµÙŠÙ„ Ø¨Ù†Ø¬Ø§Ø­.
               </p>
-              <p className="text-sm text-zinc-500">{customerAddress}</p>
-            </div>
-
-            <div className="bg-zinc-50 dark:bg-zinc-800 rounded-xl p-4 space-y-2">
-              <p className="text-sm text-zinc-500">المبلغ المطلوب</p>
-              <p className="font-bold text-[#00853f]">{total.toLocaleString()} د.ج</p>
-            </div>
-
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                onClick={() => setIsOpen(false)}
-                className="flex-1"
-              >
-                إلغاء
-              </Button>
-              <Button
-                onClick={handleSend}
-                disabled={isLoading}
-                className="flex-1"
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    جاري الإرسال...
-                  </>
-                ) : (
-                  <>
-                    <Truck className="w-4 h-4" />
-                    إرسال
-                  </>
-                )}
+              <Button onClick={() => setIsOpen(false)} className="w-full">
+                Ø­Ø³Ù†Ø§Ù‹
               </Button>
             </div>
-          </div>
-        )}
-      </Modal>
+          ) : result === "error" ? (
+            <div className="py-6 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/30">
+                <XCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="mb-2 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+                ÙØ´Ù„ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„
+              </h3>
+              <p className="mb-4 text-zinc-600 dark:text-zinc-400">
+                {errorMessage}
+              </p>
+              <Button onClick={() => setIsOpen(false)} className="w-full">
+                Ø¥ØºÙ„Ø§Ù‚
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800">
+                <p className="text-sm text-zinc-500">Ø§Ù„Ù…Ø³ØªÙ„Ù…</p>
+                <p className="font-medium text-zinc-900 dark:text-zinc-50">{customerName}</p>
+                <p className="text-sm text-zinc-500">{customerPhone}</p>
+              </div>
+              
+              <div className="space-y-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800">
+                <p className="text-sm text-zinc-500">Ø§Ù„Ø¹Ù†ÙˆØ§Ù†</p>
+                <p className="text-sm text-zinc-900 dark:text-zinc-50">
+                  {customerWilaya} - {customerCommune}
+                </p>
+                <p className="text-sm text-zinc-500">{customerAddress}</p>
+              </div>
+
+              <div className="space-y-2 rounded-xl bg-zinc-50 p-4 dark:bg-zinc-800">
+                <p className="text-sm text-zinc-500">Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù…Ø·Ù„ÙˆØ¨</p>
+                <p className="font-bold text-[#00853f]">{total.toLocaleString()} Ø¯.Ø¬</p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsOpen(false)}
+                  className="flex-1"
+                >
+                  Ø¥Ù„ØºØ§Ø¡
+                </Button>
+                <Button
+                  onClick={handleSend}
+                  disabled={isLoading}
+                  className="flex-1"
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø¥Ø±Ø³Ø§Ù„...
+                    </>
+                  ) : (
+                    <>
+                      <Truck className="w-4 h-4" />
+                      Ø¥Ø±Ø³Ø§Ù„
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

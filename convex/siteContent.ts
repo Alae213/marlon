@@ -168,6 +168,7 @@ export const setNavbarStyles = mutation({
     storeId: v.id("stores"),
     background: v.optional(v.union(v.literal("dark"), v.literal("light"), v.literal("glass"))),
     textColor: v.optional(v.union(v.literal("dark"), v.literal("light"))),
+    showCart: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
     const existing = await ctx.db
@@ -191,6 +192,7 @@ export const setNavbarStyles = mutation({
       ...baseContent,
       ...(args.background ? { background: args.background } : {}),
       ...(nextTextColor ? { textColor: nextTextColor } : {}),
+      ...(args.showCart !== undefined ? { showCart: args.showCart } : {}),
     };
 
     if (existing) {

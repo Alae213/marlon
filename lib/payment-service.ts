@@ -135,8 +135,19 @@ class ChargilyProvider implements PaymentProvider {
   }
 
   verifyWebhook(body: string, signature?: string): Promise<WebhookEvent | null> {
-    // Chargily webhook verification would go here
-    // For now, parse the body directly
+    // Chargily uses X-Chargily-Signature header for webhook verification
+    if (!signature || !this.apiKey) {
+      console.warn("Chargily webhook: missing signature or API key");
+      return Promise.resolve(null);
+    }
+
+    // Verify HMAC-SHA256 signature
+    const expectedSignature = this.computeSignature(body);
+    if (!this.constantTimeCompare(signature, expectedSignature)) {
+      console.warn("Chargily webhook: invalid signature");
+      return Promise.resolve(null);
+    }
+
     try {
       const data = JSON.parse(body);
       return Promise.resolve({
@@ -148,6 +159,31 @@ class ChargilyProvider implements PaymentProvider {
     } catch {
       return Promise.resolve(null);
     }
+  }
+
+  /**
+   * Compute HMAC-SHA256 signature for webhook verification
+   */
+  private computeSignature(payload: string): string {
+    // Use crypto module for HMAC-SHA256
+    const crypto = require("crypto");
+    const hmac = crypto.createHmac("sha256", this.apiKey);
+    hmac.update(payload, "utf8");
+    return hmac.digest("hex");
+  }
+
+  /**
+   * Constant-time string comparison to prevent timing attacks
+   */
+  private constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
   }
 }
 
@@ -206,9 +242,17 @@ class SofizPayProvider implements PaymentProvider {
   }
 
   verifyWebhook(body: string, signature?: string): Promise<WebhookEvent | null> {
-    // SofizPay webhook verification with signature
-    if (signature && this.apiKey) {
-      // Implement proper HMAC verification here
+    // SofizPay webhook verification with HMAC-SHA256 signature
+    if (!signature || !this.apiKey) {
+      console.warn("SofizPay webhook: missing signature or API key");
+      return Promise.resolve(null);
+    }
+
+    // Verify HMAC-SHA256 signature
+    const expectedSignature = this.computeSignature(body);
+    if (!this.constantTimeCompare(signature, expectedSignature)) {
+      console.warn("SofizPay webhook: invalid signature");
+      return Promise.resolve(null);
     }
 
     try {
@@ -224,6 +268,30 @@ class SofizPayProvider implements PaymentProvider {
       return Promise.resolve(null);
     }
   }
+
+  /**
+   * Compute HMAC-SHA256 signature for webhook verification
+   */
+  private computeSignature(payload: string): string {
+    const crypto = require("crypto");
+    const hmac = crypto.createHmac("sha256", this.apiKey);
+    hmac.update(payload, "utf8");
+    return hmac.digest("hex");
+  }
+
+  /**
+   * Constant-time string comparison to prevent timing attacks
+   */
+  private constantTimeCompare(a: string, b: string): boolean {
+    if (a.length !== b.length) {
+      return false;
+    }
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+      result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+  }
 }
 
 /**
@@ -233,7 +301,7 @@ class SofizPayProvider implements PaymentProvider {
 class CustomPaymentProvider implements PaymentProvider {
   async createCheckout(params: CreateCheckoutParams): Promise<CheckoutResult> {
     // Placeholder - implement your custom payment logic here
-    console.log("Custom payment provider - implement your logic");
+    console.warn("Custom payment provider - implementation needed");
     
     return {
       success: true,

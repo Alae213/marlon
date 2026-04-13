@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useUser, SignInButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useUser, SignIn, SignedIn, SignedOut } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id, Doc } from "@/convex/_generated/dataModel";
@@ -15,7 +15,7 @@ import {
 import { Button } from "@/components/primitives/core/buttons/button";
 import { Input } from "@/components/primitives/core/inputs/input";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
-import { Dialog, DialogPortal, DialogOverlay, DialogContent, DialogHeader, DialogTitle } from "@/components/primitives/animate-ui/primitives/radix/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Types
 interface StoreData {
@@ -164,150 +164,117 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
 
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogPortal>
-        <DialogOverlay className="fixed inset-0 z-[60] bg-black/0" />
-        <div className="fixed inset-0 flex items-center justify-center z-[70]">
-          <DialogContent
-            style={{ 
-              boxShadow: "var(--bottom-nav-shadow)",
-            } as React.CSSProperties}
-            className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px]  items-start backdrop-blur-[12px]"
-            from="top"
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-            }}
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="bg-black/0"
+        style={{
+          boxShadow: "var(--bottom-nav-shadow)",
+        } as React.CSSProperties}
+        className="max-w-[360px] gap-[12px] overflow-hidden rounded-[64px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
+      >
+        <DialogHeader className="flex h-[58px] flex-row justify-between">
+          <DialogTitle className="headline-2xl text-white">
+            This is what people
+            <br />
+            will see.
+          </DialogTitle>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 -m-2 items-center justify-center rounded-full transition-colors duration-150 hover:bg-white/10 active:scale-[0.96]"
           >
-            <DialogHeader className="flex flex-row justify-between w-full h-[58px]">
-              <DialogTitle className="headline-2xl text-white">
-                This is what people
-                <br />
-                will see.
-              </DialogTitle>
-              <div 
-                onClick={onClose} 
-                className="w-10 h-10 -m-2 flex items-center justify-center cursor-pointer rounded-full hover:bg-white/10 transition-colors duration-150 active:scale-[0.96]"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
-                </svg>
-              </div>
-            </DialogHeader>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+            </svg>
+          </button>
+        </DialogHeader>
 
+        <hr className="h-px w-full rounded-full border-0" style={{ background: "rgba(242, 242, 242, 0.30)", boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)" }} />
 
-              <hr className="h-px w-full border-0 rounded-full "
-                      style={{
-                        background: "rgba(242, 242, 242, 0.30)",
-                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
-                      }}/>
+        <p className="body-base text-[var(--system-300)]">you can change it late</p>
 
-                      <p className="text-[var(--system-300)] body-base">
-                        you can change it late
-                        </p>
-                      
-                  <div
-                    style={{ boxShadow: "var(--shadow-shadow)" }}
-                    className="flex flex-col gap-[11px] p-[12px] rounded-[22px] bg-white/10 overflow-visible"
-                  >
-                    <div className="flex flex-row gap-4 items-center w-full h-[27px]">
-                      
-                        <Image src="/windw.svg" alt="Website" width={33} height={9} />
-                        <div className="flex flex-row gap-2 items-center w-full">
-                          <Image src="/favicon.svg" alt="Marlon" width={27} height={34} />
-                        
-                        <input
-                          type="text"
-                          value={name}
-                          onChange={(e) => {
-                            handleNameChange(e.target.value);
-                            if (hasSubmitted) setError("");
-                          }}
-                          placeholder="Type . . ."
-                          className={`w-full px-[4px] rounded-[10px] h-[32px] bg-transparent border ${hasSubmitted && !name ? 'border-red-500' : 'border-white/0'} text-[var(--system-100)] placeholder-[var(--system-300)] body-base py-[4px] transition-colors duration-300 ease-in-out focus:outline-none hover:bg-white/10 focus:bg-white/5`}
-                          autoFocus
-                          aria-label="Website name"
-                        />  
-                        </div>
-                    </div>
+        <div style={{ boxShadow: "var(--shadow-shadow)" }} className="flex flex-col gap-[11px] overflow-visible rounded-[22px] bg-white/10 p-[12px]">
+          <div className="flex h-[27px] w-full flex-row items-center gap-4">
+            <Image src="/windw.svg" alt="Website" width={33} height={9} />
+            <div className="flex w-full flex-row items-center gap-2">
+              <Image src="/favicon.svg" alt="Marlon" width={27} height={34} />
 
-                    <div className="h-[32px]">
-                      <div className="flex items-center gap-2">
-                        <span className="text-[var(--system-200)] body-base">
-                          marlon.app/
-                        </span>
-                        <div className="relative w-full">
-                          <Input
-                            type="text"
-                            value={slug}
-                            onChange={(e) => {
-                              const newSlug = e.target.value.toLowerCase();
-                              setSlug(newSlug);
-                              if (hasSubmitted) {
-                                const validation = validateSlug(newSlug);
-                                setError(validation.valid ? '' : validation.message || '');
-                              } else {
-                                setError('');
-                              }
-                            }}
-                            className={`px-3 py-2 h-[32px] bg-black/30 ${hasSubmitted && (error || !slug) ? 'border-red-500' : 'border-white/0'}`}
-                            placeholder="my-website"
-                          />
-                          {slug && (
-                            <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                              {validateSlug(slug).valid ? (
-                                <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                </svg>
-                              ) : (
-                                <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => {
+                  handleNameChange(e.target.value);
+                  if (hasSubmitted) setError("");
+                }}
+                placeholder="Type . . ."
+                className={`body-base h-[32px] w-full rounded-[10px] border bg-transparent px-[4px] py-[4px] text-[var(--system-100)] placeholder-[var(--system-300)] transition-colors duration-300 ease-in-out focus:outline-none hover:bg-white/10 focus:bg-white/5 ${hasSubmitted && !name ? "border-red-500" : "border-white/0"}`}
+                autoFocus
+                aria-label="Website name"
+              />
+            </div>
+          </div>
 
-                    {error && (
-                      <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-[10px] text-red-200 text-sm flex items-start gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 flex-shrink-0 mt-0.5" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                        </svg>
-                        <div>
-                          <p className="font-medium">Please fix the following:</p>
-                          <p>{error}</p>
-                        </div>
-                      </div>
+          <div className="h-[32px]">
+            <div className="flex items-center gap-2">
+              <span className="body-base text-[var(--system-200)]">marlon.app/</span>
+              <div className="relative w-full">
+                <Input
+                  type="text"
+                  value={slug}
+                  onChange={(e) => {
+                    const newSlug = e.target.value.toLowerCase();
+                    setSlug(newSlug);
+                    if (hasSubmitted) {
+                      const validation = validateSlug(newSlug);
+                      setError(validation.valid ? "" : validation.message || "");
+                    } else {
+                      setError("");
+                    }
+                  }}
+                  className={`h-[32px] bg-black/30 px-3 py-2 ${hasSubmitted && (error || !slug) ? "border-red-500" : "border-white/0"}`}
+                  placeholder="my-website"
+                />
+                {slug && (
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    {validateSlug(slug).valid ? (
+                      <svg className="h-4 w-4 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    ) : (
+                      <svg className="h-4 w-4 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
                     )}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
 
-                  <div className="h-6"></div>
-
-                  <div className="flex gap-3 w-full">
-                    <Button
-                      variant="ghost"
-                      size="md"
-                      onClick={onClose}
-                      className=" w-full"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreate}
-                      disabled={isCreating}
-                      size="md"
-                      className="w-full"
-                    >
-                      {isCreating ? "Creating..." : "Create"}
-                    </Button>
-                  </div>
-                  
-                
-          </DialogContent>
+          {error && (
+            <div className="flex items-start gap-2 rounded-[10px] border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-200">
+              <svg xmlns="http://www.w3.org/2000/svg" className="mt-0.5 h-4 w-4 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <p className="font-medium">Please fix the following:</p>
+                <p>{error}</p>
+              </div>
+            </div>
+          )}
         </div>
-      </DialogPortal>
+
+        <div className="h-6" />
+
+        <div className="flex w-full gap-3">
+          <Button variant="ghost" size="md" onClick={onClose} className="w-full">
+            Cancel
+          </Button>
+          <Button onClick={handleCreate} disabled={isCreating} size="md" className="w-full">
+            {isCreating ? "Creating..." : "Create"}
+          </Button>
+        </div>
+      </DialogContent>
     </Dialog>
   );
 }
@@ -321,68 +288,44 @@ function AgencyModeModal({ isOpen, onClose }: {
 
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogPortal>
-        <DialogOverlay className="fixed inset-0 z-[60] bg-black/0" />
-        <div className="fixed inset-0 flex items-center justify-center z-[70]">
-          <DialogContent
-            style={{ 
-              boxShadow: "var(--bottom-nav-shadow)",
-            } as React.CSSProperties}
-            className="w-[360px] bg-[--system-100] [corner-shape:squircle] rounded-[64px] overflow-hidden bg-[image:var(--gradient-popup)] p-[20px] flex flex-col gap-[12px] items-start backdrop-blur-[12px]"
-            from="top"
-            transition={{
-              type: "spring",
-              stiffness: 300,
-              damping: 25,
-            }}
+      <DialogContent
+        showCloseButton={false}
+        overlayClassName="bg-black/0"
+        style={{
+          boxShadow: "var(--bottom-nav-shadow)",
+        } as React.CSSProperties}
+        className="max-w-[360px] gap-[12px] overflow-hidden rounded-[64px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
+      >
+        <DialogHeader className="flex h-[58px] flex-row justify-between">
+          <DialogTitle className="headline-2xl text-white">Agency Mode</DialogTitle>
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 -m-2 items-center justify-center rounded-full transition-colors duration-150 hover:bg-white/10 active:scale-[0.96]"
           >
-            <DialogHeader className="flex flex-row justify-between w-full h-[58px]">
-              <DialogTitle className="headline-2xl text-white">
-                Agency Mode
-              </DialogTitle>
-              <div 
-                onClick={onClose} 
-                className="w-10 h-10 -m-2 flex items-center justify-center cursor-pointer rounded-full hover:bg-white/10 transition-colors duration-150 active:scale-[0.96]"
-              >
-                <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
-                </svg>
-              </div>
-            </DialogHeader>
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+            </svg>
+          </button>
+        </DialogHeader>
 
-            <hr className="h-px w-full border-0 rounded-full "
-              style={{
-                background: "rgba(242, 242, 242, 0.30)",
-                boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)",
-              }}/>
+        <hr className="h-px w-full rounded-full border-0" style={{ background: "rgba(242, 242, 242, 0.30)", boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)" }} />
 
-            <p className="text-[var(--system-300)] body-base">
-              You already have a store. To manage multiple stores, you need to apply for Agency Mode.
-            </p>
+        <p className="body-base text-[var(--system-300)]">
+          You already have a store. To manage multiple stores, you need to apply for Agency Mode.
+        </p>
 
-            <div className="h-6"></div>
+        <div className="h-6" />
 
-            <div className="flex gap-3 w-full">
-              <Button
-                variant="ghost"
-                size="md"
-                onClick={onClose}
-                className="w-full"
-              >
-                Cancel
-              </Button>
-              <Button
-                disabled
-                size="md"
-                className="w-full opacity-50 cursor-not-allowed"
-              >
-                Coming Soon
-              </Button>
-            </div>
-
-          </DialogContent>
+        <div className="flex w-full gap-3">
+          <Button variant="ghost" size="md" onClick={onClose} className="w-full">
+            Cancel
+          </Button>
+          <Button disabled size="md" className="w-full cursor-not-allowed opacity-50">
+            Coming Soon
+          </Button>
         </div>
-      </DialogPortal>
+      </DialogContent>
     </Dialog>
   );
 }
@@ -462,6 +405,8 @@ function DashboardContent() {
 
 // Landing Page Component - Public landing page for unauthenticated users
 function LandingPage() {
+  const [isSignInOpen, setIsSignInOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-white">
       <header className="flex items-center justify-between px-8 py-6">
@@ -473,19 +418,26 @@ function LandingPage() {
 
           <SignedOut>
             <div className="flex flex-col items-center gap-4">
-              <SignInButton mode="modal">
-                <Button className="flex items-center justify-center gap-3 w-full max-w-xs h-12">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                    <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                  </svg>
-                  Sign in with Google
-                </Button>
-              </SignInButton>
+              <Button onClick={() => setIsSignInOpen(true)} className="flex h-12 w-full max-w-xs items-center justify-center gap-3">
+                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                </svg>
+                Sign in with Google
+              </Button>
             </div>
           </SignedOut>
         </div>
       </main>
+
+      <Dialog open={isSignInOpen} onOpenChange={setIsSignInOpen}>
+        <DialogContent
+          className="max-w-[440px] border-0 bg-transparent p-0 shadow-none"
+          closeClassName="right-3 top-3 bg-white/92 text-[--system-500] shadow-[var(--shadow-md)] hover:bg-white hover:text-[--system-700]"
+        >
+          <SignIn routing="virtual" fallbackRedirectUrl="/" />
+        </DialogContent>
+      </Dialog>
 
       <footer className="py-6 text-center">
         <p className="label-xs text-[var(--system-300)]">© 2026 Marlon. All rights reserved.</p>

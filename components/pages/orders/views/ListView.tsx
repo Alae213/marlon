@@ -30,6 +30,7 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/prim
 import { Checkbox, CheckboxIndicator } from "@/components/primitives/animate-ui/primitives/headless/checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/primitives/ui/table";
 import { SubtleTab, SubtleTabItem } from "@/components/primitives/ui/subtle-tab";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { LucideIcon } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -1019,49 +1020,40 @@ export function ListView({
       </div>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <>
-          <div 
-            className="fixed inset-0 z-[60] bg-black/30 backdrop-blur-sm"
-            onClick={() => setShowDeleteConfirm(false)}
-          />
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <div 
-              className="w-[360px] bg-[var(--system-100)] rounded-[48px] p-[20px] flex flex-col gap-[12px] items-start"
-              style={{ boxShadow: "var(--shadow-xl-shadow)" }}
-            >
-              <div className="flex items-center gap-3 mb-2">
-                <div className="p-3 bg-red-100 rounded-full">
-                  <AlertTriangle className="w-6 h-6 text-red-600" />
-                </div>
-                <h2 className="headline-2xl text-[var(--system-600)]">Delete Orders</h2>
+      <Dialog open={showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(false)}>
+        <DialogContent className="max-w-[360px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+          <DialogHeader className="pr-10">
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded-full bg-red-100 p-3">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
-              <p className="text-[var(--system-500)] body-base">
-                Are you sure you want to delete {selectedOrders.size} order(s)? This action cannot be undone.
-              </p>
-              <div className="flex gap-2 w-full mt-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setShowDeleteConfirm(false)}
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  variant="danger"
-                  onClick={async () => {
-                    await handleBulkDelete(Array.from(selectedOrders));
-                    setShowDeleteConfirm(false);
-                  }}
-                  className="flex-1"
-                >
-                  Delete
-                </Button>
-              </div>
+              <DialogTitle>Delete Orders</DialogTitle>
             </div>
-          </div>
-        </>
-      )}
+            <DialogDescription>
+              Are you sure you want to delete {selectedOrders.size} order(s)? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="danger"
+              onClick={async () => {
+                await handleBulkDelete(Array.from(selectedOrders));
+                setShowDeleteConfirm(false);
+              }}
+              className="flex-1"
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
     </TooltipProvider>
   );

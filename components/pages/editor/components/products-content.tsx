@@ -19,8 +19,8 @@ import Image from "next/image";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { Card } from "@/components/primitives/core/layout/card";
 import { EmptyState } from "@/components/primitives/core/feedback/empty-state";
-import { Modal } from "@/components/primitives/core/feedback/modal";
 import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 import type { Product, ProductFormData } from "../types";
 import { useInlineEdit } from "../hooks/use-inline-edit";
@@ -248,7 +248,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
       {/* Browser Chrome Window */}
       <div className="flex flex-col items-center justify-center bg-[var(--system-200)] h-full">
         {/* Header */}
-      <div className="px-[12px] w-full flex items-center justify-between py-4">
+      <div className="px-[12px] w-full flex items-center justify-between pt-4">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center">
             <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
@@ -263,7 +263,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
             background: "linear-gradient(0deg, #434545 100%, #212525 0%)",
             boxShadow: "var(--shadow-xl-shadow)",
           }}
-          className="flex flex-col gap-[8px] w-full h-[96vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
+          className="flex flex-col gap-[8px] w-full h-[100vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
         >
           {/* Browser Window Header */}
           <div className="px-[8px] flex items-center justify-between h-[24px]">
@@ -426,7 +426,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                     <button
                       onClick={() => setIsAddModalOpen(true)}
                       aria-label="Add new product"
-                      className="aspect-[1/1.3] bg-white border border-dashed border-[--system-300] hover:border-[--system-700] transition-all duration-200 flex flex-col items-center justify-center gap-2"
+                      className="aspect-[1/1.3] bg-white border border-dashed border-[--system-300] rounded-2xl hover:border-[--system-700] transition-all duration-200 flex flex-col items-center justify-center gap-2"
                     >
                       <Plus className="w-8 h-8 text-[--system-300]" />
                     </button>
@@ -456,7 +456,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               orientation="vertical"
               className="flex w-2 touch-none select-none p-[1px] transition-colors"
             >
-              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-300)]" />
+              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-300)]/0" />
             </ScrollAreaScrollbar>
           </ScrollAreaRoot>
 
@@ -467,42 +467,55 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
       </div>
 
       {/* Add Product Modal */}
-      <Modal
-        isOpen={isAddModalOpen}
-        onClose={() => {
-          setIsAddModalOpen(false);
-          setError(null);
+      <Dialog
+        open={isAddModalOpen}
+        onOpenChange={(open) => {
+          setIsAddModalOpen(open);
+          if (!open) setError(null);
         }}
-        title="Add new product"
       >
-        <ProductForm
-          onClose={() => {
-            setIsAddModalOpen(false);
-            setError(null);
-          }}
-          onSubmit={handleAddProduct}
-          error={error}
-        />
-      </Modal>
+        <DialogContent className="gap-[var(--spacing-md)] border-[--system-200] bg-[--system-50] p-[var(--spacing-md)] text-[--system-700] shadow-[var(--shadow-lg)]">
+          <DialogHeader className="gap-[var(--spacing-xs)] pr-[calc(var(--spacing-md)+2.25rem)]">
+            <DialogTitle>Add new product</DialogTitle>
+          </DialogHeader>
+          <ProductForm
+            onClose={() => {
+              setIsAddModalOpen(false);
+              setError(null);
+            }}
+            onSubmit={handleAddProduct}
+            error={error}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Product Modal */}
-      <Modal
-        isOpen={!!editingProduct}
-        onClose={() => setEditingProduct(null)}
-        title="Edit product"
+      <Dialog
+        open={!!editingProduct}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditingProduct(null);
+            setUpdateError(null);
+          }
+        }}
       >
-        {editingProduct && (
-          <ProductForm
-            product={editingProduct}
-            onClose={() => {
-              setEditingProduct(null);
-              setUpdateError(null);
-            }}
-            onSubmit={handleEditSubmit}
-            error={updateError}
-          />
-        )}
-      </Modal>
+        <DialogContent className="max-w-[560px] gap-0 border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+          <DialogHeader className="mb-[var(--spacing-lg)] pr-10">
+            <DialogTitle>Edit product</DialogTitle>
+          </DialogHeader>
+          {editingProduct && (
+            <ProductForm
+              product={editingProduct}
+              onClose={() => {
+                setEditingProduct(null);
+                setUpdateError(null);
+              }}
+              onSubmit={handleEditSubmit}
+              error={updateError}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Settings Dialog */}
       <SettingsDialog
@@ -510,7 +523,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
         onClose={() => setIsSettingsOpen(false)}
         storeId={storeId}
         storeSlug={storeSlug}
-        initialTab="preferences"
+        initialTab="delivery"
       />
     </div>
   );

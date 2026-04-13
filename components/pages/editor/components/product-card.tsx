@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import { Image as ImageIcon, Edit, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Button } from "@/components/primitives/core/buttons/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Product, EditingField } from "../types";
-import { DeleteConfirmOverlay } from "./delete-confirm-overlay";
 import { formatPrice } from "../utils";
 
 interface ProductCardProps {
@@ -43,131 +44,116 @@ export function ProductCard({
   const isDeleting = deletingProductId === product._id;
 
   return (
-    <div className="group relative bg-white border border-[--system-200] overflow-hidden hover:border-[--system-700] transition-all duration-200">
-      {/* Image */}
-      <div className="aspect-square bg-[--system-50] flex items-center justify-center relative">
-        {product.images?.[0] ? (
-          <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
-        ) : (
-          <ImageIcon className="w-8 h-8 text-[--system-300]" />
-        )}
-      </div>
-
-      {/* Info */}
-      <div className="p-4">
-        {/* Product Name - Inline Edit */}
-        {isEditingName ? (
-          <input
-            autoFocus
-            type="text"
-            value={editValue}
-            onChange={(e) => onEditValueChange(e.target.value)}
-            onBlur={onSaveEdit}
-            onKeyDown={onKeyDown}
-            className="w-full text-body text-[--system-700] mb-2 px-1 py-0.5 border border-[--system-700] bg-white focus:outline-none"
-          />
-        ) : (
-          <h3
-            className="text-body text-[--system-700] mb-2 line-clamp-2 cursor-pointer hover:text-[--system-400]"
-            onClick={() => onStartEditing(product._id, "name", product.name)}
-          >
-            {product.name}
-          </h3>
-        )}
-
-        <div className="flex items-center gap-2">
-          {/* Base Price - Inline Edit */}
-          {isEditingBasePrice ? (
-            <input
-              autoFocus
-              type="number"
-              value={editValue}
-              onChange={(e) => onEditValueChange(e.target.value)}
-              onBlur={onSaveEdit}
-              onKeyDown={onKeyDown}
-              className="text-body font-semibold text-[--system-700] tabular-nums px-1 py-0.5 w-24 border border-[--system-700] bg-white focus:outline-none"
-            />
+    <>
+      <div className="group relative overflow-hidden rounded-2xl border border-[--system-200] bg-white transition-all duration-200 hover:border-[--system-700]">
+        <div className="relative flex aspect-square items-center justify-center bg-[--system-50]">
+          {product.images?.[0] ? (
+            <Image src={product.images[0]} alt={product.name} fill className="object-cover" />
           ) : (
-            <span
-              className="text-body font-semibold text-[--system-700] tabular-nums cursor-pointer hover:text-[--system-400]"
-              onClick={() => onStartEditing(product._id, "basePrice", product.basePrice)}
-            >
-              {formatPrice(product.basePrice)}
-            </span>
+            <ImageIcon className="w-8 h-8 text-[--system-300]" />
           )}
+        </div>
 
-          {/* Old Price - Inline Edit */}
-          {product.oldPrice &&
-            (isEditingOldPrice ? (
-              <input
-                autoFocus
-                type="number"
-                value={editValue}
-                onChange={(e) => onEditValueChange(e.target.value)}
-                onBlur={onSaveEdit}
-                onKeyDown={onKeyDown}
-                className="text-xs text-[--system-300] line-through tabular-nums px-1 py-0.5 w-24 border border-[--system-300] bg-white focus:outline-none"
-                placeholder="Old price"
-              />
-            ) : (
+        <div className="p-4">
+          
+            <h3
+              className="mb-2 line-clamp-2 cursor-pointer text-body text-[--system-700] hover:text-[--system-400]"
+              onClick={() => onStartEditing(product._id, "name", product.name)}
+            >
+              {product.name}
+            </h3>
+          
+
+          <div className="flex items-center gap-2">
+            
               <span
-                className="text-xs text-[--system-300] line-through cursor-pointer hover:text-[--system-400]"
-                onClick={() => onStartEditing(product._id, "oldPrice", product.oldPrice || "")}
+                className="cursor-pointer text-body font-semibold tabular-nums text-[--system-700] hover:text-[--system-400]"
+                onClick={() => onStartEditing(product._id, "basePrice", product.basePrice)}
               >
-                {formatPrice(product.oldPrice)}
+                {formatPrice(product.basePrice)}
               </span>
-            ))}
+           
+
+            {product.oldPrice &&
+              (isEditingOldPrice ? (
+                <input
+                  autoFocus
+                  type="number"
+                  value={editValue}
+                  onChange={(e) => onEditValueChange(e.target.value)}
+                  onBlur={onSaveEdit}
+                  onKeyDown={onKeyDown}
+                  className="w-24 border border-[--system-300] bg-white px-1 py-0.5 text-xs line-through tabular-nums text-[--system-300] focus:outline-none"
+                  placeholder="Old price"
+                /> 
+              ) : ( 
+                <span
+                  className="cursor-pointer text-xs line-through text-[--system-300] hover:text-[--system-400]"
+                  onClick={() => onStartEditing(product._id, "oldPrice", product.oldPrice || "")}
+                >
+                  {formatPrice(product.oldPrice)}
+                </span>
+              ))}
+          </div>
+        </div>
+
+        <div className="absolute top-2 end-2 flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onEdit(product);
+            }}
+            className="bg-white/90 p-2 transition-colors hover:bg-[--system-50]"
+            title="Edit"
+          >
+            <Edit className="w-4 h-4 text-[--system-400]" />
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onToggleArchive(product._id, product.isArchived);
+            }}
+            className="bg-white/90 p-2 transition-colors hover:bg-[--system-50]"
+            title={product.isArchived ? "Activate" : "Deactivate"}
+          >
+            {product.isArchived ? (
+              <Eye className="w-4 h-4 text-[--color-success]" />
+            ) : (
+              <EyeOff className="w-4 h-4 text-[--color-warning]" />
+            )}
+          </button>
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onRequestDelete(product._id);
+            }}
+            className="bg-white/90 p-2 transition-colors hover:bg-red-50"
+            title="Delete"
+          >
+            <Trash2 className="w-4 h-4 text-[--destructive]" />
+          </button>
         </div>
       </div>
 
-      {/* Action buttons (visible on hover) */}
-      <div className="absolute top-2 end-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onEdit(product);
-          }}
-          className="p-2 bg-white/90 hover:bg-[--system-50] transition-colors"
-          title="Edit"
-        >
-          <Edit className="w-4 h-4 text-[--system-400]" />
-        </button>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onToggleArchive(product._id, product.isArchived);
-          }}
-          className="p-2 bg-white/90 hover:bg-[--system-50] transition-colors"
-          title={product.isArchived ? "Activate" : "Deactivate"}
-        >
-          {product.isArchived ? (
-            <Eye className="w-4 h-4 text-[--color-success]" />
-          ) : (
-            <EyeOff className="w-4 h-4 text-[--color-warning]" />
-          )}
-        </button>
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onRequestDelete(product._id);
-          }}
-          className="p-2 bg-white/90 hover:bg-red-50 transition-colors"
-          title="Delete"
-        >
-          <Trash2 className="w-4 h-4 text-[--destructive]" />
-        </button>
-      </div>
-
-      {/* Delete confirmation overlay */}
-      {isDeleting && (
-        <DeleteConfirmOverlay
-          onCancel={onCancelDelete}
-          onConfirm={() => onConfirmDelete(product._id)}
-        />
-      )}
-    </div>
+      <Dialog open={isDeleting} onOpenChange={(open) => !open && onCancelDelete()}>
+        <DialogContent className="max-w-[360px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+          <DialogHeader className="pr-10">
+            <DialogTitle>Delete product?</DialogTitle>
+            <DialogDescription>This action will archive the product from the storefront.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={onCancelDelete}>
+              Cancel
+            </Button>
+            <Button variant="danger" onClick={() => onConfirmDelete(product._id)}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
