@@ -23,14 +23,6 @@ export interface CallLog {
   notes?: string;
 }
 
-// Admin note (internal only, not visible to customers)
-export interface AdminNote {
-  id: string;
-  text: string;
-  timestamp: number;
-  merchantId: string;
-}
-
 // Audit trail entry
 export interface AuditTrailEntry {
   id: string;
@@ -58,7 +50,9 @@ export interface Order {
   deliveryType: "home_delivery" | "office_delivery" | "pickup";
   trackingNumber?: string;
   callLog: CallLog[];
-  adminNotes?: AdminNote[];
+  adminNoteText?: string;
+  adminNoteUpdatedAt?: number;
+  adminNoteUpdatedBy?: string;
   auditTrail: AuditTrailEntry[];
 }
 

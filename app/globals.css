@@ -141,16 +141,41 @@
   --radius-full: 9999px;
 
   /* ===========================================
-     SHADOWS
-     =========================================== */
+      SHADOWS
+      =========================================== */
   --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
-/* ===========================================
-      TYPOGRAPHY - Font Stack
+  /* ===========================================
+      Z-INDEX LAYERS
       =========================================== */
+  --z-menu: 50;
+
+  /* ===========================================
+     MENU (Shared primitive) - Dark by default
+     =========================================== */
+  --menu-surface-bg: var(--system-800);
+  --menu-surface-fg: var(--system-100);
+  --menu-surface-border: var(--system-700);
+  --menu-surface-shadow:
+    0 18px 48px rgb(from var(--system-900) r g b / 0.55),
+    0 0 0 1px rgb(from var(--system-900) r g b / 0.18);
+
+  --menu-item-hover-bg: var(--system-700);
+  --menu-item-hover-fg: var(--system-50);
+  --menu-item-active-bg: var(--system-600);
+  --menu-item-active-fg: var(--system-50);
+  --menu-item-disabled-fg: var(--system-400);
+
+  --menu-separator-bg: var(--system-700);
+  --menu-label-fg: var(--system-300);
+  --menu-shortcut-fg: var(--system-300);
+
+  /* ===========================================
+       TYPOGRAPHY - Font Stack
+       =========================================== */
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
   --font-arabic: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
@@ -216,6 +241,25 @@
   --color-slate: var(--system-800);
   --color-border-light: var(--system-200);
   --color-muted-hex: var(--system-400),
+
+  /* ===========================================
+     OVERLAY Z-INDEX TOKENS
+     Single source of truth for overlay stacking
+     =========================================== */
+  --z-overlay: 50;
+  --z-menu: 50;
+  --z-dialog: 60;
+  --z-sheet: 70;
+  --z-toast: 80;
+
+  /* ===========================================
+     SHEET/DRAWER DARK TOKENS
+     =========================================== */
+  --sheet-surface-bg: var(--system-800);
+  --sheet-surface-fg: var(--system-100);
+  --sheet-surface-border: var(--system-700);
+  --sheet-overlay-bg: rgb(0 0 0 / 0.4);
+  --sheet-surface-shadow: var(--shadow-xl-shadow);
 
   /* ===========================================
      DARK AREAS - Editor Browser (Keep as-is)

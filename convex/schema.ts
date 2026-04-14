@@ -84,6 +84,8 @@ export default defineSchema({
     lastCallOutcome: v.optional(v.string()),
     lastCallAt: v.optional(v.number()),
     trackingNumber: v.optional(v.string()),
+    deliveryProvider: v.optional(v.string()),
+    deliveryDispatchedAt: v.optional(v.number()),
     notes: v.optional(v.string()),
     // Extended fields for order management
     callLog: v.optional(v.array(v.object({
@@ -92,12 +94,11 @@ export default defineSchema({
       outcome: v.string(),
       notes: v.optional(v.string()),
     }))),
-    adminNotes: v.optional(v.array(v.object({
-      id: v.string(),
-      text: v.string(),
-      timestamp: v.number(),
-      merchantId: v.string(),
-    }))),
+    adminNoteText: v.optional(v.string()),
+    adminNoteUpdatedAt: v.optional(v.number()),
+    adminNoteUpdatedBy: v.optional(v.string()),
+    // Legacy field - will be removed after migration
+    adminNotes: v.optional(v.any()),
     auditTrail: v.optional(v.array(v.object({
       id: v.string(),
       timestamp: v.number(),
@@ -134,4 +135,37 @@ export default defineSchema({
   })
     .index("storeId", ["storeId"])
     .index("wilaya", ["storeId", "wilaya"]),
+
+deliveryCredentials: defineTable({
+    storeId: v.id("stores"),
+    provider: v.union(v.literal("zr-express"), v.literal("zr_express"), v.literal("yalidine"), v.literal("andrson"), v.literal("noest")),
+    algorithm: v.literal("aes-256-gcm"),
+    ciphertextHex: v.string(),
+    ivHex: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("storeId", ["storeId"])
+    .index("storeProvider", ["storeId", "provider"]),
+
+  deliveryAnalyticsEvents: defineTable({
+    storeId: v.id("stores"),
+    orderId: v.optional(v.string()),
+    eventType: v.union(
+      v.literal("attempted"),
+      v.literal("dispatched"),
+      v.literal("delivered"),
+      v.literal("failed"),
+      v.literal("rts")
+    ),
+    provider: v.string(),
+    region: v.optional(v.string()),
+    trackingNumber: v.optional(v.string()),
+    reason: v.optional(v.string()),
+    source: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("storeCreatedAt", ["storeId", "createdAt"])
+    .index("storeProvider", ["storeId", "provider"])
+    .index("storeRegion", ["storeId", "region"]),
 });

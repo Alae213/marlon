@@ -12,6 +12,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Button } from "@/components/primitives/core/buttons/button";
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/primitives/ui/sheet";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -207,43 +208,34 @@ function StorefrontContent() {
       </div>
 
       {/* Mobile Menu Drawer */}
-      {mobileMenuOpen && (
-        <>
-          {/* Backdrop */}
-          <div 
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-          
-          {/* Drawer */}
-          <div className="fixed top-0 right-0 h-full w-72 bg-[--system-gray-6] shadow-xl z-50 lg:hidden flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between p-4 border-b border-[--system-gray-4]">
-              <h2 className="text-lg font-medium text-[--system-gray-900]">القائمة</h2>
-              <button
-                onClick={() => setMobileMenuOpen(false)}
-                className="p-2 hover:bg-[--system-gray-5] rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
+      <Sheet open={mobileMenuOpen} onOpenChange={(open) => setMobileMenuOpen(open)}>
+        <SheetContent side="right" showCloseButton={false} className="w-72 flex flex-col p-0">
+          <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
+            <SheetTitle className="text-lg font-medium text-[var(--sheet-surface-fg)]">
+              القائمة
+            </SheetTitle>
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              className="p-2 hover:bg-[var(--system-700)] rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-[var(--system-300)]" />
+            </button>
+          </SheetHeader>
 
-            {/* Links */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-2">
-              {navbarLinks.map((link, index) => (
-                <a
-                  key={`mobile-${link.id || `link-${index}`}`}
-                  href={link.url}
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="block p-3 rounded-lg bg-[--system-gray-5] text-[--system-gray-900]"
-                >
-                  {link.text}
-                </a>
-              ))}
-            </div>
+          <div className="flex-1 overflow-y-auto p-4 space-y-2">
+            {navbarLinks.map((link, index) => (
+              <a
+                key={`mobile-${link.id || `link-${index}`}`}
+                href={link.url}
+                onClick={() => setMobileMenuOpen(false)}
+                className="block p-3 rounded-lg bg-[var(--system-700)] text-[var(--sheet-surface-fg)] hover:bg-[var(--system-600)] transition-colors"
+              >
+                {link.text}
+              </a>
+            ))}
           </div>
-        </>
-      )}
+        </SheetContent>
+      </Sheet>
 
       {/* Hero Section */}
       {heroTitle && (

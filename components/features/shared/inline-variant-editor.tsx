@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Plus, Edit2, Check, GripVertical, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { Input } from "@/components/primitives/core/inputs/input";
+import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
 
 interface VariantOption {
   name: string;
@@ -261,43 +262,48 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
         </div>
       ))}
 
-      <div className="relative">
-        <Button 
-          variant="outline" 
-          onClick={() => setShowPrebuiltDropdown(!showPrebuiltDropdown)} 
-          className="w-full"
+      <Menu open={showPrebuiltDropdown} onOpenChange={setShowPrebuiltDropdown}>
+        <MenuTrigger asChild>
+          <Button variant="outline" className="w-full">
+            <Plus className="w-4 h-4" />
+            Add Option Group
+            <ChevronDown className={`w-4 h-4 transition-transform ${showPrebuiltDropdown ? "rotate-180" : ""}`} />
+          </Button>
+        </MenuTrigger>
+        <MenuContent
+          align="start"
+          sideOffset={8}
+          className="w-[var(--radix-popper-anchor-width)] rounded-xl border border-[--system-200] bg-[--system-50] p-0 shadow-[var(--shadow-lg)] overflow-hidden"
         >
-          <Plus className="w-4 h-4" />
-          Add Option Group
-          <ChevronDown className={`w-4 h-4 transition-transform ${showPrebuiltDropdown ? "rotate-180" : ""}`} />
-        </Button>
-        
-        {showPrebuiltDropdown && (
-          <div className="absolute top-full start-0 end-0 mt-2 bg-white border border-[--system-200] rounded-xl shadow-lg z-10 overflow-hidden">
-            <button
-              onClick={() => handleAddGroup("size")}
-              className="w-full px-4 py-3 text-start hover:bg-[--system-100] transition-colors border-b border-[--system-100]"
-            >
+          <MenuItem
+            onSelect={() => handleAddGroup("size")}
+            className="px-4 py-3 hover:bg-[--system-100] transition-colors border-b border-[--system-100] rounded-none cursor-pointer"
+          >
+            <div>
               <span className="font-medium text-[--system-700]">Size</span>
               <p className="text-xs text-[--system-400] mt-0.5">Small, Medium, Large, XL</p>
-            </button>
-            <button
-              onClick={() => handleAddGroup("color")}
-              className="w-full px-4 py-3 text-start hover:bg-[--system-100] transition-colors border-b border-[--system-100]"
-            >
+            </div>
+          </MenuItem>
+          <MenuItem
+            onSelect={() => handleAddGroup("color")}
+            className="px-4 py-3 hover:bg-[--system-100] transition-colors border-b border-[--system-100] rounded-none cursor-pointer"
+          >
+            <div>
               <span className="font-medium text-[--system-700]">Color</span>
               <p className="text-xs text-[--system-400] mt-0.5">Red, Blue, Green, Black, White</p>
-            </button>
-            <button
-              onClick={() => handleAddGroup("custom")}
-              className="w-full px-4 py-3 text-start hover:bg-[--system-100] transition-colors"
-            >
+            </div>
+          </MenuItem>
+          <MenuItem
+            onSelect={() => handleAddGroup("custom")}
+            className="px-4 py-3 hover:bg-[--system-100] transition-colors rounded-none cursor-pointer"
+          >
+            <div>
               <span className="font-medium text-[--system-700]">Custom</span>
               <p className="text-xs text-[--system-400] mt-0.5">Add your own options</p>
-            </button>
-          </div>
-        )}
-      </div>
+            </div>
+          </MenuItem>
+        </MenuContent>
+      </Menu>
     </div>
   );
 }

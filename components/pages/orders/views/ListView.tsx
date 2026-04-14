@@ -4,13 +4,8 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { 
   Search, 
-  ChevronDown, 
-  ChevronUp,
   ArrowUpDown,
-  Settings,
-  Archive,
   X,
-  Check,
   Filter,
   Trash2,
   AlertTriangle,
@@ -21,7 +16,6 @@ import {
   SlidersHorizontal,
   ChevronsUpDown,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/primitives/core/feedback/badge";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
@@ -31,10 +25,20 @@ import { Checkbox, CheckboxIndicator } from "@/components/primitives/animate-ui/
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/primitives/ui/table";
 import { SubtleTab, SubtleTabItem } from "@/components/primitives/ui/subtle-tab";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Menu,
+  MenuCheckboxItem,
+  MenuContent,
+  MenuItem,
+  MenuLabel,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuTrigger,
+} from "@/components/ui/menu";
 import type { LucideIcon } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import Image from "next/image";
 import type { 
   SortField, 
   SortDirection, 
@@ -100,14 +104,6 @@ const ListIcon = () => (
         <rect width="16" height="16" fill="white" transform="translate(6.99382e-07 16) rotate(-90)"/>
       </clipPath>
     </defs>
-  </svg>
-);
-
-const KanbanIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2.3999" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
-    <rect x="7.2002" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
-    <rect x="12" y="2" width="3.6" height="14" rx="1" fill="currentColor"/>
   </svg>
 );
 
@@ -205,12 +201,6 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
   );
 }
 
-// Sort icon component
-function SortIcon({ field, sortField, sortDirection }: { field: SortField; sortField: SortField; sortDirection: SortDirection }) {
-  if (sortField !== field) return <ArrowUpDown className="w-3.5 h-3.5 opacity-30" />;
-  return sortDirection === "asc" ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />;
-}
-
 interface ListViewProps {
   orders: Doc<"orders">[];
   selectedOrders: Set<string>;
@@ -236,99 +226,71 @@ interface ListViewProps {
 
 // Status Dropdown Component
 function StatusCell({ 
-  orderId, 
   status, 
   isOpen, 
   onToggle, 
   onStatusChange,
   callLog,
 }: { 
-  orderId: string; 
   status: string; 
   isOpen: boolean; 
   onToggle: (open: boolean) => void;
   onStatusChange: (status: string) => void;
   callLog?: CallLog[];
 }) {
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onToggle(false);
-      }
-    }
-    
-    if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isOpen, onToggle]);
-
   const statusConfig = STATUS_CONFIG[status as OrderStatus];
   const statusLabel = STATUS_LABELS[status as OrderStatus];
 
   return (
-    <div className="relative w-full" ref={dropdownRef}>
-      <div className="flex flex-row items-center justify-between">
-        <button
-          onClick={() => onToggle(!isOpen)}
-          className="cursor-pointer flex flex-row items-center gap-2 p-1 hover:bg-black/5 rounded-[12px]"
+    <Menu open={isOpen} onOpenChange={onToggle}>
+      <div className="relative w-full">
+        <div className="flex flex-row items-center justify-between">
+          <MenuTrigger asChild>
+            <button
+              type="button"
+              className="cursor-pointer flex flex-row items-center gap-2 p-1 hover:bg-black/5 rounded-[12px]"
+            >
+              <Badge
+                bgColor={statusConfig?.bgColor}
+                textColor={statusConfig?.textColor}
+                icon={statusConfig?.icon}
+              >
+                {statusConfig?.label || statusLabel?.label || status}
+              </Badge>
+            </button>
+          </MenuTrigger>
+
+          {/* Call Log Slots */}
+          {callLog && callLog.length > -1 && <CallSlotsHover callLog={callLog} />}
+        </div>
+
+        <MenuContent
+          align="start"
+          sideOffset={-32}
+          className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
         >
-          <Badge 
-            bgColor={statusConfig?.bgColor}
-            textColor={statusConfig?.textColor}
-            icon={statusConfig?.icon}
-          >
-            {statusConfig?.label || statusLabel?.label || status}
-          </Badge>
-        </button>
-        
-        {/* Call Log Slots */}
-        {callLog && callLog.length > -1 && (
-          <CallSlotsHover callLog={callLog} />
-        )}
-      </div>
-      
-      <AnimatePresence>
-        {isOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            transition={{ duration: 0.15 }}
-            className="absolute top-full -mt-8 -left-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
-          >
+          <MenuRadioGroup value={status} onValueChange={onStatusChange}>
             {statuses.map((s) => {
-              const sConfig = STATUS_CONFIG[s];
+              const sConfig = STATUS_CONFIG[s]
               return (
-                <button
-                  key={s}
-                  onClick={() => {
-                    onStatusChange(s);
-                    onToggle(false);
-                  }}
-                  className={`w-full p-1 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
-                    status === s ? "bg-black/0" : ""
-                  }`}
-                >
-                  <span 
+                <MenuRadioItem key={s} value={s} className="rounded-[12px] py-1.5 pl-8">
+                  <span
                     className="overflow-hidden inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-[10px] shadow-[var(--shadow-badge)]"
-                    style={{ 
-                      backgroundColor: sConfig?.bgColor || '#6b728015',
-                      color: sConfig?.textColor || '#ffffff01',
+                    style={{
+                      backgroundColor: sConfig?.bgColor || "#6b728015",
+                      color: sConfig?.textColor || "#ffffff01",
                     }}
                   >
                     {sConfig?.icon}
                     {sConfig?.label || s}
                   </span>
-                </button>
-              );
+                </MenuRadioItem>
+              )
             })}
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
+          </MenuRadioGroup>
+        </MenuContent>
+      </div>
+    </Menu>
   );
 }
 
@@ -356,25 +318,21 @@ export function ListView({
 }: ListViewProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
-  const [currentTime, setCurrentTime] = useState(() => Date.now());
+  const [, setCurrentTime] = useState(() => Date.now());
   
   // Sort dropdown state
   const [sortDropdownOpen, setSortDropdownOpen] = useState(false);
-  const sortDropdownRef = useRef<HTMLDivElement>(null);
   
   // Filter dropdown state
   const [filterDropdownOpen, setFilterDropdownOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("all");
-  const filterDropdownRef = useRef<HTMLDivElement>(null);
   
   // Date filter state
   const [dateFilterOpen, setDateFilterOpen] = useState(false);
   const [activeDateFilter, setActiveDateFilter] = useState<"all" | "today" | "week" | "month">("all");
-  const dateFilterRef = useRef<HTMLDivElement>(null);
   
   // Settings dropdown state
   const [settingsDropdownOpen, setSettingsDropdownOpen] = useState(false);
-  const settingsDropdownRef = useRef<HTMLDivElement>(null);
   
   // Hidden statuses state (persisted in localStorage)
   const [hiddenStatuses, setHiddenStatuses] = useState<Set<OrderStatus>>(() => {
@@ -439,62 +397,6 @@ export function ListView({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchOpen, onSearchOpenChange]);
-
-  // Handle click outside sort dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target as Node)) {
-        setSortDropdownOpen(false);
-      }
-    }
-    
-    if (sortDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [sortDropdownOpen]);
-
-  // Handle click outside filter dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (filterDropdownRef.current && !filterDropdownRef.current.contains(event.target as Node)) {
-        setFilterDropdownOpen(false);
-      }
-    }
-    
-    if (filterDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [filterDropdownOpen]);
-
-  // Handle click outside date filter dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (dateFilterRef.current && !dateFilterRef.current.contains(event.target as Node)) {
-        setDateFilterOpen(false);
-      }
-    }
-    
-    if (dateFilterOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [dateFilterOpen]);
-
-  // Handle click outside settings dropdown
-  useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (settingsDropdownRef.current && !settingsDropdownRef.current.contains(event.target as Node)) {
-        setSettingsDropdownOpen(false);
-      }
-    }
-    
-    if (settingsDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [settingsDropdownOpen]);
 
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
@@ -664,183 +566,191 @@ export function ListView({
         <div className="flex items-center gap-1">
         
         {/* Date Filter Dropdown */}
-        <div className="relative" ref={dateFilterRef}>
-          <button
-            onClick={() => setDateFilterOpen(!dateFilterOpen)}
-            className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
-              activeDateFilter !== "all"
-                ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
-                : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-            }`}
-          >
-            <span>
-              {activeDateFilter === "all" ? "All" : 
-               activeDateFilter === "today" ? "Today" :
-               activeDateFilter === "week" ? "Last Week" : "This Month"}
-            </span>
-            <ChevronsUpDown className="w-4 h-4" /> 
-          </button>
-          
-          {dateFilterOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
+        <Menu open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
+          <MenuTrigger asChild>
+            <button
+              type="button"
+              className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+                activeDateFilter !== "all"
+                  ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                  : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+              }`}
             >
-              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Filter By Date</div>
+              <span>
+                {activeDateFilter === "all"
+                  ? "All"
+                  : activeDateFilter === "today"
+                    ? "Today"
+                    : activeDateFilter === "week"
+                      ? "Last Week"
+                      : "This Month"}
+              </span>
+              <ChevronsUpDown className="w-4 h-4" />
+            </button>
+          </MenuTrigger>
+
+          <MenuContent
+            align="end"
+            sideOffset={-32}
+            className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
+          >
+            <MenuLabel>Filter By Date</MenuLabel>
+            <MenuRadioGroup
+              value={activeDateFilter}
+              onValueChange={(value) => setActiveDateFilter(value as typeof activeDateFilter)}
+            >
               {[
                 { id: "all", label: "All" },
                 { id: "today", label: "Today (24h)" },
                 { id: "week", label: "This Week (7 days)" },
                 { id: "month", label: "This Month" },
               ].map((option) => (
-                <button
+                <MenuRadioItem
                   key={option.id}
-                  onClick={() => {
-                    setActiveDateFilter(option.id as typeof activeDateFilter);
-                    setDateFilterOpen(false);
-                  }}
-                  className={`w-full py-1.5 px-3 justify-between text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
-                    activeDateFilter === option.id ? "bg-black/5" : ""
-                  }`}
+                  value={option.id}
+                  className="w-full justify-between rounded-[12px]"
                 >
                   <span className="text-[var(--system-600)]">{option.label}</span>
-                  {activeDateFilter === option.id && <Check className="w-3.5 h-3.5" />}
-                </button>
+                </MenuRadioItem>
               ))}
-            </motion.div>
-          )}
-        </div>
+            </MenuRadioGroup>
+          </MenuContent>
+        </Menu>
 
         {/* Filter Dropdown */}
-        <div className="relative" ref={filterDropdownRef}>
+        <Menu open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                onClick={() => setFilterDropdownOpen(!filterDropdownOpen)}
-                className={`cursor-pointer p-2 rounded-lg transition-colors ${
-                  activeFilter !== "all"
-                    ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
-                    : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-                }`}
-              >
-                <Filter className="w-4 h-4" />
-              </button>
+              <MenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                    activeFilter !== "all"
+                      ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                      : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+                  }`}
+                >
+                  <Filter className="w-4 h-4" />
+                </button>
+              </MenuTrigger>
             </TooltipTrigger>
             <TooltipContent>Filter by status</TooltipContent>
           </Tooltip>
-          
-          {filterDropdownOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[200px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
-            >
-              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Filter By State</div>
+
+          <MenuContent
+            align="end"
+            sideOffset={-32}
+            className="min-w-[240px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
+          >
+            <MenuLabel>Filter By State</MenuLabel>
+            <MenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
+              <MenuRadioItem value="all" className="w-full justify-between rounded-[12px]">
+                <span className="text-[var(--system-600)]">All</span>
+                <span className="label-xs text-[var(--system-400)]">{orders.length}</span>
+              </MenuRadioItem>
               {statuses.map((status) => {
-                const sConfig = STATUS_CONFIG[status];
-                const count = orders.filter(o => o.status === status).length;
-                const isHidden = hiddenStatuses.has(status);
-                
+                const sConfig = STATUS_CONFIG[status]
+                const count = orders.filter((o) => o.status === status).length
+
                 return (
-                  <div key={status} className="flex items-center ">
-                    <button
-                      onClick={() => {
-                        setFilterDropdownOpen(false);
+                  <MenuRadioItem
+                    key={status}
+                    value={status}
+                    className="w-full justify-between rounded-[12px]"
+                  >
+                    <span
+                      className="overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                      style={{
+                        backgroundColor: sConfig?.bgColor || "#6b7280",
+                        color: sConfig?.textColor || "#ffffff",
                       }}
-                      className={`flex-1 px-3 py-1 text-start body-base flex items-center justify-between transition-colors ${
-                        activeFilter === status ? "bg-[#f5f5f5]" : ""
-                      }`}
                     >
-                      <span 
-                        className="overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
-                        style={{ 
-                          backgroundColor: sConfig?.bgColor || '#6b7280',
-                          color: sConfig?.textColor || '#ffffff',
-                        }}
-                      >
-                        {sConfig?.icon}
-                        {sConfig?.label || status}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="label-xs text-[var(--system-400)]">{count}</span>
-                        {activeFilter === status && <Check className="w-3.5 h-3.5" />}
-                      </div>
-                    </button>
-                    {/* Eye toggle button */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleHiddenStatus(status);
-                      }}
-                      className="cursor-pointer p-2 hover:bg-[var(--system-100)] transition-colors rounded-[8px]"
-                      title={isHidden ? "Show this state" : "Hide this state"}
-                    >
-                      {isHidden ? (
-                        <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
-                      ) : (
-                        <Eye className="w-4 h-4 text-[var(--system-400)]" />
-                      )}
-                    </button>
-                  </div>
-                );
+                      {sConfig?.icon}
+                      {sConfig?.label || status}
+                    </span>
+                    <span className="label-xs text-[var(--system-400)]">{count}</span>
+                  </MenuRadioItem>
+                )
               })}
-            </motion.div>
-          )}
-        </div>
+            </MenuRadioGroup>
+
+            <MenuSeparator />
+            <MenuLabel>Hide States</MenuLabel>
+            {statuses.map((status) => {
+              const sConfig = STATUS_CONFIG[status]
+              const isHidden = hiddenStatuses.has(status)
+
+              return (
+                <MenuCheckboxItem
+                  key={status}
+                  checked={isHidden}
+                  onCheckedChange={() => toggleHiddenStatus(status)}
+                  onSelect={(e) => e.preventDefault()}
+                  className="rounded-[12px]"
+                >
+                  {isHidden ? (
+                    <EyeOff className="h-4 w-4 text-[var(--system-400)]" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-[var(--system-400)]" />
+                  )}
+                  <span className="text-[var(--system-600)]">{sConfig?.label || status}</span>
+                </MenuCheckboxItem>
+              )
+            })}
+          </MenuContent>
+        </Menu>
 
         {/* Sort Dropdown */}
-        <div className="relative" ref={sortDropdownRef}>
+        <Menu open={sortDropdownOpen} onOpenChange={setSortDropdownOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                onClick={() => setSortDropdownOpen(!sortDropdownOpen)}
-                className={`cursor-pointer p-2 rounded-lg transition-colors ${
-                  sortField !== "date" || sortDirection !== "desc"
-                    ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
-                    : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-                }`}
-              >
-                <ArrowUpDown className="w-4 h-4" />
-              </button>
+              <MenuTrigger asChild>
+                <button
+                  type="button"
+                  className={`cursor-pointer p-2 rounded-lg transition-colors ${
+                    sortField !== "date" || sortDirection !== "desc"
+                      ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                      : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+                  }`}
+                >
+                  <ArrowUpDown className="w-4 h-4" />
+                </button>
+              </MenuTrigger>
             </TooltipTrigger>
             <TooltipContent>Sort orders</TooltipContent>
           </Tooltip>
-          
-          {sortDropdownOpen && (
-            <div className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[200px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1">
-              <div className="px-3 py-2 label-xs text-[var(--system-400)]">Sort By</div>
+
+          <MenuContent
+            align="end"
+            sideOffset={-32}
+            className="min-w-[220px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
+          >
+            <MenuLabel>Sort By</MenuLabel>
+            <MenuRadioGroup
+              value={`${sortField}:${sortDirection}`}
+              onValueChange={(value) => {
+                const [field, direction] = value.split(":")
+                onSort(field as SortField)
+                onSortDirectionChange(direction as SortDirection)
+              }}
+            >
               {[
                 { id: "date", direction: "desc", label: "Newest first" },
                 { id: "date", direction: "asc", label: "Oldest first" },
                 { id: "total", direction: "desc", label: "Highest value first" },
                 { id: "total", direction: "asc", label: "Lowest value first" },
               ].map((option) => (
-                <button
+                <MenuRadioItem
                   key={`${option.id}-${option.direction}`}
-                  onClick={() => {
-                    onSort(option.id as SortField);
-                    onSortDirectionChange(option.direction as SortDirection);
-                    setSortDropdownOpen(false);
-                  }}
-                  className={`w-full py-1 px-2 justify-between text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-opacity ${
-                    sortField === option.id && 
-                    ((option.id === "date" && sortDirection === (option.direction as SortDirection)) ||
-                     (option.id === "total" && sortDirection === (option.direction as SortDirection)))
-                      ? "bg-black/5" : ""
-                  }`}
+                  value={`${option.id}:${option.direction}`}
+                  className="w-full justify-between rounded-[12px]"
                 >
                   <span className="text-[var(--system-600)]">{option.label}</span>
-                  {sortField === option.id && sortDirection === option.direction && <Check className="w-3.5 h-3.5" />}
-                </button>
+                </MenuRadioItem>
               ))}
-            </div>
-          )}
-        </div>
+            </MenuRadioGroup>
+          </MenuContent>
+        </Menu>
 
           {/* Search */}
           <div id="search-container" className="relative">
@@ -887,44 +797,36 @@ export function ListView({
         </Tooltip>
 
         {/* Settings Dropdown (Placeholder) */}
-        <div className="relative" ref={settingsDropdownRef}>
+        <Menu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <button
-                onClick={() => setSettingsDropdownOpen(!settingsDropdownOpen)}
-                className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
-              >
-                <SlidersHorizontal className="w-4 h-4" />
-              </button>
+              <MenuTrigger asChild>
+                <button
+                  type="button"
+                  className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                </button>
+              </MenuTrigger>
             </TooltipTrigger>
             <TooltipContent>More</TooltipContent>
           </Tooltip>
-          
-          {settingsDropdownOpen && (
-            <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.15 }}
-              className="absolute top-full -mt-8 -right-1 z-[9999] min-w-[180px] bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] overflow-hidden p-1"
-            >
-              <button
-                onClick={() => setSettingsDropdownOpen(false)}
-                className="w-full py-2 px-3 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-colors"
-              >
-                <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
-                <span className="text-[var(--system-600)]">Black List</span>
-              </button>
-              <button
-                onClick={() => setSettingsDropdownOpen(false)}
-                className="w-full py-2 px-3 text-start flex items-center gap-2 rounded-[12px] cursor-pointer hover:bg-black/5 transition-colors"
-              >
-                <ArrowRightLeft className="w-4 h-4 text-[var(--system-400)]" />
-                <span className="text-[var(--system-600)]">Delivery Costs</span>
-              </button>
-            </motion.div>
-          )}
-        </div>
+
+          <MenuContent
+            align="end"
+            sideOffset={-32}
+            className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
+          >
+            <MenuItem onSelect={() => setSettingsDropdownOpen(false)} className="rounded-[12px]">
+              <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
+              <span className="text-[var(--system-600)]">Black List</span>
+            </MenuItem>
+            <MenuItem onSelect={() => setSettingsDropdownOpen(false)} className="rounded-[12px]">
+              <ArrowRightLeft className="w-4 h-4 text-[var(--system-400)]" />
+              <span className="text-[var(--system-600)]">Delivery Costs</span>
+            </MenuItem>
+          </MenuContent>
+        </Menu>
 
         
         </div>
@@ -993,7 +895,6 @@ export function ListView({
                 </TableCell>
                 <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                   <StatusCell
-                    orderId={order._id}
                     status={order.status}
                     isOpen={!!statusDropdownOpen[order._id]}
                     onToggle={(open) => onStatusDropdownToggle(order._id, open)}

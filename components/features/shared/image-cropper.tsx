@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState, type ChangeEvent, type DragEvent, type SyntheticEvent } from "react";
+import { useCallback, useRef, useState, useEffect, type ChangeEvent, type DragEvent, type SyntheticEvent } from "react";
 import Image from "next/image";
 import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
 import { Check, Crop as CropIcon } from "lucide-react";
@@ -203,11 +203,40 @@ interface LightboxProps {
 }
 
 function Lightbox({ images, currentIndex, onClose, onIndexChange }: LightboxProps) {
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((event: globalThis.KeyboardEvent) => {
+    if (event.key === "Escape") {
+      onClose();
+    } else if (event.key === "ArrowLeft") {
+      onIndexChange((currentIndex - 1 + images.length) % images.length);
+    } else if (event.key === "ArrowRight") {
+      onIndexChange((currentIndex + 1) % images.length);
+    }
+  }, [onClose, onIndexChange, currentIndex, images.length]);
+
+  useEffect(() => {
+    // Add keyboard listener
+    window.addEventListener("keydown", handleKeyDown);
+    // Lock body scroll
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.body.style.overflow = "";
+    };
+  }, [handleKeyDown]);
+
   return (
-    <div className="fixed inset-0 z-50 relative flex items-center justify-center bg-black/95">
+    <div 
+      className="fixed inset-0 z-[var(--z-dialog)] relative flex items-center justify-center bg-black/95"
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Image ${currentIndex + 1} of ${images.length}`}
+    >
       <button
         onClick={onClose}
-        className="absolute top-4 end-4 z-10 p-2 text-white/70 hover:text-white"
+        className="absolute top-4 end-4 z-10 p-2 text-white/70 hover:text-white focus:outline-none focus:ring-2 focus:ring-white/40 rounded-lg"
+        aria-label="Close lightbox"
       >
         <svg width="32" height="32" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path

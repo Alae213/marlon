@@ -63,7 +63,7 @@ function OrdersContent({
 
   const updateOrderStatus = useMutation(api.orders.updateOrderStatus);
   const addCallLogMutation = useMutation(api.orders.addCallLog);
-  const addAdminNoteMutation = useMutation(api.orders.addAdminNote);
+  const upsertAdminNoteMutation = useMutation(api.orders.upsertAdminNote);
 
   const handleStatusChange = useCallback(
     async (orderId: string, newStatus: string) => {
@@ -119,34 +119,29 @@ function OrdersContent({
     [selectedOrder, addCallLogMutation],
   );
 
-  const handleAddAdminNote = useCallback(
+  const handleUpsertAdminNote = useCallback(
     async (orderId: string, text: string) => {
       try {
-        await addAdminNoteMutation({
+        await upsertAdminNoteMutation({
           orderId: orderId as Id<"orders">,
           text,
         });
 
         // Update local state if this is the selected order
         if (selectedOrder?._id === orderId) {
+          const trimmed = text.trim();
           setSelectedOrder({
             ...selectedOrder,
-            adminNotes: [
-              ...(selectedOrder.adminNotes || []),
-              {
-                id: crypto.randomUUID(),
-                text,
-                timestamp: Date.now(),
-                merchantId: user?.id || "unknown",
-              },
-            ],
+            adminNoteText: trimmed,
+            adminNoteUpdatedAt: Date.now(),
+            adminNoteUpdatedBy: user?.id || "unknown",
           });
         }
       } catch (error) {
         console.error("Failed to add admin note:", error);
       }
     },
-    [selectedOrder, user, addAdminNoteMutation],
+    [selectedOrder, user, upsertAdminNoteMutation],
   );
 
   if (!isLoaded) {
@@ -256,7 +251,7 @@ function OrdersContent({
           onClose={() => setSelectedOrder(null)}
           onStatusChange={handleStatusChange}
           onAddCallLog={handleAddCallLog}
-          onAddAdminNote={handleAddAdminNote}
+          onUpsertAdminNote={handleUpsertAdminNote}
         />
 
         <BottomNavigation storeSlug={storeSlug} currentPage="orders" />

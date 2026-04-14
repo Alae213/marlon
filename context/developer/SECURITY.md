@@ -35,10 +35,27 @@ Rules:
 - Auth checks happen server-side — never trust the client to enforce access
 - Verify the user owns the resource before returning or modifying it
   (a user requesting `/invoices/123` should only see it if invoice 123 belongs to them)
-- Admin-only routes must verify the admin role explicitly, not just authentication
+- Store-admin routes must verify store role explicitly (`owner | admin`) not just authentication
+- Platform-admin routes must verify `platformRole=platform_admin` explicitly
 - Session tokens must expire — never create tokens with no expiry
 - Logout must invalidate the session server-side, not just clear the cookie
 - Failed auth attempts must not reveal whether the email exists
+
+Role model (locked):
+- Store roles: `owner`, `admin`, `staff`
+- Platform role: `platform_admin`
+
+Role boundaries (must enforce in policy layer, not UI):
+- `owner`: full store control; can confirm owner transfer/removal requests.
+- `admin`: operational store control; can manage catalog/orders/memberships within policy, but cannot unilaterally transfer or remove the current owner.
+- `staff`: day-to-day operations only; no billing, membership governance, or ownership actions.
+- `platform_admin`: exceptional platform governance only; no routine store operations by default.
+
+Ownership governance (locked):
+- Admin cannot unilaterally remove owner.
+- Owner transfer/removal requires explicit confirmation from the current owner before execution.
+- Exceptional break-glass by `platform_admin` is allowed only for legal/safety/escalation incidents with mandatory reason code and immutable audit evidence.
+- Every ownership governance action (request, confirmation, execution, rejection, break-glass) must append immutable audit entries.
 
 ---
 
@@ -116,3 +133,6 @@ Security is not a feature to add later. It is built in from the first line.
      - GDPR: users in the EU must be able to request deletion of their data
      - PCI: no payment data is stored — all card handling goes through Stripe
 -->
+
+- Ownership changes must use a two-step flow: request then owner confirmation.
+- Ownership changes are never hard-deleted from logs; retention policy must preserve governance evidence.

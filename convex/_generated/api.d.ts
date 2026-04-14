@@ -9,6 +9,9 @@
  */
 
 import type * as auth from "../auth.js";
+import type * as deliveryAnalytics from "../deliveryAnalytics.js";
+import type * as deliveryCredentialsCrypto from "../deliveryCredentialsCrypto.js";
+import type * as deliveryProvider from "../deliveryProvider.js";
 import type * as orders from "../orders.js";
 import type * as products from "../products.js";
 import type * as siteContent from "../siteContent.js";
@@ -23,6 +26,9 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   auth: typeof auth;
+  deliveryAnalytics: typeof deliveryAnalytics;
+  deliveryCredentialsCrypto: typeof deliveryCredentialsCrypto;
+  deliveryProvider: typeof deliveryProvider;
   orders: typeof orders;
   products: typeof products;
   siteContent: typeof siteContent;

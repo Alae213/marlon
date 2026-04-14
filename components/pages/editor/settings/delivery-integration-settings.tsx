@@ -1,185 +1,224 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/primitives/core/buttons/button";
 
-type Provider = "none" | "zr-express" | "yalidine";
+type Provider = "yalidine" | "zr-express" | "andrson" | "noest";
 
-const PROVIDERS: Array<{ value: Provider; label: string }> = [
-  { value: "none", label: "None" },
-  { value: "zr-express", label: "ZR Express" },
+interface ProviderConfig {
+  value: Provider;
+  label: string;
+}
+
+const PROVIDERS: ProviderConfig[] = [
   { value: "yalidine", label: "Yalidine" },
+  { value: "zr-express", label: "ZR Express" },
+  { value: "andrson", label: "Andrson" },
+  { value: "noest", label: "Noest Express" },
 ];
 
 interface DeliveryIntegrationSettingsProps {
   storeId: Id<"stores">;
 }
 
-interface DeliveryIntegrationFormProps {
-  storeId: Id<"stores">;
-  initialProvider: Provider;
-  initialApiKey: string;
-  initialApiToken: string;
+interface MultiProviderState {
+  enabled: boolean;
+  credentials: Record<string, string>;
+  hasStoredCredentials: boolean;
+  credentialsUpdatedAt?: number | null;
 }
 
-function DeliveryIntegrationForm({
-  storeId,
-  initialProvider,
-  initialApiKey,
-  initialApiToken,
-}: DeliveryIntegrationFormProps) {
-  const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
-  const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
+interface EnabledProvidersState {
+  yalidine: boolean;
+  "zr-express": boolean;
+  andrson: boolean;
+  noest: boolean;
+}
 
-  const [provider, setProvider] = useState<Provider>(initialProvider);
-  const [apiKey, setApiKey] = useState(initialApiKey);
-  const [apiToken, setApiToken] = useState(initialApiToken);
-  const [isSaving, setIsSaving] = useState(false);
-  const [isTesting, setIsTesting] = useState(false);
-  const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null);
-  const [savedMessage, setSavedMessage] = useState(false);
+type CredentialField = "apiKey" | "apiSecret" | "accountNumber";
 
-  const handleProviderChange = useCallback(
-    async (newProvider: Provider) => {
-      setProvider(newProvider);
-      setTestResult(null);
-      try {
-        await setDeliveryIntegration({
-          storeId,
-          provider: newProvider,
-          apiKey: newProvider === "none" ? "" : apiKey,
-          apiToken: newProvider === "none" ? "" : apiToken,
-        });
-        setSavedMessage(true);
-        setTimeout(() => setSavedMessage(false), 2000);
-      } catch (error) {
-        console.error("Failed to save provider:", error);
-      }
-    },
-    [setDeliveryIntegration, storeId, apiKey, apiToken]
-  );
+const PROVIDER_REQUIREMENTS: Record<Provider, { required: CredentialField[]; optional: CredentialField[]; helpText: string }> = {
+  yalidine: {
+    required: ["apiKey", "apiSecret"],
+    optional: [],
+    helpText: "Use your Yalidine API key and API secret.",
+  },
+  "zr-express": {
+    required: ["apiKey", "apiSecret"],
+    optional: ["accountNumber"],
+    helpText: "Use your ZR Express API key and API secret. Account number is optional.",
+  },
+  andrson: {
+    required: ["apiKey"],
+    optional: ["apiSecret", "accountNumber"],
+    helpText: "Andrson integration (TBD). Contact provider for credentials.",
+  },
+  noest: {
+    required: ["apiKey"],
+    optional: ["apiSecret", "accountNumber"],
+    helpText: "Noest Express integration (TBD). Contact provider for credentials.",
+  },
+};
 
-  const handleSaveCredentials = useCallback(async () => {
-    if (provider === "none") return;
-    setIsSaving(true);
-    try {
-      await setDeliveryIntegration({ storeId, provider, apiKey, apiToken });
-      setSavedMessage(true);
-      setTimeout(() => setSavedMessage(false), 2000);
-    } catch (error) {
-      console.error("Failed to save credentials:", error);
-    }
-    setIsSaving(false);
-  }, [setDeliveryIntegration, storeId, provider, apiKey, apiToken]);
+function createEmptyCredentials(): Record<string, string> {
+  return { apiKey: "", apiSecret: "", accountNumber: "" };
+}
 
-  const handleTestConnection = useCallback(async () => {
-    if (!apiKey || !apiToken) return;
-    setIsTesting(true);
-    setTestResult(null);
-    try {
-      const result = await testDeliveryConnection({
-        storeId,
-        provider: provider as "zr-express" | "yalidine",
-        apiKey,
-        apiToken,
-      });
-      setTestResult(result);
-    } catch {
-      setTestResult({ success: false, message: "Connection failed" });
-    }
-    setIsTesting(false);
-  }, [testDeliveryConnection, storeId, provider, apiKey, apiToken]);
+function hasAnyCredentialValue(credentials: Record<string, string>): boolean {
+  return Object.values(credentials).some((value) => value.trim().length > 0);
+}
+
+function getMissingFields(provider: Provider, credentials: Record<string, string>): CredentialField[] {
+  return PROVIDER_REQUIREMENTS[provider].required.filter((field) => !credentials[field].trim());
+}
+
+function getFieldLabel(field: CredentialField): string {
+  const labels: Record<CredentialField, string> = {
+    apiKey: "API key",
+    apiSecret: "API secret",
+    accountNumber: "Account number",
+  };
+  return labels[field];
+}
+
+function ProviderCard({
+  provider,
+  config,
+  state,
+  onToggle,
+  onUpdateCredential,
+  onTest,
+  onSave,
+  isTesting,
+  testResult,
+}: {
+  provider: Provider;
+  config: ProviderConfig;
+  state: MultiProviderState;
+  onToggle: (enabled: boolean) => void;
+  onUpdateCredential: (field: CredentialField, value: string) => void;
+  onTest: () => void;
+  onSave: () => void;
+  isTesting: boolean;
+  testResult: { success: boolean; message: string } | null;
+}) {
+  const requirements = PROVIDER_REQUIREMENTS[provider];
+  const missing = state.enabled ? getMissingFields(provider, state.credentials) : [];
+  const testDisabled = !state.enabled || missing.length > 0 || isTesting;
+  const hasValues = hasAnyCredentialValue(state.credentials);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="font-semibold text-[--system-700]">Courier Integration</h3>
-          <p className="text-sm text-[--system-400] mt-1">Connect your store to a courier service</p>
-        </div>
-        {savedMessage && <span className="text-sm font-medium text-[--color-success]">✓ Saved</span>}
-      </div>
-
-      <div className="flex gap-3 p-1 bg-[--system-100] rounded-xl">
-        {PROVIDERS.map((opt) => (
+    <div className={`p-4 rounded-xl border transition-all ${state.enabled ? "bg-white border-[--system-200]" : "bg-[--system-50] border-[--system-100]"}`}>
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
           <button
-            key={opt.value}
-            onClick={() => handleProviderChange(opt.value)}
-            className={`flex-1 py-2.5 px-4 text-sm font-medium rounded-lg transition-all ${
-              provider === opt.value
-                ? "bg-white text-[--system-700] shadow-sm border border-[--system-200]"
-                : "text-[--system-400] hover:text-[--system-500]"
+            onClick={() => onToggle(!state.enabled)}
+            className={`relative w-10 h-6 rounded-full transition-colors ${
+              state.enabled ? "bg-[--color-primary]" : "bg-[--system-200]"
             }`}
           >
-            {opt.label}
+            <span
+              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                state.enabled ? "translate-x-4" : "translate-x-0"
+              }`}
+            />
           </button>
-        ))}
+          <span className="font-medium text-[--system-700]">{config.label}</span>
+        </div>
+        {state.enabled && state.hasStoredCredentials && (
+          <span className="text-xs text-[--system-400]">
+            {state.credentialsUpdatedAt
+              ? `Updated ${new Date(state.credentialsUpdatedAt).toLocaleDateString()}`
+              : "Configured"}
+          </span>
+        )}
       </div>
 
-      {provider !== "none" && (
-        <div className="space-y-4 p-5 bg-white border border-[--system-200] rounded-xl">
+      {state.enabled && (
+        <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium mb-2 text-[--system-500]">API Key</label>
+            <label className="block text-xs font-medium mb-1.5 text-[--system-500]">API Key</label>
             <input
               type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              onBlur={handleSaveCredentials}
-              className="w-full h-11 px-4 border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+              value={state.credentials.apiKey}
+              onChange={(e) => onUpdateCredential("apiKey", e.target.value)}
+              onBlur={onSave}
+              className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
               placeholder="Enter API key"
             />
           </div>
-          <div>
-            <label className="block text-sm font-medium mb-2 text-[--system-500]">API Token</label>
-            <input
-              type="password"
-              value={apiToken}
-              onChange={(e) => setApiToken(e.target.value)}
-              onBlur={handleSaveCredentials}
-              className="w-full h-11 px-4 border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
-              placeholder="Enter API token"
-            />
-          </div>
 
-          <div className="flex gap-3 pt-2">
+          {requirements.required.includes("apiSecret") && (
+            <div>
+              <label className="block text-xs font-medium mb-1.5 text-[--system-500]">API Secret</label>
+              <input
+                type="password"
+                value={state.credentials.apiSecret}
+                onChange={(e) => onUpdateCredential("apiSecret", e.target.value)}
+                onBlur={onSave}
+                className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+                placeholder="Enter API secret"
+              />
+            </div>
+          )}
+
+          {requirements.optional.includes("accountNumber") && (
+            <div>
+              <label className="block text-xs font-medium mb-1.5 text-[--system-500]">Account Number (optional)</label>
+              <input
+                type="text"
+                value={state.credentials.accountNumber}
+                onChange={(e) => onUpdateCredential("accountNumber", e.target.value)}
+                onBlur={onSave}
+                className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+                placeholder="Account number if provided"
+              />
+            </div>
+          )}
+
+          {missing.length > 0 && (
+            <p className="text-xs text-[--color-error]">
+              Required: {missing.map(getFieldLabel).join(", ")}
+            </p>
+          )}
+
+          {state.hasStoredCredentials && !hasValues && (
+            <p className="text-xs text-[--system-400]">Saved. Leave blank to keep current.</p>
+          )}
+
+          <div className="flex gap-2 pt-1">
             <Button
               variant="outline"
-              onClick={handleTestConnection}
-              disabled={!apiKey || !apiToken || isTesting}
+              size="sm"
+              onClick={onTest}
+              disabled={testDisabled}
               className="flex-1"
             >
-              {isTesting ? "Testing..." : "Test Connection"}
+              {isTesting ? "Testing..." : "Test"}
             </Button>
-            <Button onClick={handleSaveCredentials} disabled={isSaving} className="flex-1">
-              {isSaving ? "Saving..." : "Save"}
+            <Button size="sm" onClick={onSave} disabled={missing.length > 0} className="flex-1">
+              Save
             </Button>
           </div>
 
           {testResult && (
             <div
-              className={`p-4 rounded-xl text-sm font-medium ${
+              className={`p-2 rounded-lg text-xs font-medium ${
                 testResult.success
-                  ? "bg-[--color-success-bg] text-[--color-success] border border-[--color-success]"
-                  : "bg-[--color-error-bg] text-[--color-error] border border-[--color-error]"
+                  ? "bg-[--color-success-bg] text-[--color-success]"
+                  : "bg-[--color-error-bg] text-[--color-error]"
               }`}
             >
               {testResult.message}
             </div>
           )}
 
-          <p className="text-xs text-[--system-400] pt-2 border-t border-[--system-200]">
-            {provider === "zr-express" && "Get your API key from ZR Express dashboard"}
-            {provider === "yalidine" && "Get your API key and token from Yalidine dashboard"}
+          <p className="text-xs text-[--system-400] pt-1 border-t border-[--system-100]">
+            {requirements.helpText}
           </p>
-        </div>
-      )}
-
-      {provider === "none" && (
-        <div className="p-5 bg-[--system-100] rounded-xl border border-[--system-200]">
-          <p className="text-sm text-[--system-400]">No courier selected. Shipping will be handled manually.</p>
         </div>
       )}
     </div>
@@ -188,6 +227,185 @@ function DeliveryIntegrationForm({
 
 export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSettingsProps) {
   const deliveryIntegration = useQuery(api.siteContent.getDeliveryIntegration, { storeId });
+  const setDeliveryIntegration = useMutation(api.siteContent.setDeliveryIntegration);
+  const testDeliveryConnection = useAction(api.siteContent.testDeliveryConnection);
+
+  const [enabledProviders, setEnabledProviders] = useState<EnabledProvidersState>({
+    yalidine: false,
+    "zr-express": false,
+    andrson: false,
+    noest: false,
+  });
+
+  const [providerStates, setProviderStates] = useState<Record<Provider, MultiProviderState>>({
+    yalidine: { enabled: false, credentials: createEmptyCredentials(), hasStoredCredentials: false },
+    "zr-express": { enabled: false, credentials: createEmptyCredentials(), hasStoredCredentials: false },
+    andrson: { enabled: false, credentials: createEmptyCredentials(), hasStoredCredentials: false },
+    noest: { enabled: false, credentials: createEmptyCredentials(), hasStoredCredentials: false },
+  });
+
+  const [testingProvider, setTestingProvider] = useState<Provider | null>(null);
+  const [testResults, setTestResults] = useState<Record<Provider, { success: boolean; message: string } | null>>({
+    yalidine: null,
+    "zr-express": null,
+    andrson: null,
+    noest: null,
+  });
+
+  useEffect(() => {
+    if (deliveryIntegration) {
+      const data = deliveryIntegration as {
+        provider?: string;
+        hasCredentials?: boolean;
+        credentialsUpdatedAt?: number | null;
+        enabledProviders?: string[];
+      };
+      
+      const enabled = data.enabledProviders || (data.provider && data.provider !== "none" ? [data.provider] : []);
+      const newEnabled: EnabledProvidersState = {
+        yalidine: enabled.includes("yalidine"),
+        "zr-express": enabled.includes("zr-express"),
+        andrson: enabled.includes("andrson"),
+        noest: enabled.includes("noest"),
+      };
+      setEnabledProviders(newEnabled);
+
+      for (const p of PROVIDERS) {
+        if (newEnabled[p.value]) {
+          setProviderStates((prev) => ({
+            ...prev,
+            [p.value]: {
+              ...prev[p.value],
+              enabled: true,
+              hasStoredCredentials: data.hasCredentials ?? false,
+              credentialsUpdatedAt: data.credentialsUpdatedAt ?? null,
+            },
+          }));
+        }
+      }
+    }
+  }, [deliveryIntegration]);
+
+  const handleToggle = useCallback(
+    async (provider: Provider, enabled: boolean) => {
+      setEnabledProviders((prev) => ({ ...prev, [provider]: enabled }));
+      setTestResults((prev) => ({ ...prev, [provider]: null }));
+
+      if (enabled) {
+        setProviderStates((prev) => ({
+          ...prev,
+          [provider]: { ...prev[provider], enabled, credentials: createEmptyCredentials() },
+        }));
+      } else {
+        setProviderStates((prev) => ({
+          ...prev,
+          [provider]: { ...prev[provider], enabled, credentials: createEmptyCredentials() },
+        }));
+      }
+
+      const currentEnabled = Object.entries(enabledProviders)
+        .filter(([_, v]) => v || (provider === _ && enabled))
+        .map(([k]) => k);
+
+      if (enabled) {
+        currentEnabled.push(provider);
+      } else {
+        const idx = currentEnabled.indexOf(provider);
+        if (idx > -1) currentEnabled.splice(idx, 1);
+      }
+
+      const uniqueEnabled = [...new Set(currentEnabled)];
+      const primaryProvider = uniqueEnabled[0] || "none";
+
+      try {
+        await setDeliveryIntegration({
+          storeId,
+          provider: primaryProvider as "yalidine" | "zr-express" | "andrson" | "noest" | "none",
+          enabledProviders: uniqueEnabled as ("yalidine" | "zr-express" | "andrson" | "noest")[],
+        });
+      } catch (error) {
+        console.error("Failed to update provider settings:", error);
+      }
+    },
+    [storeId, setDeliveryIntegration, enabledProviders]
+  );
+
+  const handleUpdateCredential = useCallback(
+    (provider: Provider, field: CredentialField, value: string) => {
+      setProviderStates((prev) => ({
+        ...prev,
+        [provider]: {
+          ...prev[provider],
+          credentials: { ...prev[provider].credentials, [field]: value },
+        },
+      }));
+      setTestResults((prev) => ({ ...prev, [provider]: null }));
+    },
+    []
+  );
+
+  const handleSave = useCallback(
+    async (provider: Provider) => {
+      const state = providerStates[provider];
+      const missing = getMissingFields(provider, state.credentials);
+      if (missing.length > 0) return;
+
+      try {
+        await setDeliveryIntegration({
+          storeId,
+          provider,
+          credentials: {
+            apiKey: state.credentials.apiKey,
+            apiSecret: state.credentials.apiSecret,
+            accountNumber: state.credentials.accountNumber,
+          },
+        });
+
+        setProviderStates((prev) => ({
+          ...prev,
+          [provider]: {
+            ...prev[provider],
+            hasStoredCredentials: true,
+            credentialsUpdatedAt: Date.now(),
+          },
+        }));
+      } catch (error) {
+        console.error("Failed to save credentials:", error);
+      }
+    },
+    [storeId, setDeliveryIntegration, providerStates]
+  );
+
+  const handleTest = useCallback(
+    async (provider: Provider) => {
+      const state = providerStates[provider];
+      const missing = getMissingFields(provider, state.credentials);
+      if (missing.length > 0) return;
+
+      setTestingProvider(provider);
+      setTestResults((prev) => ({ ...prev, [provider]: null }));
+
+      try {
+        const result = await testDeliveryConnection({
+          storeId,
+          provider,
+          credentials: {
+            apiKey: state.credentials.apiKey,
+            apiSecret: state.credentials.apiSecret,
+            accountNumber: state.credentials.accountNumber,
+          },
+        });
+        setTestResults((prev) => ({ ...prev, [provider]: result }));
+      } catch (error) {
+        setTestResults((prev) => ({
+          ...prev,
+          [provider]: { success: false, message: "Test failed. Check credentials." },
+        }));
+      }
+      setTestingProvider(null);
+    },
+    [storeId, testDeliveryConnection, providerStates]
+  );
 
   if (deliveryIntegration === undefined) {
     return (
@@ -197,18 +415,46 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
     );
   }
 
-  const initialProvider = (deliveryIntegration?.provider as Provider) || "none";
-  const initialApiKey = deliveryIntegration?.apiKey ?? "";
-  const initialApiToken = deliveryIntegration?.apiToken ?? "";
-  const formKey = `${initialProvider}:${initialApiKey}:${initialApiToken}`;
-
   return (
-    <DeliveryIntegrationForm
-      key={formKey}
-      storeId={storeId}
-      initialProvider={initialProvider}
-      initialApiKey={initialApiKey}
-      initialApiToken={initialApiToken}
-    />
+    <div className="space-y-6">
+      <div>
+        <h3 className="font-semibold text-[--system-700]">Courier Integration</h3>
+        <p className="text-sm text-[--system-400] mt-1">
+          Enable providers and save credentials securely for this store.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-3 text-xs text-[--system-500]">
+        Credentials are write-only. Existing keys are never displayed after save.
+      </div>
+
+      <div className="space-y-3">
+        {PROVIDERS.map((config) => (
+          <ProviderCard
+            key={config.value}
+            provider={config.value}
+            config={config}
+            state={providerStates[config.value]}
+            onToggle={(enabled) => handleToggle(config.value, enabled)}
+            onUpdateCredential={(field, value) => handleUpdateCredential(config.value, field, value)}
+            onTest={() => handleTest(config.value)}
+            onSave={() => handleSave(config.value)}
+            isTesting={testingProvider === config.value}
+            testResult={testResults[config.value]}
+          />
+        ))}
+      </div>
+
+      {!enabledProviders.yalidine &&
+        !enabledProviders["zr-express"] &&
+        !enabledProviders.andrson &&
+        !enabledProviders.noest && (
+          <div className="p-4 bg-[--system-100] rounded-xl border border-[--system-200]">
+            <p className="text-sm text-[--system-400]">
+              No courier enabled. Shipping will be handled manually.
+            </p>
+          </div>
+        )}
+    </div>
   );
 }

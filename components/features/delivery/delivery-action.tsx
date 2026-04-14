@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Truck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useParams } from "next/navigation";
 
 interface DeliveryActionProps {
   orderId: string;
@@ -18,6 +19,8 @@ interface DeliveryActionProps {
   currentStatus: string;
   trackingNumber?: string;
   deliveryProvider?: "zr_express" | "yalidine";
+  storeId?: string;
+  storeSlug?: string;
   onSuccess?: (trackingNumber: string) => void;
 }
 
@@ -34,8 +37,11 @@ export function DeliveryAction({
   currentStatus,
   trackingNumber,
   deliveryProvider,
+  storeId,
+  storeSlug,
   onSuccess,
 }: DeliveryActionProps) {
+  const params = useParams<{ storeSlug?: string }>();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<"success" | "error" | null>(null);
@@ -61,6 +67,8 @@ export function DeliveryAction({
           products,
           total,
           provider: deliveryProvider || "zr_express",
+          storeId,
+          storeSlug: storeSlug ?? params?.storeSlug,
         }),
       });
 

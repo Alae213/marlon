@@ -1,143 +1,110 @@
-# Feature: Subscription Billing
+# Feature: Subscription Billing (Masked Overflow Unlock)
 
 > **Status:** `complete`
 > **Phase:** v1
-> **Last updated:** 2026-04-10
+> **Last updated:** 2026-04-14
 
 ---
 
 ## Summary
 
-The billing system handles subscription tiers for stores: 50 free orders per 30-day rolling window, then 2000 DZD/month for paid access. Includes locked state handling where customer data is masked, and payment webhook processing to activate stores. Payment provider is abstracted and configurable.
+Canonical commercial model for MVP monetization and lock governance (per locked decisions on 2026-04-14):
+
+- Unlimited stores per account.
+- Per-store cap: `5` orders/day.
+- Cap reset: daily at `00:00` in `Africa/Algiers` timezone.
+- Overflow orders are accepted, but merchant-side data/actions are masked and frozen until unlock.
+- Unlock price: `2000 DZD/store/month` subscription.
+- Any store admin can initiate and complete payment.
+- No customer-facing notification is sent during locked state.
+- Masked overflow records auto-delete after `5` days if the store remains locked.
 
 ---
 
 ## Users
 
-- **Primary**: Store owners/merchants
-- **When**: When store reaches 50 orders, to unlock full order management
-- **Journey**: Trial → 50 orders reached → Locked → Pay 2000 DZD → Active (30 days)
+- Solo merchant operating one or multiple stores.
+- Agency/admin team managing multiple client stores and paying unlocks on behalf of a store.
 
 ---
 
 ## User Stories
 
-- As a merchant, I want 50 free orders so I can test the platform before paying
-- As a merchant, I want to see my order count so I know when I'll hit the limit
-- As a merchant with a locked store, I want to pay 2000 DZD so I can access order details again
-- As a merchant, I want my store to stay live even when locked so customers can still order
-- As a merchant, I want manual renewal so I'm not charged automatically
+- As a solo merchant, I want each store to keep accepting orders after cap so I do not lose incoming demand while deciding to unlock.
+- As a solo merchant, I want clear lock/unlock status per store so I can pay only for stores that need full order access.
+- As an agency admin, I want to unlock any assigned store without owner intervention so operations are not blocked.
+- As an agency admin, I want lock behavior to be consistent across stores so team SOPs stay predictable.
 
 ---
 
-## Behaviour
+## Behavior Flows
 
-### Happy Path
+### 1) Normal Under-Cap Order Flow
 
-1. **Free Tier (Trial)**
-   - Store created → status: trial, orderCount: 0
-   - Each order increments orderCount
-   - Window: 30-day rolling (starts on first order)
+1. Customer places order on storefront.
+2. System validates/store-saves order as normal.
+3. If store has fewer than 5 accepted orders for current `Africa/Algiers` day, order remains fully visible to merchant.
+4. Merchant can view customer details and run normal order actions.
 
-2. **Locked State**
-   - Trigger: orderCount >= 50
-   - Public storefront: fully operational
-   - Orders page: customer data masked (`***`), action buttons disabled
-   - Editor: full access
-   - Overlay message: "Unlock your store to manage orders: Pay 2000 DZD" + Pay Now button
+### 2) Overflow/Lock Flow
 
-3. **Paid Tier (Active)**
-   - Payment via payment provider (configurable)
-   - Webhook received → status: active, paidUntil: now+30d, orderCount: 0, firstOrderAt: null
-   - Full access restored
+1. Customer places order after daily per-store cap is reached.
+2. System still accepts order to avoid checkout drop-off.
+3. Store enters or remains locked state for overflow scope: merchant-facing customer/order data is fully masked and mutation actions are frozen.
+4. Customer receives no lock-related notification; checkout UX remains unchanged.
+5. If store remains locked, masked overflow records older than 5 days are permanently deleted.
 
-4. **Expiry Flow**
-   - paidUntil expires → wait for next order → status: trial, firstOrderAt: now, orderCount: 1
-   - Repeat cycle
+### 3) Unlock Payment Flow (Webhook + Idempotency)
 
-### Billing State Machine
+1. Any store admin initiates `2000 DZD/store/month` subscription checkout for the specific store.
+2. Payment provider sends signed webhook on success/failure.
+3. Backend verifies signature, timestamp/replay window, and event authenticity before any state change.
+4. Webhook handler is idempotent: duplicate events do not create duplicate subscriptions or inconsistent unlock transitions.
+5. On verified success, store billing status transitions to unlocked for active subscription period.
 
-```
-Store created → status: trial, orderCount: 0
-  ↓ (each order) orderCount++
-  ↓ orderCount >= 50 → status: locked
-  ↓ merchant pays 2000 DZD
-  → status: active, paidUntil: now+30d, orderCount: 0, firstOrderAt: null
-  ↓ paidUntil expires
-  → wait for next order → status: trial, firstOrderAt: now, orderCount: 1
-  → repeat cycle
-```
+### 4) Post-Unlock Visibility Restoration
 
-### Edge Cases & Rules
-
-- **50-order limit**: Per store per 30-day rolling window
-- **Payment unlocks**: 30 days from payment date (not from first order)
-- **After paid period expires**: Store returns to free tier (new 50-order allowance)
-- **Public storefront always live**: Regardless of lock state
-- **No auto-renewal**: Manual renewal only
-- **Independent billing**: Multi-store users don't share allowances
+1. After successful unlock, store lock flag clears.
+2. Merchant/admin regains full visibility for retained (not auto-deleted) masked overflow orders.
+3. Frozen merchant actions are restored for unlocked store.
+4. Overflow orders already deleted by 5-day retention rule are not recoverable.
 
 ---
 
-## Connections
+## Edge Cases and Business Rules
 
-- **Depends on**: Store creation, Orders (order counting)
-- **Triggers**: Payment provider webhook → Store activation
-- **Shares data with**: Orders management (locked state behavior)
-
----
-
-## MVP vs Full Version
-
-| Aspect | MVP (v1) | Full Version |
-|--------|----------|--------------|
-| Auto-renewal | Not supported | Supported |
-| Payment methods | EDAHABIA/CIB | All Algerian methods |
-| Agency billing | Per-store | Consolidated |
+- Daily cap counter is computed per store, not per account.
+- Day boundary always follows `Africa/Algiers` regardless of merchant/browser locale.
+- Unlock scope is per store; one store subscription never unlocks another store.
+- Payment success must be event-driven from verified webhook, not client redirect state.
+- Duplicate, delayed, or out-of-order webhook deliveries must be safely handled.
+- If subscription expires/cancels, lock behavior re-applies according to active billing state.
+- Overflow acceptance continues during lock; visibility/action restrictions remain enforced until unlock.
 
 ---
 
-## Security Considerations
+## Security and Compliance Notes
 
-- Auth required: Yes (Clerk)
-- Input validation: Payment webhook signature verification
-- Rate limiting: Webhook endpoints should be rate limited
-- Sensitive data: Customer data masked in locked state (must never be logged)
-
----
-
-## Tasks
-
-| Task # | Status | What needs to be done |
-|--------|--------|-----------------------|
-| T23 | [x] | 50-order free tier with rolling window |
-| T24 | [x] | 2000 DZD/month payment flow |
-| T25 | [x] | Locked state with customer data masking |
-| T26 | [x] | Payment webhook processing |
-| T27 | [x] | Payment provider abstraction |
+- Enforce owner/staff policy layer on all billing and order-visibility endpoints.
+- Accept unlock initiation from store admins only; reject non-admin actors server-side.
+- Treat webhook endpoint as untrusted input: signature verification, replay protection, strict schema validation, and immutable audit logs are required.
+- Never expose masked PII while locked, including exports, logs, analytics payloads, and error traces.
+- Keep payment secrets in environment variables only; no secrets in source, logs, or client payloads.
+- Retention rule (`5` days for still-locked masked overflow) must be deterministic and auditable.
 
 ---
 
-## UAT Status
+## Task Mapping (Canonical Alignment)
 
-**UAT Status:** `passed`
-
-**Last tested:** 2026-04-10
-
-**Outcome:** All billing features working - free tier, locked state, payment flow, webhook
-
----
-
-## Open Questions
-
-- [ ] Need auto-renewal option for convenience?
-- [ ] Any need for payment receipts?
+| Task # | Status | Mapping |
+|--------|--------|---------|
+| T22 | `[x]` | This spec is now aligned to locked commercial model and governance semantics. |
+| T23 | `[ ]` | Depends on this spec: propagate overflow masking lifecycle into `context/features/orders-management.md`. |
+| T24 | `[ ]` | Depends on this spec + security locks: codify launch controls in `context/developer/SECURITY.md`. |
+| T25 | `[ ]` | Depends on billing/lock lifecycle for ops gates in `context/ops/CI_CD.md` and `context/ops/MONITORING.md`. |
 
 ---
 
 ## Notes
 
-- Payment provider is abstracted via lib/payment-service.ts
-- Configure via PAYMENT_PROVIDER env var (chargily|sofizpay|custom)
-- Webhook endpoint: `/api/chargily/webhook` (handles any provider)
-- Customer data never deleted, only masked while locked
+- Source of truth: locked policy decisions in `context/project/DECISIONS.md` (Decision dated 2026-04-14, commercial model + governance lock).

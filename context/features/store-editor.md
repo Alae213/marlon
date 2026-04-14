@@ -2,7 +2,7 @@
 
 > **Status:** `complete`
 > **Phase:** v1
-> **Last updated:** 2026-04-10
+> **Last updated:** 2026-04-14
 
 ---
 
@@ -57,9 +57,10 @@ The store editor is the merchant's command center for managing their store. It i
    - Default data pre-populated, editable
 
 6. **Delivery API Integration**
-   - Settings: select provider (ZR Express/Yalidine/None)
-   - Fields: API key + token, "Test Connection" button, "Save"
-   - If configured: bulk select orders → "Send to Delivery Company" → returns tracking number
+    - Settings: select provider (ZR Express/Yalidine/None)
+    - Fields: API key + token, "Test Connection" button, "Save"
+    - Saved credentials are write-only: reopening settings never pre-fills/reveals previous credential values
+    - If configured: bulk select orders → "Send to Delivery Company" → returns tracking number
 
 ### Edge Cases & Rules
 
@@ -93,7 +94,7 @@ The store editor is the merchant's command center for managing their store. It i
 - Auth required: Yes (Clerk)
 - Input validation: Product names required, prices must be positive
 - Rate limiting: None at this level
-- Sensitive data: Delivery API credentials stored (needs encryption)
+- Sensitive data: Delivery API credentials stored per store/provider and encrypted at rest
 
 ---
 
@@ -122,7 +123,6 @@ The store editor is the merchant's command center for managing their store. It i
 
 ## Open Questions
 
-- [ ] Should delivery API credentials be encrypted at rest?
 - [ ] Any need for product categories?
 
 ---
@@ -130,4 +130,6 @@ The store editor is the merchant's command center for managing their store. It i
 ## Notes
 
 - Implementation follows PRD: inline editing, drag-drop reorder, rich text descriptions
-- Delivery API credentials stored in Convex (per PRD: encrypted at rest)
+- Delivery API credentials now persisted in `deliveryCredentials` (encrypted), while `deliveryIntegration` keeps only provider/metadata
+- Delivery credential inputs are intentionally not hydrated from stored secrets; UI uses `hasCredentials` metadata to indicate configured state
+- Delivery order endpoint enforces store ownership and includes request rate limiting; env fallback is gated behind `DELIVERY_ALLOW_GLOBAL_CREDENTIAL_FALLBACK=true`

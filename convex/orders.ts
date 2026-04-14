@@ -1,6 +1,23 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
+import { api } from "./_generated/api";
+
+function toDeliveryEventType(status: string): "delivered" | "failed" | "rts" | null {
+  if (status === "succeeded") {
+    return "delivered";
+  }
+
+  if (status === "canceled" || status === "blocked") {
+    return "failed";
+  }
+
+  if (status === "router") {
+    return "rts";
+  }
+
+  return null;
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type DbWithGet = { db: { get: (id: any) => Promise<any> } };
@@ -210,6 +227,10 @@ export const updateOrderStatus = mutation({
     await assertOrderOwnership(ctx, args.orderId);
 
     const order = await ctx.db.get(args.orderId);
+    if (!order) {
+      throw new Error("Order not found");
+    }
+
     const now = Date.now();
     // Use immutable spread instead of mutating array
     const timeline = [...(order?.timeline || []), {
@@ -223,6 +244,20 @@ export const updateOrderStatus = mutation({
       timeline,
       updatedAt: now,
     });
+
+    const analyticsEventType = toDeliveryEventType(args.status);
+    if (analyticsEventType) {
+      await ctx.runMutation(api.deliveryAnalytics.recordDeliveryEvent, {
+        storeId: order.storeId as Id<"stores">,
+        orderId: String(args.orderId),
+        eventType: analyticsEventType,
+        provider: order.deliveryProvider ?? "unknown",
+        region: order.customerWilaya,
+        trackingNumber: order.trackingNumber,
+        source: "orders.updateOrderStatus",
+        createdAt: now,
+      });
+    }
 
     return args.orderId;
   },
@@ -273,6 +308,7 @@ export const updateTrackingNumber = mutation({
   args: {
     orderId: v.id("orders"),
     trackingNumber: v.string(),
+    provider: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const { order } = await assertOrderOwnership(ctx, args.orderId);
@@ -287,6 +323,47 @@ export const updateTrackingNumber = mutation({
 
     await ctx.db.patch(args.orderId, {
       trackingNumber: args.trackingNumber,
+      deliveryProvider: args.provider,
+      deliveryDispatchedAt: now,
+      timeline,
+      updatedAt: now,
+    });
+
+    await ctx.runMutation(api.deliveryAnalytics.recordDeliveryEvent, {
+      storeId: order.storeId as Id<"stores">,
+      orderId: String(args.orderId),
+      eventType: "dispatched",
+      provider: args.provider ?? order.deliveryProvider ?? "unknown",
+      region: order.customerWilaya,
+      trackingNumber: args.trackingNumber,
+      source: "orders.updateTrackingNumber",
+      createdAt: now,
+    });
+
+    return args.orderId;
+  },
+});
+
+export const markOrderDispatchedFromDeliveryApi = mutation({
+  args: {
+    orderId: v.id("orders"),
+    trackingNumber: v.string(),
+    provider: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { order } = await assertOrderOwnership(ctx, args.orderId);
+
+    const now = Date.now();
+    const timeline = [...(order.timeline || []), {
+      status: "tracking",
+      timestamp: now,
+      note: `Delivery dispatched with ${args.provider}. Tracking: ${args.trackingNumber}`,
+    }];
+
+    await ctx.db.patch(args.orderId, {
+      trackingNumber: args.trackingNumber,
+      deliveryProvider: args.provider,
+      deliveryDispatchedAt: now,
       timeline,
       updatedAt: now,
     });
@@ -313,8 +390,9 @@ export const updateOrderNotes = mutation({
   },
 });
 
-// Add admin note to order
-export const addAdminNote = mutation({
+// Upsert single admin note for an order.
+// Clearing is supported by passing an empty/whitespace-only string.
+export const upsertAdminNote = mutation({
   args: {
     orderId: v.id("orders"),
     text: v.string(),
@@ -323,27 +401,72 @@ export const addAdminNote = mutation({
     const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
-    // Use immutable spread and crypto.randomUUID() for unique ID
-    const adminNotes = [...(order.adminNotes || []), {
-      id: crypto.randomUUID(),
-      text: args.text,
-      timestamp: now,
-      merchantId: identity.subject,
-    }];
+    const text = args.text.trim();
+    const isClearing = text.length === 0;
 
     const timeline = [...(order.timeline || []), {
       status: "admin_note",
       timestamp: now,
-      note: `إضافة ملاحظة: ${args.text.substring(0, 30)}${args.text.length > 30 ? "..." : ""}`,
+      note: isClearing ? "تم مسح ملاحظة الإدارة" : "تم تحديث ملاحظة الإدارة",
     }];
 
     await ctx.db.patch(args.orderId, {
-      adminNotes,
+      adminNoteText: text,
+      adminNoteUpdatedAt: now,
+      adminNoteUpdatedBy: identity.subject,
       timeline,
       updatedAt: now,
     });
 
     return args.orderId;
+  },
+});
+
+// One-time cleanup to remove legacy adminNotes history and any old timeline entries.
+// Does NOT migrate existing note text.
+export const purgeLegacyAdminNotesForStore = mutation({
+  args: { storeId: v.id("stores") },
+  handler: async (ctx, args) => {
+    await assertStoreOwnership(ctx, args.storeId);
+
+    const orders = await ctx.db
+      .query("orders")
+      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
+      .collect();
+
+    let updatedCount = 0;
+
+    for (const order of orders) {
+      const orderAny = order as unknown as Record<string, unknown>;
+      const { _id, _creationTime, adminNotes: _adminNotes, ...rest } = orderAny as {
+        _id: Id<"orders">;
+        _creationTime: number;
+        adminNotes?: unknown;
+      } & Record<string, unknown>;
+
+      const timelineRaw = rest.timeline;
+      const timeline = Array.isArray(timelineRaw)
+        ? timelineRaw.filter((entry) => {
+            if (!entry || typeof entry !== "object") return true;
+            const status = (entry as Record<string, unknown>).status;
+            return status !== "admin_note";
+          })
+        : timelineRaw;
+
+      const nextDoc: Record<string, unknown> = {
+        ...rest,
+        timeline,
+        adminNoteText: "",
+      };
+
+      delete nextDoc.adminNoteUpdatedAt;
+      delete nextDoc.adminNoteUpdatedBy;
+
+      await ctx.db.replace(_id, nextDoc as Omit<Doc<"orders">, "_id" | "_creationTime">);
+      updatedCount += 1;
+    }
+
+    return { updatedCount };
   },
 });
 

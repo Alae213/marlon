@@ -9,6 +9,8 @@ import { X, Minus, Plus, Trash2, Loader2, Check } from "lucide-react";
 import { useCart, CartItem } from "@/contexts/cart-context";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
+import { Sheet, SheetContent, SheetTitle, SheetHeader, SheetFooter } from "@/components/primitives/ui/sheet";
+import { Button } from "@/components/primitives/core/buttons/button";
 
 interface CartSidebarProps {
   isOpen: boolean;
@@ -189,100 +191,84 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
     }
   };
 
-  const handleClose = () => {
+const handleClose = () => {
     setShowCheckout(false);
     setFormData(initialFormData);
     setOrderPlaced(false);
     onClose();
   };
 
-  if (!isOpen) return null;
-
-  // Success state
-  if (orderPlaced) {
-    return (
-      <Fragment>
-        <div 
-          className="fixed inset-0 z-50 bg-black/30"
-          onClick={handleClose}
-        />
-        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
-          <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-            <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mb-6">
-              <Check className="w-8 h-8 text-white" />
-            </div>
-            <h2 className="text-xl font-normal text-foreground mb-2">
-              Order Confirmed!
-            </h2>
-            <p className="text-muted-foreground mb-4">
-              We will contact you at your phone number to verify your order
-            </p>
-            <p className="text-sm text-muted-foreground mb-8">
-              Order Number: <span className="font-medium">{orderNumber}</span>
-            </p>
-            <button
-              onClick={handleClose}
-              className="w-full h-12 bg-primary text-primary-foreground font-normal hover:opacity-80 transition-opacity"
-            >
-              Continue Shopping
-            </button>
+  return (
+    <Sheet open={isOpen} onOpenChange={(open) => !open && handleClose()}>
+      {/* Success State */}
+      {orderPlaced && (
+        <SheetContent side="right" showCloseButton={false} className="flex flex-col items-center justify-center p-8 text-center">
+          <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mb-6">
+            <Check className="w-8 h-8 text-white" />
           </div>
-        </div>
-      </Fragment>
-    );
-  }
+          <SheetTitle className="text-xl font-normal text-[var(--sheet-surface-fg)] mb-2">
+            Order Confirmed!
+          </SheetTitle>
+          <p className="text-[var(--system-300)] mb-4">
+            We will contact you at your phone number to verify your order
+          </p>
+          <p className="text-sm text-[var(--system-300)] mb-8">
+            Order Number: <span className="font-medium text-[var(--sheet-surface-fg)]">{orderNumber}</span>
+          </p>
+          <Button
+            onClick={handleClose}
+            className="w-full h-12 bg-[var(--color-primary)] text-white hover:opacity-80 transition-opacity"
+          >
+            Continue Shopping
+          </Button>
+        </SheetContent>
+      )}
 
-  // Checkout form
-  if (showCheckout) {
-    return (
-      <Fragment>
-        <div 
-          className="fixed inset-0 z-50 bg-black/30"
-          onClick={handleClose}
-        />
-        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
-          <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
-            <h2 className="text-lg font-normal text-foreground">
+      {/* Checkout Form */}
+      {showCheckout && !orderPlaced && (
+        <SheetContent side="right" showCloseButton={false} className="flex flex-col p-0">
+          <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
+            <SheetTitle className="text-lg font-normal text-[var(--sheet-surface-fg)]">
               Checkout
-            </h2>
+            </SheetTitle>
             <button
               onClick={handleClose}
-              className="p-1 hover:bg-muted transition-colors"
+              className="p-1 hover:bg-[var(--system-700)] rounded-lg transition-colors"
             >
-              <X className="w-5 h-5 text-muted-foreground" />
+              <X className="w-5 h-5 text-[var(--system-300)]" />
             </button>
-          </div>
+          </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
+              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
                 Name *
               </label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                className="w-full px-3 py-2 border border-input bg-background text-foreground focus:outline-none focus:border-primary"
+                className="w-full px-3 py-2 border border-[var(--system-700)] bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)]"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
+              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
                 Phone *
               </label>
               <input
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-3 py-2 border bg-background text-foreground focus:outline-none focus:border-primary ${
-                  phoneError ? "border-destructive" : "border-input"
+                className={`w-full px-3 py-2 border bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)] ${
+                  phoneError ? "border-[var(--color-error)]" : "border-[var(--system-700)]"
                 }`}
                 placeholder="05XX XXX XXX"
                 required
               />
               {phoneError && (
-                <p className="text-xs text-destructive mt-1">{phoneError}</p>
+                <p className="text-xs text-[var(--color-error)] mt-1">{phoneError}</p>
               )}
             </div>
 
@@ -306,21 +292,21 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
+              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
                 Address
               </label>
               <input
                 type="text"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                className="w-full px-3 py-2 border border-input bg-background text-foreground focus:outline-none focus:border-primary"
+                className="w-full px-3 py-2 border border-[var(--system-700)] bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)]"
                 placeholder={formData.deliveryType === "domicile" ? "Full address for delivery" : "Not required for stopdesk"}
                 disabled={formData.deliveryType === "stopdesk"}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-foreground mb-1">
+              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
                 Delivery Type
               </label>
               <div className="flex gap-2">
@@ -329,8 +315,8 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
                   onClick={() => handleInputChange("deliveryType", "stopdesk")}
                   className={`flex-1 py-2 px-3 border transition-colors ${
                     formData.deliveryType === "stopdesk"
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-input text-muted-foreground hover:border-primary"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
                   }`}
                 >
                   Stopdesk
@@ -340,8 +326,8 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
                   onClick={() => handleInputChange("deliveryType", "domicile")}
                   className={`flex-1 py-2 px-3 border transition-colors ${
                     formData.deliveryType === "domicile"
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-input text-muted-foreground hover:border-primary"
+                      ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
+                      : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
                   }`}
                 >
                   Domicile
@@ -350,28 +336,27 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
             </div>
           </div>
 
-          <div className="sticky bottom-0 p-4 border-t border-border bg-card/80 backdrop-blur-sm">
-            {/* Order Summary */}
+          <SheetFooter className="p-4 border-t border-[var(--sheet-surface-border)] bg-[var(--sheet-surface-bg)]">
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Subtotal</span>
-                <span className="text-foreground">{formatPrice(total)}</span>
+                <span className="text-[var(--system-300)] text-sm">Subtotal</span>
+                <span className="text-[var(--sheet-surface-fg)]">{formatPrice(total)}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground text-sm">Delivery</span>
-                <span className="text-foreground">{formatPrice(deliveryCost)}</span>
+                <span className="text-[var(--system-300)] text-sm">Delivery</span>
+                <span className="text-[var(--sheet-surface-fg)]">{formatPrice(deliveryCost)}</span>
               </div>
-              <div className="flex items-center justify-between pt-2 border-t border-border">
-                <span className="font-medium text-foreground">Total</span>
-                <span className="text-xl font-normal text-foreground">
+              <div className="flex items-center justify-between pt-2 border-t border-[var(--system-700)]">
+                <span className="font-medium text-[var(--sheet-surface-fg)]">Total</span>
+                <span className="text-xl font-normal text-[var(--sheet-surface-fg)]">
                   {formatPrice(orderTotal)}
                 </span>
               </div>
             </div>
-            <button
+            <Button
               onClick={handleSubmitOrder}
               disabled={isSubmitting || !formData.name || !formData.phone || !formData.wilaya}
-              className="w-full h-12 bg-primary text-primary-foreground font-normal hover:opacity-80 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full h-12 bg-[var(--color-primary)] text-white hover:opacity-80 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>
@@ -381,108 +366,102 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
               ) : (
                 "Place Order"
               )}
-            </button>
-          </div>
-        </div>
-      </Fragment>
-    );
-  }
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      )}
 
-  // Cart view
-  return (
-      <Fragment>
-        <div 
-          className="fixed inset-0 z-50 bg-black/30"
-          onClick={handleClose}
-        />
-        <div className="fixed inset-y-0 end-0 z-50 w-full sm:w-[420px] lg:w-[480px] bg-card shadow-xl animate-in slide-in-from-end duration-300 overflow-hidden flex flex-col">
-          <div className="sticky top-0 flex items-center justify-between p-4 border-b border-border bg-card/80 backdrop-blur-sm">
-            <h2 className="text-lg font-normal text-foreground">
+      {/* Cart View */}
+      {!showCheckout && !orderPlaced && (
+        <SheetContent side="right" showCloseButton={false} className="flex flex-col p-0">
+          <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
+            <SheetTitle className="text-lg font-normal text-[var(--sheet-surface-fg)]">
               سلة المشتريات
-            </h2>
-          <button
-            onClick={handleClose}
-            className="p-1 hover:bg-muted transition-colors"
-          >
-            <X className="w-5 h-5 text-muted-foreground" />
-          </button>
-        </div>
+            </SheetTitle>
+            <button
+              onClick={handleClose}
+              className="p-1 hover:bg-[var(--system-700)] rounded-lg transition-colors"
+            >
+              <X className="w-5 h-5 text-[var(--system-300)]" />
+            </button>
+          </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {items.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center">
-              <p className="text-muted-foreground mb-4">سلة المشتريات فارغة</p>
-            </div>
-          ) : (
-            items.map((item) => (
-              <div
-                key={item.id}
-                className="flex gap-4 p-4 border border-border"
-              >
-                {item.image && (
-                  <div className="w-20 h-20 bg-muted flex-shrink-0 overflow-hidden relative">
-                    <Image
-                      src={item.image}
-                      alt={item.name}
-                      fill
-                      className="object-cover"
-                    />
-                  </div>
-                )}
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-normal text-foreground truncate">
-                    {item.name}
-                  </h3>
-                  {item.variant && (
-                    <p className="text-sm text-muted-foreground">{item.variant}</p>
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            {items.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full text-center">
+                <p className="text-[var(--system-300)] mb-4">سلة المشتريات فارغة</p>
+              </div>
+            ) : (
+              items.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex gap-4 p-4 border border-[var(--system-700)] rounded-xl"
+                >
+                  {item.image && (
+                    <div className="w-20 h-20 bg-[var(--system-700)] flex-shrink-0 overflow-hidden relative rounded-lg">
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
                   )}
-                  <p className="text-foreground font-normal mt-1">
-                    {formatPrice(item.price)}
-                  </p>
-                  <div className="flex items-center gap-3 mt-2">
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-8 h-8 border border-input flex items-center justify-center hover:bg-muted transition-colors"
-                    >
-                      <Minus className="w-3.5 h-3.5" />
-                    </button>
-                    <span className="w-8 text-center font-normal">{item.quantity}</span>
-                    <button
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-8 h-8 border border-input flex items-center justify-center hover:bg-muted transition-colors"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                    </button>
-                    <button
-                      onClick={() => removeItem(item.id)}
-                      className="w-8 h-8 flex items-center justify-center text-destructive hover:bg-destructive/10 transition-colors me-auto"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-normal text-[var(--sheet-surface-fg)] truncate">
+                      {item.name}
+                    </h3>
+                    {item.variant && (
+                      <p className="text-sm text-[var(--system-300)]">{item.variant}</p>
+                    )}
+                    <p className="text-[var(--sheet-surface-fg)] font-normal mt-1">
+                      {formatPrice(item.price)}
+                    </p>
+                    <div className="flex items-center gap-3 mt-2">
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="w-8 h-8 border border-[var(--system-700)] flex items-center justify-center hover:bg-[var(--system-700)] transition-colors rounded-lg"
+                      >
+                        <Minus className="w-3.5 h-3.5 text-[var(--system-300)]" />
+                      </button>
+                      <span className="w-8 text-center font-normal text-[var(--sheet-surface-fg)]">{item.quantity}</span>
+                      <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="w-8 h-8 border border-[var(--system-700)] flex items-center justify-center hover:bg-[var(--system-700)] transition-colors rounded-lg"
+                      >
+                        <Plus className="w-3.5 h-3.5 text-[var(--system-300)]" />
+                      </button>
+                      <button
+                        onClick={() => removeItem(item.id)}
+                        className="w-8 h-8 flex items-center justify-center text-[var(--color-error)] hover:bg-[var(--color-error)]/10 transition-colors me-auto rounded-lg"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))
-          )}
-        </div>
-
-        {items.length > 0 && (
-          <div className="sticky bottom-0 p-4 border-t border-border bg-card/80 backdrop-blur-sm">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-muted-foreground">المجموع</span>
-              <span className="text-xl font-normal text-foreground">
-                {formatPrice(total)}
-              </span>
-            </div>
-            <button
-              onClick={() => setShowCheckout(true)}
-              className="w-full h-12 bg-primary text-primary-foreground font-normal hover:opacity-80 transition-opacity"
-            >
-              إتمام الطلب
-            </button>
+              ))
+            )}
           </div>
-        )}
-      </div>
-    </Fragment>
+
+          {items.length > 0 && (
+            <SheetFooter className="p-4 border-t border-[var(--system-700)] bg-[var(--sheet-surface-bg)]">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[var(--system-300)]">المجموع</span>
+                <span className="text-xl font-normal text-[var(--sheet-surface-fg)]">
+                  {formatPrice(total)}
+                </span>
+              </div>
+              <Button
+                onClick={() => setShowCheckout(true)}
+                className="w-full h-12 bg-[var(--color-primary)] text-white hover:opacity-80 transition-opacity"
+              >
+                إتمام الطلب
+              </Button>
+            </SheetFooter>
+          )}
+        </SheetContent>
+      )}
+    </Sheet>
   );
 }

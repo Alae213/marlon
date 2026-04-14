@@ -3,6 +3,7 @@ export { Button } from "./buttons/button";
 export { Input } from "./inputs/input";
 export { Textarea } from "./inputs/textarea";
 export { Dropdown, DropdownItem } from "./inputs/dropdown";
+export { Menu, MenuTrigger, MenuContent, MenuPanel, MenuItems, MenuItem, MenuLabel, MenuSeparator } from "./inputs/dropdown";
 export { Badge } from "./feedback/badge";
 export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "./layout/card";
 export { AnimatedTabs, AnimatedTabContent } from "./layout/animated-tabs";

@@ -1,15 +1,13 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useId } from "react";
+import type { ReactNode, KeyboardEvent } from "react";
 import Image from "next/image";
-import { Id, Doc } from "@/convex/_generated/dataModel";
+import { Doc } from "@/convex/_generated/dataModel";
 import {
   Phone,
   Package,
-  Clock,
   CheckCircle,
-  MoreHorizontal,
-  ChevronDown,
   X,
   PhoneOff,
   PhoneMissed,
@@ -20,11 +18,8 @@ import { Button } from "@/components/primitives/core/buttons/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
 import { Sheet, SheetContent, SheetTitle } from "@/components/primitives/ui/sheet";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/primitives/ui/hover-card";
-import type { AdminNote, CallLog, OrderStatus } from "@/lib/orders-types";
-import {
-  STATUS_LABELS,
-  CALL_OUTCOME_LABELS,
-} from "@/lib/orders-types";
+import type { CallLog, OrderStatus } from "@/lib/orders-types";
+import { CALL_OUTCOME_LABELS } from "@/lib/orders-types";
 
 interface OrderProductItem {
   productId: string;
@@ -33,13 +28,6 @@ interface OrderProductItem {
   price: number;
   quantity: number;
   variant?: string;
-}
-
-interface AdminNoteItem {
-  id: string;
-  text: string;
-  timestamp: number;
-  merchantId: string;
 }
 import { STATUS_CONFIG } from "@/lib/status-icons";
 import { cn } from "@/lib/utils";
@@ -71,9 +59,15 @@ function formatDate(timestamp: number): string {
 
 function formatPhoneSpaced(phone: string): string {
   if (!phone) return "";
-  const cleaned = phone.replace(/[^\w]/g, "");
-  const parts = cleaned.match(/.{1,2}/g);
-  return parts ? parts.join(" ") : phone;
+
+  const raw = String(phone).trim();
+  const hasPlus = raw.startsWith("+");
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return raw;
+
+  const parts = digits.match(/.{1,2}/g);
+  const grouped = parts ? parts.join(" ") : digits;
+  return hasPlus ? `+${grouped}` : grouped;
 }
 
 function getCallOutcomeBg(outcome?: string): string {
@@ -91,32 +85,112 @@ function getCallOutcomeBg(outcome?: string): string {
   }
 }
 
+type NormalizedCallLogItem = {
+  id: string;
+  outcome?: string;
+  timestamp?: number;
+};
+
+function normalizeCallLog(callLog: unknown): NormalizedCallLogItem[] {
+  if (!Array.isArray(callLog)) return [];
+
+  return callLog
+    .map((item, idx): NormalizedCallLogItem | null => {
+      if (!item || typeof item !== "object") {
+        return { id: `call-${idx}` };
+      }
+
+      const obj = item as Record<string, unknown>;
+      const rawId = obj.id ?? obj._id;
+      const id =
+        typeof rawId === "string" && rawId
+          ? rawId
+          : typeof rawId === "number"
+            ? String(rawId)
+            : undefined;
+
+      const outcome = typeof obj.outcome === "string" ? obj.outcome : undefined;
+      const timestamp =
+        typeof obj.timestamp === "number"
+          ? obj.timestamp
+          : typeof obj.createdAt === "number"
+            ? obj.createdAt
+            : undefined;
+
+      const fallbackId = `call-${timestamp ?? "na"}-${idx}`;
+      return {
+        id: id ?? fallbackId,
+        outcome,
+        timestamp,
+      };
+    })
+    .filter((item): item is NormalizedCallLogItem => Boolean(item));
+}
+
 // ---------------------------------------------------------------------------
 // Sub-components
 // ---------------------------------------------------------------------------
 
-function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
+function CallSlotsHover({ callLog }: { callLog: NormalizedCallLogItem[] }) {
+  const [isPointerInside, setIsPointerInside] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isToggled, setIsToggled] = useState(false);
+
   const slots = useMemo(() => {
     const relevant = callLog.slice(-MAX_CALL_SLOTS);
     return Array.from({ length: MAX_CALL_SLOTS }, (_, i) => relevant[i] ?? null);
   }, [callLog]);
 
   const hasCalls = callLog.length > 0;
+  const open = hasCalls && (isPointerInside || isFocused || isToggled);
+
+  const handleKeyDown = useCallback((e: KeyboardEvent<HTMLButtonElement>) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      setIsToggled((v) => !v);
+      return;
+    }
+    if (e.key === "Escape") {
+      setIsToggled(false);
+    }
+  }, []);
+
+  const triggerLabel = hasCalls ? "Call history" : "Call history (no calls)";
 
   return (
-    <HoverCard openDelay={200} closeDelay={100}>
+    <HoverCard
+      open={open}
+      onOpenChange={(nextOpen) => {
+        if (!nextOpen) setIsToggled(false);
+      }}
+      openDelay={200}
+      closeDelay={100}
+    >
       <HoverCardTrigger asChild>
-        <div className="flex items-end gap-1 h-[22px] cursor-pointer">
+        <button
+          type="button"
+          aria-label={triggerLabel}
+          aria-expanded={open}
+          onPointerEnter={() => setIsPointerInside(true)}
+          onPointerLeave={() => setIsPointerInside(false)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => {
+            setIsFocused(false);
+            setIsToggled(false);
+          }}
+          onKeyDown={handleKeyDown}
+          className="flex items-end gap-1 h-[22px] cursor-pointer bg-transparent border-0 p-0 rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/20"
+        >
           {slots.map((call, index) => (
             <div
               key={index}
               className={cn(
-                "w-[5px] h-full border border-white/8 rounded-full transition-colors",
+                "w-[5px] h-full border border-white/8 rounded-full transition-colors motion-reduce:transition-none",
                 call ? getCallOutcomeBg(call.outcome) : "bg-white/10"
               )}
             />
           ))}
-        </div>
+        </button>
       </HoverCardTrigger>
       {hasCalls && (
         <HoverCardContent
@@ -146,10 +220,12 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
                   )}
                 />
                 <span className="text-white/90">
-                  {CALL_OUTCOME_LABELS[call.outcome]?.label || call.outcome}
+                  {call.outcome
+                    ? CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label || call.outcome
+                    : "Unknown"}
                 </span>
                 <span className="text-white/40 text-[10px]">
-                  {formatDate(call.timestamp)}
+                  {typeof call.timestamp === "number" ? formatDate(call.timestamp) : "Unknown time"}
                 </span>
               </div>
             ))}
@@ -170,7 +246,7 @@ interface OrderDetailsProps {
     outcome: CallLog["outcome"],
     notes?: string,
   ) => Promise<void>;
-  onAddAdminNote: (orderId: string, text: string) => Promise<void>;
+  onUpsertAdminNote: (orderId: string, text: string) => Promise<void>;
 }
 
 // ---------------------------------------------------------------------------
@@ -183,42 +259,85 @@ export function OrderDetails({
   onClose,
   onStatusChange,
   onAddCallLog,
-  onAddAdminNote,
+  onUpsertAdminNote,
 }: OrderDetailsProps) {
   // ── Data ────────────────────────────────────────────────────────────────
   // Use order prop directly - parent updates local state after mutations
   
-  const [newNote, setNewNote] = useState("");
+  const currentAdminNoteText = typeof order?.adminNoteText === "string" ? order.adminNoteText : "";
+  const currentAdminNoteUpdatedAt = typeof order?.adminNoteUpdatedAt === "number" ? order.adminNoteUpdatedAt : undefined;
+
+  const [adminNoteDraft, setAdminNoteDraft] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
+  const noteTextareaId = useId();
+  const noteErrorId = useId();
+
+  const [callLogError, setCallLogError] = useState<string | null>(null);
+  const [isSavingCallLog, setIsSavingCallLog] = useState(false);
+
+  const resetNoteState = useCallback((nextDraft: string) => {
+    setAdminNoteDraft(nextDraft);
+    setIsSavingNote(false);
+    setNoteError(null);
+  }, []);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
   const handleAddCallLog = useCallback(
     async (outcome: CallLog["outcome"]) => {
-      if (!order) return;
+      if (!order || isSavingCallLog) return;
+      setCallLogError(null);
+      setIsSavingCallLog(true);
       try {
         await onAddCallLog(order._id, outcome);
-      } catch (error) {
-        console.error("Failed to add call log:", error);
+      } catch {
+        setCallLogError("Failed to save call log. Please try again.");
+      } finally {
+        setIsSavingCallLog(false);
       }
     },
-    [order, onAddCallLog],
+    [order, onAddCallLog, isSavingCallLog],
   );
 
-  const handleAddNote = async () => {
-    if (!order || !newNote.trim() || isSavingNote) return;
+  const hasAdminNoteChanged = adminNoteDraft.trim() !== currentAdminNoteText.trim();
+
+  const handleSaveAdminNote = useCallback(async () => {
+    if (!order || isSavingNote || !hasAdminNoteChanged) return;
     setNoteError(null);
     setIsSavingNote(true);
     try {
-      await onAddAdminNote(order._id, newNote);
-      setNewNote("");
+      await onUpsertAdminNote(order._id, adminNoteDraft);
     } catch {
       setNoteError("Failed to save note. Please try again.");
     } finally {
       setIsSavingNote(false);
     }
-  };
+  }, [order, isSavingNote, hasAdminNoteChanged, onUpsertAdminNote, adminNoteDraft]);
+
+  useEffect(() => {
+    if (!isOpen) resetNoteState("");
+  }, [isOpen, resetNoteState]);
+
+  useEffect(() => {
+    if (order?._id) resetNoteState(currentAdminNoteText);
+  }, [order?._id, currentAdminNoteText, resetNoteState]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setCallLogError(null);
+      setIsSavingCallLog(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (order?._id) {
+      setCallLogError(null);
+      setIsSavingCallLog(false);
+    }
+  }, [order?._id]);
+
+  const normalizedCallLog = useMemo(() => normalizeCallLog(order?.callLog), [order?.callLog]);
 
   if (!order) return null;
 
@@ -352,39 +471,44 @@ export function OrderDetails({
                 }} />
               </div>
 
-          {/* Admin Notes Section */}
+          {/* Admin Note Section */}
           <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-3">
-            <h3 className="text-sm font-medium text-white/80">Admin Notes</h3>
-            
-            {(order.adminNotes ?? []).length > 0 && (
-              <div className="space-y-2 max-h-40 overflow-y-auto scrollbar-hide">
-                {(order.adminNotes ?? []).slice().reverse().map((note: AdminNoteItem) => (
-                  <div key={note.id} className="p-2.5 rounded-xl bg-[var(--note-bg)] border border-[var(--note-border)] ">
-                    <p className="text-sm text-[var(--note-text)]">{note.text}</p>
-                    <p className="text-[10px] text-white/40 mt-1">{formatDate(note.timestamp)}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-            
+            <div className="flex items-baseline justify-between gap-2">
+              <h3 className="text-sm font-medium text-white/80">Admin Note</h3>
+              {typeof currentAdminNoteUpdatedAt === "number" && (
+                <span className="text-[10px] text-white/40">Last updated: {formatDate(currentAdminNoteUpdatedAt)}</span>
+              )}
+            </div>
+
+            <label htmlFor={noteTextareaId} className="sr-only">
+              Add an admin note
+            </label>
             <textarea
-              value={newNote}
+              id={noteTextareaId}
+              value={adminNoteDraft}
               onChange={(e) => {
-                setNewNote(e.target.value);
+                setAdminNoteDraft(e.target.value);
                 setNoteError(null);
               }}
               placeholder="Type a private note here..."
-              className="w-full px-3 py-2 bg-black/20 text-white text-sm resize-none rounded-xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors"
+              className="w-full px-3 py-2 bg-black/20 text-white text-sm resize-none rounded-xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors motion-reduce:transition-none"
               rows={3}
+              aria-invalid={Boolean(noteError)}
+              aria-describedby={noteError ? noteErrorId : undefined}
             />
-            {noteError && <p className="text-xs text-destructive">{noteError}</p>}
+            {noteError && (
+              <p id={noteErrorId} className="text-xs text-destructive">
+                {noteError}
+              </p>
+            )}
             
             <div className="flex justify-end">
               <Button
+                type="button"
                 variant="secondary"
                 size="sm"
-                onClick={handleAddNote}
-                disabled={!newNote.trim() || isSavingNote}
+                onClick={handleSaveAdminNote}
+                disabled={!hasAdminNoteChanged || isSavingNote}
                 className="bg-white/10 hover:bg-white/20 text-white border-white/10 h-8 px-4"
               >
                 {isSavingNote ? "Saving..." : "Save Note"}
@@ -405,30 +529,39 @@ export function OrderDetails({
           </div>
 
           {/* Call Controls */}
-          <div className="flex items-center justify-between px-1">
-            <CallSlotsHover callLog={(order.callLog ?? []) as CallLog[]} />
-            <div className="flex gap-2">
-              <CallButton 
-                outcome="answered" 
-                icon={<Phone className="w-3.5 h-3.5" />} 
-                label="Answered"
-                bg="bg-[#1bc57d]"
-                onClick={() => handleAddCallLog("answered")}
-              />
-              <CallButton 
-                outcome="no_answer" 
-                icon={<PhoneMissed className="w-4 h-4" />} 
-                bg="bg-[#fa9a34]"
-                onClick={() => handleAddCallLog("no_answer")}
-              />
-              <CallButton 
-                outcome="refused" 
-                icon={<PhoneOff className="w-4 h-4" />} 
-                bg="bg-[#f44055]"
-                onClick={() => handleAddCallLog("refused")}
-              />
-            </div>
-          </div>
+           <div className="flex items-center justify-between px-1">
+             <CallSlotsHover callLog={normalizedCallLog} />
+             <div className="flex gap-2">
+               <CallButton 
+                 outcome="answered" 
+                 icon={<Phone aria-hidden="true" className="w-3.5 h-3.5" />} 
+                 label="Answered"
+                 bg="bg-[#1bc57d]"
+                 onClick={() => handleAddCallLog("answered")}
+                 disabled={isSavingCallLog}
+               />
+               <CallButton 
+                 outcome="no_answer" 
+                 icon={<PhoneMissed aria-hidden="true" className="w-4 h-4" />} 
+                 bg="bg-[#fa9a34]"
+                 onClick={() => handleAddCallLog("no_answer")}
+                 disabled={isSavingCallLog}
+               />
+               <CallButton 
+                 outcome="refused" 
+                 icon={<PhoneOff aria-hidden="true" className="w-4 h-4" />} 
+                 bg="bg-[#f44055]"
+                 onClick={() => handleAddCallLog("refused")}
+                 disabled={isSavingCallLog}
+               />
+             </div>
+           </div>
+
+           {callLogError && (
+             <p className="text-xs text-destructive text-center" role="alert">
+               {callLogError}
+             </p>
+           )}
 
           <div className="h-px w-full px-[22px]">
                 <div className="h-px w-full shrink-0" style={{
@@ -452,14 +585,33 @@ export function OrderDetails({
 // ---------------------------------------------------------------------------
 
 
-function CallButton({ outcome, icon, label, bg, onClick }: { 
-  outcome: string, icon: React.ReactNode, label?: string, bg: string, onClick: () => void 
+function CallButton({
+  outcome,
+  icon,
+  label,
+  bg,
+  onClick,
+  disabled,
+}: {
+  outcome: string;
+  icon: ReactNode;
+  label?: string;
+  bg: string;
+  onClick: () => void;
+  disabled?: boolean;
 }) {
+  const ariaLabel = label || CALL_OUTCOME_LABELS[outcome as CallLog["outcome"]]?.label || outcome;
   return (
     <button 
+      type="button"
       onClick={onClick}
+      aria-label={ariaLabel}
+      disabled={disabled}
       className={cn(
-        "text-[10px] font-medium h-7 px-3 rounded-lg text-white flex items-center justify-center gap-1.5 transition-all hover:opacity-90 active:scale-95 cursor-pointer",
+        "text-[10px] font-medium h-7 px-3 rounded-lg text-white flex items-center justify-center gap-1.5 transition-all motion-reduce:transition-none motion-reduce:active:scale-100",
+        disabled
+          ? "opacity-60 cursor-not-allowed"
+          : "hover:opacity-90 active:scale-95 cursor-pointer",
         bg
       )}
     >
@@ -559,7 +711,7 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
 }
 
 function ActionButton({ label, targetStatus, icon, onClick }: {
-  label: string, targetStatus: OrderStatus, icon?: React.ReactNode, onClick: () => void
+  label: string, targetStatus: OrderStatus, icon?: ReactNode, onClick: () => void
 }) {
   const statusConfig = STATUS_CONFIG[targetStatus];
   
@@ -567,8 +719,9 @@ function ActionButton({ label, targetStatus, icon, onClick }: {
     // Fallback styling if status config not found
     return (
       <button
+        type="button"
         onClick={onClick}
-        className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20"
+        className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20 motion-reduce:transition-none"
       >
         {icon && <div className="p-1">{icon}</div>}
         {label}
@@ -578,22 +731,25 @@ function ActionButton({ label, targetStatus, icon, onClick }: {
 
   return (
     <button
+      type="button"
       onClick={onClick}
-      className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer overflow-hidden"
+      className="group relative flex-1 py-3.5 rounded-2xl font-semibold text-sm flex flex-col items-center justify-center gap-1.5 outline-none cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:ring-white/20"
       style={{
         backgroundColor: statusConfig.bgColor,
-        borderColor: statusConfig.textColor + '40', // Add opacity to border
         color: statusConfig.textColor,
       }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = statusConfig.textColor + '20'; // Darker on hover
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = statusConfig.bgColor;
-      }}
     >
-      {icon && <div className="p-1" style={{ color: statusConfig.textColor }}>{icon}</div>}
-      {label}
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-2xl border-2 border-current opacity-30"
+      />
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-0 transition-opacity group-hover:opacity-10 group-focus-visible:opacity-10 motion-reduce:transition-none"
+        style={{ backgroundColor: "currentColor" }}
+      />
+      {icon && <div className="relative p-1">{icon}</div>}
+      <span className="relative">{label}</span>
     </button>
   );
 }

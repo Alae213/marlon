@@ -1,5 +1,64 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
+import { Doc, Id } from "./_generated/dataModel";
+import {
+  decryptDeliveryCredentials,
+  encryptDeliveryCredentials,
+} from "./deliveryCredentialsCrypto";
+import { normalizeDeliveryProvider } from "./deliveryProvider";
+
+type StoreOwnerAuthContext = {
+  db: { get: (id: Id<"stores">) => Promise<Doc<"stores"> | null> };
+  auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
+};
+
+const TEST_CONNECTION_RATE_LIMIT_WINDOW_MS = 60_000;
+const TEST_CONNECTION_RATE_LIMIT_MAX_REQUESTS = 5;
+const testConnectionRateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function isRateLimited(
+  key: string,
+  maxRequests: number,
+  windowMs: number
+): { limited: boolean; retryAfterSeconds: number } {
+  const now = Date.now();
+  const existing = testConnectionRateLimit.get(key);
+
+  if (!existing || existing.resetAt <= now) {
+    testConnectionRateLimit.set(key, { count: 1, resetAt: now + windowMs });
+    return { limited: false, retryAfterSeconds: 0 };
+  }
+
+  if (existing.count >= maxRequests) {
+    return {
+      limited: true,
+      retryAfterSeconds: Math.max(1, Math.ceil((existing.resetAt - now) / 1000)),
+    };
+  }
+
+  existing.count += 1;
+  testConnectionRateLimit.set(key, existing);
+  return { limited: false, retryAfterSeconds: 0 };
+}
+
+async function assertStoreOwner(ctx: StoreOwnerAuthContext, storeId: Id<"stores">) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized");
+  }
+
+  const store = await ctx.db.get(storeId);
+  if (!store) {
+    throw new Error("Store not found");
+  }
+
+  if (store.ownerId !== identity.subject) {
+    throw new Error("Forbidden");
+  }
+
+  return { identity, store };
+}
 
 // Type definitions for site content
 
@@ -49,10 +108,23 @@ interface FooterContent {
 }
 
 interface DeliveryIntegrationContent {
-  provider?: "zr-express" | "yalidine" | "none";
+  provider?: "yalidine" | "zr-express" | "andrson" | "noest" | "none";
+  enabledProviders?: ("yalidine" | "zr-express" | "andrson" | "noest")[];
+  hasCredentials?: boolean;
+  lastUpdatedAt?: number;
+  credentials?: DeliveryCredentialsInput;
   apiKey?: string;
   apiToken?: string;
+  apiSecret?: string;
+  accountNumber?: string;
 }
+
+type DeliveryCredentialsInput = {
+  apiKey?: string;
+  apiToken?: string;
+  apiSecret?: string;
+  accountNumber?: string;
+};
 
 type SiteContent = NavbarContent | HeroContent | FooterContent | DeliveryIntegrationContent;
 
@@ -613,39 +685,278 @@ export const bulkSetDeliveryPricing = mutation({
   },
 });
 
+function sanitizeCredentialValue(value?: string): string {
+  return value?.trim() ?? "";
+}
+
+function mergeCredentialSources(args: {
+  credentials?: DeliveryCredentialsInput;
+  apiKey?: string;
+  apiToken?: string;
+  apiSecret?: string;
+  accountNumber?: string;
+}) {
+  return {
+    apiKey: sanitizeCredentialValue(args.credentials?.apiKey ?? args.apiKey),
+    apiToken: sanitizeCredentialValue(args.credentials?.apiToken ?? args.apiToken),
+    apiSecret: sanitizeCredentialValue(
+      args.credentials?.apiSecret ?? args.apiSecret ?? args.credentials?.apiToken ?? args.apiToken
+    ),
+    accountNumber: sanitizeCredentialValue(args.credentials?.accountNumber ?? args.accountNumber),
+  };
+}
+
+function hasAnyDeliveryCredential(credentials: {
+  apiKey: string;
+  apiToken: string;
+  apiSecret: string;
+  accountNumber: string;
+}) {
+  return Boolean(
+    credentials.apiKey ||
+      credentials.apiToken ||
+      credentials.apiSecret ||
+      credentials.accountNumber
+  );
+}
+
+function getCanonicalProvider(provider?: string | null): "yalidine" | "zr-express" | "andrson" | "noest" | "none" {
+  return normalizeDeliveryProvider(provider);
+}
+
 // Delivery Integration Functions
 export const getDeliveryIntegration = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
-    const content = await ctx.db
+    const sectionDoc = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "deliveryIntegration"))
       .first();
-    return content?.content ?? null;
+
+    const content = (sectionDoc?.content as DeliveryIntegrationContent | null) ?? null;
+    const provider = getCanonicalProvider(content?.provider);
+    const lastUpdatedAt = content?.lastUpdatedAt ?? sectionDoc?.updatedAt ?? null;
+
+    if (provider === "none") {
+      return {
+        provider,
+        hasCredentials: false,
+        lastUpdatedAt,
+        credentialsUpdatedAt: null,
+      };
+    }
+
+    const storedCredentials = await ctx.db
+      .query("deliveryCredentials")
+      .withIndex("storeProvider", (q) => q.eq("storeId", args.storeId).eq("provider", provider))
+      .first();
+
+    if (!storedCredentials) {
+      const legacyCredentials = mergeCredentialSources({
+        credentials: content?.credentials,
+        apiKey: content?.apiKey,
+        apiToken: content?.apiToken,
+        apiSecret: content?.apiSecret,
+        accountNumber: content?.accountNumber,
+      });
+
+      if (hasAnyDeliveryCredential(legacyCredentials)) {
+        return {
+          provider,
+          hasCredentials: true,
+          lastUpdatedAt,
+          credentialsUpdatedAt: null,
+          fromLegacyPayload: true,
+        };
+      }
+
+      return {
+        provider,
+        hasCredentials: false,
+        lastUpdatedAt,
+        credentialsUpdatedAt: null,
+      };
+    }
+
+    return {
+      provider,
+      hasCredentials: true,
+      lastUpdatedAt,
+      credentialsUpdatedAt: storedCredentials.updatedAt,
+    };
+  },
+});
+
+export const getDeliveryCredentialsForOwnerRuntime = query({
+  args: { storeId: v.id("stores") },
+  handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
+    const sectionDoc = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "deliveryIntegration"))
+      .first();
+
+    const content = (sectionDoc?.content as DeliveryIntegrationContent | null) ?? null;
+    const provider = getCanonicalProvider(content?.provider);
+
+    if (provider === "none") {
+      return {
+        provider,
+        credentials: { apiKey: "", apiToken: "", apiSecret: "", accountNumber: "" },
+      };
+    }
+
+    const storedCredentials = await ctx.db
+      .query("deliveryCredentials")
+      .withIndex("storeProvider", (q) => q.eq("storeId", args.storeId).eq("provider", provider))
+      .first();
+
+    if (!storedCredentials) {
+      const legacyCredentials = mergeCredentialSources({
+        credentials: content?.credentials,
+        apiKey: content?.apiKey,
+        apiToken: content?.apiToken,
+        apiSecret: content?.apiSecret,
+        accountNumber: content?.accountNumber,
+      });
+
+      return {
+        provider,
+        credentials: legacyCredentials,
+      };
+    }
+
+    try {
+      const credentials = await decryptDeliveryCredentials({
+        ciphertextHex: storedCredentials.ciphertextHex,
+        ivHex: storedCredentials.ivHex,
+      });
+
+      return {
+        provider,
+        credentials,
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unable to decrypt credentials.";
+      return {
+        provider,
+        credentials: { apiKey: "", apiToken: "", apiSecret: "", accountNumber: "" },
+        decryptionError: message,
+      };
+    }
   },
 });
 
 export const setDeliveryIntegration = mutation({
   args: {
     storeId: v.id("stores"),
-    provider: v.optional(v.union(v.literal("zr-express"), v.literal("yalidine"), v.literal("none"))),
+    provider: v.optional(
+      v.union(
+        v.literal("zr-express"),
+        v.literal("zr_express"),
+        v.literal("yalidine"),
+        v.literal("andrson"),
+        v.literal("noest"),
+        v.literal("none")
+      )
+    ),
+    enabledProviders: v.optional(v.array(v.string())),
+    credentials: v.optional(
+      v.object({
+        apiKey: v.optional(v.string()),
+        apiToken: v.optional(v.string()),
+        apiSecret: v.optional(v.string()),
+        accountNumber: v.optional(v.string()),
+      })
+    ),
     apiKey: v.optional(v.string()),
     apiToken: v.optional(v.string()),
+    apiSecret: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "deliveryIntegration"))
       .first();
 
     const now = Date.now();
-    const content = existing?.content as DeliveryIntegrationContent ?? { provider: "none", apiKey: "", apiToken: "" };
+    const content = (existing?.content as DeliveryIntegrationContent | null) ?? { provider: "none" };
+    const provider = getCanonicalProvider(args.provider ?? content.provider);
+    const mergedCredentials = mergeCredentialSources(args);
+    const legacyCredentials = mergeCredentialSources({
+      credentials: content.credentials,
+      apiKey: content.apiKey,
+      apiToken: content.apiToken,
+      apiSecret: content.apiSecret,
+      accountNumber: content.accountNumber,
+    });
+
+    const allStoreCredentials = await ctx.db
+      .query("deliveryCredentials")
+      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
+      .collect();
+
+    let hasCredentials = false;
+
+    if (provider === "none") {
+      for (const row of allStoreCredentials) {
+        await ctx.db.delete(row._id);
+      }
+    } else {
+      const providerRow = allStoreCredentials.find((row) => row.provider === provider);
+
+      for (const row of allStoreCredentials) {
+        if (row.provider !== provider) {
+          await ctx.db.delete(row._id);
+        }
+      }
+
+      if (hasAnyDeliveryCredential(mergedCredentials)) {
+        const encrypted = await encryptDeliveryCredentials(mergedCredentials);
+        if (providerRow) {
+          await ctx.db.patch(providerRow._id, {
+            algorithm: "aes-256-gcm",
+            ciphertextHex: encrypted.ciphertextHex,
+            ivHex: encrypted.ivHex,
+            updatedAt: now,
+          });
+        } else {
+          await ctx.db.insert("deliveryCredentials", {
+            storeId: args.storeId,
+            provider,
+            algorithm: "aes-256-gcm",
+            ciphertextHex: encrypted.ciphertextHex,
+            ivHex: encrypted.ivHex,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        hasCredentials = true;
+      } else if (!providerRow && hasAnyDeliveryCredential(legacyCredentials)) {
+        const encrypted = await encryptDeliveryCredentials(legacyCredentials);
+        await ctx.db.insert("deliveryCredentials", {
+          storeId: args.storeId,
+          provider,
+          algorithm: "aes-256-gcm",
+          ciphertextHex: encrypted.ciphertextHex,
+          ivHex: encrypted.ivHex,
+          createdAt: now,
+          updatedAt: now,
+        });
+        hasCredentials = true;
+      } else {
+        hasCredentials = Boolean(providerRow);
+      }
+    }
 
     const nextContent: DeliveryIntegrationContent = {
-      ...content,
-      ...(args.provider !== undefined ? { provider: args.provider } : {}),
-      ...(args.apiKey !== undefined ? { apiKey: args.apiKey } : {}),
-      ...(args.apiToken !== undefined ? { apiToken: args.apiToken } : {}),
+      provider,
+      hasCredentials,
+      lastUpdatedAt: now,
     };
 
     if (existing) {
@@ -665,39 +976,152 @@ export const setDeliveryIntegration = mutation({
 export const testDeliveryConnection = action({
   args: {
     storeId: v.id("stores"),
-    provider: v.union(v.literal("zr-express"), v.literal("yalidine")),
-    apiKey: v.string(),
-    apiToken: v.string(),
+    provider: v.optional(
+      v.union(
+        v.literal("zr-express"),
+        v.literal("zr_express"),
+        v.literal("yalidine"),
+        v.literal("andrson"),
+        v.literal("noest")
+      )
+    ),
+    credentials: v.optional(
+      v.object({
+        apiKey: v.optional(v.string()),
+        apiToken: v.optional(v.string()),
+        apiSecret: v.optional(v.string()),
+        accountNumber: v.optional(v.string()),
+      })
+    ),
+    apiKey: v.optional(v.string()),
+    apiToken: v.optional(v.string()),
+    apiSecret: v.optional(v.string()),
+    accountNumber: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<{ success: boolean; message: string }> => {
     try {
-      if (args.provider === "zr-express") {
+      const identity = await ctx.auth.getUserIdentity();
+      if (!identity) {
+        return { success: false, message: "Unauthorized" };
+      }
+
+      const store = await ctx.runQuery(api.stores.getStore, {
+        storeId: args.storeId,
+      });
+
+      if (!store) {
+        return { success: false, message: "Store not found." };
+      }
+
+      if (store.ownerId !== identity.subject) {
+        return { success: false, message: "Forbidden" };
+      }
+
+      const rateLimitKey = `${identity.subject}:${args.storeId}`;
+      const rateLimit = isRateLimited(
+        rateLimitKey,
+        TEST_CONNECTION_RATE_LIMIT_MAX_REQUESTS,
+        TEST_CONNECTION_RATE_LIMIT_WINDOW_MS
+      );
+
+      if (rateLimit.limited) {
+        return {
+          success: false,
+          message: `Too many test attempts. Try again in ${rateLimit.retryAfterSeconds}s.`,
+        };
+      }
+
+      const integration = await ctx.runQuery(api.siteContent.getDeliveryCredentialsForOwnerRuntime, {
+        storeId: args.storeId,
+      });
+
+      const sectionProvider = getCanonicalProvider(integration?.provider);
+      const provider = getCanonicalProvider(args.provider ?? sectionProvider);
+
+      if (provider === "none") {
+        return { success: false, message: "No delivery provider selected for this store." };
+      }
+
+      const inputCredentials = mergeCredentialSources(args);
+      const hasInputCredentials = hasAnyDeliveryCredential(inputCredentials);
+
+      let credentials = inputCredentials;
+
+      if (!hasInputCredentials) {
+        if (typeof integration?.decryptionError === "string" && integration.decryptionError.includes("DELIVERY_CREDENTIALS_KEY")) {
+          return {
+            success: false,
+            message:
+              "Missing DELIVERY_CREDENTIALS_KEY. Configure it in Convex environment settings before testing delivery credentials.",
+          };
+        }
+
+        credentials = {
+          apiKey: integration?.credentials?.apiKey ?? "",
+          apiToken: integration?.credentials?.apiToken ?? "",
+          apiSecret: integration?.credentials?.apiSecret ?? "",
+          accountNumber: integration?.credentials?.accountNumber ?? "",
+        };
+      }
+
+      if (!credentials.apiKey) {
+        return { success: false, message: "API key is required." };
+      }
+
+      if (provider === "zr-express" && !(credentials.apiSecret || credentials.apiToken)) {
+        return { success: false, message: "ZR Express requires API secret or API token." };
+      }
+
+      if (provider === "yalidine" && !(credentials.apiToken || credentials.apiSecret)) {
+        return { success: false, message: "Yalidine requires API token or API secret." };
+      }
+
+      if (provider === "zr-express") {
         const response = await fetch("https://api.zrexpress.dz/v1/test", {
           headers: {
-            "Authorization": `Bearer ${args.apiKey}`,
+            "Authorization": `Bearer ${credentials.apiKey}`,
+            "X-API-SECRET": credentials.apiSecret || credentials.apiToken,
             "Content-Type": "application/json",
           },
         });
         if (response.ok) {
-          return { success: true, message: "اتصال ناجح بـ ZR Express" };
+          return { success: true, message: "Connection successful. ZR Express credentials are valid." };
         }
-        return { success: false, message: "فشل الاتصال بـ ZR Express" };
-      } else if (args.provider === "yalidine") {
+        return {
+          success: false,
+          message: "ZR Express rejected these credentials. Recheck API key/secret and account access.",
+        };
+      }
+
+      if (provider === "yalidine") {
         const response = await fetch("https://api.yalidine.com/v1/test", {
           headers: {
-            "X-API-Key": args.apiKey,
-            "X-API-Token": args.apiToken,
+            "X-API-Key": credentials.apiKey,
+            "X-API-Token": credentials.apiToken || credentials.apiSecret,
             "Content-Type": "application/json",
           },
         });
         if (response.ok) {
-          return { success: true, message: "اتصال ناجح بـ Yalidine" };
+          return { success: true, message: "Connection successful. Yalidine credentials are valid." };
         }
-        return { success: false, message: "فشل الاتصال بـ Yalidine" };
+        return {
+          success: false,
+          message: "Yalidine rejected these credentials. Recheck API key/token and account access.",
+        };
       }
-      return { success: false, message: "مزود غير معروف" };
+      return { success: false, message: "Unsupported provider." };
     } catch (error) {
-      return { success: false, message: `خطأ في الاتصال: ${error}` };
+      if (error instanceof Error && error.message.includes("DELIVERY_CREDENTIALS_KEY")) {
+        return {
+          success: false,
+          message:
+            "Missing DELIVERY_CREDENTIALS_KEY. Configure it in Convex environment settings before testing delivery credentials.",
+        };
+      }
+      return {
+        success: false,
+        message: "Connection test failed because of a network or provider issue. Please retry.",
+      };
     }
   },
 });
