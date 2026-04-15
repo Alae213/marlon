@@ -13,7 +13,7 @@ interface UseInlineEditOptions {
 }
 
 /**
- * Custom hook for inline editing of product fields, hero text, and footer text.
+ * Custom hook for inline editing of product fields and hero text.
  *
  * Manages:
  * - editingField: which field is currently being edited (null when not editing)
@@ -24,7 +24,7 @@ interface UseInlineEditOptions {
  * - startEditing: begin editing a product field (name, basePrice, oldPrice)
  * - saveInlineEdit: save the current product field edit
  * - handleKeyDown: Enter to save, Escape to cancel (for product fields)
- * - setEditingField / setEditValue: for hero/footer fields that manage their own save logic
+ * - setEditingField / setEditValue: for hero fields that manage their own save logic
  */
 export function useInlineEdit({ products }: UseInlineEditOptions) {
   const updateProduct = useMutation(api.products.updateProduct);

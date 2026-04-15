@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { KeyboardEvent, useState } from "react";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DeliveryPricingSettings } from "../settings/delivery-pricing-settings";
@@ -44,29 +44,76 @@ interface SettingsDialogPanelProps {
 
 function SettingsDialogPanel({ storeId, storeSlug, initialTab }: SettingsDialogPanelProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab);
+  const activePanelId = `${activeTab}-panel`;
+
+  const handleTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentTab: SettingsTab) => {
+    const currentIndex = TABS.findIndex((tab) => tab.id === currentTab);
+    if (currentIndex < 0) return;
+
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      event.preventDefault();
+      const nextIndex = (currentIndex + 1) % TABS.length;
+      setActiveTab(TABS[nextIndex].id);
+    }
+
+    if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      event.preventDefault();
+      const prevIndex = (currentIndex - 1 + TABS.length) % TABS.length;
+      setActiveTab(TABS[prevIndex].id);
+    }
+
+    if (event.key === "Home") {
+      event.preventDefault();
+      setActiveTab(TABS[0].id);
+    }
+
+    if (event.key === "End") {
+      event.preventDefault();
+      setActiveTab(TABS[TABS.length - 1].id);
+    }
+  };
 
   return (
     <>
-      <div className="flex w-full border-b border-white/10">
-        {TABS.map((tab) => (
-          <button
-            key={tab.id}
-            onClick={() => setActiveTab(tab.id)}
-            className={`flex-1 py-3 text-sm font-medium transition-colors ${
-              activeTab === tab.id
-                ? "border-b-2 border-white text-white"
-                : "text-white/55 hover:text-white/80"
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <div className="grid w-full grid-cols-[11rem_minmax(0,1fr)] gap-[var(--spacing-md)] max-[520px]:grid-cols-1">
+        <div
+          role="tablist"
+          aria-label="Store settings sections"
+          aria-orientation="vertical"
+          className="flex h-fit flex-col gap-[var(--spacing-xs)] rounded-[var(--radius-lg)] border border-white/10 bg-white/5 p-[var(--spacing-xs)]"
+        >
+          {TABS.map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              id={`${tab.id}-tab`}
+              role="tab"
+              aria-selected={activeTab === tab.id}
+              aria-controls={`${tab.id}-panel`}
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              onClick={() => setActiveTab(tab.id)}
+              onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
+              className={`rounded-[var(--radius-md)] px-[var(--spacing-sm)] py-[var(--spacing-sm)] text-left text-body-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-ring] ${
+                activeTab === tab.id
+                  ? "bg-white text-[--system-700]"
+                  : "text-white/70 hover:bg-white/10 hover:text-white"
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
 
-      <div className="max-h-[60vh] w-full overflow-y-auto rounded-[24px] bg-white p-4 text-[--system-700]">
-        {activeTab === "delivery" && <DeliveryPricingSettings storeId={storeId} />}
-        {activeTab === "integration" && <DeliveryIntegrationSettings storeId={storeId} />}
-        {activeTab === "store" && <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />}
+        <div
+          id={activePanelId}
+          role="tabpanel"
+          aria-labelledby={`${activeTab}-tab`}
+          className="max-h-[60vh] min-h-0 overflow-y-auto rounded-[var(--radius-xl)] bg-white p-[var(--spacing-md)] text-[--system-700]"
+        >
+          {activeTab === "delivery" && <DeliveryPricingSettings storeId={storeId} />}
+          {activeTab === "integration" && <DeliveryIntegrationSettings storeId={storeId} />}
+          {activeTab === "store" && <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />}
+        </div>
       </div>
     </>
   );
@@ -81,7 +128,7 @@ export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab
         showCloseButton={false}
         overlayClassName="bg-black/40"
         style={{ boxShadow: "var(--shadow-xl-shadow)" }}
-        className="max-w-[600px] gap-[12px] overflow-hidden rounded-[48px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
+        className="max-w-[600px] gap-[var(--spacing-md)] overflow-hidden rounded-[var(--radius-2xl)] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[var(--spacing-lg)] text-white backdrop-blur-[12px] [corner-shape:squircle]"
       >
         <DialogHeader className="w-full">
           <div className="flex items-center justify-between w-full">
@@ -89,10 +136,13 @@ export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab
               Store Settings
             </DialogTitle>
             <button
+              type="button"
+              aria-label="Close settings"
               onClick={onClose}
-              className="p-1 hover:bg-white/10 rounded-lg transition-colors"
+              className="inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-white/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-ring] focus-visible:ring-offset-2 focus-visible:ring-offset-[--system-700]"
             >
               <X className="w-5 h-5 text-white/70" />
+              <span className="sr-only">Close settings</span>
             </button>
           </div>
         </DialogHeader>

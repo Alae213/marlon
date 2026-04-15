@@ -62,15 +62,6 @@ async function assertStoreOwner(ctx: StoreOwnerAuthContext, storeId: Id<"stores"
 
 // Type definitions for site content
 
-// Navbar link structure
-interface NavbarLink {
-  id: string;
-  text: string;
-  url: string;
-  isDefault: boolean;
-  enabled: boolean;
-}
-
 interface NavbarContent {
   logo?: string;
   logoStorageId?: string;
@@ -78,7 +69,6 @@ interface NavbarContent {
   background?: "dark" | "light" | "glass";
   textColor?: "dark" | "light";
   showCart?: boolean;
-  links: NavbarLink[];
 }
 
 interface HeroContent {
@@ -91,20 +81,6 @@ interface HeroContent {
   backgroundImageStorageId?: string;
   backgroundImageUrl?: string;
   backgroundImage?: string;
-}
-
-interface FooterContent {
-  logo?: string;
-  logoStorageId?: string;
-  description?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  copyright?: string;
-  socialLinks?: Array<{
-    platform: string;
-    url: string;
-    enabled: boolean;
-  }>;
 }
 
 interface DeliveryIntegrationContent {
@@ -126,7 +102,7 @@ type DeliveryCredentialsInput = {
   accountNumber?: string;
 };
 
-type SiteContent = NavbarContent | HeroContent | FooterContent | DeliveryIntegrationContent;
+type SiteContent = NavbarContent | HeroContent | DeliveryIntegrationContent;
 
 // Get site content for a store
 export const getSiteContent = query({
@@ -281,160 +257,6 @@ export const setNavbarStyles = mutation({
   },
 });
 
-// Set all navbar links (for reordering)
-export const setNavbarLinks = mutation({
-  args: {
-    storeId: v.id("stores"),
-    links: v.array(v.object({
-      id: v.string(),
-      text: v.string(),
-      url: v.string(),
-      isDefault: v.boolean(),
-      enabled: v.boolean(),
-    })),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
-      .first();
-
-    const now = Date.now();
-    const baseContent = existing?.content as NavbarContent ?? DEFAULT_NAVBAR;
-
-    const nextContent: NavbarContent = {
-      ...baseContent,
-      links: args.links,
-    };
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
-      return existing._id;
-    }
-
-    return await ctx.db.insert("siteContent", {
-      storeId: args.storeId,
-      section: "navbar",
-      content: nextContent,
-      updatedAt: now,
-    });
-  },
-});
-
-// Add a single navbar link
-export const addNavbarLink = mutation({
-  args: {
-    storeId: v.id("stores"),
-    link: v.object({
-      id: v.string(),
-      text: v.string(),
-      url: v.string(),
-      isDefault: v.boolean(),
-      enabled: v.boolean(),
-    }),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
-      .first();
-
-    const now = Date.now();
-    const baseContent = existing?.content as NavbarContent ?? DEFAULT_NAVBAR;
-
-    const nextContent: NavbarContent = {
-      ...baseContent,
-      links: [...baseContent.links, args.link],
-    };
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
-      return existing._id;
-    }
-
-    return await ctx.db.insert("siteContent", {
-      storeId: args.storeId,
-      section: "navbar",
-      content: nextContent,
-      updatedAt: now,
-    });
-  },
-});
-
-// Remove a navbar link by ID
-export const removeNavbarLink = mutation({
-  args: {
-    storeId: v.id("stores"),
-    linkId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
-      .first();
-
-    if (!existing) return null;
-
-    const now = Date.now();
-    const baseContent = existing.content as NavbarContent;
-
-    // Filter out the link, but preserve default links
-    const nextLinks = baseContent.links.filter(
-      (link) => link.isDefault || link.id !== args.linkId
-    );
-
-    const nextContent: NavbarContent = {
-      ...baseContent,
-      links: nextLinks,
-    };
-
-    await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
-    return existing._id;
-  },
-});
-
-// Update a navbar link
-export const updateNavbarLink = mutation({
-  args: {
-    storeId: v.id("stores"),
-    linkId: v.string(),
-    text: v.optional(v.string()),
-    url: v.optional(v.string()),
-    enabled: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
-      .first();
-
-    if (!existing) return null;
-
-    const now = Date.now();
-    const baseContent = existing.content as NavbarContent;
-
-    const nextLinks = baseContent.links.map((link) => {
-      if (link.id === args.linkId) {
-        return {
-          ...link,
-          ...(args.text !== undefined ? { text: args.text } : {}),
-          ...(args.url !== undefined ? { url: args.url } : {}),
-          ...(args.enabled !== undefined ? { enabled: args.enabled } : {}),
-        };
-      }
-      return link;
-    });
-
-    const nextContent: NavbarContent = {
-      ...baseContent,
-      links: nextLinks,
-    };
-
-    await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
-    return existing._id;
-  },
-});
-
 // Delete logo (remove from navbar)
 export const deleteNavbarLogo = mutation({
   args: {
@@ -462,7 +284,7 @@ export const deleteNavbarLogo = mutation({
   },
 });
 
-export const setLogoAndSyncFooter = mutation({
+export const setNavbarLogo = mutation({
   args: {
     storeId: v.id("stores"),
     logoStorageId: v.string(),
@@ -475,18 +297,8 @@ export const setLogoAndSyncFooter = mutation({
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
       .first();
 
-    const footerDoc = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "footer"))
-      .first();
-
     const nextNavbar: NavbarContent = {
       ...(navbarDoc?.content ?? DEFAULT_NAVBAR),
-      logoStorageId: args.logoStorageId,
-    };
-
-    const nextFooter: FooterContent = {
-      ...(footerDoc?.content ?? DEFAULT_FOOTER),
       logoStorageId: args.logoStorageId,
     };
 
@@ -497,17 +309,6 @@ export const setLogoAndSyncFooter = mutation({
         storeId: args.storeId,
         section: "navbar",
         content: nextNavbar,
-        updatedAt: now,
-      });
-    }
-
-    if (footerDoc) {
-      await ctx.db.patch(footerDoc._id, { content: nextFooter, updatedAt: now });
-    } else {
-      await ctx.db.insert("siteContent", {
-        storeId: args.storeId,
-        section: "footer",
-        content: nextFooter,
         updatedAt: now,
       });
     }
@@ -557,49 +358,6 @@ export const setHeroStyles = mutation({
   },
 });
 
-export const setFooterStyles = mutation({
-  args: {
-    storeId: v.id("stores"),
-    contactEmail: v.optional(v.string()),
-    contactPhone: v.optional(v.string()),
-    copyright: v.optional(v.string()),
-    socialLinks: v.optional(v.array(v.object({
-      platform: v.string(),
-      url: v.string(),
-      enabled: v.boolean(),
-    }))),
-  },
-  handler: async (ctx, args) => {
-    const existing = await ctx.db
-      .query("siteContent")
-      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "footer"))
-      .first();
-
-    const now = Date.now();
-    const baseContent = existing?.content as FooterContent ?? DEFAULT_FOOTER;
-
-    const nextContent: FooterContent = {
-      ...baseContent,
-      ...(args.contactEmail !== undefined ? { contactEmail: args.contactEmail } : {}),
-      ...(args.contactPhone !== undefined ? { contactPhone: args.contactPhone } : {}),
-      ...(args.copyright !== undefined ? { copyright: args.copyright } : {}),
-      ...(args.socialLinks ? { socialLinks: args.socialLinks } : {}),
-    };
-
-    if (existing) {
-      await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
-      return existing._id;
-    }
-
-    return await ctx.db.insert("siteContent", {
-      storeId: args.storeId,
-      section: "footer",
-      content: nextContent,
-      updatedAt: now,
-    });
-  },
-});
-
 // Delivery Pricing Functions
 export const getDeliveryPricing = query({
   args: { storeId: v.id("stores") },
@@ -620,6 +378,8 @@ export const setDeliveryPricing = mutation({
     officeDelivery: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("deliveryPricing")
       .withIndex("wilaya", (q) => q.eq("storeId", args.storeId).eq("wilaya", args.wilaya))
@@ -628,21 +388,51 @@ export const setDeliveryPricing = mutation({
     const now = Date.now();
 
     if (existing) {
-      await ctx.db.patch(existing._id, {
-        homeDelivery: args.homeDelivery,
-        officeDelivery: args.officeDelivery,
-        updatedAt: now,
-      });
+      const nextHome = args.homeDelivery ?? existing.homeDelivery;
+      const nextOffice = args.officeDelivery ?? existing.officeDelivery;
+      if (nextHome === existing.homeDelivery && nextOffice === existing.officeDelivery) {
+        return existing._id;
+      }
+
+      const updates: {
+        homeDelivery?: number;
+        officeDelivery?: number;
+        updatedAt: number;
+      } = { updatedAt: now };
+
+      if (args.homeDelivery !== undefined) {
+        updates.homeDelivery = args.homeDelivery;
+      }
+
+      if (args.officeDelivery !== undefined) {
+        updates.officeDelivery = args.officeDelivery;
+      }
+
+      await ctx.db.patch(existing._id, updates);
       return existing._id;
     }
 
-    return await ctx.db.insert("deliveryPricing", {
+    const newPricing: {
+      storeId: Id<"stores">;
+      wilaya: string;
+      homeDelivery?: number;
+      officeDelivery?: number;
+      updatedAt: number;
+    } = {
       storeId: args.storeId,
       wilaya: args.wilaya,
-      homeDelivery: args.homeDelivery,
-      officeDelivery: args.officeDelivery,
       updatedAt: now,
-    });
+    };
+
+    if (args.homeDelivery !== undefined) {
+      newPricing.homeDelivery = args.homeDelivery;
+    }
+
+    if (args.officeDelivery !== undefined) {
+      newPricing.officeDelivery = args.officeDelivery;
+    }
+
+    return await ctx.db.insert("deliveryPricing", newPricing);
   },
 });
 
@@ -656,6 +446,8 @@ export const bulkSetDeliveryPricing = mutation({
     })),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const now = Date.now();
     
     for (const p of args.pricing) {
@@ -665,19 +457,49 @@ export const bulkSetDeliveryPricing = mutation({
         .first();
 
       if (existing) {
-        await ctx.db.patch(existing._id, {
-          homeDelivery: p.homeDelivery,
-          officeDelivery: p.officeDelivery,
-          updatedAt: now,
-        });
+        const nextHome = p.homeDelivery ?? existing.homeDelivery;
+        const nextOffice = p.officeDelivery ?? existing.officeDelivery;
+        if (nextHome === existing.homeDelivery && nextOffice === existing.officeDelivery) {
+          continue;
+        }
+
+        const updates: {
+          homeDelivery?: number;
+          officeDelivery?: number;
+          updatedAt: number;
+        } = { updatedAt: now };
+
+        if (p.homeDelivery !== undefined) {
+          updates.homeDelivery = p.homeDelivery;
+        }
+
+        if (p.officeDelivery !== undefined) {
+          updates.officeDelivery = p.officeDelivery;
+        }
+
+        await ctx.db.patch(existing._id, updates);
       } else {
-        await ctx.db.insert("deliveryPricing", {
+        const newPricing: {
+          storeId: Id<"stores">;
+          wilaya: string;
+          homeDelivery?: number;
+          officeDelivery?: number;
+          updatedAt: number;
+        } = {
           storeId: args.storeId,
           wilaya: p.wilaya,
-          homeDelivery: p.homeDelivery,
-          officeDelivery: p.officeDelivery,
           updatedAt: now,
-        });
+        };
+
+        if (p.homeDelivery !== undefined) {
+          newPricing.homeDelivery = p.homeDelivery;
+        }
+
+        if (p.officeDelivery !== undefined) {
+          newPricing.officeDelivery = p.officeDelivery;
+        }
+
+        await ctx.db.insert("deliveryPricing", newPricing);
       }
     }
     
@@ -724,6 +546,41 @@ function getCanonicalProvider(provider?: string | null): "yalidine" | "zr-expres
   return normalizeDeliveryProvider(provider);
 }
 
+type SupportedDeliveryProvider = "yalidine" | "zr-express" | "andrson" | "noest";
+
+function normalizeEnabledProviders(enabledProviders?: string[] | null): SupportedDeliveryProvider[] {
+  const normalized = (enabledProviders ?? [])
+    .map((provider) => getCanonicalProvider(provider))
+    .filter((provider): provider is SupportedDeliveryProvider => provider !== "none");
+
+  return [...new Set(normalized)];
+}
+
+function deriveEnabledProviders(content?: DeliveryIntegrationContent | null): SupportedDeliveryProvider[] {
+  const normalizedEnabledProviders = normalizeEnabledProviders(content?.enabledProviders);
+  if (normalizedEnabledProviders.length > 0) {
+    return normalizedEnabledProviders;
+  }
+
+  const provider = getCanonicalProvider(content?.provider);
+  if (provider === "none") {
+    return [];
+  }
+
+  return [provider];
+}
+
+function derivePrimaryProvider(
+  preferredProvider: "yalidine" | "zr-express" | "andrson" | "noest" | "none",
+  enabledProviders: SupportedDeliveryProvider[]
+): "yalidine" | "zr-express" | "andrson" | "noest" | "none" {
+  if (preferredProvider !== "none" && enabledProviders.includes(preferredProvider)) {
+    return preferredProvider;
+  }
+
+  return enabledProviders[0] ?? "none";
+}
+
 // Delivery Integration Functions
 export const getDeliveryIntegration = query({
   args: { storeId: v.id("stores") },
@@ -734,24 +591,33 @@ export const getDeliveryIntegration = query({
       .first();
 
     const content = (sectionDoc?.content as DeliveryIntegrationContent | null) ?? null;
-    const provider = getCanonicalProvider(content?.provider);
+    const persistedProvider = getCanonicalProvider(content?.provider);
+    const enabledProviders = deriveEnabledProviders(content);
+    const provider = derivePrimaryProvider(persistedProvider, enabledProviders);
     const lastUpdatedAt = content?.lastUpdatedAt ?? sectionDoc?.updatedAt ?? null;
 
     if (provider === "none") {
       return {
         provider,
+        enabledProviders,
         hasCredentials: false,
         lastUpdatedAt,
         credentialsUpdatedAt: null,
       };
     }
 
-    const storedCredentials = await ctx.db
+    const allStoreCredentials = await ctx.db
       .query("deliveryCredentials")
-      .withIndex("storeProvider", (q) => q.eq("storeId", args.storeId).eq("provider", provider))
-      .first();
+      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
+      .collect();
 
-    if (!storedCredentials) {
+    const enabledProviderSet = new Set(enabledProviders);
+    const enabledProviderCredentials = allStoreCredentials.filter((row) => {
+      const rowProvider = getCanonicalProvider(row.provider);
+      return rowProvider !== "none" && enabledProviderSet.has(rowProvider);
+    });
+
+    if (enabledProviderCredentials.length === 0) {
       const legacyCredentials = mergeCredentialSources({
         credentials: content?.credentials,
         apiKey: content?.apiKey,
@@ -763,6 +629,7 @@ export const getDeliveryIntegration = query({
       if (hasAnyDeliveryCredential(legacyCredentials)) {
         return {
           provider,
+          enabledProviders,
           hasCredentials: true,
           lastUpdatedAt,
           credentialsUpdatedAt: null,
@@ -772,17 +639,23 @@ export const getDeliveryIntegration = query({
 
       return {
         provider,
+        enabledProviders,
         hasCredentials: false,
         lastUpdatedAt,
         credentialsUpdatedAt: null,
       };
     }
 
+    const credentialsUpdatedAt = Math.max(
+      ...enabledProviderCredentials.map((credentialRow) => credentialRow.updatedAt)
+    );
+
     return {
       provider,
+      enabledProviders,
       hasCredentials: true,
       lastUpdatedAt,
-      credentialsUpdatedAt: storedCredentials.updatedAt,
+      credentialsUpdatedAt,
     };
   },
 });
@@ -798,7 +671,9 @@ export const getDeliveryCredentialsForOwnerRuntime = query({
       .first();
 
     const content = (sectionDoc?.content as DeliveryIntegrationContent | null) ?? null;
-    const provider = getCanonicalProvider(content?.provider);
+    const persistedProvider = getCanonicalProvider(content?.provider);
+    const enabledProviders = deriveEnabledProviders(content);
+    const provider = derivePrimaryProvider(persistedProvider, enabledProviders);
 
     if (provider === "none") {
       return {
@@ -807,10 +682,13 @@ export const getDeliveryCredentialsForOwnerRuntime = query({
       };
     }
 
-    const storedCredentials = await ctx.db
+    const allStoreCredentials = await ctx.db
       .query("deliveryCredentials")
-      .withIndex("storeProvider", (q) => q.eq("storeId", args.storeId).eq("provider", provider))
-      .first();
+      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
+      .collect();
+
+    const storedCredentials =
+      allStoreCredentials.find((row) => getCanonicalProvider(row.provider) === provider) ?? null;
 
     if (!storedCredentials) {
       const legacyCredentials = mergeCredentialSources({
@@ -885,7 +763,21 @@ export const setDeliveryIntegration = mutation({
 
     const now = Date.now();
     const content = (existing?.content as DeliveryIntegrationContent | null) ?? { provider: "none" };
-    const provider = getCanonicalProvider(args.provider ?? content.provider);
+    const providerFromArgs =
+      args.provider !== undefined ? getCanonicalProvider(args.provider) : undefined;
+    let enabledProviders =
+      args.enabledProviders !== undefined
+        ? normalizeEnabledProviders(args.enabledProviders)
+        : deriveEnabledProviders(content);
+
+    if (providerFromArgs === "none") {
+      enabledProviders = [];
+    } else if (providerFromArgs && !enabledProviders.includes(providerFromArgs)) {
+      enabledProviders = [providerFromArgs, ...enabledProviders];
+    }
+
+    const persistedProvider = getCanonicalProvider(content.provider);
+    const provider = derivePrimaryProvider(providerFromArgs ?? persistedProvider, enabledProviders);
     const mergedCredentials = mergeCredentialSources(args);
     const legacyCredentials = mergeCredentialSources({
       credentials: content.credentials,
@@ -900,21 +792,14 @@ export const setDeliveryIntegration = mutation({
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
       .collect();
 
-    let hasCredentials = false;
+    const providerRow =
+      provider === "none"
+        ? null
+        : allStoreCredentials.find((row) => getCanonicalProvider(row.provider) === provider) ?? null;
 
-    if (provider === "none") {
-      for (const row of allStoreCredentials) {
-        await ctx.db.delete(row._id);
-      }
-    } else {
-      const providerRow = allStoreCredentials.find((row) => row.provider === provider);
+    let upsertedProviderCredential = false;
 
-      for (const row of allStoreCredentials) {
-        if (row.provider !== provider) {
-          await ctx.db.delete(row._id);
-        }
-      }
-
+    if (provider !== "none") {
       if (hasAnyDeliveryCredential(mergedCredentials)) {
         const encrypted = await encryptDeliveryCredentials(mergedCredentials);
         if (providerRow) {
@@ -935,7 +820,7 @@ export const setDeliveryIntegration = mutation({
             updatedAt: now,
           });
         }
-        hasCredentials = true;
+        upsertedProviderCredential = true;
       } else if (!providerRow && hasAnyDeliveryCredential(legacyCredentials)) {
         const encrypted = await encryptDeliveryCredentials(legacyCredentials);
         await ctx.db.insert("deliveryCredentials", {
@@ -947,14 +832,28 @@ export const setDeliveryIntegration = mutation({
           createdAt: now,
           updatedAt: now,
         });
-        hasCredentials = true;
-      } else {
-        hasCredentials = Boolean(providerRow);
+        upsertedProviderCredential = true;
       }
     }
 
+    const enabledProviderSet = new Set(enabledProviders);
+    const hasStoredCredentialsForEnabledProviders =
+      allStoreCredentials.some((row) => {
+        const rowProvider = getCanonicalProvider(row.provider);
+        return rowProvider !== "none" && enabledProviderSet.has(rowProvider);
+      }) || upsertedProviderCredential;
+
+    const hasCredentials =
+      hasStoredCredentialsForEnabledProviders ||
+      (provider !== "none" &&
+        enabledProviderSet.has(provider) &&
+        !providerRow &&
+        !hasAnyDeliveryCredential(mergedCredentials) &&
+        hasAnyDeliveryCredential(legacyCredentials));
+
     const nextContent: DeliveryIntegrationContent = {
       provider,
+      enabledProviders,
       hasCredentials,
       lastUpdatedAt: now,
     };
@@ -1132,11 +1031,6 @@ export const DEFAULT_NAVBAR: NavbarContent = {
   logoUrl: undefined,
   background: "light",
   textColor: "dark",
-  links: [
-    { id: "link-shop", text: "Shop", url: "#products", isDefault: true, enabled: true },
-    { id: "link-faq", text: "FAQ", url: "/", isDefault: true, enabled: true },
-    { id: "link-help", text: "Help", url: "/", isDefault: true, enabled: true },
-  ],
   showCart: true,
 };
 
@@ -1148,17 +1042,6 @@ export const DEFAULT_HERO: HeroContent = {
   layout: "center",
   backgroundImage: undefined,
 };
-
-export const DEFAULT_FOOTER: FooterContent = {
-  logo: undefined,
-  logoStorageId: undefined,
-  description: "متجرنا يوفر لك أفضل المنتجات",
-  contactEmail: "",
-  contactPhone: "",
-  socialLinks: [],
-  copyright: "جميع الحقوق محفوظة",
-};
-
 // Initialize default site content for a new store
 export const initializeSiteContent = mutation({
   args: { storeId: v.id("stores") },
@@ -1168,8 +1051,7 @@ export const initializeSiteContent = mutation({
     const sections = [
       { section: "navbar", content: DEFAULT_NAVBAR },
       { section: "hero", content: DEFAULT_HERO },
-      { section: "footer", content: DEFAULT_FOOTER },
-    ];
+          ];
     
     for (const { section, content } of sections) {
       const existing = await ctx.db
@@ -1190,5 +1072,55 @@ export const initializeSiteContent = mutation({
     }
     
     return true;
+  },
+});
+
+// Remove legacy footer content for a single store
+export const removeFooterContentForStore = mutation({
+  args: { storeId: v.id("stores") },
+  handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
+    const footerDocs = await ctx.db
+      .query("siteContent")
+      .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "footer"))
+      .collect();
+
+    for (const doc of footerDocs) {
+      await ctx.db.delete(doc._id);
+    }
+
+    return { deletedCount: footerDocs.length };
+  },
+});
+
+// Remove all legacy footer content for stores owned by the signed-in user
+export const removeAllOwnedFooterContent = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthorized");
+    }
+
+    const stores = await ctx.db
+      .query("stores")
+      .withIndex("ownerId", (q) => q.eq("ownerId", identity.subject))
+      .collect();
+
+    let deletedCount = 0;
+    for (const store of stores) {
+      const footerDocs = await ctx.db
+        .query("siteContent")
+        .withIndex("section", (q) => q.eq("storeId", store._id).eq("section", "footer"))
+        .collect();
+
+      for (const doc of footerDocs) {
+        await ctx.db.delete(doc._id);
+        deletedCount += 1;
+      }
+    }
+
+    return { deletedCount };
   },
 });

@@ -421,7 +421,7 @@ export const cleanupLockedStoreOrders = internalMutation({
     // Find all locked stores
     const lockedStores = await ctx.db
       .query("stores")
-      .filter((q) => q.eq(q.field("subscription"), "locked"))
+      .withIndex("subscription", (q) => q.eq("subscription", "locked"))
       .collect();
 
     let totalDeleted = 0;
@@ -434,8 +434,9 @@ export const cleanupLockedStoreOrders = internalMutation({
         // Delete orders older than the lockedAt time
         const ordersToDelete = await ctx.db
           .query("orders")
-          .withIndex("storeId", (q) => q.eq("storeId", store._id))
-          .filter((q) => q.lt(q.field("createdAt"), store.lockedAt!))
+          .withIndex("storeCreatedAt", (q) =>
+            q.eq("storeId", store._id).lt("createdAt", store.lockedAt!)
+          )
           .collect();
 
         for (const order of ordersToDelete) {

@@ -13,6 +13,8 @@ import type * as deliveryAnalytics from "../deliveryAnalytics.js";
 import type * as deliveryCredentialsCrypto from "../deliveryCredentialsCrypto.js";
 import type * as deliveryProvider from "../deliveryProvider.js";
 import type * as orders from "../orders.js";
+import type * as performanceBackfill from "../performanceBackfill.js";
+import type * as performanceHelpers from "../performanceHelpers.js";
 import type * as products from "../products.js";
 import type * as siteContent from "../siteContent.js";
 import type * as stores from "../stores.js";
@@ -30,6 +32,8 @@ declare const fullApi: ApiFromModules<{
   deliveryCredentialsCrypto: typeof deliveryCredentialsCrypto;
   deliveryProvider: typeof deliveryProvider;
   orders: typeof orders;
+  performanceBackfill: typeof performanceBackfill;
+  performanceHelpers: typeof performanceHelpers;
   products: typeof products;
   siteContent: typeof siteContent;
   stores: typeof stores;

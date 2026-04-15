@@ -45,10 +45,11 @@
 
 **Decision:** Lock commercial model and tenant governance for MVP around masked-overflow monetization.
 **Date:** 2026-04-14
+**Status:** Partially superseded by the ownership governance decision on 2026-04-14 below.
 **Context:** Phases 1A-1B finalized the core business mechanics that directly affect revenue timing, merchant permissions, and data visibility rules.
 **Options Considered:** (1) Keep previous pricing model, (2) Defer monetization mechanics, (3) Adopt unlimited-store model with strict overflow gating and explicit governance locks.
 **Rationale:** The selected model creates a low-friction onboarding path while protecting conversion via a hard unlock gate and clear permission boundaries.
-**Consequences:** The active MVP policy is now fixed as: unlimited stores per account; per-store daily cap of 5 orders; new overflow masking model with full freeze until unlock; unlock subscription at `2000 DZD/store/month`; fixed reset at `00:00` `Africa/Algiers`; masked overflow auto-delete after 5 days; no customer notification while locked; phone verification required after 5 stores; agencies can both create and be invited to stores; and admin permissions include owner-removal.
+**Consequences:** The active MVP policy is now fixed as: unlimited stores per account; per-store daily cap of 5 orders; new overflow masking model with full freeze until unlock; unlock subscription at `2000 DZD/store/month`; fixed reset at `00:00` `Africa/Algiers`; masked overflow auto-delete after 5 days; no customer notification while locked; phone verification required after 5 stores; agencies can both create and be invited to stores; and store admins exist as a role, but owner transfer/removal requires explicit current-owner confirmation per the ownership governance decision logged below.
 
 ---
 
@@ -63,10 +64,11 @@
 
 **Decision:** Lock Phase 3 security and trust controls for launch.
 **Date:** 2026-04-14
+**Status:** Partially superseded by the ownership governance decision on 2026-04-14 below.
 **Context:** Security posture needed explicit launch-level controls for roles, webhook trust, secret handling, fraud resistance, and audit evidence.
 **Options Considered:** (1) Lightweight MVP controls with deferred hardening, (2) Full enterprise-grade stack immediately, (3) Practical launch controls with strict non-negotiables.
 **Rationale:** Chosen controls balance speed and defensibility while preventing common failure modes in payments, PII handling, and COD abuse.
-**Consequences:** Security is now locked to: owner + staff role model (limited staff actions); webhook signature verification with replay protection window; full masking in locked state with no exceptions; Vercel/Convex environment-secret model; rate limits plus phone reputation/blocklist for fraud; immutable logs with merchant export capability.
+**Consequences:** Security is now locked to: `owner | admin | staff` role model with limited admin/staff actions by policy; webhook signature verification with replay protection window; full masking in locked state with no exceptions; Vercel/Convex environment-secret model; rate limits plus phone reputation/blocklist for fraud; immutable logs with merchant export capability.
 
 ---
 

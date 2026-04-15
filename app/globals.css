@@ -149,11 +149,6 @@
   --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
 
   /* ===========================================
-      Z-INDEX LAYERS
-      =========================================== */
-  --z-menu: 50;
-
-  /* ===========================================
      MENU (Shared primitive) - Dark by default
      =========================================== */
   --menu-surface-bg: var(--system-800);
@@ -177,13 +172,13 @@
        TYPOGRAPHY - Font Stack
        =========================================== */
   --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-arabic: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-arabic: "IBM Plex Sans Arabic", "Noto Sans Arabic", var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
 /* ===========================================
       TYPOGRAPHY - Tracking Scale
       =========================================== */
-  --tracking-0: -0.08em;   /* Display headings */
-  --tracking-1: -0.05em;   /* Titles, subtitles */
+  --tracking-0: -0.03em;   /* Display headings */
+  --tracking-1: -0.02em;   /* Titles, subtitles */
   --tracking-2: -0.01em;   /* Body text (default) */
   --tracking-3: 0;         /* All-caps labels, badges */
   --tracking-4: 0.025em;   /* Wide tracking for emphasis */
@@ -200,37 +195,37 @@
   /* Body Small: 14px - Secondary body, form labels */
   --text-body-sm: 0.875rem;
   --leading-body-sm: 1.25rem;     /* 20px */
-  --tracking-body-sm: -0.01em;
-  --weight-body-sm: 500;
+  --tracking-body-sm: 0;
+  --weight-body-sm: 400;
 
   /* Body: 16px - Primary body copy (MOST USED) */
   --text-body: 1rem;
   --leading-body: 1.5rem;         /* 24px */
-  --tracking-body: -0.01em;
-  --weight-body: 450;
+  --tracking-body: 0;
+  --weight-body: 400;
 
   /* Heading Small: 18px - Emphasized body */
   --text-heading-sm: 1.125rem;
-  --leading-heading-sm: 1.333rem; /* 24px */
-  --tracking-heading-sm: -0.04em;
-  --weight-heading-sm: 450;
+  --leading-heading-sm: 1.5rem;   /* 24px */
+  --tracking-heading-sm: -0.01em;
+  --weight-heading-sm: 600;
 
   /* Heading: 20px - Section headings, card titles */
   --text-heading: 1.25rem;
-  --leading-heading: 1.4rem;      /* 28px */
-  --tracking-heading: -0.05em;
-  --weight-heading: 550;
+  --leading-heading: 1.75rem;     /* 28px */
+  --tracking-heading: -0.01em;
+  --weight-heading: 600;
 
   /* Modal: 24px - Modal headings */
   --text-modal: 1.5rem;
-  --leading-modal: 1.333rem;      /* 32px */
-  --tracking-modal: -0.06em;
+  --leading-modal: 2rem;          /* 32px */
+  --tracking-modal: -0.02em;
   --weight-modal: 700;
 
   /* Page: 36px - Page titles, hero */
   --text-page: 2.25rem;
-  --leading-page: 1.222rem;        /* 44px */
-  --tracking-page: -0.08em;
+  --leading-page: 2.75rem;        /* 44px */
+  --tracking-page: -0.03em;
   --weight-page: 700;
 
   /* ===========================================
@@ -240,7 +235,8 @@
   --color-paper: var(--system-50);
   --color-slate: var(--system-800);
   --color-border-light: var(--system-200);
-  --color-muted-hex: var(--system-400),
+  --color-muted-hex: var(--system-400);
+  --shadow-badge: var(--shadow-sm);
 
   /* ===========================================
      OVERLAY Z-INDEX TOKENS
@@ -341,6 +337,20 @@
   line-height: var(--leading-page);
   letter-spacing: var(--tracking-page);
   font-weight: var(--weight-page);
+}
+
+.body-base {
+  font-size: var(--text-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-body);
+}
+
+.label-xs {
+  font-size: var(--text-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  font-weight: 500;
 }
 
 /* ===========================================

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -109,14 +109,22 @@ function ProviderCard({
   const missing = state.enabled ? getMissingFields(provider, state.credentials) : [];
   const testDisabled = !state.enabled || missing.length > 0 || isTesting;
   const hasValues = hasAnyCredentialValue(state.credentials);
+  const providerLabelId = `${provider}-label`;
+  const apiKeyId = `${provider}-api-key`;
+  const apiSecretId = `${provider}-api-secret`;
+  const accountNumberId = `${provider}-account-number`;
 
   return (
     <div className={`p-4 rounded-xl border transition-all ${state.enabled ? "bg-white border-[--system-200]" : "bg-[--system-50] border-[--system-100]"}`}>
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <button
+            type="button"
+            role="switch"
+            aria-checked={state.enabled}
+            aria-labelledby={providerLabelId}
             onClick={() => onToggle(!state.enabled)}
-            className={`relative w-10 h-6 rounded-full transition-colors ${
+            className={`relative w-10 h-6 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-ring] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
               state.enabled ? "bg-[--color-primary]" : "bg-[--system-200]"
             }`}
           >
@@ -126,10 +134,10 @@ function ProviderCard({
               }`}
             />
           </button>
-          <span className="font-medium text-[--system-700]">{config.label}</span>
+          <span id={providerLabelId} className="text-body-sm text-[--system-700]">{config.label}</span>
         </div>
         {state.enabled && state.hasStoredCredentials && (
-          <span className="text-xs text-[--system-400]">
+          <span className="text-caption text-[--system-400]">
             {state.credentialsUpdatedAt
               ? `Updated ${new Date(state.credentialsUpdatedAt).toLocaleDateString()}`
               : "Configured"}
@@ -138,28 +146,30 @@ function ProviderCard({
       </div>
 
       {state.enabled && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <div>
-            <label className="block text-xs font-medium mb-1.5 text-[--system-500]">API Key</label>
+            <label htmlFor={apiKeyId} className="mb-2 block text-caption text-[--system-500]">API Key</label>
             <input
+              id={apiKeyId}
               type="password"
               value={state.credentials.apiKey}
               onChange={(e) => onUpdateCredential("apiKey", e.target.value)}
               onBlur={onSave}
-              className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+              className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
               placeholder="Enter API key"
             />
           </div>
 
           {requirements.required.includes("apiSecret") && (
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-[--system-500]">API Secret</label>
+              <label htmlFor={apiSecretId} className="mb-2 block text-caption text-[--system-500]">API Secret</label>
               <input
+                id={apiSecretId}
                 type="password"
                 value={state.credentials.apiSecret}
                 onChange={(e) => onUpdateCredential("apiSecret", e.target.value)}
                 onBlur={onSave}
-                className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+                className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
                 placeholder="Enter API secret"
               />
             </div>
@@ -167,29 +177,30 @@ function ProviderCard({
 
           {requirements.optional.includes("accountNumber") && (
             <div>
-              <label className="block text-xs font-medium mb-1.5 text-[--system-500]">Account Number (optional)</label>
+              <label htmlFor={accountNumberId} className="mb-2 block text-caption text-[--system-500]">Account Number (optional)</label>
               <input
+                id={accountNumberId}
                 type="text"
                 value={state.credentials.accountNumber}
                 onChange={(e) => onUpdateCredential("accountNumber", e.target.value)}
                 onBlur={onSave}
-                className="w-full h-10 px-3 text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
+                className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
                 placeholder="Account number if provided"
               />
             </div>
           )}
 
           {missing.length > 0 && (
-            <p className="text-xs text-[--color-error]">
+            <p className="text-caption text-[--color-error]">
               Required: {missing.map(getFieldLabel).join(", ")}
             </p>
           )}
 
           {state.hasStoredCredentials && !hasValues && (
-            <p className="text-xs text-[--system-400]">Saved. Leave blank to keep current.</p>
+            <p className="text-caption text-[--system-400]">Saved. Leave blank to keep current.</p>
           )}
 
-          <div className="flex gap-2 pt-1">
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
@@ -206,7 +217,7 @@ function ProviderCard({
 
           {testResult && (
             <div
-              className={`p-2 rounded-lg text-xs font-medium ${
+              className={`text-caption rounded-lg p-3 ${
                 testResult.success
                   ? "bg-[--color-success-bg] text-[--color-success]"
                   : "bg-[--color-error-bg] text-[--color-error]"
@@ -216,7 +227,7 @@ function ProviderCard({
             </div>
           )}
 
-          <p className="text-xs text-[--system-400] pt-1 border-t border-[--system-100]">
+          <p className="text-caption border-t border-[--system-100] pt-2 text-[--system-400]">
             {requirements.helpText}
           </p>
         </div>
@@ -252,7 +263,17 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
     noest: null,
   });
 
+  // Track previous deliveryIntegration to detect changes
+  const prevDeliveryIntegration = useRef(deliveryIntegration);
+
+  /* eslint-disable react-hooks/set-state-in-effect */
+  // Sync with external Convex query data - this is intentional for state synchronization
   useEffect(() => {
+    // Skip if deliveryIntegration hasn't changed
+    if (prevDeliveryIntegration.current === deliveryIntegration) {
+      return;
+    }
+    prevDeliveryIntegration.current = deliveryIntegration;
     if (deliveryIntegration) {
       const data = deliveryIntegration as {
         provider?: string;
@@ -269,65 +290,65 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         noest: enabled.includes("noest"),
       };
       setEnabledProviders(newEnabled);
-
-      for (const p of PROVIDERS) {
-        if (newEnabled[p.value]) {
-          setProviderStates((prev) => ({
-            ...prev,
-            [p.value]: {
-              ...prev[p.value],
-              enabled: true,
-              hasStoredCredentials: data.hasCredentials ?? false,
-              credentialsUpdatedAt: data.credentialsUpdatedAt ?? null,
-            },
-          }));
+      setProviderStates((prev) => {
+        const next = { ...prev };
+        for (const p of PROVIDERS) {
+          const isEnabled = newEnabled[p.value];
+          next[p.value] = {
+            ...prev[p.value],
+            enabled: isEnabled,
+            hasStoredCredentials: isEnabled ? (data.hasCredentials ?? false) : false,
+            credentialsUpdatedAt: isEnabled ? (data.credentialsUpdatedAt ?? null) : null,
+            credentials: isEnabled ? prev[p.value].credentials : createEmptyCredentials(),
+          };
         }
-      }
+        return next;
+      });
     }
   }, [deliveryIntegration]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleToggle = useCallback(
     async (provider: Provider, enabled: boolean) => {
-      setEnabledProviders((prev) => ({ ...prev, [provider]: enabled }));
+      const previousEnabledValue = enabledProviders[provider];
+      const previousProviderState = providerStates[provider];
+      const nextEnabledProviders: EnabledProvidersState = {
+        ...enabledProviders,
+        [provider]: enabled,
+      };
+
+      const enabledProviderList = (Object.entries(nextEnabledProviders) as Array<[Provider, boolean]>)
+        .filter(([, isEnabled]) => isEnabled)
+        .map(([providerName]) => providerName);
+      const providerForMutation: "yalidine" | "zr-express" | "andrson" | "noest" | "none" =
+        enabledProviderList[0] ?? "none";
+
+      setEnabledProviders(nextEnabledProviders);
       setTestResults((prev) => ({ ...prev, [provider]: null }));
-
-      if (enabled) {
-        setProviderStates((prev) => ({
-          ...prev,
-          [provider]: { ...prev[provider], enabled, credentials: createEmptyCredentials() },
-        }));
-      } else {
-        setProviderStates((prev) => ({
-          ...prev,
-          [provider]: { ...prev[provider], enabled, credentials: createEmptyCredentials() },
-        }));
-      }
-
-      const currentEnabled = Object.entries(enabledProviders)
-        .filter(([_, v]) => v || (provider === _ && enabled))
-        .map(([k]) => k);
-
-      if (enabled) {
-        currentEnabled.push(provider);
-      } else {
-        const idx = currentEnabled.indexOf(provider);
-        if (idx > -1) currentEnabled.splice(idx, 1);
-      }
-
-      const uniqueEnabled = [...new Set(currentEnabled)];
-      const primaryProvider = uniqueEnabled[0] || "none";
+      setProviderStates((prev) => ({
+        ...prev,
+        [provider]: {
+          ...prev[provider],
+          enabled,
+          credentials: createEmptyCredentials(),
+          hasStoredCredentials: enabled ? prev[provider].hasStoredCredentials : false,
+          credentialsUpdatedAt: enabled ? prev[provider].credentialsUpdatedAt : null,
+        },
+      }));
 
       try {
         await setDeliveryIntegration({
           storeId,
-          provider: primaryProvider as "yalidine" | "zr-express" | "andrson" | "noest" | "none",
-          enabledProviders: uniqueEnabled as ("yalidine" | "zr-express" | "andrson" | "noest")[],
+          provider: providerForMutation,
+          enabledProviders: enabledProviderList as ("yalidine" | "zr-express" | "andrson" | "noest")[],
         });
       } catch (error) {
+        setEnabledProviders((prev) => ({ ...prev, [provider]: previousEnabledValue }));
+        setProviderStates((prev) => ({ ...prev, [provider]: previousProviderState }));
         console.error("Failed to update provider settings:", error);
       }
     },
-    [storeId, setDeliveryIntegration, enabledProviders]
+    [storeId, setDeliveryIntegration, enabledProviders, providerStates]
   );
 
   const handleUpdateCredential = useCallback(
@@ -396,7 +417,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
           },
         });
         setTestResults((prev) => ({ ...prev, [provider]: result }));
-      } catch (error) {
+      } catch {
         setTestResults((prev) => ({
           ...prev,
           [provider]: { success: false, message: "Test failed. Check credentials." },
@@ -419,12 +440,12 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-[--system-700]">Courier Integration</h3>
-        <p className="text-sm text-[--system-400] mt-1">
+        <p className="mt-1 text-body-sm text-[--system-400]">
           Enable providers and save credentials securely for this store.
         </p>
       </div>
 
-      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-3 text-xs text-[--system-500]">
+      <div className="text-caption rounded-xl border border-[--system-200] bg-[--system-100] p-3 text-[--system-500]">
         Credentials are write-only. Existing keys are never displayed after save.
       </div>
 
@@ -450,7 +471,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         !enabledProviders.andrson &&
         !enabledProviders.noest && (
           <div className="p-4 bg-[--system-100] rounded-xl border border-[--system-200]">
-            <p className="text-sm text-[--system-400]">
+            <p className="text-body-sm text-[--system-400]">
               No courier enabled. Shipping will be handled manually.
             </p>
           </div>

@@ -438,10 +438,6 @@ function LandingPage() {
           <SignIn routing="virtual" fallbackRedirectUrl="/" />
         </DialogContent>
       </Dialog>
-
-      <footer className="py-6 text-center">
-        <p className="label-xs text-[var(--system-300)]">© 2026 Marlon. All rights reserved.</p>
-      </footer>
     </div>
   );
 }

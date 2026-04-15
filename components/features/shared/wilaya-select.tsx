@@ -31,17 +31,20 @@ export function WilayaSelect({ value, onChange, label, required, error }: Wilaya
     onChange(getWilayaDisplay(wilaya));
     setIsOpen(false);
     setSearch("");
+    setHighlightedIndex(0);
   };
 
-  useEffect(() => {
-    if (isOpen) {
+  const handleOpenChange = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
       setHighlightedIndex(0);
     }
-  }, [isOpen]);
+  };
 
-  useEffect(() => {
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
     setHighlightedIndex(0);
-  }, [search]);
+  };
 
   return (
     <div className="relative">
@@ -51,7 +54,7 @@ export function WilayaSelect({ value, onChange, label, required, error }: Wilaya
         </label>
       )}
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={handleOpenChange}>
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -83,7 +86,7 @@ export function WilayaSelect({ value, onChange, label, required, error }: Wilaya
                 ref={inputRef}
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="بحث - Rechercher..."
                 className="w-full px-2 py-1 text-sm border border-input bg-background focus:outline-none"
                 onKeyDown={(e) => {
@@ -183,17 +186,20 @@ export function CommuneSelect({ wilayaValue, value, onChange, label, required, e
     onChange(commune.french);
     setIsOpen(false);
     setSearch("");
+    setHighlightedIndex(0);
   };
 
-  useEffect(() => {
-    if (isOpen) {
+  const handleOpenChangeCom = (open: boolean) => {
+    setIsOpen(open);
+    if (open) {
       setHighlightedIndex(0);
     }
-  }, [isOpen]);
+  };
 
-  useEffect(() => {
+  const handleSearchChangeCom = (value: string) => {
+    setSearch(value);
     setHighlightedIndex(0);
-  }, [search]);
+  };
 
   const isDisabled = disabled || !wilayaValue || communes.length === 0;
 
@@ -205,7 +211,7 @@ export function CommuneSelect({ wilayaValue, value, onChange, label, required, e
         </label>
       )}
       
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={handleOpenChangeCom}>
         <PopoverTrigger asChild>
           <button
             type="button"
@@ -243,7 +249,7 @@ export function CommuneSelect({ wilayaValue, value, onChange, label, required, e
                   ref={inputRef}
                   type="text"
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => handleSearchChangeCom(e.target.value)}
                   placeholder="بحث - Rechercher..."
                   className="w-full px-2 py-1 text-sm border border-input bg-background focus:outline-none"
                   onKeyDown={(e) => {

@@ -1,163 +1,229 @@
 # Architecture
 
-Canonical runtime architecture for Marlon MVP, aligned with locked Phase 1-4 decisions.
+Truth-first architecture reference for Marlon MVP. This document separates live implementation from policy constraints and target-state design so diagrams and claims do not overstate what is already shipped.
 
-## 1) System Context
+Status labels used here:
+- `Current`: live in code now.
+- `Partial`: some pieces exist, but the full behavior is not complete.
+- `Planned`: intended architecture, not yet fully implemented.
+- `Policy-locked`: business/security rule that should be treated as fixed even if implementation is incomplete.
+- `Needs verification`: likely true but should be rechecked in code before relying on it operationally.
 
-- Clients: public storefront users (COD buyers) and authenticated merchant users (owner/admin/staff) in the same Next.js application.
-- App runtime: Next.js on Vercel for UI routes, API/webhook ingress, and edge/middleware checks.
-- Backend and data plane: Convex for business logic, realtime subscriptions, and primary data storage.
-- Identity: Clerk (Google OAuth) for authentication; Convex receives trusted actor identity from Clerk session context.
-- External integrations:
-  - Chargily Pay for store unlock subscription payment (`2000 DZD/store/month`).
-  - Delivery providers (ZR Express, Yalidine) via adapter layer.
-- Platform policy baseline:
-  - Multi-tenant by store with strict tenant isolation.
-  - Global unique store slugs with reserved-word denylist.
-  - Public catalog performance via ISR/static, checkout/order paths dynamic.
+## 1) Architecture Snapshot
 
-## 2) Runtime Components
+### Current runtime reality
 
-- Next.js Web App
-  - Storefront catalog/product routes rendered with ISR/static caching.
-  - Checkout/order placement, admin actions, and payment webhook paths remain dynamic.
-- API/Webhook Layer
-  - Receives checkout submissions, billing/unlock events, and delivery dispatch requests.
-  - Applies request validation, rate limits, signature verification (for webhooks), and idempotency guards.
-- Authorization Core (Convex)
-  - Central auth helper + policy layer is mandatory for all protected queries/mutations/actions.
-  - Resolves actor role (owner/admin/staff) and store membership before any store-scoped access.
-  - Resolves platform governance role (`platform_admin`) for exceptional platform-scoped interventions only.
-- Order Service (Convex)
-  - Hybrid model: inline order state write plus mandatory append to immutable audit log.
-  - Enforces locked-state masking/freeze behavior for overflow orders.
-- Billing/Lock Service (Convex)
-  - Tracks per-store daily quota (`5/day`, reset at `00:00 Africa/Algiers`).
-  - Transitions lock/unlock state and unlock window from verified payment events.
-- Delivery Integration Service
-  - Stores delivery metadata in `siteContent.deliveryIntegration`.
-  - Stores secrets in encrypted `deliveryCredentials` records only (AES-GCM key from env).
-  - Uses provider adapter interface + registry/service boundaries (`lib/delivery/*`) for extensible provider support.
-  - Recommendation engine foundation runs in recommendation-only mode (manual dispatch remains required).
-  - Uses async dispatch queue with retry and dead-letter queue (DLQ).
-- Delivery Analytics Service
-  - Persists canonical events in `deliveryAnalyticsEvents` (`attempted`, `dispatched`, `delivered`, `failed`, `rts`).
-  - Produces store-level summary views by provider and region for success-rate-first optimization.
-- Background Workers/Schedulers
-  - Delivery job retries, DLQ handling, overflow lifecycle cleanup, retention/anonymization jobs.
+- `Current`: Single Next.js application serves both public storefront and merchant/admin UI.
+- `Current`: Convex is the primary backend/data plane for app logic and data.
+- `Current`: Clerk provides authentication context.
+- `Current`: Storefront is client-rendered in live code; this is not currently ISR/static in production behavior.
+- `Current`: Auth enforcement is primarily owner-based and store-scoped close to feature code, not a fully centralized policy layer.
+- `Current`: Live order data is split across `orders`, `orderDigests`, `orderTimelineEvents`, and `orderCallEvents` rather than one canonical audit table.
+- `Current`: Delivery analytics events and rollups exist in the live schema, though surrounding delivery workflow architecture is still only partial.
+- `Partial`: Chargily billing/unlock flow exists, but runtime lock/billing behavior does not yet fully match the planned `5/day` overflow model end to end.
+- `Partial`: Delivery integration exists in part, but async queue/retry/DLQ architecture is not fully live.
+- `Partial`: Webhook verification and idempotency hardening are not yet complete enough to describe as finished.
+- `Partial`: Ops, monitoring, and reliability controls exist unevenly and should not be treated as full target-state coverage.
 
-## 3) Request/Data Flows
+### Policy-locked constraints
+
+- `Policy-locked`: Multi-tenant isolation is by store.
+- `Policy-locked`: Store slugs must be globally unique and protected by a reserved-word denylist.
+- `Policy-locked`: Merchant roles are `owner`, `admin`, and `staff`; platform break-glass access is exceptional only.
+- `Policy-locked`: Owner transfer/removal requires explicit owner-confirmation style governance; admin-only owner removal is forbidden.
+- `Policy-locked`: Locked/overflow behavior must not expose masked customer data before unlock.
+- `Policy-locked`: Customer-facing checkout should not surface merchant lock state.
+- `Policy-locked`: Delivery credentials belong in dedicated secret storage, not generic content blobs.
+
+### Target state
+
+- `Planned`: Public catalog/product routes move to ISR/static or equivalent cache-friendly rendering.
+- `Planned`: Auth converges on a centralized Convex policy layer used by all protected operations.
+- `Planned`: Billing/lock enforcement fully matches the `5/day`, `Africa/Algiers` overflow model.
+- `Planned`: Delivery dispatch runs through async jobs with retry, DLQ, and replay tooling.
+- `Planned`: Payment webhooks enforce signature verification, replay protection, and idempotent processing consistently.
+- `Planned`: Monitoring, alerting, synthetic checks, and backup/restore posture become explicit operational guarantees rather than aspirations.
+
+## 2) System Context
+
+Diagram key: this shows the intended runtime shape. Boxes and links include both live and planned components; see status notes below before treating every edge as production reality.
+
+```mermaid
+flowchart LR
+    shopper[Public shopper browser]
+    merchant[Merchant browser]
+
+    subgraph vercel[Next.js app on Vercel]
+        ui[Storefront and merchant routes]
+        dyn[Dynamic routes and API/webhook handlers]
+        middleware[Edge/middleware checks]
+    end
+
+    subgraph convex[Convex runtime and data plane]
+        auth[Authorization helpers/policies]
+        orders[Orders and order event writes]
+        billing[Billing and lock state]
+        delivery[Delivery dispatch and analytics]
+        db[(Convex data)]
+    end
+
+    clerk[Clerk]
+    chargily[Chargily Pay]
+    couriers[Delivery providers]
+
+    shopper --> ui
+    shopper --> dyn
+    merchant --> ui
+    merchant --> dyn
+    merchant --> middleware
+    ui --> clerk
+    dyn --> clerk
+    dyn --> auth
+    dyn --> orders
+    dyn --> billing
+    dyn --> delivery
+    auth --> db
+    orders --> db
+    billing --> db
+    delivery --> db
+    dyn --> chargily
+    delivery --> couriers
+    chargily --> dyn
+```
+
+- `Current`: Next.js, Convex, Clerk, Chargily, and delivery-provider integration points exist in the app architecture.
+- `Current`: Dynamic routes and API/webhook handlers are part of the runtime.
+- `Partial`: Middleware and authorization helpers exist, but not yet as a uniformly enforced policy system.
+- `Partial`: Delivery integration reaches providers in some flows, but the service boundary is not yet fully asynchronous/retriable.
+- `Current`: Convex contains live order-event and delivery-analytics structures even though some higher-level service boundaries are still target-state.
+- `Planned`: Treat the `auth`, `billing`, and `delivery` boxes as target service boundaries, not proof of full separation in live code.
+
+## 3) Runtime Components
+
+- Next.js web app
+  - `Current`: Public storefront and merchant UI share one app shell.
+  - `Current`: Storefront rendering is primarily client-side in live code.
+  - `Planned`: Catalog/product discovery becomes ISR/static or similar cached rendering where safe.
+- API/webhook layer
+  - `Current`: Accepts checkout, billing callback, and delivery-related requests.
+  - `Partial`: Validation exists in parts of the stack.
+  - `Partial`: Signature verification and idempotency should not be assumed complete on all webhook paths.
+- Authorization
+  - `Current`: Access control is mainly enforced through owner-based store checks.
+  - `Partial`: Some helper abstractions exist.
+  - `Planned`: One central policy layer governs all protected reads, writes, and actions.
+- Orders and audit
+  - `Current`: Orders are persisted in Convex.
+  - `Current`: Live order-related history is split across `orderDigests`, `orderTimelineEvents`, and `orderCallEvents`.
+  - `Partial`: Event recording exists in meaningful parts of the flow, but this document should not imply a single complete immutable `orderAudit` architecture is already live everywhere.
+- Billing and lock state
+  - `Partial`: Unlock/payment behavior exists.
+  - `Partial`: Live lock behavior does not yet fully implement the target `5/day` overflow lifecycle exactly as specified.
+- Delivery integration
+  - `Partial`: Provider integration and merchant dispatch flows exist.
+  - `Partial`: Some delivery metadata/credentials handling exists.
+  - `Current`: Delivery analytics events and rollup-style data exist in the live schema.
+  - `Planned`: Async dispatch queue, retries, and DLQ are still target-state architecture.
+- Ops/reliability layer
+  - `Current`: Basic platform/runtime hosting exists.
+  - `Needs verification`: exact monitoring, alerting, backup, and restore coverage should be rechecked before being relied on operationally.
+
+## 4) Request and Data Flows
 
 ### A) Storefront order creation
-1. User loads storefront catalog/product pages from ISR/static output.
-2. Checkout submits to dynamic path with customer/order payload.
-3. Backend resolves `storeSlug` (global unique + reserved-word policy already enforced at creation).
-4. Billing/lock policy checks store daily usage (`5/day`, `Africa/Algiers` calendar reset).
-5. Order is created with inline state; audit append is written in the same logical operation.
-6. If within cap: normal merchant-visible order.
-7. If overflow: order is accepted, but merchant-side sensitive fields/actions are masked/frozen until unlock.
-8. Customer-facing flow remains unchanged (no lock notification).
+
+1. `Current`: Shopper loads storefront in the Next.js app.
+2. `Current`: Checkout submits customer/order payload to dynamic backend logic.
+3. `Current`: Backend resolves the target store from routing context.
+4. `Partial`: Billing/lock checks may run during order creation, but live behavior is not yet the full planned `5/day` overflow model in all cases.
+5. `Current`: Order is written to Convex, with related history/event data split across multiple order-event tables.
+6. `Partial`: Merchant-visible masking/freeze behavior exists conceptually and in part of the implementation, but should not be documented as perfectly complete until verified end to end.
 
 ### B) Overflow lock and freeze behavior
-1. When store usage exceeds daily cap, new incoming orders enter overflow-protected mode.
-2. Merchant views show masked customer identity/contact/address and disabled order actions for locked overflow records.
-3. Masking policy is full (no exceptions) until store unlock is active.
-4. Overflow masked records auto-delete after 5 days if unlock does not occur.
-5. Analytics derived from deleted/expired records are retained only in anonymized form.
+
+Diagram key: this sequence shows the intended business flow. Live code only partially matches it today.
+
+```mermaid
+sequenceDiagram
+    participant Customer
+    participant Next as Next.js checkout route
+    participant Billing as Convex billing/lock policy
+    participant Orders as Convex order write
+    participant Merchant as Merchant UI
+
+    Customer->>Next: Submit checkout
+    Next->>Billing: Resolve store + daily usage
+    Billing-->>Next: within cap or locked_overflow
+    Next->>Orders: Create order + write order event records
+    alt Within daily cap
+        Orders-->>Merchant: Normal order visibility
+    else Overflow while locked
+        Orders-->>Merchant: Masked customer data + frozen actions
+        Note over Orders,Merchant: Overflow record stays masked until unlock or 5-day expiry
+    end
+    Next-->>Customer: Order accepted
+```
+
+- `Policy-locked`: Customer checkout should still succeed even when merchant lock/overflow rules apply.
+- `Policy-locked`: Merchant-side masked/frozen behavior is the required business rule for protected overflow records.
+- `Partial`: The exact `5/day` quota, `Africa/Algiers` reset handling, unlock restoration, and 5-day expiry path should be treated as target behavior unless confirmed in code.
 
 ### C) Unlock payment webhook
-1. Store admin initiates unlock payment for a specific store (`2000 DZD/store/month`).
-2. System creates a payment intent/session bound to store and actor permissions.
-3. Chargily webhook hits backend callback.
-4. Webhook path verifies signature and replay window, then enforces idempotent event handling.
-5. On verified success, store unlock state is activated for the paid window and an immutable audit event is appended.
-6. Merchant access to previously frozen overflow data/actions is restored for retained records.
+
+1. `Current`: Store admin can initiate payment/unlock-related flow.
+2. `Current`: Chargily sends webhook callbacks into backend routes.
+3. `Partial`: Success handling updates billing/unlock state in some form.
+4. `Partial`: Signature verification, replay-window defense, and idempotent receipt handling are not yet hardened enough to describe as complete.
+5. `Planned`: Verified payment events become the sole source of truth for unlock activation and durable event recording.
 
 ### D) Delivery dispatch
-1. Merchant triggers dispatch from orders UI.
-2. Authorization policy verifies actor permission for store/order dispatch action.
-3. Delivery API logs `attempted` analytics event for store/provider/region dimensions.
-4. Worker/API loads provider metadata + decrypts per-store credentials from `deliveryCredentials`.
-5. If credentials missing: fail-safe error; global fallback allowed only when `DELIVERY_ALLOW_GLOBAL_CREDENTIAL_FALLBACK=true`.
-6. Provider adapter executes call through delivery service boundary; terminal failures go to DLQ.
-7. Dispatch outcome logs `dispatched` or `failed` analytics event and appends immutable audit entries.
-8. Later terminal order statuses are normalized into `delivered`, `failed`, or `rts` analytics events.
 
-## 4) Authorization and Tenant Isolation
+1. `Current`: Merchant can trigger delivery dispatch in at least part of the order workflow.
+2. `Current`: Provider-specific integration logic exists.
+3. `Partial`: Credential loading and adapter/service boundaries exist unevenly or are still being formalized.
+4. `Planned`: Dispatch moves to async workers/queues with retry and DLQ rather than depending on direct request-time processing.
+5. `Planned`: Canonical analytics and normalized terminal delivery events become consistent across providers.
 
-- Single enforcement model: central authorization helper + policy layer; no feature-level ad hoc auth bypasses.
-- Every store-scoped read/write requires:
-  - authenticated actor,
-  - resolved store membership,
-  - role-based permission check for requested action.
-- Tenant boundary key is `storeId`; slug is only a routing identifier and must resolve to one store globally.
-- Slug governance:
-  - global uniqueness,
-  - reserved-word denylist,
-  - collision-safe creation path.
-- Locked role model:
-  - Store: `owner`, `admin`, `staff`.
-  - Platform: `platform_admin`.
-- Role baseline and constraints:
-  - `owner`: full store authority including required confirmation for ownership transfer/removal.
-  - `admin`: broad operational control, but cannot unilaterally remove/transfer current owner.
-  - `staff`: limited operational actions; no billing/governance authority.
-  - `platform_admin`: break-glass governance path only, with strict reason-code and audit requirements.
-- Ownership governance lock:
-  - Owner transfer/removal requires explicit current owner confirmation.
-  - Admin-only owner removal is forbidden.
-  - Break-glass override is exceptional and must generate immutable governance audit events.
-- Locked-state visibility rules are authorization policy outputs (not front-end-only masking).
+## 5) Authorization and Tenant Isolation
 
-## 5) Data Ownership Boundaries
+- `Current`: Store isolation is enforced primarily through store-scoped lookups and owner-based checks.
+- `Current`: Slug is a routing identifier; store-scoped data should still resolve to a single store boundary.
+- `Partial`: Role-aware permissions exist, but enforcement is not yet a complete centralized policy layer.
+- `Policy-locked`: No feature should bypass store ownership or equivalent store-scoped authorization checks for protected data.
+- `Policy-locked`: `owner` has store authority; `admin` cannot remove/transfer the owner unilaterally; `staff` has limited operational access.
+- `Policy-locked`: Break-glass platform intervention must be exceptional and auditable.
+- `Planned`: Locked-state visibility/masking becomes a backend policy output everywhere, not a behavior enforced inconsistently by feature code.
 
-- `stores`: canonical store identity, slug, commercial state, lock/unlock counters and windows.
-- `storeMemberships` (or equivalent): actor-to-store role bindings and permission resolution source.
-- `products`, `siteContent`, `deliveryPricing`: merchant-managed storefront/editor data, scoped to store.
-- `orders`: operational state (status, totals, delivery state) with inline latest snapshot.
-- `orderAudit` (append-only): immutable timeline of status changes, edits, call outcomes, lock/unlock, dispatch attempts.
-- `ownerTransferRequests` (append + state machine): ownership governance workflow evidence (requested, confirmed, executed, canceled, expired, break-glass).
-- `deliveryCredentials`: encrypted per-store/provider secrets; never embedded in generic content blobs.
-  - metadata only in `siteContent.deliveryIntegration` (`provider`, `hasCredentials`, `lastUpdatedAt`).
-  - secrets are write-only to UI after save.
-- `billingEvents`/`webhookReceipts` (or equivalent): payment event idempotency and replay-defense evidence.
-- Governance boundary:
-  - ownership changes require two-step confirmation artifacts,
-  - all exceptional `platform_admin` interventions carry reason code + ticket reference + immutable audit append.
-- Retention boundary:
-  - PII retained on a time-boxed policy,
-  - masked overflow records purged after 5 days when still locked,
-  - analytics retained only in anonymized aggregates.
+## 6) Data Ownership Boundaries
 
-## 6) Reliability and Failure Strategy
+- `Current`: Convex stores canonical app data for stores, products/content, orders, owner-linked identity data, and delivery analytics.
+- `Current`: Live order records are distributed across `orders`, `orderDigests`, `orderTimelineEvents`, and `orderCallEvents`.
+- `Partial`: These order/event tables provide meaningful history coverage, but this doc should not claim a universally complete append-only audit model yet.
+- `Policy-locked`: Delivery secrets must live outside generic content blobs and remain write-only after save from the UI perspective.
+- `Policy-locked`: Billing/webhook processing needs durable event-receipt/idempotency evidence once hardening is complete.
+- `Planned`: Ownership-transfer evidence, immutable governance events, durable webhook receipts, and retention/anonymization boundaries become explicit schema-level guarantees.
 
-- Async external integrations by default (delivery queue) to isolate provider latency/failures from user actions.
-- Retry + DLQ for delivery dispatch; operations can inspect/replay DLQ jobs with audit trace.
-- Webhook resilience:
-  - signature verification mandatory,
-  - replay protection window,
-  - idempotent processing.
-- Anti-abuse controls in request paths: rate limits plus phone reputation/blocklist checks for COD fraud resistance.
-- Environment topology: `dev`, `staging`, `production` with isolated secrets/config.
-- Rollback policy: disable feature flag first, full rollback second.
-- Monitoring requirements: error tracking + uptime + synthetic checkout monitor.
-- Reliability target priority (first 90 days): checkout/order creation success.
-- Data protection ops: hourly backups with restore target within 4 hours.
+## 7) Reliability and Operations
 
-## 7) Performance Strategy
+- `Current`: Vercel/Next.js plus Convex provide the baseline hosted runtime.
+- `Partial`: Some request validation and anti-abuse protections may exist, but this should not be read as comprehensive rate-limiting/fraud-defense coverage.
+- `Partial`: Operational visibility exists only to the extent already wired in code/platform accounts; this document does not certify full monitoring coverage.
+- `Needs verification`: environment isolation, alerting, uptime probes, synthetic checkout tests, backup frequency, and restore objectives should be validated before being treated as committed ops guarantees.
+- `Planned`: Delivery retries, DLQ replay, hardened webhook resilience, and explicit monitoring/restore targets are target-state reliability controls.
 
-- Rendering split:
-  - ISR/static for catalog and product discovery routes,
-  - dynamic execution for checkout, order placement, auth-gated admin, and webhook endpoints.
-- Realtime admin UX uses Convex subscriptions for order/editor updates.
-- Keep hot request paths minimal:
-  - avoid synchronous external provider calls during checkout,
-  - move integration work to queue workers.
-- Enforce index-first access for high-cardinality lookups (`slug`, `storeId`, date windows, queue status).
-- Apply API rate limits on public submit and integration endpoints to protect p95 latency under abuse bursts.
-- Synthetic checkout monitoring is part of performance SLO guardrails.
+## 8) Performance Strategy
 
-## 8) Open Implementation Notes
+- `Current`: App performance depends mainly on the current client-rendered storefront plus Convex-backed dynamic operations.
+- `Current`: Admin experiences can use realtime/data-subscription patterns where implemented.
+- `Planned`: Catalog/product discovery routes move to cache-friendly rendering to reduce storefront latency.
+- `Planned`: External provider work should be removed from hot user-facing paths where possible and pushed to async processing.
+- `Needs verification`: index coverage, p95 protections under abuse, and synthetic performance guardrails should be confirmed in code and infrastructure before promising them.
 
-- PII retention duration is locked as time-boxed, but exact durations per PII category still need final codification in `context/technical/DATA_MODELS.md`.
-- Delivery retry policy constants (max attempts, backoff schedule, DLQ replay policy) should be finalized in `context/technical/API_CONTRACTS.md`.
+## 9) Open Gaps That Matter
+
+- `Gap`: Centralized authorization/policy enforcement is not finished; current reality is mostly owner-based store checks.
+- `Gap`: Storefront rendering strategy in live code is client-rendered, not the previously documented ISR/static model.
+- `Gap`: Billing/lock runtime behavior only partially matches the full planned `5/day` overflow lifecycle.
+- `Gap`: Delivery queue/retry/DLQ architecture is still target-state.
+- `Gap`: Webhook verification and idempotency need further hardening.
+- `Gap`: Ops/reliability claims need code-and-platform verification before they can be treated as committed architecture.

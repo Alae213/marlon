@@ -117,27 +117,27 @@ export interface Theme {
 export const lightTheme: Theme = {
   name: "light",
   colors: {
-    background: "#fafafa",
-    foreground: "#171717",
-    primary: "#171717",
+    background: "#FAFAFA",
+    foreground: "#404040",
+    primary: "#0070F3",
     primaryForeground: "#ffffff",
-    secondary: "#f5f5f5",
+    secondary: "#F5F5F5",
     secondaryForeground: "#525252",
-    muted: "#f5f5f5",
+    muted: "#F5F5F5",
     mutedForeground: "#737373",
-    accent: "#f5f5f5",
+    accent: "#F5F5F5",
     accentForeground: "#525252",
-    destructive: "#dc2626",
-    destructiveForeground: "#ffffff",
-    border: "#e5e5e5",
-    input: "#e5e5e5",
-    ring: "#525252",
-    success: "#17CFAA",
-    warning: "#d97706",
-    info: "#2764e7",
-    card: "#ffffff",
+    destructive: "#DC2626",
+    destructiveForeground: "#FFFFFF",
+    border: "#E5E5E5",
+    input: "#E5E5E5",
+    ring: "#0070F3",
+    success: "#34C759",
+    warning: "#FF9500",
+    info: "#5AC8FA",
+    card: "#FFFFFF",
     cardForeground: "#171717",
-    popover: "#ffffff",
+    popover: "#FFFFFF",
     popoverForeground: "#171717",
   },
   spacing: {
@@ -150,8 +150,8 @@ export const lightTheme: Theme = {
     "3xl": "4rem",  // 64px
   },
   typography: {
-    fontFamily: '"DM Sans", "IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif',
-    fontFamilyArabic: '"IBM Plex Sans Arabic", "Noto Sans Arabic", "DM Sans", system-ui, sans-serif',
+    fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
+    fontFamilyArabic: '"IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif',
     fontSize: {
       xs: "0.75rem",    // 12px
       sm: "0.875rem",   // 14px
@@ -176,11 +176,11 @@ export const lightTheme: Theme = {
   },
   radius: {
     none: "0",
-    sm: "0.125rem",  // 2px
-    md: "0.375rem",  // 6px
-    lg: "0.5rem",    // 8px
-    xl: "0.75rem",   // 12px
-    "2xl": "1rem",   // 16px
+    sm: "0.375rem",  // 6px
+    md: "0.625rem",  // 10px
+    lg: "1rem",      // 16px
+    xl: "1.25rem",   // 20px
+    "2xl": "1.5rem", // 24px
     full: "9999px",
   },
   shadows: {

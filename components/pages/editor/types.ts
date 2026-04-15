@@ -66,17 +66,6 @@ export interface HeroContent {
   backgroundImageUrl?: string;
 }
 
-export interface FooterContent {
-  contactEmail?: string;
-  contactPhone?: string;
-  copyright?: string;
-  socialLinks?: Array<{
-    platform: string;
-    url: string;
-    enabled: boolean;
-  }>;
-}
-
 // ── Inline Editing Types ───────────────────────────────────────
 
 export type EditableField =
@@ -84,10 +73,7 @@ export type EditableField =
   | "basePrice"
   | "oldPrice"
   | "heroTitle"
-  | "heroCtaText"
-  | "footerPhone"
-  | "footerEmail"
-  | "footerCopyright";
+  | "heroCtaText";
 
 export interface EditingField {
   productId: string;

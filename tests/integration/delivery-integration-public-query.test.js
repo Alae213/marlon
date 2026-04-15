@@ -23,6 +23,7 @@ function createCtx({ sectionDoc, storedCredentials }) {
             withIndex() {
               return {
                 first: async () => storedCredentials,
+                collect: async () => (storedCredentials ? [storedCredentials] : []),
               };
             },
           };
@@ -49,6 +50,7 @@ describe("getDeliveryIntegration public metadata safety", () => {
           },
         },
         storedCredentials: {
+          provider: "zr-express",
           updatedAt: 200,
           ciphertextHex: "deadbeef",
           ivHex: "00112233445566778899aabb",
@@ -59,6 +61,7 @@ describe("getDeliveryIntegration public metadata safety", () => {
 
     expect(result).toEqual({
       provider: "zr-express",
+      enabledProviders: ["zr-express"],
       hasCredentials: true,
       lastUpdatedAt: 100,
       credentialsUpdatedAt: 200,
@@ -87,6 +90,7 @@ describe("getDeliveryIntegration public metadata safety", () => {
 
     expect(result).toEqual({
       provider: "zr-express",
+      enabledProviders: ["zr-express"],
       hasCredentials: true,
       lastUpdatedAt: 100,
       credentialsUpdatedAt: null,

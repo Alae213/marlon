@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Doc, Id } from "@/convex/_generated/dataModel";
 import { 
   Search, 
@@ -9,12 +9,15 @@ import {
   Filter,
   Trash2,
   AlertTriangle,
-  ArrowRightLeft,
   Eye,
   EyeOff,
   Zap,
   SlidersHorizontal,
   ChevronsUpDown,
+  Truck,
+  PackageCheck,
+  Loader2,
+  FileDown,
 } from "lucide-react";
 import { Badge } from "@/components/primitives/core/feedback/badge";
 import { Button } from "@/components/primitives/core/buttons/button";
@@ -49,6 +52,7 @@ import { STATUS_LABELS, CALL_OUTCOME_LABELS } from "@/lib/orders-types";
 import { STATUS_CONFIG } from "@/lib/status-icons";
 import { ProductCell } from "../components/ProductCell";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/contexts/toast-context";
 
 // Relative time helper
 export function getRelativeTime(timestamp: number): string {
@@ -222,6 +226,7 @@ interface ListViewProps {
   onOrderClick: (order: Doc<"orders">) => void;
   viewMode: "list" | "state";
   onViewModeChange: (mode: "list" | "state") => void;
+  storeSlug?: string;
 }
 
 // Status Dropdown Component
@@ -315,6 +320,7 @@ export function ListView({
   onOrderClick,
   viewMode,
   onViewModeChange,
+  storeSlug,
 }: ListViewProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchButtonRef = useRef<HTMLButtonElement>(null);
@@ -353,7 +359,33 @@ export function ListView({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   
   // Delete mutation
-  const deleteOrder = useMutation(api.orders.deleteOrder);
+  const bulkDeleteOrders = useMutation(api.orders.bulkDeleteOrders);
+
+  // Toast notifications
+  const { showToast } = useToast();
+
+  // Dispatch All state
+  const [isDispatchingAll, setIsDispatchingAll] = useState(false);
+  
+  // Bulk dispatch selected state
+  const [isBulkDispatching, setIsBulkDispatching] = useState(false);
+
+  // Delivery quick stats
+  const readyToDispatchCount = useMemo(() => {
+    return orders.filter((o) => o.status === "confirmed").length;
+  }, [orders]);
+
+  const courierStatusSummary = useMemo(() => {
+    const summary = { dispatched: 0, pending: 0 };
+    for (const order of orders) {
+      if (order.deliveryProvider && order.trackingNumber) {
+        summary.dispatched++;
+      } else if (order.status === "confirmed") {
+        summary.pending++;
+      }
+    }
+    return summary;
+  }, [orders]);
 
   // Update currentTime every minute
   useEffect(() => {
@@ -469,15 +501,193 @@ export function ListView({
 
   const handleBulkDelete = async (orderIds: string[]) => {
     try {
-      for (const orderId of orderIds) {
-        await deleteOrder({ orderId: orderId as Id<"orders"> });
-      }
+      await bulkDeleteOrders({ orderIds: orderIds as Id<"orders">[] });
       // Clear selection after successful delete
       onClearSelection();
     } catch (error) {
       console.error("Failed to delete orders:", error);
     }
   };
+
+  const handleDispatchAll = useCallback(async () => {
+    if (isDispatchingAll) return;
+    
+    const confirmedOrders = orders.filter((o) => o.status === "confirmed");
+    if (confirmedOrders.length === 0) return;
+    
+    setIsDispatchingAll(true);
+    
+    let successCount = 0;
+    let failCount = 0;
+    
+    for (const order of confirmedOrders) {
+      try {
+        const response = await fetch("/api/delivery/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+            customerWilaya: order.customerWilaya,
+            customerCommune: order.customerCommune,
+            customerAddress: order.customerAddress,
+            products: order.products,
+            total: order.total,
+            provider: order.deliveryProvider || "zr_express",
+            storeSlug,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          await onStatusChange(order._id, "packaged");
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch {
+        failCount++;
+      }
+    }
+    
+    setIsDispatchingAll(false);
+    
+    if (successCount > 0 && failCount > 0) {
+      showToast(`${successCount} dispatched, ${failCount} failed`, "info");
+    } else if (successCount > 0) {
+      showToast(`${successCount} orders dispatched`, "success");
+    } else {
+      showToast("Failed to dispatch orders", "error");
+    }
+  }, [orders, isDispatchingAll, onStatusChange, storeSlug, showToast]);
+
+  const handleBulkDispatch = useCallback(async () => {
+    if (isBulkDispatching) return;
+    
+    const confirmedSelectedIds = orders
+      .filter((o) => selectedOrders.has(o._id) && o.status === "confirmed")
+      .map((o) => o._id);
+    
+    if (confirmedSelectedIds.length === 0) return;
+    
+    setIsBulkDispatching(true);
+    
+    let successCount = 0;
+    let failCount = 0;
+    const failedIds: string[] = [];
+    
+    for (const orderId of confirmedSelectedIds) {
+      const order = orders.find((o) => o._id === orderId);
+      if (!order) continue;
+      
+      try {
+        const response = await fetch("/api/delivery/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            orderId: order._id,
+            orderNumber: order.orderNumber,
+            customerName: order.customerName,
+            customerPhone: order.customerPhone,
+            customerWilaya: order.customerWilaya,
+            customerCommune: order.customerCommune,
+            customerAddress: order.customerAddress,
+            products: order.products,
+            total: order.total,
+            provider: order.deliveryProvider || "zr_express",
+            storeSlug,
+          }),
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          await onStatusChange(order._id, "packaged");
+          successCount++;
+        } else {
+          failCount++;
+          failedIds.push(orderId);
+        }
+      } catch {
+        failCount++;
+        failedIds.push(orderId);
+      }
+    }
+    
+    setIsBulkDispatching(false);
+    
+    if (successCount > 0 && failCount > 0) {
+      showToast(`${successCount} dispatched, ${failCount} failed`, "info");
+    } else if (successCount > 0) {
+      showToast(`${successCount} orders dispatched`, "success");
+    } else {
+      showToast("Failed to dispatch orders", "error");
+    }
+  }, [orders, selectedOrders, isBulkDispatching, onStatusChange, storeSlug, showToast]);
+
+  // Export to CSV
+  const handleExportCSV = useCallback((exportAll: boolean) => {
+    const ordersToExport = exportAll 
+      ? filteredOrders 
+      : orders.filter((o) => selectedOrders.has(o._id));
+    
+    if (ordersToExport.length === 0) {
+      showToast("No orders to export", "info");
+      return;
+    }
+
+    // Build CSV content
+    const headers = [
+      "Order Number",
+      "Customer Name",
+      "Phone",
+      "Wilaya",
+      "Commune",
+      "Address",
+      "Status",
+      "Total (DZD)",
+      "Delivery Provider",
+      "Tracking Number",
+      "Created At",
+    ];
+    
+    const rows = ordersToExport.map((order) => [
+      order.orderNumber,
+      order.customerName,
+      order.customerPhone,
+      order.customerWilaya || "",
+      order.customerCommune || "",
+      order.customerAddress || "",
+      order.status,
+      order.total.toString(),
+      order.deliveryProvider || "",
+      order.trackingNumber || "",
+      new Date(order.createdAt).toLocaleString("en-US"),
+    ]);
+    
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) => 
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+    
+    // Download CSV
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `orders-export-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showToast(`Exported ${ordersToExport.length} orders`, "success");
+  }, [filteredOrders, orders, selectedOrders, showToast]);
 
   // Toggle hidden status and persist to localStorage
   const toggleHiddenStatus = (status: OrderStatus) => {
@@ -542,8 +752,22 @@ export function ListView({
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {selectedOrdersByStatus.confirmed > 0 && (
+              <button
+                onClick={handleBulkDispatch}
+                disabled={isBulkDispatching}
+                className="ml-2 cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isBulkDispatching ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <PackageCheck className="w-3 h-3" />
+                )}
+                {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
+              </button>
+            )}
             <button
-              className="ml-2 cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
+              className="cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
               onClick={() => setShowDeleteConfirm(true)}
             >
               <Trash2 className="w-4 h-4" />
@@ -618,24 +842,31 @@ export function ListView({
         </Menu>
 
         {/* Filter Dropdown */}
-        <Menu open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <MenuTrigger asChild>
-                <button
-                  type="button"
-                  className={`cursor-pointer p-2 rounded-lg transition-colors ${
-                    activeFilter !== "all"
-                      ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
-                      : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
-                  }`}
-                >
-                  <Filter className="w-4 h-4" />
-                </button>
-              </MenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Filter by status</TooltipContent>
-          </Tooltip>
+          <Menu open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <MenuTrigger asChild>
+                  <button
+                    type="button"
+                    className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+                      activeFilter !== "all"
+                        ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                        : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
+                    }`}
+                  >
+                    <Filter className="w-4 h-4" />
+                    <span>
+                      {activeFilter === "all" 
+                        ? "Filter" 
+                        : activeFilter === "confirmed" 
+                          ? `Ready (${readyToDispatchCount})`
+                          : STATUS_CONFIG[activeFilter as OrderStatus]?.label || activeFilter}
+                    </span>
+                  </button>
+                </MenuTrigger>
+              </TooltipTrigger>
+              <TooltipContent>Filter by status</TooltipContent>
+            </Tooltip>
 
           <MenuContent
             align="end"
@@ -648,6 +879,18 @@ export function ListView({
                 <span className="text-[var(--system-600)]">All</span>
                 <span className="label-xs text-[var(--system-400)]">{orders.length}</span>
               </MenuRadioItem>
+              {readyToDispatchCount > 0 && (
+                <MenuRadioItem 
+                  value="confirmed" 
+                  className="w-full justify-between rounded-[12px]"
+                >
+                  <span className="inline-flex items-center gap-1.5 px-2 py-1 label-xs rounded-[8px] bg-[var(--blue-300)]/20 text-[var(--blue-300)] font-medium">
+                    <PackageCheck className="w-3 h-3" />
+                    Ready to Dispatch
+                  </span>
+                  <span className="label-xs text-[var(--blue-300)] font-medium">{readyToDispatchCount}</span>
+                </MenuRadioItem>
+              )}
               {statuses.map((status) => {
                 const sConfig = STATUS_CONFIG[status]
                 const count = orders.filter((o) => o.status === status).length
@@ -784,17 +1027,63 @@ export function ListView({
           )}
         </div>  
 
-        {/*Integration (Placeholder) */}
-        <Tooltip>
-          <TooltipTrigger asChild>
+        {/* Delivery Integration Quick Actions */}
+        {readyToDispatchCount > 0 ? (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--blue-300)]/10 border border-[var(--blue-300)]/30">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[var(--blue-300)]" />
+                  <span className="text-sm font-medium text-[var(--blue-300)]">
+                    {readyToDispatchCount} ready
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {courierStatusSummary.pending} orders ready to dispatch
+              </TooltipContent>
+            </Tooltip>
             <button
-              className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+              onClick={handleDispatchAll}
+              disabled={isDispatchingAll}
+              className="cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <Zap className="w-4 h-4" />
+              {isDispatchingAll ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <PackageCheck className="w-3 h-3" />
+              )}
+              {isDispatchingAll ? "Dispatching..." : "Dispatch All"}
             </button>
-          </TooltipTrigger>
-          <TooltipContent>Delivery Integration</TooltipContent>
-        </Tooltip>
+          </div>
+        ) : courierStatusSummary.dispatched > 0 ? (
+          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--system-100)] border border-[var(--system-200)]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-1.5">
+                  <Truck className="w-4 h-4 text-[var(--system-400)]" />
+                  <span className="text-sm text-[var(--system-400)]">
+                    {courierStatusSummary.dispatched} dispatched
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {courierStatusSummary.dispatched} orders with tracking
+              </TooltipContent>
+            </Tooltip>
+          </div>
+        ) : (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
+              >
+                <Zap className="w-4 h-4" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>Delivery Integration</TooltipContent>
+          </Tooltip>
+        )}
 
         {/* Settings Dropdown (Placeholder) */}
         <Menu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
@@ -817,13 +1106,28 @@ export function ListView({
             sideOffset={-32}
             className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuItem onSelect={() => setSettingsDropdownOpen(false)} className="rounded-[12px]">
-              <EyeOff className="w-4 h-4 text-[var(--system-400)]" />
-              <span className="text-[var(--system-600)]">Black List</span>
-            </MenuItem>
-            <MenuItem onSelect={() => setSettingsDropdownOpen(false)} className="rounded-[12px]">
-              <ArrowRightLeft className="w-4 h-4 text-[var(--system-400)]" />
-              <span className="text-[var(--system-600)]">Delivery Costs</span>
+            <MenuLabel className="px-2 py-1 text-xs text-[var(--system-400)]">Export</MenuLabel>
+            {selectedOrders.size > 0 ? (
+              <MenuItem 
+                onSelect={() => {
+                  setSettingsDropdownOpen(false);
+                  handleExportCSV(false);
+                }} 
+                className="rounded-[12px]"
+              >
+                <FileDown className="w-4 h-4 text-[var(--system-400)]" />
+                <span className="text-[var(--system-600)]">Export Selected ({selectedOrders.size})</span>
+              </MenuItem>
+            ) : null}
+            <MenuItem 
+              onSelect={() => {
+                setSettingsDropdownOpen(false);
+                handleExportCSV(true);
+              }} 
+              className="rounded-[12px]"
+            >
+              <FileDown className="w-4 h-4 text-[var(--system-400)]" />
+              <span className="text-[var(--system-600)]">Export All ({filteredOrders.length})</span>
             </MenuItem>
           </MenuContent>
         </Menu>
@@ -837,11 +1141,12 @@ export function ListView({
         <Table className="table-fixed">
           <colgroup>
             <col style={{ width: "48px" }} />
-            <col style={{ width: "25%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
-            <col style={{ width: "16.7%" }} />
+            <col style={{ width: "22%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
+            <col style={{ width: "14%" }} />
           </colgroup>
           <TableHeader>
             <tr className="bg-[var(--system-200)]/60 rounded-[12px]">
@@ -858,6 +1163,7 @@ export function ListView({
               <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Product</th>
               <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">State</th>
               <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Total</th>
+              <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Delivery</th>
               <th className="rounded-r-[12px] px-3 py-[10px] text-left text-[var(--system-600)]">Date</th>
             </tr>
           </TableHeader>
@@ -904,6 +1210,21 @@ export function ListView({
                 </TableCell>
                 <TableCell className="py-3 text-[var(--system-600)]">
                   {formatPrice(order.total)}
+                </TableCell>
+                <TableCell className="py-3">
+                  {order.deliveryProvider ? (
+                    <div className="flex items-center gap-1.5">
+                      <Truck className="w-3.5 h-3.5 text-[var(--blue-300)]" />
+                      <span className="text-xs text-[var(--system-600)]">
+                        {order.deliveryProvider}
+                      </span>
+                      <span className="text-[var(--system-300)] text-[10px]">
+                        {order.trackingNumber || "—"}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-[var(--system-300)] text-xs">—</span>
+                  )}
                 </TableCell>
                 <TableCell className="py-3 text-[var(--system-300)]">
                   {getRelativeTime(order.createdAt)}

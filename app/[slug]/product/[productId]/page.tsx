@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { ArrowRight, Package, Check } from "lucide-react";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
-import { useQuery, useMutation } from "convex/react";
+import { useQuery, useMutation, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
@@ -61,27 +61,30 @@ function ProductDetailContent() {
   const [phoneError, setPhoneError] = useState("");
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
-  
-  const navbarContent = useQuery(
-    api.siteContent.getSiteContentResolved,
-    store?._id ? { storeId: store._id as Id<"stores">, section: "navbar" } : "skip"
-  );
+  const [navbarContent, setNavbarContent] = useState<{ content?: unknown } | null>(null);
+  const [deliveryPricing, setDeliveryPricing] = useState<Array<{ wilaya: string; homeDelivery?: number; officeDelivery?: number }>>([]);
+  const [products, setProducts] = useState<Array<{ _id: string; name: string; basePrice: number; oldPrice?: number; images?: string[]; description?: string; variants?: Array<{ name: string; options: Array<{ name: string; priceModifier?: number }> }>; isArchived?: boolean }>>([]);
 
-  // Fetch delivery pricing
-  const deliveryPricing = useQuery(
-    api.stores.getDeliveryPricing,
-    store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
-  );
-  
-  const footerContent = useQuery(
-    api.siteContent.getSiteContentResolved,
-    store?._id ? { storeId: store._id as Id<"stores">, section: "footer" } : "skip"
-  );
-  
-  const products = useQuery(
-    api.products.getProducts,
-    store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
-  );
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSnapshot() {
+      if (!store?._id) return;
+      const storeId = store._id as Id<"stores">;
+      const [navbar, pricing, productList] = await Promise.all([
+        convex.query(api.siteContent.getSiteContentResolved, { storeId, section: "navbar" }),
+        convex.query(api.stores.getDeliveryPricing, { storeId }),
+        convex.query(api.products.getProducts, { storeId }),
+      ]);
+      if (cancelled) return;
+      setNavbarContent(navbar);
+      setDeliveryPricing((pricing ?? []) as Array<{ wilaya: string; homeDelivery?: number; officeDelivery?: number }>);
+      setProducts((productList ?? []) as Array<{ _id: string; name: string; basePrice: number; oldPrice?: number; images?: string[]; description?: string; variants?: Array<{ name: string; options: Array<{ name: string; priceModifier?: number }> }>; isArchived?: boolean }>);
+    }
+    void loadSnapshot();
+    return () => {
+      cancelled = true;
+    };
+  }, [convex, store?._id]);
 
   const product = useMemo(() => {
     if (!products) return null;
@@ -114,21 +117,6 @@ function ProductDetailContent() {
     navbarBg === "dark"
       ? "bg-transparent hover:bg-white/10"
       : "bg-transparent hover:bg-black/5";
-
-  // Footer content
-  const currentFooter = footerContent?.content as {
-    logo?: string;
-    logoUrl?: string;
-    description?: string;
-    contactEmail?: string;
-    contactPhone?: string;
-    copyright?: string;
-  } | undefined;
-  const footerLogoUrl = currentFooter?.logoUrl;
-  const footerDescription = currentFooter?.description ?? "";
-  const footerPhone = currentFooter?.contactPhone ?? "";
-  const footerEmail = currentFooter?.contactEmail ?? "";
-  const footerCopyright = currentFooter?.copyright ?? "";
 
   // Related products (other products from the same store, excluding current)
   const relatedProducts = useMemo(() => {
@@ -663,55 +651,9 @@ function ProductDetailContent() {
           storeSlug={slug}
         />
       )}
-
-      {/* Footer */}
-      <footer className="mt-16 pt-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Logo & Description */}
-          <div>
-            {footerLogoUrl && (
-              <div className="w-16 h-16 mb-4 relative">
-                <Image
-                  src={footerLogoUrl}
-                  alt="Store logo"
-                  fill
-                  className="object-contain"
-                />
-              </div>
-            )}
-            {footerDescription && (
-              <p className="body-base text-[var(--system-400)] mb-4">{footerDescription}</p>
-            )}
-          </div>
-
-          {/* Contact Info */}
-          <div>
-            <h3 className="title-xl text-[var(--system-600)] mb-4">معلومات التواصل</h3>
-            {footerPhone && (
-              <p className="body-base text-[var(--system-400)] mb-2">
-                Phone: {footerPhone}
-              </p>
-            )}
-            {footerEmail && (
-              <p className="body-base text-[var(--system-400)]">
-                Email: {footerEmail}
-              </p>
-            )}
-          </div>
-
-          {/* Copyright */}
-          <div className="md:text-end">
-            {footerCopyright && (
-              <p className="body-base text-[var(--system-400)]">{footerCopyright}</p>
-            )}
-            <p className="label-xs text-[var(--system-300)] mt-4">
-              © {new Date().getFullYear()} {store?.name || "Store"}
-            </p>
-          </div>
-        </div>
-      </footer>
     </div>
     </div>
     </>
   );
 }
+  const convex = useConvex();

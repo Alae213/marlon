@@ -1,138 +1,160 @@
 # Security
 
-> Claude reads this file before writing any code that touches auth, user data,
-> payments, file uploads, external APIs, or environment variables.
-> Security violations are always Must Fix — they block commits regardless of anything else.
+This file is the non-negotiable security baseline for code that touches auth, tenant data, payments, delivery integrations, webhooks, uploads, or environment variables.
 
----
+## Status Language
 
-## Secrets and Credentials
+- `Current`: enforced or clearly present in the live repo.
+- `Planned`: intended direction only. Do not describe it as live.
+- If code and docs disagree, the repo is truth. Fix the docs.
 
-Never hardcode any secret, key, token, or password in source code — ever.
-This includes placeholder values, test values, and "temporary" values.
+## Priority Order
 
-- All secrets live in environment variables
-- Environment variables are documented in `context/technical/ENVIRONMENT.md`
-- `.env` files are always in `.gitignore` — verify this before every commit
-- If a secret is accidentally committed, treat it as compromised immediately
+1. Tenant isolation, auth correctness, and secret handling
+2. Payment and delivery trust decisions
+3. Sensitive data exposure and logging boundaries
+4. Abuse resistance and fail-closed behavior
+5. Developer convenience
 
-Forbidden in code:
-- API keys of any kind
-- Database connection strings with credentials
-- JWT secrets or signing keys
-- OAuth client secrets
-- Private keys or certificates
-- Passwords, even hashed ones
+Do not accept a cleaner abstraction, faster path, or better UX if it weakens any higher-priority rule.
 
----
+## Hard Rules
 
-## Authentication and Authorisation
+- Server-side enforcement only. UI visibility is never authorization.
+- Store boundary is `storeId`. `storeSlug` is routing data, not proof of access.
+- Fail closed. If auth context, store resolution, credentials, or webhook verification are missing, reject the operation.
+- Never return secrets, decrypted credentials, signing material, or raw payment credentials to the client.
+- Never log secrets, raw credentials, customer PII, full payment payloads, or raw sensitive webhook bodies.
+- Any authz, tenant-isolation, secret-handling, or webhook-trust gap is a must-fix issue.
 
-Every route, endpoint, and action that requires a logged-in user must check
-authentication before doing anything else. No exceptions.
+## Current Access Model
+
+### Current
+
+- Store access is mainly enforced with direct `store.ownerId` checks in Convex functions and route handlers.
+- Delivery credential runtime reads are owner-scoped.
+- The delivery route rejects authenticated users who do not own the target store.
+- There is no centralized policy layer yet.
+
+### Planned
+
+- Store roles move to `owner | admin | staff`.
+- Platform governance role moves to `platform_admin`.
+- Protected access moves behind a central Convex authorization helper and policy layer.
+- Ownership transfer or removal requires explicit current-owner confirmation, with break-glass use limited to `platform_admin`.
+
+Do not write new code that assumes the planned role model already exists.
+
+## Secrets Handling
+
+- Keep secrets only in managed environment stores documented in `context/technical/ENVIRONMENT.md`.
+- Do not hardcode real, test, placeholder, temporary, or fallback secrets in source, fixtures, comments, screenshots, or seeded data.
+- Treat every committed secret as compromised: rotate it, remove it from active use, and inspect misuse risk.
+- `DELIVERY_CREDENTIALS_KEY` is high sensitivity. Do not change it without an explicit re-encryption plan.
+- Emergency courier fallback secrets (`ZR_EXPRESS_*`, `YALIDINE_*`) are incident-only controls. Keep them unset unless fallback is intentionally enabled and tracked.
+
+## Authorization and Tenant Isolation
+
+- Every store-scoped read or write must resolve the target store on the server and verify access to that exact store.
+- Never trust `storeSlug`, query params, hidden form fields, client role claims, or request metadata as proof of authorization.
+- Cross-store access is forbidden for orders, analytics, credentials, content, and admin actions.
+- Keep current owner-based enforcement where that is the live model.
+- New code must not widen access to make future role migration easier.
+
+## Sensitive Data and Logging
+
+- Treat customer names, phone numbers, addresses, emails, payment references, and delivery credentials as sensitive.
+- Do not place sensitive values in URLs, redirect params, cache keys, analytics events, or client-visible error messages.
+- Keep sensitive values out of browser debugging output.
+- Delivery credential UI is write-only after save. Do not reintroduce secret readback.
+- Payment data stays with the provider. Do not store card details or equivalent raw payment instruments.
+- Log only what is needed to diagnose behavior: outcome, actor ID, store ID, provider, request ID.
+- Existing console logging is development-level only, not an audit trail.
+
+## Delivery Credentials
+
+### Current
+
+- Per-store delivery credentials live in dedicated `deliveryCredentials` records encrypted with `DELIVERY_CREDENTIALS_KEY`.
+- Non-secret delivery integration metadata lives in `siteContent.deliveryIntegration`.
+- Public delivery integration queries expose metadata only.
+- Owner-scoped server runtime reads can decrypt credentials for delivery actions.
+- An emergency global fallback exists behind `DELIVERY_ALLOW_GLOBAL_CREDENTIAL_FALLBACK=true`.
+
+### Planned
+
+- Keep fallback off during normal operation.
+- Any fallback enablement must be incident-driven, time-boxed, and rotated off after use.
+- Platform operators do not get routine read access to merchant credentials.
+
+## Payments and Webhook Trust
+
+### Current
+
+- `PAYMENT_PROVIDER` selects the provider by environment.
+- Chargily and SofizPay API keys are server-side env vars.
+- Provider helpers include signature verification logic.
+- Provider helpers can return demo or mock checkout responses when credentials are absent.
+- The live Chargily webhook route is not yet hardened to the target trust model.
+
+### Planned
+
+- Verified payment webhooks are the only trusted trigger for unlock activation.
+- Webhook processing persists receipt evidence, rejects replay, and dedupes before state changes.
 
 Rules:
-- Auth checks happen server-side — never trust the client to enforce access
-- Verify the user owns the resource before returning or modifying it
-  (a user requesting `/invoices/123` should only see it if invoice 123 belongs to them)
-- Store-admin routes must verify store role explicitly (`owner | admin`) not just authentication
-- Platform-admin routes must verify `platformRole=platform_admin` explicitly
-- Session tokens must expire — never create tokens with no expiry
-- Logout must invalidate the session server-side, not just clear the cookie
-- Failed auth attempts must not reveal whether the email exists
 
-Role model (locked):
-- Store roles: `owner`, `admin`, `staff`
-- Platform role: `platform_admin`
+- All inbound webhooks are untrusted until verified.
+- Verify signatures with the provider's documented scheme over the raw request body.
+- Never trust store IDs or metadata in the payload as authorization proof.
+- Enforce idempotency before state changes.
+- Apply replay-window checks where the provider supports timestamps.
+- Do not describe payment flows as production-hardened while demo mode or incomplete verification still exists.
 
-Role boundaries (must enforce in policy layer, not UI):
-- `owner`: full store control; can confirm owner transfer/removal requests.
-- `admin`: operational store control; can manage catalog/orders/memberships within policy, but cannot unilaterally transfer or remove the current owner.
-- `staff`: day-to-day operations only; no billing, membership governance, or ownership actions.
-- `platform_admin`: exceptional platform governance only; no routine store operations by default.
+## Abuse Controls and Fail-Closed Behavior
 
-Ownership governance (locked):
-- Admin cannot unilaterally remove owner.
-- Owner transfer/removal requires explicit confirmation from the current owner before execution.
-- Exceptional break-glass by `platform_admin` is allowed only for legal/safety/escalation incidents with mandatory reason code and immutable audit evidence.
-- Every ownership governance action (request, confirmation, execution, rejection, break-glass) must append immutable audit entries.
+### Current
 
----
+- The delivery create-order route has an in-memory per-process rate limit keyed by user and client IP.
+- Delivery connection testing in Convex is rate-limited per owner and store.
 
-## User Input
+### Planned
 
-Treat all user input as untrusted. Validate and sanitise everything before
-using it in a query, rendering it to the page, or passing it to an external service.
+- Durable rate limits cover public checkout, unlock initiation, webhook ingest, slug validation, and governance endpoints.
+- COD order creation adds phone reputation and blocklist checks.
 
 Rules:
-- Validate input type, length, and format on the server — client validation is UX only
-- Never interpolate user input directly into database queries — always use parameterised queries
-- Sanitise any user-generated content before rendering it as HTML
-- Reject unexpected fields in form submissions — only accept what you expect
-- File uploads: validate file type by content (not just extension), enforce size limits,
-  never serve uploaded files from the same origin as the app
 
----
+- In-memory limits are temporary guards, not durable protection.
+- Missing auth, missing credentials, missing verification, or ambiguous tenant context must reject the request.
+- Do not add silent fallback behavior for protected operations.
 
-## Sensitive Data
+## Delivery Credentials Rules
 
-Define what counts as sensitive for this project and handle it accordingly.
+- Delivery credentials are server-only.
+- Do not expose decrypted values through Convex queries, route responses, admin tooling, or debug helpers.
+- Do not copy delivery secrets into `siteContent`, public metadata, or client state.
+- Do not widen credential read access for support or convenience.
 
-Sensitive data in most web apps includes:
-- Passwords (must be hashed with bcrypt or argon2 — never md5 or sha1)
-- Email addresses
-- Payment information (never store raw card numbers — use Stripe or equivalent)
-- Personal identification details
-- Private messages or documents
+## Review-Time Red Flags
 
-Rules:
-- Sensitive data is never logged — not in error logs, not in analytics
-- Sensitive data is never included in URLs or query parameters
-- Responses must not include sensitive fields the current user doesn't need
-  (e.g. a user list endpoint should never return password hashes)
-- Use HTTPS everywhere — never serve sensitive operations over HTTP
+Treat these as must-fix findings:
 
----
+- Auth enforced only in UI code
+- Store access derived from slug or client-supplied store identifiers without a server check
+- Cross-store reads or writes without an explicit access check
+- Secrets or tokens committed anywhere in the repo
+- Decrypted credentials returned to clients or logged
+- Sensitive data placed in URLs, analytics payloads, or client error messages
+- Payment or unlock state changes triggered without verified webhook trust
+- Webhook handlers that skip raw-body verification, dedupe, or replay checks where supported
+- New delivery fallback behavior enabled by default
+- Public or semi-public endpoints that fail open when auth or verification is missing
+- Security-sensitive changes merged without updating this file when the live posture changed
 
-## Rate Limiting and Abuse Prevention
+## What Engineers Must Do
 
-Protect endpoints that can be abused:
-- Login and signup endpoints must be rate limited
-- Password reset must be rate limited
-- Any endpoint that sends emails or SMS must be rate limited
-- Search endpoints that are computationally expensive should be rate limited
-
----
-
-## Dependencies
-
-- Never install a package without checking it is actively maintained
-- Pin dependency versions in production — avoid `latest` or loose ranges
-- Run `npm audit` after adding dependencies — flag high severity issues immediately
-
----
-
-## What Claude Must Do
-
-When writing code that touches any of the above areas, Claude must:
-
-1. Read this file first
-2. Check the feature spec for any stated security requirements
-3. Implement the security measure — never defer it as "to do later"
-4. Flag in the code review if any area was not addressed
-
-Security is not a feature to add later. It is built in from the first line.
-
----
-
-## Project-Specific Rules
-
-<!-- Add any rules specific to this project here during setup or as they emerge.
-     Examples:
-     - All users must verify their email before accessing paid features
-     - GDPR: users in the EU must be able to request deletion of their data
-     - PCI: no payment data is stored — all card handling goes through Stripe
--->
-
-- Ownership changes must use a two-step flow: request then owner confirmation.
-- Ownership changes are never hard-deleted from logs; retention policy must preserve governance evidence.
+- Read this file before changing auth, payments, delivery integrations, tenant-scoped queries, or env handling.
+- Verify whether a rule is `Current` or `Planned` before documenting behavior.
+- Reduce logging before calling security-sensitive work complete.
+- Align with `context/project/DECISIONS.md`, `context/technical/ARCHITECTURE.md`, `context/technical/API_CONTRACTS.md`, and `context/technical/ENVIRONMENT.md` when the touched path depends on them.

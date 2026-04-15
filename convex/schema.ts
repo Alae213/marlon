@@ -33,7 +33,8 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("ownerId", ["ownerId"])
-    .index("slug", ["slug"]),
+    .index("slug", ["slug"])
+    .index("subscription", ["subscription"]),
 
   products: defineTable({
     storeId: v.string(),
@@ -56,7 +57,9 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("storeId", ["storeId"])
-    .index("category", ["storeId", "category"]),
+    .index("category", ["storeId", "category"])
+    .index("storeArchivedSort", ["storeId", "isArchived", "sortOrder"])
+    .index("storeCategoryArchivedSort", ["storeId", "category", "isArchived", "sortOrder"]),
 
   orders: defineTable({
     storeId: v.string(),
@@ -114,8 +117,74 @@ export default defineSchema({
     updatedAt: v.number(),
   })
     .index("storeId", ["storeId"])
+    .index("storeCreatedAt", ["storeId", "createdAt"])
     .index("status", ["storeId", "status"])
-    .index("orderNumber", ["orderNumber"]),
+    .index("orderNumber", ["orderNumber"])
+    .index("storeOrderNumber", ["storeId", "orderNumber"])
+    .index("storeUpdatedAt", ["storeId", "updatedAt"]),
+
+  orderDigests: defineTable({
+    orderId: v.id("orders"),
+    storeId: v.string(),
+    orderNumber: v.string(),
+    customerName: v.string(),
+    customerPhone: v.string(),
+    customerWilaya: v.string(),
+    status: v.string(),
+    paymentStatus: v.optional(v.string()),
+    total: v.number(),
+    subtotal: v.number(),
+    deliveryCost: v.number(),
+    deliveryProvider: v.optional(v.string()),
+    trackingNumber: v.optional(v.string()),
+    productsCount: v.number(),
+    primaryProductName: v.optional(v.string()),
+    primaryProductImage: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("orderId", ["orderId"])
+    .index("storeUpdatedAt", ["storeId", "updatedAt"])
+    .index("storeStatusUpdatedAt", ["storeId", "status", "updatedAt"])
+    .index("storeOrderNumber", ["storeId", "orderNumber"]),
+
+  orderTimelineEvents: defineTable({
+    orderId: v.id("orders"),
+    storeId: v.string(),
+    status: v.string(),
+    note: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("orderCreatedAt", ["orderId", "createdAt"])
+    .index("storeCreatedAt", ["storeId", "createdAt"]),
+
+  orderCallEvents: defineTable({
+    orderId: v.id("orders"),
+    storeId: v.string(),
+    outcome: v.string(),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("orderCreatedAt", ["orderId", "createdAt"])
+    .index("storeCreatedAt", ["storeId", "createdAt"]),
+
+  productDigests: defineTable({
+    productId: v.id("products"),
+    storeId: v.string(),
+    name: v.string(),
+    basePrice: v.number(),
+    oldPrice: v.optional(v.number()),
+    primaryImage: v.optional(v.string()),
+    category: v.optional(v.string()),
+    isArchived: v.boolean(),
+    sortOrder: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("productId", ["productId"])
+    .index("storeUpdatedAt", ["storeId", "updatedAt"])
+    .index("storeArchivedSort", ["storeId", "isArchived", "sortOrder"])
+    .index("storeCategoryArchivedSort", ["storeId", "category", "isArchived", "sortOrder"]),
 
   siteContent: defineTable({
     storeId: v.string(),
@@ -168,4 +237,22 @@ deliveryCredentials: defineTable({
     .index("storeCreatedAt", ["storeId", "createdAt"])
     .index("storeProvider", ["storeId", "provider"])
     .index("storeRegion", ["storeId", "region"]),
+
+  deliveryAnalyticsRollups: defineTable({
+    storeId: v.id("stores"),
+    dayKey: v.string(),
+    provider: v.string(),
+    region: v.optional(v.string()),
+    attempted: v.number(),
+    dispatched: v.number(),
+    delivered: v.number(),
+    failed: v.number(),
+    rts: v.number(),
+    completed: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("storeDay", ["storeId", "dayKey"])
+    .index("storeProviderDay", ["storeId", "provider", "dayKey"])
+    .index("storeRegionDay", ["storeId", "region", "dayKey"])
+    .index("storeProviderRegionDay", ["storeId", "provider", "region", "dayKey"]),
 });

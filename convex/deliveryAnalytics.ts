@@ -1,5 +1,6 @@
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { toDayKey } from "./performanceHelpers";
 
 type DeliveryEventType = "attempted" | "dispatched" | "delivered" | "failed" | "rts";
 
@@ -12,19 +13,13 @@ function normalizeDimension(value?: string | null): string | undefined {
   return normalized.length > 0 ? normalized : undefined;
 }
 
-function buildSummary(events: Array<{ eventType: DeliveryEventType }>) {
-  const counts: Record<DeliveryEventType, number> = {
-    attempted: 0,
-    dispatched: 0,
-    delivered: 0,
-    failed: 0,
-    rts: 0,
-  };
-
-  for (const event of events) {
-    counts[event.eventType] += 1;
-  }
-
+function buildSummaryFromCounts(counts: {
+  attempted: number;
+  dispatched: number;
+  delivered: number;
+  failed: number;
+  rts: number;
+}) {
   const completed = counts.delivered + counts.failed + counts.rts;
   const successRate = completed > 0 ? counts.delivered / completed : 0;
 
@@ -33,6 +28,110 @@ function buildSummary(events: Array<{ eventType: DeliveryEventType }>) {
     completed,
     successRate,
   };
+}
+
+async function incrementRollup(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  ctx: any,
+  args: {
+    storeId: string;
+    provider: string;
+    region?: string;
+    createdAt: number;
+    eventType: DeliveryEventType;
+  }
+) {
+  const dayKey = toDayKey(args.createdAt);
+  const now = Date.now();
+  const rollupDelta = {
+    attempted: 0,
+    dispatched: 0,
+    delivered: 0,
+    failed: 0,
+    rts: 0,
+    completed: 0,
+  };
+
+  rollupDelta[args.eventType] += 1;
+  if (args.eventType === "delivered" || args.eventType === "failed" || args.eventType === "rts") {
+    rollupDelta.completed += 1;
+  }
+
+  const existingExact = await ctx.db
+    .query("deliveryAnalyticsRollups")
+    .withIndex("storeProviderRegionDay", (q: any) =>
+      q
+        .eq("storeId", args.storeId)
+        .eq("provider", args.provider)
+        .eq("region", args.region)
+        .eq("dayKey", dayKey)
+    )
+    .first();
+
+  if (existingExact) {
+    await ctx.db.patch(existingExact._id, {
+      attempted: existingExact.attempted + rollupDelta.attempted,
+      dispatched: existingExact.dispatched + rollupDelta.dispatched,
+      delivered: existingExact.delivered + rollupDelta.delivered,
+      failed: existingExact.failed + rollupDelta.failed,
+      rts: existingExact.rts + rollupDelta.rts,
+      completed: existingExact.completed + rollupDelta.completed,
+      updatedAt: now,
+    });
+  } else {
+    await ctx.db.insert("deliveryAnalyticsRollups", {
+      storeId: args.storeId,
+      dayKey,
+      provider: args.provider,
+      region: args.region,
+      attempted: rollupDelta.attempted,
+      dispatched: rollupDelta.dispatched,
+      delivered: rollupDelta.delivered,
+      failed: rollupDelta.failed,
+      rts: rollupDelta.rts,
+      completed: rollupDelta.completed,
+      updatedAt: now,
+    });
+  }
+
+  if (args.region) {
+    const existingProviderGlobal = await ctx.db
+      .query("deliveryAnalyticsRollups")
+      .withIndex("storeProviderRegionDay", (q: any) =>
+        q
+          .eq("storeId", args.storeId)
+          .eq("provider", args.provider)
+          .eq("region", undefined)
+          .eq("dayKey", dayKey)
+      )
+      .first();
+
+    if (existingProviderGlobal) {
+      await ctx.db.patch(existingProviderGlobal._id, {
+        attempted: existingProviderGlobal.attempted + rollupDelta.attempted,
+        dispatched: existingProviderGlobal.dispatched + rollupDelta.dispatched,
+        delivered: existingProviderGlobal.delivered + rollupDelta.delivered,
+        failed: existingProviderGlobal.failed + rollupDelta.failed,
+        rts: existingProviderGlobal.rts + rollupDelta.rts,
+        completed: existingProviderGlobal.completed + rollupDelta.completed,
+        updatedAt: now,
+      });
+    } else {
+      await ctx.db.insert("deliveryAnalyticsRollups", {
+        storeId: args.storeId,
+        dayKey,
+        provider: args.provider,
+        region: undefined,
+        attempted: rollupDelta.attempted,
+        dispatched: rollupDelta.dispatched,
+        delivered: rollupDelta.delivered,
+        failed: rollupDelta.failed,
+        rts: rollupDelta.rts,
+        completed: rollupDelta.completed,
+        updatedAt: now,
+      });
+    }
+  }
 }
 
 export const recordDeliveryEvent = mutation({
@@ -55,18 +154,30 @@ export const recordDeliveryEvent = mutation({
   },
   handler: async (ctx, args) => {
     const createdAt = args.createdAt ?? Date.now();
+    const provider = normalizeDimension(args.provider) ?? "unknown";
+    const region = normalizeDimension(args.region);
 
-    return await ctx.db.insert("deliveryAnalyticsEvents", {
+    const eventId = await ctx.db.insert("deliveryAnalyticsEvents", {
       storeId: args.storeId,
       orderId: normalizeDimension(args.orderId),
       eventType: args.eventType,
-      provider: normalizeDimension(args.provider) ?? "unknown",
-      region: normalizeDimension(args.region),
+      provider,
+      region,
       trackingNumber: normalizeDimension(args.trackingNumber),
       reason: normalizeDimension(args.reason),
       source: normalizeDimension(args.source),
       createdAt,
     });
+
+    await incrementRollup(ctx, {
+      storeId: args.storeId,
+      provider,
+      region,
+      createdAt,
+      eventType: args.eventType,
+    });
+
+    return eventId;
   },
 });
 
@@ -75,53 +186,92 @@ export const getDeliveryPerformanceSummary = query({
     storeId: v.id("stores"),
     provider: v.optional(v.string()),
     region: v.optional(v.string()),
+    sinceDays: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const providerFilter = normalizeDimension(args.provider);
     const regionFilter = normalizeDimension(args.region);
+    const sinceDays = args.sinceDays ?? 30;
+    const now = Date.now();
+    const sinceTimestamp = now - sinceDays * 24 * 60 * 60 * 1000;
+    const sinceDayKey = toDayKey(sinceTimestamp);
 
-    const allEvents = await ctx.db
-      .query("deliveryAnalyticsEvents")
-      .withIndex("storeCreatedAt", (q) => q.eq("storeId", args.storeId))
+    const byDay = await ctx.db
+      .query("deliveryAnalyticsRollups")
+      .withIndex("storeDay", (q) => q.eq("storeId", args.storeId).gte("dayKey", sinceDayKey))
       .collect();
 
-    const filtered = allEvents.filter((event) => {
-      if (providerFilter && event.provider !== providerFilter) {
+    const filteredRows = byDay.filter((row) => {
+      if (providerFilter && row.provider !== providerFilter) {
         return false;
       }
-      if (regionFilter && event.region !== regionFilter) {
-        return false;
+      if (regionFilter) {
+        return row.region === regionFilter;
       }
-      return true;
+      return row.region === undefined;
     });
 
-    const overall = buildSummary(filtered as Array<{ eventType: DeliveryEventType }>);
+    const overallCounts = {
+      attempted: 0,
+      dispatched: 0,
+      delivered: 0,
+      failed: 0,
+      rts: 0,
+    };
 
-    const byProvider = new Map<string, Array<{ eventType: DeliveryEventType }>>();
-    const byRegion = new Map<string, Array<{ eventType: DeliveryEventType }>>();
+    const providerCounts = new Map<string, typeof overallCounts>();
+    const regionCounts = new Map<string, typeof overallCounts>();
 
-    for (const event of filtered as Array<{ provider: string; region?: string; eventType: DeliveryEventType }>) {
-      const providerKey = event.provider || "unknown";
-      const providerEvents = byProvider.get(providerKey) ?? [];
-      providerEvents.push({ eventType: event.eventType });
-      byProvider.set(providerKey, providerEvents);
+    for (const row of filteredRows) {
+      overallCounts.attempted += row.attempted;
+      overallCounts.dispatched += row.dispatched;
+      overallCounts.delivered += row.delivered;
+      overallCounts.failed += row.failed;
+      overallCounts.rts += row.rts;
 
-      const regionKey = event.region || "unknown";
-      const regionEvents = byRegion.get(regionKey) ?? [];
-      regionEvents.push({ eventType: event.eventType });
-      byRegion.set(regionKey, regionEvents);
+      const providerKey = row.provider || "unknown";
+      const p = providerCounts.get(providerKey) ?? {
+        attempted: 0,
+        dispatched: 0,
+        delivered: 0,
+        failed: 0,
+        rts: 0,
+      };
+      p.attempted += row.attempted;
+      p.dispatched += row.dispatched;
+      p.delivered += row.delivered;
+      p.failed += row.failed;
+      p.rts += row.rts;
+      providerCounts.set(providerKey, p);
+
+      const regionKey = row.region || "unknown";
+      const r = regionCounts.get(regionKey) ?? {
+        attempted: 0,
+        dispatched: 0,
+        delivered: 0,
+        failed: 0,
+        rts: 0,
+      };
+      r.attempted += row.attempted;
+      r.dispatched += row.dispatched;
+      r.delivered += row.delivered;
+      r.failed += row.failed;
+      r.rts += row.rts;
+      regionCounts.set(regionKey, r);
     }
 
     return {
-      overall,
-      byProvider: Array.from(byProvider.entries()).map(([provider, events]) => ({
+      overall: buildSummaryFromCounts(overallCounts),
+      byProvider: Array.from(providerCounts.entries()).map(([provider, counts]) => ({
         provider,
-        ...buildSummary(events),
+        ...buildSummaryFromCounts(counts),
       })),
-      byRegion: Array.from(byRegion.entries()).map(([region, events]) => ({
+      byRegion: Array.from(regionCounts.entries()).map(([region, counts]) => ({
         region,
-        ...buildSummary(events),
+        ...buildSummaryFromCounts(counts),
       })),
+      sinceDayKey,
+      windowDays: sinceDays,
     };
   },
 });

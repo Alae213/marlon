@@ -38,7 +38,7 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
   const [logoCropSrc, setLogoCropSrc] = useState<string | null>(null);
 
   const setNavbarStyles = useMutation(api.siteContent.setNavbarStyles);
-  const setLogoAndSyncFooter = useMutation(api.siteContent.setLogoAndSyncFooter);
+  const setNavbarLogo = useMutation(api.siteContent.setNavbarLogo);
   const { uploadToStorage } = useImageUpload();
 
   const currentNavbar = (navbarContent?.content ?? undefined) as NavbarContent | undefined;
@@ -97,10 +97,10 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
   const handleApplyLogoCrop = useCallback(
     async (croppedDataUrl: string) => {
       const storageId = await uploadToStorage(croppedDataUrl);
-      await setLogoAndSyncFooter({ storeId, logoStorageId: storageId });
+      await setNavbarLogo({ storeId, logoStorageId: storageId });
       setLogoCropSrc(null);
     },
-    [setLogoAndSyncFooter, storeId, uploadToStorage]
+    [setNavbarLogo, storeId, uploadToStorage]
   );
 
   return (

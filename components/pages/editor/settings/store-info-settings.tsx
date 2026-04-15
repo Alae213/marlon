@@ -51,18 +51,19 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
     <div className="space-y-6">
       <div>
         <h3 className="font-semibold text-[--system-700]">Store Information</h3>
-        <p className="text-sm text-[--system-400] mt-1">Basic information about your store</p>
+        <p className="mt-1 text-body-sm text-[--system-400]">Basic information about your store</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2 text-[--system-500]">Store Name</label>
-          <Input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
+          <label htmlFor="store-name" className="mb-2 block text-body-sm text-[--system-500]">Store Name</label>
+          <Input id="store-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2 text-[--system-500]">Description</label>
+          <label htmlFor="store-description" className="mb-2 block text-body-sm text-[--system-500]">Description</label>
           <Textarea
+            id="store-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Enter store description"
@@ -71,19 +72,19 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
         </div>
 
         <div>
-          <label className="block text-sm font-medium mb-2 text-[--system-500]">Phone Number</label>
-          <Input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
+          <label htmlFor="store-phone" className="mb-2 block text-body-sm text-[--system-500]">Phone Number</label>
+          <Input id="store-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
         </div>
       </div>
 
-      <div className="p-4 bg-[--system-100] rounded-xl border border-[--system-200]">
-        <p className="text-xs text-[--system-400] mb-1">Store URL</p>
-        <p className="font-medium text-[--system-700]">marlon.com/{storeSlug}</p>
+      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-4">
+        <p className="mb-1 text-caption text-[--system-400]">Store URL</p>
+        <p className="text-body-sm text-[--system-700]">marlon.com/{storeSlug}</p>
       </div>
 
       {savedMessage && (
-        <div className="p-3 rounded-lg bg-[--color-success-bg] text-[--color-success] text-sm font-medium">
-          ✓ Changes saved successfully
+        <div className="rounded-lg bg-[--color-success-bg] p-3 text-body-sm text-[--color-success]">
+          Changes saved successfully
         </div>
       )}
 

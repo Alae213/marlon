@@ -2,6 +2,8 @@
 // Currently supports: Chargily, SofizPay ( Stellar), or custom implementations
 // To add a new provider: implement the PaymentProvider interface and add to providers/
 
+import crypto from "crypto";
+
 export interface PaymentProvider {
   createCheckout(params: CreateCheckoutParams): Promise<CheckoutResult>;
   verifyWebhook(body: string, signature?: string): Promise<WebhookEvent | null>;
@@ -166,7 +168,9 @@ class ChargilyProvider implements PaymentProvider {
    */
   private computeSignature(payload: string): string {
     // Use crypto module for HMAC-SHA256
-    const crypto = require("crypto");
+    if (!this.apiKey) {
+      throw new Error("API key not configured");
+    }
     const hmac = crypto.createHmac("sha256", this.apiKey);
     hmac.update(payload, "utf8");
     return hmac.digest("hex");
@@ -273,7 +277,9 @@ class SofizPayProvider implements PaymentProvider {
    * Compute HMAC-SHA256 signature for webhook verification
    */
   private computeSignature(payload: string): string {
-    const crypto = require("crypto");
+    if (!this.apiKey) {
+      throw new Error("API key not configured");
+    }
     const hmac = crypto.createHmac("sha256", this.apiKey);
     hmac.update(payload, "utf8");
     return hmac.digest("hex");

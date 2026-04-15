@@ -1,418 +1,140 @@
-# Data Models (Canonical)
-
-Canonical MVP data model aligned to locked decisions in `context/project/DECISIONS.md` and runtime architecture in `context/technical/ARCHITECTURE.md`.
-
-## Global Rules
-
-- Multi-tenant boundary is `storeId` on all store-scoped records.
-- Timestamps use Unix epoch milliseconds (`Date.now()`).
-- Commercial lock policy is fixed platform-wide:
-  - `dailyCap = 5` orders per store/day.
-  - Day boundary is `00:00 Africa/Algiers`.
-  - Overflow orders are accepted but merchant-visible data/actions are masked/frozen while locked.
-  - Overflow orders auto-delete after 5 days if still locked.
-  - Unlock price is fixed at `2000 DZD` per store per month.
-- `stores.slug` is globally unique; reserved words are denied at creation/update (`reserved-slug` policy check).
-
-## Shared Enums / State Machines
-
-- `MembershipRole`: `owner | admin | staff`
-- `MembershipStatus`: `active | invited | revoked`
-- `PlatformRole` (users): `user | platform_admin`
-- `OwnershipTransferStatus`: `pending_owner_confirmation | confirmed_by_owner | executed | rejected | canceled | expired | break_glass_executed`
-- `StoreLockState`: `unlocked | locked_overflow`
-- `OrderStatus`: `pending | confirmed | preparing | out_for_delivery | delivered | canceled | returned`
-- `OrderVisibilityState`: `normal | overflow_masked | overflow_unlocked`
-- `DeliveryJobStatus`: `queued | in_progress | retry_scheduled | succeeded | failed | dead_letter`
-- `WebhookProcessStatus`: `received | verified | processed | ignored_duplicate | rejected`
-
-## Entities
-
-### `users`
-
-Purpose: identity, account trust, and retention lifecycle for authenticated actors.
-
-Fields
-- `_id`
-- `clerkUserId` (required)
-- `platformRole` (`PlatformRole`, default `user`)
-- `email` (nullable), `emailVerifiedAt` (nullable)
-- `phoneE164` (nullable), `phoneVerifiedAt` (nullable)
-- `storesOwnedCount` (derived/cacheable)
-- `reputationScore` (number, default neutral)
-- `isBlocked` (bool), `blockReason` (nullable)
-- `createdAt`, `updatedAt`, `lastSeenAt`
-- Retention/lifecycle: `deletedAt` (soft delete), `anonymizedAt`, `retentionPolicyVersion`
-
-Indexes / constraints
-- Unique: `clerkUserId`
-- Index: `phoneE164`
-- Index: `platformRole`
-
-### `stores`
-
-Purpose: canonical store identity, routing slug, and commercial lock/unlock state.
-
-Fields
-- `_id`
-- `ownerUserId` (required)
-- `slug` (required, global unique, reserved denylist protected)
-- `name`, `status` (`active | suspended | archived`)
-- `timezone` (fixed to `Africa/Algiers` for cap logic)
-- `dailyOrderCap` (fixed `5`)
-- `dailyWindowDate` (`YYYY-MM-DD` in `Africa/Algiers`)
-- `dailyOrdersCount` (resets at local midnight)
-- `lockState` (`StoreLockState`)
-- `lockActivatedAt` (nullable)
-- `unlockPriceDzd` (fixed `2000`)
-- `unlockActiveFrom` (nullable), `unlockActiveUntil` (nullable)
-- `createdAt`, `updatedAt`
-- Lifecycle: `deletedAt` (nullable)
-
-Indexes / constraints
-- Unique: `slug`
-- Index: `ownerUserId`
-- Index: `lockState`
-- Index: `unlockActiveUntil`
-
-Policy note
-- `slug` uniqueness is global across all stores; writes must fail when slug is in reserved denylist.
-
-### `storeMemberships`
-
-Purpose: actor-to-store authorization source of truth.
-
-Fields
-- `_id`
-- `storeId`, `userId`
-- `role` (`MembershipRole`)
-- `status` (`MembershipStatus`)
-- `invitedByUserId` (nullable)
-- `createdAt`, `updatedAt`, `revokedAt` (nullable)
-
-Indexes / constraints
-- Unique: (`storeId`, `userId`)
-- Index: (`userId`, `status`)
-- Index: (`storeId`, `role`, `status`)
-
-Governance note
-- `admin` may manage members and operations per policy, but may not execute current owner removal/transfer without explicit owner confirmation.
-
-### `ownerTransferRequests`
-
-Purpose: auditable governance workflow for owner transfer/removal with mandatory current-owner confirmation.
-
-Fields
-- `_id`
-- `storeId`
-- `currentOwnerUserId`
-- `proposedSuccessorUserId` (nullable for owner-removal-only request when policy allows)
-- `requestedByUserId`
-- `status` (`OwnershipTransferStatus`)
-- `requestReasonCode` (`owner_initiated | owner_requested_delegate | legal_request | abuse_escalation | support_escalation | other`)
-- `requestNote` (nullable)
-- `ownerConfirmedAt` (nullable)
-- `ownerConfirmedByUserId` (nullable, must equal `currentOwnerUserId`)
-- `executedAt` (nullable)
-- `executedByUserId` (nullable)
-- `breakGlass` (bool, default `false`)
-- `breakGlassReasonCode` (nullable, required when `breakGlass=true`)
-- `breakGlassTicketRef` (nullable, required when `breakGlass=true`)
-- `expiresAt`
-- `createdAt`, `updatedAt`, `canceledAt` (nullable)
-
-Indexes / constraints
-- Index: (`storeId`, `status`, `createdAt`)
-- Index: (`currentOwnerUserId`, `status`)
-- Index: (`requestedByUserId`, `createdAt`)
-- Logical invariant: execution requires `ownerConfirmedAt` unless `breakGlass=true`.
-- Logical invariant: `breakGlass=true` requires `executedBy` actor with `platformRole=platform_admin`, non-empty reason code, and ticket reference.
-
-### `products`
-
-Purpose: merchant catalog entries.
-
-Fields
-- `_id`
-- `storeId`
-- `slug` (store-scoped)
-- `title`, `description`
-- `priceDzd`, `compareAtPriceDzd` (nullable)
-- `currency` (default `DZD`)
-- `images` (array), `inventoryQty` (nullable)
-- `isPublished`, `sortOrder`
-- `createdAt`, `updatedAt`, `deletedAt` (nullable)
-
-Indexes / constraints
-- Unique: (`storeId`, `slug`)
-- Index: (`storeId`, `isPublished`, `sortOrder`)
-
-### `siteContent`
-
-Purpose: editable storefront/admin content by section.
-
-Fields
-- `_id`
-- `storeId`
-- `section` (e.g., `hero`, `about`, `faq`, `deliveryIntegration`)
-- `content` (JSON object)
-- `version`
-- `updatedByUserId`
-- `createdAt`, `updatedAt`
-
-Delivery integration metadata rule
-- `siteContent.section = deliveryIntegration` stores metadata only:
-  - `provider` (`zr-express | yalidine | none`)
-  - `hasCredentials` (bool)
-  - `lastUpdatedAt`
-- No secret credential values may be stored in `siteContent`.
-
-Indexes / constraints
-- Unique: (`storeId`, `section`)
-- Index: `storeId`
-
-### `deliveryPricing`
-
-Purpose: store-scoped delivery pricing matrix used at checkout.
-
-Fields
-- `_id`
-- `storeId`
-- `provider` (`zr-express | yalidine | internal`)
-- `zones` (array of zone rules: name, feeDzd, conditions)
-- `defaultFeeDzd`
-- `freeDeliveryThresholdDzd` (nullable)
-- `isActive`
-- `createdAt`, `updatedAt`
-
-Indexes / constraints
-- Unique: (`storeId`, `provider`)
-- Index: (`storeId`, `isActive`)
-
-### `deliveryCredentials`
-
-Purpose: encrypted per-store/provider delivery secrets.
-
-Fields
-- `_id`
-- `storeId`
-- `provider` (`zr-express | yalidine`)
-- `algorithm` (fixed `aes-256-gcm`)
-- `ciphertextHex`, `ivHex`, `authTagHex`
-- `keyVersion`
-- `createdAt`, `updatedAt`, `rotatedAt` (nullable)
-
-Indexes / constraints
-- Unique: (`storeId`, `provider`)
-- Index: `storeId`
-
-Security note
-- Write-only to merchant UI after save; decrypted values are never returned to clients.
-
-### `orders`
-
-Purpose: operational order record with inline latest state and embedded item snapshots.
-
-Fields
-- `_id`
-- `storeId`
-- `publicOrderNumber` (store-scoped increment/string)
-- `status` (`OrderStatus`)
-- `visibilityState` (`OrderVisibilityState`)
-- `storeLockStateAtCreation` (`StoreLockState`)
-- `customerSnapshot`:
-  - `fullName`, `phoneE164`, `addressLine`, `wilaya`, `commune`, `notes`
-- `customerMaskedSnapshot`:
-  - masked display values used while locked
-- `totals`:
-  - `subtotalDzd`, `deliveryFeeDzd`, `discountDzd`, `totalDzd`
-- `currency` (`DZD`)
-- `items` (`OrderItemSnapshot[]`, embedded; see below)
-- `delivery`:
-  - `provider`, `dispatchState`, `lastDispatchJobId` (nullable), `providerTrackingRef` (nullable)
-- `placedAt`, `confirmedAt` (nullable), `deliveredAt` (nullable), `canceledAt` (nullable)
-- Lock lifecycle: `isOverflow` (bool), `overflowDeleteAfterAt` (nullable)
-- Retention: `piiRetentionUntil`, `anonymizedAt` (nullable), `deletedAt` (nullable)
-- `createdAt`, `updatedAt`
-
-Embedded `OrderItemSnapshot`
-- `lineId`
-- `productId` (nullable for deleted products)
-- `productTitleSnapshot`
-- `skuSnapshot` (nullable)
-- `unitPriceDzdSnapshot`
-- `quantity`
-- `lineTotalDzdSnapshot`
-
-Indexes / constraints
-- Unique: (`storeId`, `publicOrderNumber`)
-- Index: (`storeId`, `createdAt`)
-- Index: (`storeId`, `status`, `createdAt`)
-- Index: (`storeId`, `visibilityState`, `createdAt`)
-- Index: (`storeId`, `overflowDeleteAfterAt`)
-
-Lifecycle note
-- If `isOverflow=true` and store remains locked, record is hard-deleted at `overflowDeleteAfterAt` (`createdAt + 5 days`).
-- Before delete, non-PII aggregates can be retained in analytics tables only.
-
-### `orderAudit`
-
-Purpose: immutable append-only timeline for order and lock/billing/delivery events.
-
-Fields
-- `_id`
-- `storeId`, `orderId` (nullable for store-level events)
-- `eventType` (e.g., `order_created`, `status_changed`, `masked`, `unlocked`, `dispatch_attempted`, `dispatch_succeeded`, `dispatch_failed`, `owner_transfer_requested`, `owner_transfer_confirmed`, `owner_transfer_executed`, `owner_transfer_break_glass_executed`)
-- `actorType` (`system | user | webhook | worker`)
-- `actorId` (nullable)
-- `payload` (structured JSON, no raw secrets)
-- `occurredAt`, `createdAt`
-- `idempotencyKey` (nullable)
-
-Indexes / constraints
-- Index: (`orderId`, `occurredAt`)
-- Index: (`storeId`, `occurredAt`)
-- Unique (nullable): `idempotencyKey`
-
-### `billingSubscriptions`
-
-Purpose: recurring commercial subscription records per store unlock plan.
-
-Fields
-- `_id`
-- `storeId`
-- `provider` (fixed `chargily` for MVP)
-- `providerSubscriptionId` (nullable until confirmed)
-- `planCode` (`unlock_store_monthly_2000_dzd`)
-- `amountDzd` (fixed `2000`)
-- `currency` (`DZD`)
-- `status` (`pending | active | past_due | canceled | expired`)
-- `currentPeriodStartAt`, `currentPeriodEndAt`
-- `canceledAt` (nullable)
-- `createdAt`, `updatedAt`
-
-Indexes / constraints
-- Unique: (`storeId`, `planCode`, `status=active`) logical invariant
-- Index: (`storeId`, `status`)
-- Index: `providerSubscriptionId`
-
-### `unlockWindows`
-
-Purpose: auditable store unlock entitlement windows derived from verified billing events.
-
-Fields
-- `_id`
-- `storeId`
-- `subscriptionId` (nullable)
-- `sourceWebhookReceiptId`
-- `startsAt`, `endsAt`
-- `state` (`scheduled | active | expired | revoked`)
-- `createdAt`, `updatedAt`
-
-Indexes / constraints
-- Index: (`storeId`, `startsAt`)
-- Index: (`storeId`, `endsAt`)
-- Index: (`storeId`, `state`)
-
-### `webhookReceipts`
-
-Purpose: trusted webhook evidence, replay defense, and idempotent processing ledger.
-
-Fields
-- `_id`
-- `provider` (`chargily`)
-- `externalEventId`
-- `eventType`
-- `signatureValid` (bool)
-- `payloadHash`
-- `receivedAt`
-- `processedAt` (nullable)
-- `processStatus` (`WebhookProcessStatus`)
-- `idempotencyKey`
-- `errorCode` (nullable), `errorMessage` (nullable)
-
-Indexes / constraints
-- Unique: (`provider`, `externalEventId`)
-- Unique: `idempotencyKey`
-- Index: (`provider`, `processStatus`, `receivedAt`)
-
-### `queueJobs`
-
-Purpose: async job queue backing delivery dispatch and retries.
-
-Fields
-- `_id`
-- `topic` (fixed `delivery.dispatch` for current scope)
-- `storeId`, `orderId`
-- `provider`
-- `status` (`DeliveryJobStatus`)
-- `attemptCount`, `maxAttempts`
-- `runAt` (scheduled next execution)
-- `lastErrorCode` (nullable), `lastErrorMessage` (nullable)
-- `payload` (minimal provider input)
-- `idempotencyKey`
-- `createdAt`, `updatedAt`, `finishedAt` (nullable)
-
-Indexes / constraints
-- Unique: `idempotencyKey`
-- Index: (`topic`, `status`, `runAt`)
-- Index: (`storeId`, `status`, `createdAt`)
-- Index: (`orderId`, `createdAt`)
-
-### `blocklistEntries`
-
-Purpose: explicit fraud/abuse denial rules.
-
-Fields
-- `_id`
-- `scope` (`global | store`)
-- `storeId` (nullable when global)
-- `subjectType` (`phone | user | ip | address`)
-- `subjectHash` (normalized + hashed value)
-- `reasonCode`
-- `active` (bool)
-- `expiresAt` (nullable)
-- `createdByUserId` (nullable), `createdAt`, `updatedAt`
-
-Indexes / constraints
-- Unique: (`scope`, `storeId`, `subjectType`, `subjectHash`)
-- Index: (`active`, `expiresAt`)
-- Index: (`storeId`, `active`)
-
-### `reputationSignals`
-
-Purpose: non-binary trust signals used for fraud scoring and throttling.
-
-Fields
-- `_id`
-- `storeId` (nullable for global signals)
-- `subjectType` (`phone | user | ip | address`)
-- `subjectHash`
-- `signalType` (`order_cancel_rate | return_rate | failed_delivery | abuse_report | velocity_spike`)
-- `signalValue` (number)
-- `windowStartAt`, `windowEndAt`
-- `source` (`system | admin | webhook`)
-- `createdAt`
-
-Indexes / constraints
-- Index: (`subjectType`, `subjectHash`, `windowEndAt`)
-- Index: (`storeId`, `signalType`, `windowEndAt`)
-
-## Locked Lifecycle and Retention Behavior
-
-- Overflow lifecycle (locked commercial behavior):
-  - On order create, if store exceeds `dailyOrderCap=5` for `dailyWindowDate` in `Africa/Algiers`, set `orders.isOverflow=true`, `orders.visibilityState=overflow_masked`, and `orders.overflowDeleteAfterAt = createdAt + 5 days`.
-  - While store is `locked_overflow`, merchant-facing reads/actions use masked snapshot only and block state-mutating actions per policy.
-  - If unlock becomes active before `overflowDeleteAfterAt`, set `visibilityState=overflow_unlocked` and allow normal handling.
-  - If still locked at `overflowDeleteAfterAt`, hard-delete overflow order record and keep only anonymized/aggregated metrics.
-- PII retention/anonymization fields:
-  - `orders.piiRetentionUntil` controls when direct identifiers must be anonymized.
-  - `users.anonymizedAt` and `orders.anonymizedAt` mark irreversible anonymization completion.
-  - `deletedAt` means tombstoned/soft-deleted records; hard-delete allowed only for overflow-expired locked orders and retention cleanup jobs.
-- Analytics retention:
-  - Retain only aggregate non-identifying metrics after anonymization/deletion events.
-- Ownership governance lifecycle:
-  - Ownership transfer/removal starts with `ownerTransferRequests.status=pending_owner_confirmation`.
-  - Execution is blocked until `ownerConfirmedAt` is set by current owner.
-  - Admin cannot bypass owner confirmation.
-  - Break-glass execution is exceptional (`breakGlass=true`) and requires `platform_admin`, reason code, ticket reference, and immutable audit append.
+# Data Models
+
+Truth-first data reference for Marlon MVP. This document separates live Convex schema from policy targets and redesign ideas so it does not overstate what exists today.
+
+Status labels used here:
+- `Current`: live in `convex/schema.ts` now.
+- `Partial`: some structure exists, but the full target behavior does not.
+- `Planned`: intended schema/design, not live yet.
+- `Policy-locked`: business rule treated as fixed even if implementation is incomplete.
+- `Needs verification`: likely true, but should be rechecked before relying on it.
+
+## 1) Live Schema Snapshot
+
+- `Current`: Live tables are `users`, `stores`, `products`, `orders`, `orderDigests`, `orderTimelineEvents`, `orderCallEvents`, `productDigests`, `siteContent`, `deliveryPricing`, `deliveryCredentials`, `deliveryAnalyticsEvents`, and `deliveryAnalyticsRollups`.
+- `Current`: The live model is mostly owner-centric. `stores.ownerId` is the main tenant/control link.
+- `Current`: There is no live `storeMemberships`, `ownerTransferRequests`, `billingSubscriptions`, `unlockWindows`, `webhookReceipts`, `queueJobs`, `blocklistEntries`, or `reputationSignals` table.
+- `Partial`: Billing/lock state lives mainly on `stores` via trial/subscription/order-count fields, not via a full normalized billing model.
+- `Needs verification`: Some ID shapes are inconsistent across tables; several `storeId` fields are plain strings, while some newer tables use `v.id("stores")` or `v.id("orders")` references.
+
+Live entity map:
+
+```mermaid
+erDiagram
+    users ||--o{ stores : owns
+    stores ||--o{ products : contains
+    stores ||--o{ productDigests : derives
+    stores ||--o{ siteContent : configures
+    stores ||--o{ deliveryPricing : prices
+    stores ||--o{ orders : receives
+    stores ||--o{ orderDigests : derives
+    orders ||--o{ orderTimelineEvents : appends
+    orders ||--o{ orderCallEvents : appends
+    stores ||--o{ deliveryCredentials : secures
+    stores ||--o{ deliveryAnalyticsEvents : records
+    stores ||--o{ deliveryAnalyticsRollups : aggregates
+```
+
+## 2) Current Core Tables
+
+### `users` - `Current`
+
+Purpose: authenticated user profile keyed to Clerk.
+
+- Key fields: `clerkId`, `email`, optional `firstName`, `lastName`, `phone`, `theme`, `createdAt`, `updatedAt`
+- Indexes: `clerkId`
+- Reality note: no live platform-role, membership, trust, or lifecycle-retention fields
+
+### `stores` - `Current`
+
+Purpose: canonical store record and current commercial state.
+
+- Key fields: `ownerId`, `name`, `slug`, optional profile/contact fields, `status`
+- Current billing/lock fields: `subscription`, `orderCount`, `firstOrderAt`, `trialEndsAt`, `paidUntil`, `lockedAt`
+- Indexes: `ownerId`, `slug`, `subscription`
+- Reality note: this is the live billing/lock source of truth today; it is not the planned overflow-lock schema
+
+### `products` - `Current`
+
+Purpose: catalog products with optional variants.
+
+- Key fields: `storeId`, `name`, optional `description`, `basePrice`, optional `oldPrice`, `images`, `category`, `variants`, `isArchived`, `sortOrder`, timestamps
+- Variant shape: array of variant groups with `name` and `options[{ name, priceModifier? }]`
+- Indexes: `storeId`, `category`, `storeArchivedSort`, `storeCategoryArchivedSort`
+- Reality note: live fields differ materially from the older `slug`/published/inventory-style documentation
+
+### `orders` - `Current`
+
+Purpose: operational order record with customer, line items, delivery, notes, and some embedded history.
+
+- Key fields: `storeId`, `orderNumber`, customer fields (`customerName`, `customerPhone`, `customerWilaya`, optional commune/address), `products[]`, `subtotal`, `deliveryCost`, `total`, `status`
+- Optional operations fields: `paymentStatus`, call metrics, delivery/tracking fields, `notes`
+- Embedded history still present: optional `callLog[]`, `auditTrail[]`, `timeline[]`, admin-note fields
+- Indexes: `storeId`, `storeCreatedAt`, `status`, `orderNumber`, `storeOrderNumber`, `storeUpdatedAt`
+- Reality note: live orders are not modeled with masked-overflow snapshots, retention markers, or normalized audit-only history yet
+
+## 3) Current Supporting / Derived / Event Tables
+
+### Order-facing tables
+
+- `orderDigests` - `Current`: denormalized order list/read model with headline customer, total, status, provider, and product-summary fields; indexed by `orderId`, store/update, store/status/update, and store/order number
+- `orderTimelineEvents` - `Current`: per-order timeline events with `status`, optional `note`, `createdAt`; indexed by order/date and store/date
+- `orderCallEvents` - `Current`: per-order call outcomes with optional notes; indexed by order/date and store/date
+
+### Product-facing tables
+
+- `productDigests` - `Current`: denormalized product read model with `productId`, `storeId`, `name`, pricing, `primaryImage`, `category`, archive state, and sort order
+
+### Store config / delivery tables
+
+- `siteContent` - `Current`: flexible per-store content by `section`, with `content` stored as `any`
+- `deliveryPricing` - `Current`: per-store, per-wilaya pricing using `homeDelivery` and `officeDelivery`; this is simpler than the previously documented zone-matrix target
+- `deliveryCredentials` - `Current`: encrypted credentials with `storeId`, `provider`, `algorithm`, `ciphertextHex`, `ivHex`, timestamps
+- `Needs verification`: `deliveryCredentials` currently omits an `authTag` field in schema even though AES-GCM normally expects one
+
+### Delivery analytics tables
+
+- `deliveryAnalyticsEvents` - `Current`: event stream for delivery outcomes with `eventType`, `provider`, optional `region`, `trackingNumber`, `reason`, `source`, `createdAt`
+- `deliveryAnalyticsRollups` - `Current`: daily aggregate counters by store/day/provider/region with `attempted`, `dispatched`, `delivered`, `failed`, `rts`, `completed`, `updatedAt`
+- `Partial`: these analytics tables are live even though the full async dispatch/queue architecture is not
+
+## 4) Policy-Locked Model Targets
+
+- `Policy-locked`: Store isolation is by store boundary, even though live authorization is mostly owner-based today.
+- `Policy-locked`: Store slugs must be globally unique and protected by reserved-word policy.
+- `Policy-locked`: Merchant roles are `owner`, `admin`, and `staff`; owner transfer/removal needs explicit owner-confirmation governance.
+- `Policy-locked`: Locked/overflow behavior must not expose protected customer data before unlock.
+- `Policy-locked`: Customer checkout should still succeed even when merchant lock rules apply.
+- `Policy-locked`: Delivery credentials belong in dedicated secret storage, not generic site content.
+
+Policy target lifecycle:
+
+```mermaid
+flowchart LR
+    live[Current live model\nstores.subscription + orderCount + paidUntil + lockedAt]
+    target[Policy-locked target\n5/day overflow model with masked merchant view]
+    redesign[Planned redesign\nnormalized billing, webhook receipts, unlock windows, governance tables]
+
+    live --> target
+    target --> redesign
+```
+
+## 5) Planned Tables / Redesigns
+
+- `Planned`: `storeMemberships` for role-aware store access beyond a single owner link
+- `Planned`: governance tables such as `ownerTransferRequests` for auditable owner transfer/removal workflows
+- `Planned`: normalized billing tables such as `billingSubscriptions`, `unlockWindows`, and `webhookReceipts`
+- `Planned`: queue/worker tables for delivery dispatch retries and dead-letter handling
+- `Planned`: explicit fraud/risk tables such as blocklists and reputation signals
+- `Planned`: tighter canonical event modeling so order history no longer depends on a mix of embedded arrays plus side tables
+
+Do not treat these as live schema. They are target-state design directions only.
+
+## 6) Biggest Live-vs-Target Gaps
+
+- `Gap`: Many previously documented tables were aspirational and do not exist in live Convex schema.
+- `Gap`: Live billing/lock behavior is trial/subscription + order-count based, not the full `5/day` `Africa/Algiers` overflow/unlock/delete model.
+- `Gap`: Live order history is split across `orders`, `orderDigests`, `orderTimelineEvents`, and `orderCallEvents`, with some history still embedded inside `orders`.
+- `Gap`: Delivery pricing is currently per-wilaya home/office pricing, not the broader planned zone-rule matrix.
+- `Gap`: Authorization data is still mostly owner-centric; do not assume live memberships, delegated roles, or governance workflows.
+- `Gap`: Field names in live schema differ from older docs in several important places, especially `users`, `stores`, `products`, and `orders`.

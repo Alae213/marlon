@@ -12,12 +12,16 @@ import {
   PhoneOff,
   PhoneMissed,
   Home,
-  Building2
+  Building2,
+  Truck,
+  ExternalLink,
+  Clipboard
 } from "lucide-react";
 import { Button } from "@/components/primitives/core/buttons/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
 import { Sheet, SheetContent, SheetTitle } from "@/components/primitives/ui/sheet";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/primitives/ui/hover-card";
+import { useToast } from "@/contexts/toast-context";
 import type { CallLog, OrderStatus } from "@/lib/orders-types";
 import { CALL_OUTCOME_LABELS } from "@/lib/orders-types";
 
@@ -247,6 +251,7 @@ interface OrderDetailsProps {
     notes?: string,
   ) => Promise<void>;
   onUpsertAdminNote: (orderId: string, text: string) => Promise<void>;
+  storeSlug?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -260,6 +265,7 @@ export function OrderDetails({
   onStatusChange,
   onAddCallLog,
   onUpsertAdminNote,
+  storeSlug,
 }: OrderDetailsProps) {
   // ── Data ────────────────────────────────────────────────────────────────
   // Use order prop directly - parent updates local state after mutations
@@ -276,11 +282,76 @@ export function OrderDetails({
   const [callLogError, setCallLogError] = useState<string | null>(null);
   const [isSavingCallLog, setIsSavingCallLog] = useState(false);
 
+  const [isDispatching, setIsDispatching] = useState(false);
+  const [dispatchError, setDispatchError] = useState<string | null>(null);
+  const [copiedFeedback, setCopiedFeedback] = useState(false);
+
+  const { showToast } = useToast();
+
   const resetNoteState = useCallback((nextDraft: string) => {
     setAdminNoteDraft(nextDraft);
     setIsSavingNote(false);
     setNoteError(null);
   }, []);
+
+  // ── Dispatch Handler ─────────────────────────────────────────────────────
+
+  const handleDispatch = useCallback(async () => {
+    if (!order || isDispatching) return;
+    setDispatchError(null);
+    setIsDispatching(true);
+
+    try {
+      const response = await fetch("/api/delivery/create-order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          customerName: order.customerName,
+          customerPhone: order.customerPhone,
+          customerWilaya: order.customerWilaya,
+          customerCommune: order.customerCommune,
+          customerAddress: order.customerAddress,
+          products: order.products,
+          total: order.total,
+          provider: order.deliveryProvider || "zr_express",
+          storeSlug,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        await onStatusChange(order._id, "packaged");
+      } else {
+        setDispatchError(data.error || "Failed to dispatch order");
+      }
+    } catch {
+      setDispatchError("Failed to dispatch order. Please try again.");
+    } finally {
+      setIsDispatching(false);
+    }
+  }, [order, isDispatching, onStatusChange, storeSlug]);
+
+  // ── Copy Order Info Handler ───────────────────────────────────────────────
+
+  const handleCopyOrderInfo = useCallback(async () => {
+    if (!order) return;
+    
+    const infoText = `Name: ${order.customerName || ""}
+Phone: ${order.customerPhone || ""}
+Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order.customerWilaya || ""}`;
+
+    try {
+      await navigator.clipboard.writeText(infoText);
+      setCopiedFeedback(true);
+      showToast("Copied!", "success");
+      setTimeout(() => setCopiedFeedback(false), 2000);
+    } catch {
+      showToast("Failed to copy", "error");
+    }
+  }, [order, showToast]);
 
   // ── Handlers ────────────────────────────────────────────────────────────
 
@@ -374,6 +445,18 @@ export function OrderDetails({
         <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-2 p-5">
           {/* Customer Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
+            <div className="flex items-center justify-between">
+              <span className="text-[var(--system-200)] text-sm font-medium">Customer</span>
+              <button
+                type="button"
+                onClick={handleCopyOrderInfo}
+                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--system-300)] text-xs transition-colors"
+                aria-label="Copy order info"
+              >
+                <Clipboard className="w-3.5 h-3.5" />
+                {copiedFeedback ? "Copied!" : "Copy"}
+              </button>
+            </div>
             <div className="space-y-3 body-base">
               {[
                 { label: "Full Name", value: order.customerName },
@@ -471,7 +554,52 @@ export function OrderDetails({
                 }} />
               </div>
 
-          {/* Admin Note Section */}
+          {/* Tracking Info Section - shown after dispatch */}
+          {order.trackingNumber && (order.status === "packaged" || order.status === "shipped") && (
+            <section className="p-3.5 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2">
+              <div className="flex items-center gap-2 text-[var(--primary)]">
+                <Truck className="w-4 h-4" />
+                <span className="text-sm font-medium">Delivery Info</span>
+              </div>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/50">Provider</span>
+                  <span className="text-sm text-white">
+                    {order.deliveryProvider === "yalidine" ? "Yalidine" : 
+                     order.deliveryProvider === "zr-express" || order.deliveryProvider === "zr_express" ? "ZR Express" :
+                     order.deliveryProvider || "Unknown"}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-white/50">Tracking #</span>
+                  <span className="text-sm text-white font-mono">{order.trackingNumber}</span>
+                </div>
+                {order.deliveryProvider === "yalidine" && (
+                  <a 
+                    href={`https://yalidine.dz/track/${order.trackingNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Track Package
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+                {order.deliveryProvider === "zr-express" || order.deliveryProvider === "zr_express" && (
+                  <a 
+                    href={`https://zrexpress.dz/tracking/${order.trackingNumber}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                  >
+                    Track Package
+                    <ExternalLink className="w-3 h-3" />
+                  </a>
+                )}
+              </div>
+</section>
+          )}
+
           <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-3">
             <div className="flex items-baseline justify-between gap-2">
               <h3 className="text-sm font-medium text-white/80">Admin Note</h3>
@@ -572,7 +700,14 @@ export function OrderDetails({
 
           {/* Status Actions */}
           <div className="w-full">
-            <StatusActionButtons status={order.status as OrderStatus} orderId={order._id} onStatusChange={onStatusChange} />
+            <StatusActionButtons 
+              status={order.status as OrderStatus} 
+              orderId={order._id} 
+              onStatusChange={onStatusChange}
+              onDispatch={handleDispatch}
+              isDispatching={isDispatching}
+              dispatchError={dispatchError}
+            />
           </div>
         </footer>
       </SheetContent>
@@ -620,8 +755,8 @@ function CallButton({
   );
 }
 
-function StatusActionButtons({ status, orderId, onStatusChange }: { 
-  status: OrderStatus, orderId: string, onStatusChange: (id: string, s: string) => void 
+function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDispatching, dispatchError }: { 
+  status: OrderStatus, orderId: string, onStatusChange: (id: string, s: string) => void, onDispatch?: () => void, isDispatching?: boolean, dispatchError?: string | null
 }) {
   switch (status) {
     case "new":
@@ -643,12 +778,20 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
       );
     case "confirmed":
       return (
-        <ActionButton
-          label="Send to delivery company"
-          targetStatus="packaged"
-          icon={<Package className="w-5 h-5" />}
-          onClick={() => onStatusChange(orderId, "packaged")}
-        />
+        <div className="flex flex-col gap-2 w-full">
+          <ActionButton
+            label={isDispatching ? "Dispatching..." : "Send to delivery company"}
+            targetStatus="packaged"
+            icon={<Package className="w-5 h-5" />}
+            onClick={() => onDispatch?.()}
+            disabled={isDispatching}
+          />
+          {dispatchError && (
+            <p className="text-xs text-destructive text-center" role="alert">
+              {dispatchError}
+            </p>
+          )}
+        </div>
       );
     case "packaged":
       return (
@@ -710,18 +853,21 @@ function StatusActionButtons({ status, orderId, onStatusChange }: {
   }
 }
 
-function ActionButton({ label, targetStatus, icon, onClick }: {
-  label: string, targetStatus: OrderStatus, icon?: ReactNode, onClick: () => void
+function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
+  label: string, targetStatus: OrderStatus, icon?: ReactNode, onClick: () => void, disabled?: boolean
 }) {
   const statusConfig = STATUS_CONFIG[targetStatus];
   
   if (!statusConfig) {
-    // Fallback styling if status config not found
     return (
       <button
         type="button"
         onClick={onClick}
-        className="flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20 motion-reduce:transition-none"
+        disabled={disabled}
+        className={cn(
+          "flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20 motion-reduce:transition-none",
+          disabled && "opacity-60 cursor-not-allowed"
+        )}
       >
         {icon && <div className="p-1">{icon}</div>}
         {label}
@@ -733,7 +879,11 @@ function ActionButton({ label, targetStatus, icon, onClick }: {
     <button
       type="button"
       onClick={onClick}
-      className="group relative flex-1 py-3.5 rounded-2xl font-semibold text-sm flex flex-col items-center justify-center gap-1.5 outline-none cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:ring-white/20"
+      disabled={disabled}
+      className={cn(
+        "group relative flex-1 py-3.5 rounded-2xl font-semibold text-sm flex flex-col items-center justify-center gap-1.5 outline-none cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:ring-white/20",
+        disabled && "opacity-60 cursor-not-allowed"
+      )}
       style={{
         backgroundColor: statusConfig.bgColor,
         color: statusConfig.textColor,

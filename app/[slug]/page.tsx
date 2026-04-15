@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Package, Menu, X } from "lucide-react";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
-import { useQuery } from "convex/react";
+import { useConvex, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
@@ -22,28 +22,21 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-// Types matching the backend
-interface NavbarLink {
-  id: string;
-  text: string;
-  url: string;
-  isDefault: boolean;
-  enabled: boolean;
-}
-
 interface NavbarContent {
   logoUrl?: string;
   background?: "dark" | "light" | "glass";
   textColor?: "dark" | "light";
-  links?: NavbarLink[];
   showCart?: boolean;
 }
 
-const DEFAULT_NAVBAR_LINKS: NavbarLink[] = [
-  { id: "link-shop", text: "Shop", url: "#products", isDefault: true, enabled: true },
-  { id: "link-faq", text: "FAQ", url: "/", isDefault: true, enabled: true },
-  { id: "link-help", text: "Help", url: "/", isDefault: true, enabled: true },
-];
+interface StorefrontProduct {
+  _id: string;
+  name: string;
+  basePrice: number;
+  images?: string[];
+}
+
+const NAVBAR_PLACEHOLDER_LABELS = ["Shop", "FAQ", "Help"];
 
 export default function StorefrontPage() {
   return (
@@ -57,33 +50,41 @@ function StorefrontContent() {
   const params = useParams();
   const slug = params?.slug as string;
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [hasOpenedCart, setHasOpenedCart] = useState(false);
   const { itemCount, isOpen, openCart, closeCart } = useCart();
+  const convex = useConvex();
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
+  const [navbarContent, setNavbarContent] = useState<{ content?: unknown } | null>(null);
+  const [heroContent, setHeroContent] = useState<{ content?: unknown } | null>(null);
+  const [footerContent, setFooterContent] = useState<{ content?: unknown } | null>(null);
+  const [productsData, setProductsData] = useState<StorefrontProduct[]>([]);
 
-  const navbarContent = useQuery(
-    api.siteContent.getSiteContentResolved,
-    store?._id ? { storeId: store._id as Id<"stores">, section: "navbar" } : "skip"
-  );
-  
-  const heroContent = useQuery(
-    api.siteContent.getSiteContentResolved,
-    store?._id ? { storeId: store._id as Id<"stores">, section: "hero" } : "skip"
-  );
-  
-  const footerContent = useQuery(
-    api.siteContent.getSiteContentResolved,
-    store?._id ? { storeId: store._id as Id<"stores">, section: "footer" } : "skip"
-  );
-  
-  const products = useQuery(
-    api.products.getProducts,
-    store?._id ? { storeId: store._id as Id<"stores"> } : "skip"
-  );
+  useEffect(() => {
+    let cancelled = false;
+    async function loadSnapshot() {
+      if (!store?._id) return;
+      const storeId = store._id as Id<"stores">;
+      const [navbar, hero, footer, products] = await Promise.all([
+        convex.query(api.siteContent.getSiteContentResolved, { storeId, section: "navbar" }),
+        convex.query(api.siteContent.getSiteContentResolved, { storeId, section: "hero" }),
+        convex.query(api.siteContent.getSiteContentResolved, { storeId, section: "footer" }),
+        convex.query(api.products.getProducts, { storeId }),
+      ]);
+      if (cancelled) return;
+      setNavbarContent(navbar);
+      setHeroContent(hero);
+      setFooterContent(footer);
+      setProductsData((products ?? []) as StorefrontProduct[]);
+    }
 
-  const productsData = useMemo(() => products || [], [products]);
+    void loadSnapshot();
+    return () => {
+      cancelled = true;
+    };
+  }, [convex, store?._id]);
 
-  const filteredProducts = productsData;
+  const filteredProducts = useMemo(() => productsData, [productsData]);
 
   const currentNavbar = navbarContent?.content as NavbarContent | undefined;
   const navbarBg = currentNavbar?.background ?? "light";
@@ -94,8 +95,11 @@ function StorefrontContent() {
         ? "dark"
         : (currentNavbar?.textColor ?? "dark");
   const navbarLogoUrl = currentNavbar?.logoUrl;
-  const navbarLinks = DEFAULT_NAVBAR_LINKS;
   const showCart = currentNavbar?.showCart ?? true;
+  const openCartWithInit = () => {
+    setHasOpenedCart(true);
+    openCart();
+  };
 
   // Hero content
   const currentHero = heroContent?.content as { 
@@ -116,7 +120,6 @@ function StorefrontContent() {
   const heroLayout = currentHero?.layout ?? "center";
   const heroBgUrl = currentHero?.backgroundImageUrl;
 
-  // Footer content
   const currentFooter = footerContent?.content as {
     logo?: string;
     logoUrl?: string;
@@ -130,6 +133,7 @@ function StorefrontContent() {
   const footerDescription = currentFooter?.description ?? "";
   const footerPhone = currentFooter?.contactPhone ?? "";
   const footerEmail = currentFooter?.contactEmail ?? "";
+
   const navbarSurfaceClass =
     navbarBg === "dark"
       ? "border-white/12 bg-[color:rgb(23_23_23_/_0.72)]"
@@ -171,14 +175,13 @@ function StorefrontContent() {
           </div>
 
           <div className="hidden lg:flex flex-1 items-center justify-center gap-2">
-            {navbarLinks.map((link, index) => (
-              <a
-                key={`desktop-${link.id || `link-${index}`}`}
-                href={link.url}
+            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
+              <span
+                key={`desktop-${label}`}
                 className={`rounded-full px-3 py-2 text-body-sm ${navbarTextClass} hover:opacity-70 transition-opacity`}
               >
-                {link.text}
-              </a>
+                {label}
+              </span>
             ))}
           </div>
 
@@ -192,7 +195,7 @@ function StorefrontContent() {
 
             {showCart && (
               <button
-                onClick={openCart}
+                onClick={openCartWithInit}
                 className={`relative flex h-10 w-10 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ${cartClasses} ${navbarTextClass}`}
               >
                 <CartIcon className="w-4 h-4" />
@@ -223,15 +226,13 @@ function StorefrontContent() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {navbarLinks.map((link, index) => (
-              <a
-                key={`mobile-${link.id || `link-${index}`}`}
-                href={link.url}
-                onClick={() => setMobileMenuOpen(false)}
-                className="block p-3 rounded-lg bg-[var(--system-700)] text-[var(--sheet-surface-fg)] hover:bg-[var(--system-600)] transition-colors"
+            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
+              <span
+                key={`mobile-${label}`}
+                className="block p-3 rounded-lg bg-[var(--system-700)] text-[var(--sheet-surface-fg)]"
               >
-                {link.text}
-              </a>
+                {label}
+              </span>
             ))}
           </div>
         </SheetContent>
@@ -318,7 +319,7 @@ function StorefrontContent() {
         </div>
       )}
 
-      {showCart && (
+      {showCart && hasOpenedCart && store?._id && (
         <CartSidebar 
           isOpen={isOpen} 
           onClose={closeCart}
@@ -327,41 +328,35 @@ function StorefrontContent() {
         />
       )}
 
-      {/* Footer */}
       <footer className="mt-16 p-8 pb-[180px]">
         <div className="flex flex-col justify-between w-full md:flex-row max-w-6xl mx-auto">
-          {/* Logo & Description */}
           <div>
             {footerLogoUrl && (
               <div className="w-16 h-16 mb-4 relative">
                 <Image
                   src={footerLogoUrl}
-                  alt="Store logo" 
+                  alt="Store logo"
                   fill
                   className="object-contain"
                 />
               </div>
             )}
             {footerDescription && (
-              <p className="title-xl text-[var(--system-400)]">{heroTitle}</p>
+              <p className="title-xl text-[var(--system-400)]">{footerDescription}</p>
             )}
           </div>
 
-          {/* Links */}
           <div className="flex flex-col items-start gap-6">
-            {navbarLinks.map((link, index) => (
-              <a
-                key={`footer-${link.id || `link-${index}`}`}
-                href={link.url}
-                className="body-base text-[var(--system-400)] hover:text-[var(--system-600)] transition-colors"
+            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
+              <span
+                key={`footer-${label}`}
+                className="body-base text-[var(--system-400)]"
               >
-                {link.text}
-              </a>
+                {label}
+              </span>
             ))}
           </div>
 
-
-          {/* Contact Info */}
           <div className="flex flex-col items-start gap-6">
             {footerPhone && (
               <p className="body-base text-[var(--system-400)]">
@@ -374,7 +369,6 @@ function StorefrontContent() {
               </p>
             )}
           </div>
-          
         </div>
       </footer>
     </div>

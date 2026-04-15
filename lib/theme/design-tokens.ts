@@ -9,8 +9,6 @@
  * Based on: context/design/DESIGN_SYSTEM.md
  */
 
-import { cssVariables } from "./config";
-
 // ===========================================
 // COLOR TOKENS
 // ===========================================
@@ -87,10 +85,10 @@ export const typography = {
     caption: "1rem",           // 16px
     bodySm: "1.25rem",         // 20px
     body: "1.5rem",            // 24px
-    headingSm: "1.333rem",     // 24px
-    heading: "1.4rem",         // 28px
-    modal: "1.333rem",         // 32px
-    page: "1.222rem",          // 44px
+    headingSm: "1.5rem",       // 24px
+    heading: "1.75rem",        // 28px
+    modal: "2rem",             // 32px
+    page: "2.75rem",           // 44px
   },
   letterSpacing: {
     tight: "-0.03em",

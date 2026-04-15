@@ -4,7 +4,6 @@ export { ProductCard } from "./components/product-card";
 export { ProductListItem } from "./components/product-list-item";
 export { NavbarEditor } from "./components/navbar-editor";
 export { HeroEditor } from "./components/hero-editor";
-export { FooterEditor } from "./components/footer-editor";
 export { SettingsDialog } from "./components/settings-dialog";
 export { DeliveryPricingSettings } from "./settings/delivery-pricing-settings";
 export { DeliveryIntegrationSettings } from "./settings/delivery-integration-settings";
@@ -20,7 +19,6 @@ export type {
   NavbarContent,
   NavbarLink,
   HeroContent,
-  FooterContent,
   EditableField,
   EditingField,
 } from "./types";

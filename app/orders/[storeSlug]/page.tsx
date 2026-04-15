@@ -237,6 +237,7 @@ function OrdersContent({
             onOrderClick={setSelectedOrder}
             viewMode={viewMode}
             onViewModeChange={setViewMode}
+            storeSlug={storeSlug}
           />
         </AnimatedTabContent>
 
@@ -252,6 +253,7 @@ function OrdersContent({
           onStatusChange={handleStatusChange}
           onAddCallLog={handleAddCallLog}
           onUpsertAdminNote={handleUpsertAdminNote}
+          storeSlug={storeSlug}
         />
 
         <BottomNavigation storeSlug={storeSlug} currentPage="orders" />

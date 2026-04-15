@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -29,7 +29,6 @@ import { ProductCard } from "./product-card";
 import { ProductForm } from "./product-form";
 import { NavbarEditor } from "./navbar-editor";
 import { HeroEditor } from "./hero-editor";
-import { FooterEditor } from "./footer-editor";
 import { SettingsDialog } from "./settings-dialog";
 
 // Convex ID validation helper
@@ -74,16 +73,13 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     storeId,
     section: "hero",
   });
-  const footerContent = useQuery(api.siteContent.getSiteContentResolved, {
-    storeId,
-    section: "footer",
-  });
 
   // ── Convex Mutations ────────────────────────────────────────
   const createProduct = useMutation(api.products.createProduct);
   const updateProduct = useMutation(api.products.updateProduct);
   const archiveProduct = useMutation(api.products.archiveProduct);
   const unarchiveProduct = useMutation(api.products.unarchiveProduct);
+  const removeAllOwnedFooterContent = useMutation(api.siteContent.removeAllOwnedFooterContent);
 
   // ── Hooks ───────────────────────────────────────────────────
   const { resolveImageStorageIds } = useImageUpload();
@@ -102,6 +98,12 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     if (!products) return [];
     return products.filter((p) => !p.isArchived);
   }, [products]);
+
+  useEffect(() => {
+    void removeAllOwnedFooterContent().catch((err) => {
+      console.error("Failed to clean legacy footer content:", err);
+    });
+  }, [removeAllOwnedFooterContent]);
 
   // ── Copy Handler ────────────────────────────────────────────
   const handleCopy = useCallback(async () => {
@@ -434,23 +436,6 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                 )}
               </Card>
 
-              {/* Footer Editor */}
-              <FooterEditor
-                storeId={storeId}
-                footerContent={footerContent}
-                navbarContent={navbarContent}
-                editingField={editingField}
-                editValue={editValue}
-                onEditValueChange={setEditValue}
-                onStartEditing={(field, value) => {
-                  setEditingField({ productId: "", field });
-                  setEditValue(value);
-                }}
-                onSaveEdit={() => {
-                  setEditingField(null);
-                  setEditValue("");
-                }}
-              />
             </ScrollAreaViewport>
             <ScrollAreaScrollbar
               orientation="vertical"

@@ -42,56 +42,72 @@ export function DeliveryPricingSettings({ storeId }: DeliveryPricingSettingsProp
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-semibold text-[--system-700]">Delivery Pricing by Region</h3>
-          <p className="text-sm text-[--system-400] mt-1">Set delivery costs for each wilaya (region)</p>
+          <p className="mt-1 text-body-sm text-[--system-400]">Set delivery costs for each wilaya (region)</p>
         </div>
-        {savedMessage && <span className="text-sm font-medium text-[--color-success]">✓ Saved</span>}
+        {savedMessage && <span className="text-body-sm text-[--color-success]">Saved</span>}
       </div>
 
-      <div className="border border-[--system-200] rounded-xl overflow-hidden bg-white">
-        <div className="grid grid-cols-3 gap-4 bg-[--system-100] p-3 text-sm font-semibold text-[--system-500]">
-          <span>Wilaya</span>
-          <span className="text-center">Home Delivery (DZD)</span>
-          <span className="text-center">Office Delivery (DZD)</span>
-        </div>
-        <div className="max-h-[400px] overflow-y-auto">
-          {WILAYAS.map((wilaya) => {
-            const pricing = deliveryPricing?.find((p: Doc<"deliveryPricing">) => p.wilaya === wilaya);
-            const homePrice = pricing?.homeDelivery ?? DEFAULT_HOME;
-            const officePrice = pricing?.officeDelivery ?? DEFAULT_OFFICE;
+      <div className="overflow-hidden rounded-xl border border-[--system-200] bg-white">
+        <div className="overflow-x-auto">
+          <table className="min-w-[560px] w-full border-collapse">
+            <thead className="bg-[--system-100]">
+              <tr>
+                <th scope="col" className="p-2 text-left text-caption text-[--system-500] sm:p-3 sm:text-body-sm">Wilaya</th>
+                <th scope="col" className="p-2 text-center text-caption text-[--system-500] sm:p-3 sm:text-body-sm">Home Delivery (DZD)</th>
+                <th scope="col" className="p-2 text-center text-caption text-[--system-500] sm:p-3 sm:text-body-sm">Office Delivery (DZD)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {WILAYAS.map((wilaya) => {
+                const pricing = deliveryPricing?.find((p: Doc<"deliveryPricing">) => p.wilaya === wilaya);
+                const homePrice = pricing?.homeDelivery ?? DEFAULT_HOME;
+                const officePrice = pricing?.officeDelivery ?? DEFAULT_OFFICE;
+                const wilayaId = wilaya.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+                const homeInputId = `${wilayaId}-home-delivery`;
+                const officeInputId = `${wilayaId}-office-delivery`;
 
-            return (
-              <div
-                key={wilaya}
-                className="grid grid-cols-3 gap-4 p-3 border-t border-[--system-200] items-center hover:bg-[--system-100] transition-colors"
-              >
-                <span className="text-sm font-medium text-[--system-700]">{wilaya}</span>
-                <input
-                  type="number"
-                  key={`${wilaya}-home-${homePrice}`}
-                  defaultValue={homePrice}
-                  onBlur={(e) => handleSave(wilaya, "homeDelivery", parseInt(e.target.value, 10) || 0)}
-                  className="h-9 px-3 text-center text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
-                  placeholder="0"
-                />
-                <input
-                  type="number"
-                  key={`${wilaya}-office-${officePrice}`}
-                  defaultValue={officePrice}
-                  onBlur={(e) => handleSave(wilaya, "officeDelivery", parseInt(e.target.value, 10) || 0)}
-                  className="h-9 px-3 text-center text-sm border border-[--system-200] bg-white text-[--system-700] rounded-lg focus:outline-none focus:border-[--color-primary] focus:ring-2 focus:ring-[--color-primary]/10 transition-all"
-                  placeholder="0"
-                />
-              </div>
-            );
-          })}
+                return (
+                  <tr key={wilaya} className="border-t border-[--system-200] transition-colors hover:bg-[--system-100]">
+                    <th scope="row" className="p-2 text-left text-caption text-[--system-700] sm:p-3 sm:text-body-sm">{wilaya}</th>
+                    <td className="p-2 sm:p-3">
+                      <label htmlFor={homeInputId} className="sr-only">{`${wilaya} home delivery price`}</label>
+                      <input
+                        id={homeInputId}
+                        type="number"
+                        key={`${wilaya}-home-${homePrice}`}
+                        defaultValue={homePrice}
+                        onBlur={(e) => handleSave(wilaya, "homeDelivery", parseInt(e.target.value, 10) || 0)}
+                        className="h-8 w-full rounded-lg border border-[--system-200] bg-white px-2 text-center text-caption text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10 sm:h-9 sm:px-3 sm:text-body-sm"
+                        placeholder="0"
+                        aria-label={`${wilaya} home delivery price`}
+                      />
+                    </td>
+                    <td className="p-2 sm:p-3">
+                      <label htmlFor={officeInputId} className="sr-only">{`${wilaya} office delivery price`}</label>
+                      <input
+                        id={officeInputId}
+                        type="number"
+                        key={`${wilaya}-office-${officePrice}`}
+                        defaultValue={officePrice}
+                        onBlur={(e) => handleSave(wilaya, "officeDelivery", parseInt(e.target.value, 10) || 0)}
+                        className="h-8 w-full rounded-lg border border-[--system-200] bg-white px-2 text-center text-caption text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10 sm:h-9 sm:px-3 sm:text-body-sm"
+                        placeholder="0"
+                        aria-label={`${wilaya} office delivery price`}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
       </div>
 
-      <p className="text-xs text-[--system-400]">
+      <p className="text-caption text-[--system-400]">
         * Default pricing: Home delivery {DEFAULT_HOME} DZD | Office delivery {DEFAULT_OFFICE} DZD
       </p>
     </div>
