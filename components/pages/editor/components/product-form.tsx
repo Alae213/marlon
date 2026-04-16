@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
 import { Textarea } from "@/components/primitives/core/inputs/textarea";
 import { ImageUploader } from "@/components/features/shared/image-cropper";

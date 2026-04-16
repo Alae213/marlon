@@ -181,13 +181,15 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
           className={cn(
             "relative shrink-0 rounded-full outline-none cursor-pointer",
             "transition-colors duration-80",
-            "focus-visible:ring-1 focus-visible:ring-[#6B97FF] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            "focus-visible:ring-1 focus-visible:ring-[var(--color-ring)] focus-visible:ring-offset-2 focus-visible:ring-offset-background"
           )}
           style={{
             width: TRACK_WIDTH,
             height: TRACK_HEIGHT,
             backgroundColor: checked
-              ? hovered ? "#5C89F2" : "#6B97FF"
+              ? hovered
+                ? "color-mix(in oklab, var(--color-primary), var(--system-50) 12%)"
+                : "var(--color-primary)"
               : hovered
                 ? "color-mix(in oklab, var(--accent), var(--foreground) 10%)"
                 : "var(--accent)",
@@ -196,7 +198,7 @@ const Switch = forwardRef<HTMLDivElement, SwitchProps>(
         >
           <SwitchPrimitive.Thumb asChild>
             <motion.span
-              className="absolute top-0 left-0 block rounded-full bg-white shadow-sm"
+              className="absolute top-0 left-0 block rounded-full bg-[var(--system-50)] shadow-sm"
               initial={false}
               style={{ x: motionX }}
               animate={{

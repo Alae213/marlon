@@ -1,7 +1,7 @@
 "use client";
 
 import { Lock, CreditCard } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { useBilling } from "@/contexts/billing-context";
 
 interface LockedOverlayProps {

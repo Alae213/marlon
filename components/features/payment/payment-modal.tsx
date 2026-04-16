@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Loader2, CheckCircle, CreditCard, Shield } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PaymentModalProps {

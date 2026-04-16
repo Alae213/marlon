@@ -12,7 +12,7 @@ import {
   ExternalLink, 
   Loader2,
 } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
 import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

@@ -10,10 +10,10 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       style={{ boxShadow: "var(--shadow-inside-shadow)" }}
       className={cn(
         // Base styles
-        "h-8 w-full min-w-0 rounded-xl bg-black/20 px-3 py-1.5 body-base",
-        "transition-[color,box-shadow] outline-none text-foreground",
+        "h-8 w-full min-w-0 rounded-[var(--radius-md)] bg-black/20 px-3 py-1.5 body-base",
+        "transition-[color,box-shadow] outline-none text-current",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50",
-        "placeholder:text-muted-foreground text-base leading-[150%]",
+        "placeholder:text-current placeholder:opacity-60 text-base leading-[150%]",
         
         // Focus states
         "focus:outline-none focus:ring-0",

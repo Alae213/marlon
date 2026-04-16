@@ -2,7 +2,7 @@
 
 import { AlertTriangle, Home, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 
 export default function GlobalError({
   error: _error,

@@ -7,7 +7,6 @@ import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
 import { Loader2 } from "lucide-react";
 import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
-import { AnimatedTabContent } from "@/components/primitives/core/layout/animated-tabs";
 import { useBilling, BillingProvider } from "@/contexts/billing-context";
 import {
   useUser,
@@ -215,7 +214,7 @@ function OrdersContent({
         </div>
 
         {/* Content based on view mode */}
-        <AnimatedTabContent active={viewMode === "list"}>
+        {viewMode === "list" && (
           <ListView
             orders={ordersData}
             selectedOrders={selectedOrders}
@@ -239,11 +238,11 @@ function OrdersContent({
             onViewModeChange={setViewMode}
             storeSlug={storeSlug}
           />
-        </AnimatedTabContent>
+        )}
 
-        <AnimatedTabContent active={viewMode === "state"}>
+        {viewMode === "state" && (
           <KanbanView viewMode={viewMode} onViewModeChange={setViewMode} />
-        </AnimatedTabContent>
+        )}
 
         {/* Order Detail SlideOver */}
         <OrderDetails

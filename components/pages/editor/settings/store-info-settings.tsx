@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
 import { Textarea } from "@/components/primitives/core/inputs/textarea";
 
@@ -50,45 +50,51 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-[--system-700]">Store Information</h3>
-        <p className="mt-1 text-body-sm text-[--system-400]">Basic information about your store</p>
+        <h3 className="text-heading-sm text-[var(--system-50)]">Store Information</h3>
+        <p className="mt-1 text-body-sm text-[var(--system-200)]">Basic information about your store</p>
       </div>
 
       <div className="space-y-4">
         <div>
-          <label htmlFor="store-name" className="mb-2 block text-body-sm text-[--system-500]">Store Name</label>
-          <Input id="store-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
+          <label htmlFor="store-name" className="mb-2 block text-body-sm text-[var(--system-100)]">Store Name</label>
+          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+            <Input id="store-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
+          </div>
         </div>
 
         <div>
-          <label htmlFor="store-description" className="mb-2 block text-body-sm text-[--system-500]">Description</label>
-          <Textarea
-            id="store-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            placeholder="Enter store description"
-            rows={3}
-          />
+          <label htmlFor="store-description" className="mb-2 block text-body-sm text-[var(--system-100)]">Description</label>
+          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+            <Textarea
+              id="store-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Enter store description"
+              rows={3}
+            />
+          </div>
         </div>
 
         <div>
-          <label htmlFor="store-phone" className="mb-2 block text-body-sm text-[--system-500]">Phone Number</label>
-          <Input id="store-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
+          <label htmlFor="store-phone" className="mb-2 block text-body-sm text-[var(--system-100)]">Phone Number</label>
+          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+            <Input id="store-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
+          </div>
         </div>
       </div>
 
-      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-4">
-        <p className="mb-1 text-caption text-[--system-400]">Store URL</p>
-        <p className="text-body-sm text-[--system-700]">marlon.com/{storeSlug}</p>
+      <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+        <p className="mb-1 text-caption text-[var(--system-200)]">Store URL</p>
+        <p className="text-body-sm text-[var(--system-50)]">marlon.com/{storeSlug}</p>
       </div>
 
       {savedMessage && (
-        <div className="rounded-lg bg-[--color-success-bg] p-3 text-body-sm text-[--color-success]">
+        <div className="rounded-lg bg-[var(--color-success-bg)] p-3 text-body-sm text-[var(--color-success)]">
           Changes saved successfully
         </div>
       )}
 
-      <Button onClick={handleSave} disabled={isSaving} className="w-full">
+      <Button onClick={handleSave} disabled={isSaving}>
         {isSaving ? "Saving..." : "Save Changes"}
       </Button>
     </div>

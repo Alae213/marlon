@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Truck, Loader2, CheckCircle, XCircle } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams } from "next/navigation";
 

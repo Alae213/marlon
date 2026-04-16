@@ -16,8 +16,8 @@ import {
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/primitives/core/buttons/button";
-import { Card } from "@/components/primitives/core/layout/card";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/primitives/core/feedback/empty-state";
 import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";

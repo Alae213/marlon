@@ -10,7 +10,7 @@ import {
   Shield
 } from "lucide-react";
 import { Badge } from "@/components/primitives/core/feedback/badge";
-import { Card, CardContent } from "@/components/primitives/core/layout/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { useBilling } from "@/contexts/billing-context";
 import { PaymentModal } from "@/components/features/payment/payment-modal";
 

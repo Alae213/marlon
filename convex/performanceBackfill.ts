@@ -27,7 +27,7 @@ export const backfillOrderDigestsBatch = internalMutation({
     }
 
     if (!result.isDone) {
-      await ctx.scheduler.runAfter(0, (internal as any).performanceBackfill.backfillOrderDigestsBatch, {
+      await ctx.scheduler.runAfter(0, internal.performanceBackfill.backfillOrderDigestsBatch, {
         cursor: result.continueCursor,
         batchSize,
       });
@@ -94,7 +94,7 @@ export const backfillOrderEventsBatch = internalMutation({
     }
 
     if (!result.isDone) {
-      await ctx.scheduler.runAfter(0, (internal as any).performanceBackfill.backfillOrderEventsBatch, {
+      await ctx.scheduler.runAfter(0, internal.performanceBackfill.backfillOrderEventsBatch, {
         cursor: result.continueCursor,
         batchSize,
       });
@@ -127,7 +127,7 @@ export const backfillProductDigestsBatch = internalMutation({
     }
 
     if (!result.isDone) {
-      await ctx.scheduler.runAfter(0, (internal as any).performanceBackfill.backfillProductDigestsBatch, {
+      await ctx.scheduler.runAfter(0, internal.performanceBackfill.backfillProductDigestsBatch, {
         cursor: result.continueCursor,
         batchSize,
       });
@@ -208,7 +208,7 @@ export const backfillAnalyticsRollupsBatch = internalMutation({
     }
 
     if (!result.isDone) {
-      await ctx.scheduler.runAfter(0, (internal as any).performanceBackfill.backfillAnalyticsRollupsBatch, {
+      await ctx.scheduler.runAfter(0, internal.performanceBackfill.backfillAnalyticsRollupsBatch, {
         cursor: result.continueCursor,
         batchSize,
       });

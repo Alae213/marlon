@@ -16,11 +16,11 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         )}
         <textarea
           ref={ref}
-          className={`w-full px-4 py-3 border ${
+          className={`w-full rounded-[var(--radius-md)] px-4 py-3 ${
             error 
-              ? "border-destructive" 
-              : "border-input"
-          } bg-card text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-ring transition-colors resize-none disabled:bg-muted disabled:cursor-not-allowed ${className}`}
+              ? "ring-1 ring-destructive" 
+              : ""
+          } bg-card text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors resize-none disabled:bg-muted disabled:cursor-not-allowed ${className}`}
           {...props}
         />
         {error && (

@@ -8,7 +8,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/primitives/animate-ui/components/animate/tooltip";
+} from "@/components/ui/tooltip";
 
 interface BottomNavigationProps {
   storeSlug: string;
@@ -54,7 +54,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
       }}>
         
         {/* Back to Home */}
-        <Tooltip side="top">
+        <Tooltip>
           <TooltipTrigger asChild>
             <Link
               href="/"
@@ -63,7 +63,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
               <Home className="w-5 h-5" />
             </Link>
           </TooltipTrigger>
-          <TooltipContent>
+          <TooltipContent side="top">
             Home
           </TooltipContent>
         </Tooltip>
@@ -79,7 +79,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
           const isExternal = item.id === "marketing";
           
           return (
-            <Tooltip key={item.id} side="top">
+            <Tooltip key={item.id}>
               <TooltipTrigger asChild>
                 <Link
                   href={item.href}
@@ -98,7 +98,7 @@ export function BottomNavigation({ storeSlug, currentPage }: BottomNavigationPro
                   {item.isActive && <span className="Body-base">{item.label}</span>}
                 </Link>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent side="top">
                 {item.label}
               </TooltipContent>
             </Tooltip>

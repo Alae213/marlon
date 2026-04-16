@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Truck, Key, CheckCircle, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/primitives/core/layout/card";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
 
 interface DeliverySettingsProps {

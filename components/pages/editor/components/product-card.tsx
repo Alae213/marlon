@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { Image as ImageIcon, Edit, Eye, EyeOff, Trash2 } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { Product, EditingField } from "../types";
 import { formatPrice } from "../utils";

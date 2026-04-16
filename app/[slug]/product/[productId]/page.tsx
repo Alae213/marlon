@@ -13,7 +13,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { ImageCarousel } from "@/components/features/shared/image-carousel";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -40,6 +40,7 @@ export default function ProductDetailPage() {
 }
 
 function ProductDetailContent() {
+  const convex = useConvex();
   const params = useParams();
   const slug = params?.slug as string;
   const productId = params?.productId as string;
@@ -656,4 +657,3 @@ function ProductDetailContent() {
     </>
   );
 }
-  const convex = useConvex();

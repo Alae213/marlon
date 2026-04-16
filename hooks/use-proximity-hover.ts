@@ -53,19 +53,18 @@ export function useProximityHover<T extends HTMLElement>(
   const measureItems = useCallback(() => {
     const container = containerRef.current;
     if (!container) return;
-    const containerRect = container.getBoundingClientRect();
-    const scrollTop = container.scrollTop;
-    const scrollLeft = container.scrollLeft;
-    const borderTop = container.clientTop;
-    const borderLeft = container.clientLeft;
     const rects: ItemRect[] = [];
     itemsRef.current.forEach((element, index) => {
-      const rect = element.getBoundingClientRect();
+      // Use offset* instead of getBoundingClientRect so measurements are
+      // unaffected by CSS transforms (e.g. scaleY animation on the parent
+      // motion.div). offsetTop/offsetLeft are layout values relative to the
+      // offsetParent (the scroll container), matching the coordinate space
+      // used by `position: absolute` children.
       rects[index] = {
-        top: rect.top - containerRect.top + scrollTop - borderTop,
-        height: rect.height,
-        left: rect.left - containerRect.left + scrollLeft - borderLeft,
-        width: rect.width,
+        top: element.offsetTop,
+        height: element.offsetHeight,
+        left: element.offsetLeft,
+        width: element.offsetWidth,
       };
     });
     itemRectsRef.current = rects;
@@ -94,6 +93,7 @@ export function useProximityHover<T extends HTMLElement>(
         let containingIndex: number | null = null;
 
         const rects = itemRectsRef.current;
+        // Convert content-relative rects to viewport coords using live scroll
         const scrollOffset = axis === "x" ? container.scrollLeft : container.scrollTop;
         const borderOffset = axis === "x" ? container.clientLeft : container.clientTop;
         const containerEdge = axis === "x" ? containerRect.left : containerRect.top;
@@ -138,6 +138,7 @@ export function useProximityHover<T extends HTMLElement>(
     setActiveIndex(null);
   }, []);
 
+  // Clean up rAF on unmount
   useEffect(() => {
     return () => {
       if (rafIdRef.current !== null) {
@@ -159,4 +160,19 @@ export function useProximityHover<T extends HTMLElement>(
     registerItem,
     measureItems,
   };
+}
+
+/**
+ * Hook for child items to register themselves with the proximity hover system.
+ * Call in useEffect with the item's ref and index.
+ */
+export function useRegisterProximityItem(
+  registerItem: (index: number, element: HTMLElement | null) => void,
+  index: number,
+  ref: RefObject<HTMLElement | null>
+) {
+  useEffect(() => {
+    registerItem(index, ref.current);
+    return () => registerItem(index, null);
+  }, [index, registerItem, ref]);
 }

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState, useEffect, type ChangeEvent, type DragEv
 import Image from "next/image";
 import ReactCrop, { type Crop, type PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop";
 import { Check, Crop as CropIcon } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import "react-image-crop/dist/ReactCrop.css";
 

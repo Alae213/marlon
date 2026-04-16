@@ -9,8 +9,8 @@ import { X, Minus, Plus, Trash2, Loader2, Check } from "lucide-react";
 import { useCart, CartItem } from "@/contexts/cart-context";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
-import { Sheet, SheetContent, SheetTitle, SheetHeader, SheetFooter } from "@/components/primitives/ui/sheet";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Sheet, SheetContent, SheetTitle, SheetHeader, SheetFooter } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface CartSidebarProps {
   isOpen: boolean;

@@ -11,8 +11,8 @@ import { useConvex, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
-import { Button } from "@/components/primitives/core/buttons/button";
-import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/primitives/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {

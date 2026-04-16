@@ -4,7 +4,9 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/primitives/core/inputs/input";
+import { Switch } from "@/components/ui/switch";
 
 type Provider = "yalidine" | "zr-express" | "andrson" | "noest";
 
@@ -109,35 +111,16 @@ function ProviderCard({
   const missing = state.enabled ? getMissingFields(provider, state.credentials) : [];
   const testDisabled = !state.enabled || missing.length > 0 || isTesting;
   const hasValues = hasAnyCredentialValue(state.credentials);
-  const providerLabelId = `${provider}-label`;
   const apiKeyId = `${provider}-api-key`;
   const apiSecretId = `${provider}-api-secret`;
   const accountNumberId = `${provider}-account-number`;
 
   return (
-    <div className={`p-4 rounded-xl border transition-all ${state.enabled ? "bg-white border-[--system-200]" : "bg-[--system-50] border-[--system-100]"}`}>
+    <div className={`rounded-[var(--radius-lg)] p-[var(--spacing-md)] transition-all ${state.enabled ? "bg-[var(--system-700)]" : "bg-[var(--system-800)]"}`}>
       <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            role="switch"
-            aria-checked={state.enabled}
-            aria-labelledby={providerLabelId}
-            onClick={() => onToggle(!state.enabled)}
-            className={`relative w-10 h-6 rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--color-ring] focus-visible:ring-offset-2 focus-visible:ring-offset-white ${
-              state.enabled ? "bg-[--color-primary]" : "bg-[--system-200]"
-            }`}
-          >
-            <span
-              className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                state.enabled ? "translate-x-4" : "translate-x-0"
-              }`}
-            />
-          </button>
-          <span id={providerLabelId} className="text-body-sm text-[--system-700]">{config.label}</span>
-        </div>
+        <Switch label={config.label} checked={state.enabled} onToggle={() => onToggle(!state.enabled)} />
         {state.enabled && state.hasStoredCredentials && (
-          <span className="text-caption text-[--system-400]">
+          <span className="text-caption text-[var(--system-200)]">
             {state.credentialsUpdatedAt
               ? `Updated ${new Date(state.credentialsUpdatedAt).toLocaleDateString()}`
               : "Configured"}
@@ -148,69 +131,66 @@ function ProviderCard({
       {state.enabled && (
         <div className="space-y-4">
           <div>
-            <label htmlFor={apiKeyId} className="mb-2 block text-caption text-[--system-500]">API Key</label>
-            <input
-              id={apiKeyId}
-              type="password"
-              value={state.credentials.apiKey}
-              onChange={(e) => onUpdateCredential("apiKey", e.target.value)}
-              onBlur={onSave}
-              className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
-              placeholder="Enter API key"
-            />
+            <label htmlFor={apiKeyId} className="mb-2 block text-caption text-[var(--system-100)]">API Key</label>
+            <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+              <Input
+                id={apiKeyId}
+                type="password"
+                value={state.credentials.apiKey}
+                onChange={(e) => onUpdateCredential("apiKey", e.target.value)}
+                onBlur={onSave}
+                placeholder="Enter API key"
+              />
+            </div>
           </div>
 
           {requirements.required.includes("apiSecret") && (
             <div>
-              <label htmlFor={apiSecretId} className="mb-2 block text-caption text-[--system-500]">API Secret</label>
-              <input
-                id={apiSecretId}
-                type="password"
-                value={state.credentials.apiSecret}
-                onChange={(e) => onUpdateCredential("apiSecret", e.target.value)}
-                onBlur={onSave}
-                className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
-                placeholder="Enter API secret"
-              />
+              <label htmlFor={apiSecretId} className="mb-2 block text-caption text-[var(--system-100)]">API Secret</label>
+              <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                <Input
+                  id={apiSecretId}
+                  type="password"
+                  value={state.credentials.apiSecret}
+                  onChange={(e) => onUpdateCredential("apiSecret", e.target.value)}
+                  onBlur={onSave}
+                  placeholder="Enter API secret"
+                />
+              </div>
             </div>
           )}
 
           {requirements.optional.includes("accountNumber") && (
             <div>
-              <label htmlFor={accountNumberId} className="mb-2 block text-caption text-[--system-500]">Account Number (optional)</label>
-              <input
-                id={accountNumberId}
-                type="text"
-                value={state.credentials.accountNumber}
-                onChange={(e) => onUpdateCredential("accountNumber", e.target.value)}
-                onBlur={onSave}
-                className="text-body-sm h-10 w-full rounded-lg border border-[--system-200] bg-white px-3 text-[--system-700] transition-all focus:border-[--color-primary] focus:outline-none focus:ring-2 focus:ring-[--color-primary]/10"
-                placeholder="Account number if provided"
-              />
+              <label htmlFor={accountNumberId} className="mb-2 block text-caption text-[var(--system-100)]">Account Number (optional)</label>
+              <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                <Input
+                  id={accountNumberId}
+                  type="text"
+                  value={state.credentials.accountNumber}
+                  onChange={(e) => onUpdateCredential("accountNumber", e.target.value)}
+                  onBlur={onSave}
+                  placeholder="Account number if provided"
+                />
+              </div>
             </div>
           )}
 
           {missing.length > 0 && (
-            <p className="text-caption text-[--color-error]">
+            <p className="text-caption text-[var(--color-error)]">
               Required: {missing.map(getFieldLabel).join(", ")}
             </p>
           )}
 
           {state.hasStoredCredentials && !hasValues && (
-            <p className="text-caption text-[--system-400]">Saved. Leave blank to keep current.</p>
+            <p className="text-caption text-[var(--system-200)]">Saved. Leave blank to keep current.</p>
           )}
 
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onTest}
-              disabled={testDisabled}
-              className="flex-1"
-            >
+            <Button onClick={onTest} disabled={testDisabled}>
               {isTesting ? "Testing..." : "Test"}
             </Button>
-            <Button size="sm" onClick={onSave} disabled={missing.length > 0} className="flex-1">
+            <Button onClick={onSave} disabled={missing.length > 0}>
               Save
             </Button>
           </div>
@@ -219,15 +199,15 @@ function ProviderCard({
             <div
               className={`text-caption rounded-lg p-3 ${
                 testResult.success
-                  ? "bg-[--color-success-bg] text-[--color-success]"
-                  : "bg-[--color-error-bg] text-[--color-error]"
+                  ? "bg-[var(--color-success-bg)] text-[var(--color-success)]"
+                  : "bg-[var(--color-error-bg)] text-[var(--color-error)]"
               }`}
             >
               {testResult.message}
             </div>
           )}
 
-          <p className="text-caption border-t border-[--system-100] pt-2 text-[--system-400]">
+          <p className="text-caption pt-2 text-[var(--system-200)]">
             {requirements.helpText}
           </p>
         </div>
@@ -430,8 +410,8 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
 
   if (deliveryIntegration === undefined) {
     return (
-      <div className="rounded-xl border border-[--system-200] bg-[--system-100] p-5">
-        <p className="text-sm text-[--system-400]">Loading courier settings...</p>
+      <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+        <p className="text-body-sm text-[var(--system-300)]">Loading courier settings...</p>
       </div>
     );
   }
@@ -439,13 +419,13 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-[--system-700]">Courier Integration</h3>
-        <p className="mt-1 text-body-sm text-[--system-400]">
+        <h3 className="text-heading-sm text-[var(--system-50)]">Courier Integration</h3>
+        <p className="mt-1 text-body-sm text-[var(--system-200)]">
           Enable providers and save credentials securely for this store.
         </p>
       </div>
 
-      <div className="text-caption rounded-xl border border-[--system-200] bg-[--system-100] p-3 text-[--system-500]">
+      <div className="text-caption rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-sm)] text-[var(--system-200)]">
         Credentials are write-only. Existing keys are never displayed after save.
       </div>
 
@@ -470,8 +450,8 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         !enabledProviders["zr-express"] &&
         !enabledProviders.andrson &&
         !enabledProviders.noest && (
-          <div className="p-4 bg-[--system-100] rounded-xl border border-[--system-200]">
-            <p className="text-body-sm text-[--system-400]">
+          <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+            <p className="text-body-sm text-[var(--system-200)]">
               No courier enabled. Shipping will be handled manually.
             </p>
           </div>

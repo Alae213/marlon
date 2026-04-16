@@ -1,4 +1,4 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 import { upsertProductDigest } from "./performanceHelpers";
@@ -91,20 +91,19 @@ async function normalizeProductImageUrls(ctx: StorageCtx, images?: string[]) {
 }
 
 async function queryActiveProducts(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ctx: any,
+  ctx: QueryCtx,
   storeId: Id<"stores">
 ) {
   const active = await ctx.db
     .query("products")
-    .withIndex("storeArchivedSort", (q: any) =>
+    .withIndex("storeArchivedSort", (q) =>
       q.eq("storeId", storeId).eq("isArchived", false)
     )
     .collect();
 
   const legacyUnset = await ctx.db
     .query("products")
-    .withIndex("storeArchivedSort", (q: any) =>
+    .withIndex("storeArchivedSort", (q) =>
       q.eq("storeId", storeId).eq("isArchived", undefined)
     )
     .collect();

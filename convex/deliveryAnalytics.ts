@@ -1,4 +1,5 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { toDayKey } from "./performanceHelpers";
 
@@ -31,10 +32,9 @@ function buildSummaryFromCounts(counts: {
 }
 
 async function incrementRollup(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ctx: any,
+  ctx: MutationCtx,
   args: {
-    storeId: string;
+    storeId: Id<"stores">;
     provider: string;
     region?: string;
     createdAt: number;
@@ -59,7 +59,7 @@ async function incrementRollup(
 
   const existingExact = await ctx.db
     .query("deliveryAnalyticsRollups")
-    .withIndex("storeProviderRegionDay", (q: any) =>
+    .withIndex("storeProviderRegionDay", (q) =>
       q
         .eq("storeId", args.storeId)
         .eq("provider", args.provider)
@@ -97,7 +97,7 @@ async function incrementRollup(
   if (args.region) {
     const existingProviderGlobal = await ctx.db
       .query("deliveryAnalyticsRollups")
-      .withIndex("storeProviderRegionDay", (q: any) =>
+      .withIndex("storeProviderRegionDay", (q) =>
         q
           .eq("storeId", args.storeId)
           .eq("provider", args.provider)

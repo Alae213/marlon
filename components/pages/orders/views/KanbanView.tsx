@@ -1,7 +1,6 @@
 "use client";
 
-import { SubtleTab, SubtleTabItem } from "@/components/primitives/ui/subtle-tab";
-import type { LucideIcon } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 // Custom icon components - SVG icons styled to match text color via currentColor
 const ListIcon = () => (
@@ -38,13 +37,21 @@ export function KanbanView({ viewMode, onViewModeChange }: KanbanViewProps) {
       {/* Toolbar */}
       <div className="flex items-center justify-start gap-1">
         {/* View Toggle */}
-        <SubtleTab
-          selectedIndex={viewMode === "list" ? 0 : 1}
-          onSelect={(index) => onViewModeChange(index === 0 ? "list" : "state")}
+        <Tabs
+          value={viewMode}
+          onValueChange={(value) => onViewModeChange(value as "list" | "state")}
         >
-          <SubtleTabItem index={0} icon={ListIcon as unknown as LucideIcon} label="List" />
-          <SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />
-        </SubtleTab>
+          <TabsList className="bg-[var(--system-100)]">
+            <TabsTrigger value="list" className="gap-2">
+              <ListIcon />
+              <span>List</span>
+            </TabsTrigger>
+            <TabsTrigger value="state" className="gap-2">
+              <KanbanIcon />
+              <span>By State</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Content */}

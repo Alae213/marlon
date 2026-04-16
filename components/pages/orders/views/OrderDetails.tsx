@@ -17,10 +17,10 @@ import {
   ExternalLink,
   Clipboard
 } from "lucide-react";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
-import { Sheet, SheetContent, SheetTitle } from "@/components/primitives/ui/sheet";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/primitives/ui/hover-card";
+import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { useToast } from "@/contexts/toast-context";
 import type { CallLog, OrderStatus } from "@/lib/orders-types";
 import { CALL_OUTCOME_LABELS } from "@/lib/orders-types";

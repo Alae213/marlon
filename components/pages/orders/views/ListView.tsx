@@ -20,13 +20,13 @@ import {
   FileDown,
 } from "lucide-react";
 import { Badge } from "@/components/primitives/core/feedback/badge";
-import { Button } from "@/components/primitives/core/buttons/button";
+import { Button } from "@/components/ui/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
-import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/primitives/animate-ui/components/animate/tooltip";
-import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/primitives/ui/hover-card";
-import { Checkbox, CheckboxIndicator } from "@/components/primitives/animate-ui/primitives/headless/checkbox";
-import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/primitives/ui/table";
-import { SubtleTab, SubtleTabItem } from "@/components/primitives/ui/subtle-tab";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox";
+import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Menu,
@@ -39,7 +39,6 @@ import {
   MenuSeparator,
   MenuTrigger,
 } from "@/components/ui/menu";
-import type { LucideIcon } from "lucide-react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { 
@@ -108,6 +107,14 @@ const ListIcon = () => (
         <rect width="16" height="16" fill="white" transform="translate(6.99382e-07 16) rotate(-90)"/>
       </clipPath>
     </defs>
+  </svg>
+);
+
+const KanbanIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <rect x="2.3999" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
+    <rect x="7.2002" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
+    <rect x="12" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
   </svg>
 );
 
@@ -779,13 +786,18 @@ export function ListView({
       {/* Toolbar */}
       <div className="flex items-center justify-between gap-1">
         {/* View Toggle */}
-        <SubtleTab
-          selectedIndex={viewMode === "list" ? 0 : 1}
-          onSelect={(index) => onViewModeChange(index === 0 ? "list" : "state")}
-        >
-          <SubtleTabItem index={0} icon={ListIcon as unknown as LucideIcon} label="List" />
-           {/*<SubtleTabItem index={1} icon={KanbanIcon as unknown as LucideIcon} label="By State" />*/}
-        </SubtleTab>
+        <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as "list" | "state")}>
+          <TabsList className="bg-[var(--system-100)]">
+            <TabsTrigger value="list" className="gap-2">
+              <ListIcon />
+              <span>List</span>
+            </TabsTrigger>
+            <TabsTrigger value="state" className="gap-2">
+              <KanbanIcon />
+              <span>By State</span>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
         
         <div className="flex items-center gap-1">
         
