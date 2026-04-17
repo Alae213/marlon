@@ -26,7 +26,6 @@ import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/comp
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Menu,
@@ -50,6 +49,9 @@ import type {
 import { STATUS_LABELS, CALL_OUTCOME_LABELS } from "@/lib/orders-types";
 import { STATUS_CONFIG } from "@/lib/status-icons";
 import { ProductCell } from "../components/ProductCell";
+import { OrderMobileCard } from "../components/OrderMobileCard";
+import { OrderViewToggle } from "../components/OrderViewToggle";
+import { getDeliveryProviderDisplay } from "@/lib/order-delivery-display";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/contexts/toast-context";
 
@@ -94,30 +96,6 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   );
 }
 
-// Custom icon components
-const ListIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <g clipPath="url(#clip0_164_2937)">
-      <path d="M2.594 2.59478C3.5215 1.66732 5.01428 1.66732 7.99984 1.66732C10.9854 1.66732 12.4782 1.66732 13.4057 2.59478C14.3332 3.52232 14.3332 5.01512 14.3332 8.00065C14.3332 10.9862 14.3332 12.479 13.4057 13.4065C12.4782 14.334 10.9854 14.334 7.99984 14.334C5.01428 14.334 3.5215 14.334 2.594 13.4065C1.6665 12.479 1.6665 10.9862 1.6665 8.00065C1.6665 5.01512 1.6665 3.52232 2.594 2.59478Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M1.6665 10.334L14.3332 10.334" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-      <path d="M1.6665 5.66602L14.3332 5.66602" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </g>
-    <defs>
-      <clipPath id="clip0_164_2937">
-        <rect width="16" height="16" fill="white" transform="translate(6.99382e-07 16) rotate(-90)"/>
-      </clipPath>
-    </defs>
-  </svg>
-);
-
-const KanbanIcon = () => (
-  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <rect x="2.3999" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
-    <rect x="7.2002" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
-    <rect x="12" y="2" width="3.6" height="14" rx="1" fill="currentColor" />
-  </svg>
-);
-
 const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "router"];
 
 // Max call slots to display
@@ -154,11 +132,16 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
   }, [callLog]);
 
   const hasCalls = callLog.length > 0;
+  const triggerLabel = hasCalls ? "Call history" : "No calls yet";
 
   return (
     <HoverCard openDelay={200} closeDelay={100}>
       <HoverCardTrigger asChild>
-        <div className="flex items-end gap-0.5 h-[18px] cursor-pointer">
+        <button
+          type="button"
+          aria-label={triggerLabel}
+          className="flex h-[18px] cursor-pointer items-end gap-0.5 rounded-md bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-300)]/40"
+        >
           {slots.map((call, index) => (
             <div
               key={index}
@@ -168,7 +151,7 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
               )}
             />
           ))}
-        </div>
+        </button>
       </HoverCardTrigger>
       {hasCalls && (
         <HoverCardContent
@@ -233,6 +216,7 @@ interface ListViewProps {
   onOrderClick: (order: Doc<"orders">) => void;
   viewMode: "list" | "state";
   onViewModeChange: (mode: "list" | "state") => void;
+  isStateViewEnabled: boolean;
   storeSlug?: string;
 }
 
@@ -243,12 +227,14 @@ function StatusCell({
   onToggle, 
   onStatusChange,
   callLog,
+  showCallSlots = true,
 }: { 
   status: string; 
   isOpen: boolean; 
   onToggle: (open: boolean) => void;
   onStatusChange: (status: string) => void;
   callLog?: CallLog[];
+  showCallSlots?: boolean;
 }) {
   const statusConfig = STATUS_CONFIG[status as OrderStatus];
   const statusLabel = STATUS_LABELS[status as OrderStatus];
@@ -256,7 +242,12 @@ function StatusCell({
   return (
     <Menu open={isOpen} onOpenChange={onToggle}>
       <div className="relative w-full">
-        <div className="flex flex-row items-center justify-between">
+        <div
+          className={cn(
+            "flex flex-row items-center gap-2",
+            showCallSlots ? "justify-between" : "justify-start",
+          )}
+        >
           <MenuTrigger asChild>
             <button
               type="button"
@@ -273,7 +264,9 @@ function StatusCell({
           </MenuTrigger>
 
           {/* Call Log Slots */}
-          {callLog && callLog.length > -1 && <CallSlotsHover callLog={callLog} />}
+          {showCallSlots && callLog && callLog.length > -1 ? (
+            <CallSlotsHover callLog={callLog} />
+          ) : null}
         </div>
 
         <MenuContent
@@ -306,6 +299,32 @@ function StatusCell({
   );
 }
 
+function SelectedStatusSummary({ counts }: { counts: Record<string, number> }) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      {statuses.map((status) => {
+        const count = counts[status];
+        if (count === 0) return null;
+
+        const statusConfig = STATUS_CONFIG[status];
+        return (
+          <span
+            key={status}
+            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px] label-xs font-medium"
+            style={{
+              backgroundColor: statusConfig?.bgColor || "#6b7280",
+              color: statusConfig?.textColor || "#ffffff",
+            }}
+          >
+            {statusConfig?.icon}
+            {count}
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
 export function ListView({
   orders,
   selectedOrders,
@@ -327,6 +346,7 @@ export function ListView({
   onOrderClick,
   viewMode,
   onViewModeChange,
+  isStateViewEnabled,
   storeSlug,
 }: ListViewProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -663,11 +683,11 @@ export function ListView({
     
     const rows = ordersToExport.map((order) => [
       order.orderNumber,
-      order.customerName,
-      order.customerPhone,
-      order.customerWilaya || "",
-      order.customerCommune || "",
-      order.customerAddress || "",
+      order.customerName === "معلومات محمية" ? "معلومات محمية" : order.customerName,
+      order.customerPhone === "معلومات محمية" ? "معلومات محمية" : order.customerPhone,
+      order.customerWilaya === "معلومات محمية" ? "معلومات محمية" : (order.customerWilaya || ""),
+      order.customerCommune === "معلومات محمية" ? "معلومات محمية" : (order.customerCommune || ""),
+      order.customerAddress === "معلومات محمية" ? "معلومات محمية" : (order.customerAddress || ""),
       order.status,
       order.total.toString(),
       order.deliveryProvider || "",
@@ -731,75 +751,76 @@ export function ListView({
     <TooltipProvider>
     <div className="w-full h-full flex flex-col gap-3 relative">
 
-
       {/* Bulk Action Toolbar */}
       {selectedOrders.size > 0 && (
-        <div className="absolute -top-1 left-1 z-50 bg-[var(--system-50)] border border-[var(--system-100)] rounded-[14px] text-[var(--system-600)] py-1 px-2 flex items-center justify-between">
-          <div className="flex items-center gap-1 ">
-            <span className="body-base text-[var(--system-500)] mr-2 ">{selectedOrders.size} selected</span>
-            <div className="flex items-center gap-1.5">
-              {statuses.map((status) => {
-                const count = selectedOrdersByStatus[status];
-                if (count === 0) return null;
-                const sConfig = STATUS_CONFIG[status];
-                return (
-                  <span 
-                    key={status}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px] lable-xs font-medium"
-                    style={{ 
-                      backgroundColor: sConfig?.bgColor || '#6b7280',
-                      color: sConfig?.textColor || '#ffffff',
-                    }}
-                  >
-                    {sConfig?.icon}
-                    {count}
-                  </span>
-                );
-              })}
+        <>
+          <div className="absolute -top-1 left-1 z-50 hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-2 py-1 text-[var(--system-600)]">
+            <div className="flex items-center gap-1">
+              <span className="body-base mr-2 text-[var(--system-500)]">{selectedOrders.size} selected</span>
+              <SelectedStatusSummary counts={selectedOrdersByStatus} />
+            </div>
+            <div className="flex items-center gap-2">
+              {selectedOrdersByStatus.confirmed > 0 && (
+                <button
+                  onClick={handleBulkDispatch}
+                  disabled={isBulkDispatching}
+                  className="ml-2 cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isBulkDispatching ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                  ) : (
+                    <PackageCheck className="w-3 h-3" />
+                  )}
+                  {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
+                </button>
+              )}
+              <button
+                className="cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
+                onClick={() => setShowDeleteConfirm(true)}
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            {selectedOrdersByStatus.confirmed > 0 && (
-              <button
-                onClick={handleBulkDispatch}
-                disabled={isBulkDispatching}
-                className="ml-2 cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isBulkDispatching ? (
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                ) : (
-                  <PackageCheck className="w-3 h-3" />
+
+          <div className="rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-3 text-[var(--system-600)] md:hidden">
+            <div className="flex flex-col gap-3">
+              <div className="space-y-2">
+                <span className="body-base text-[var(--system-500)]">{selectedOrders.size} selected</span>
+                <SelectedStatusSummary counts={selectedOrdersByStatus} />
+              </div>
+              <div className="flex items-center gap-2">
+                {selectedOrdersByStatus.confirmed > 0 && (
+                  <button
+                    onClick={handleBulkDispatch}
+                    disabled={isBulkDispatching}
+                    className="flex-1 cursor-pointer rounded-md bg-[var(--blue-300)] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
+                  </button>
                 )}
-                {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
-              </button>
-            )}
-            <button
-              className="cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
-              onClick={() => setShowDeleteConfirm(true)}
-            >
-              <Trash2 className="w-4 h-4" />
-            </button>
+                <button
+                  className="cursor-pointer rounded-md p-2 text-red-500 transition-colors hover:bg-red-500/20"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  aria-label="Delete selected orders"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       )}
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-1">
-        {/* View Toggle */}
-        <Tabs value={viewMode} onValueChange={(value) => onViewModeChange(value as "list" | "state")}>
-          <TabsList className="bg-[var(--system-100)]">
-            <TabsTrigger value="list" className="gap-2">
-              <ListIcon />
-              <span>List</span>
-            </TabsTrigger>
-            <TabsTrigger value="state" className="gap-2">
-              <KanbanIcon />
-              <span>By State</span>
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <OrderViewToggle
+          viewMode={viewMode}
+          onViewModeChange={onViewModeChange}
+          isStateViewEnabled={isStateViewEnabled}
+        />
         
-        <div className="flex items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1">
         
         {/* Date Filter Dropdown */}
         <Menu open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
@@ -1008,7 +1029,13 @@ export function ListView({
         </Menu>
 
           {/* Search */}
-          <div id="search-container" className="relative">
+          <div
+            id="search-container"
+            className={cn(
+              "relative order-last w-full sm:order-none",
+              isSearchOpen ? "sm:w-[192px]" : "sm:w-auto",
+            )}
+          >
           {isSearchOpen ? (
             <div className="flex items-center">
               <input
@@ -1017,7 +1044,7 @@ export function ListView({
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
-                className="w-48 h-8 px-3 pe-8 bg-white border border-[#e5e5e5] text-[var(--system-600)] placeholder:text-[var(--system-300)] text-sm focus:outline-none focus:border-[var(--system-200)] rounded-lg"
+                className="h-8 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 pe-8 text-sm text-[var(--system-600)] placeholder:text-[var(--system-300)] focus:border-[var(--system-200)] focus:outline-none sm:w-48"
               />
               <button
                 onClick={() => onSearchOpenChange(false)}
@@ -1041,7 +1068,7 @@ export function ListView({
 
         {/* Delivery Integration Quick Actions */}
         {readyToDispatchCount > 0 ? (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--blue-300)]/10 border border-[var(--blue-300)]/30">
+          <div className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--blue-300)]/30 bg-[var(--blue-300)]/10 px-2 py-1 sm:w-auto sm:justify-start">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5">
@@ -1058,7 +1085,7 @@ export function ListView({
             <button
               onClick={handleDispatchAll}
               disabled={isDispatchingAll}
-              className="cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="cursor-pointer flex items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDispatchingAll ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -1069,7 +1096,7 @@ export function ListView({
             </button>
           </div>
         ) : courierStatusSummary.dispatched > 0 ? (
-          <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-[var(--system-100)] border border-[var(--system-200)]">
+          <div className="flex w-full items-center gap-1.5 rounded-lg border border-[var(--system-200)] bg-[var(--system-100)] px-2 py-1 sm:w-auto">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5">
@@ -1149,15 +1176,39 @@ export function ListView({
       </div>
 
       {/* Table */}
-      <div className="overflow-visible">
-        <Table className="table-fixed">
+      <div className="space-y-3">
+        <div className="grid gap-3 md:hidden">
+          {filteredOrders.map((order) => (
+            <OrderMobileCard
+              key={order._id}
+              order={order}
+              isSelected={selectedOrders.has(order._id)}
+              searchQuery={searchQuery}
+              onOrderClick={onOrderClick}
+              onOrderSelect={onOrderSelect}
+              statusControl={
+                <StatusCell
+                  status={order.status}
+                  isOpen={!!statusDropdownOpen[order._id]}
+                  onToggle={(open) => onStatusDropdownToggle(order._id, open)}
+                  onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                  callLog={(order.callLog as CallLog[]) || []}
+                />
+              }
+            />
+          ))}
+        </div>
+
+        <div className="hidden overflow-visible md:block">
+          <Table className="table-fixed">
           <colgroup>
             <col style={{ width: "48px" }} />
-            <col style={{ width: "22%" }} />
+            <col style={{ width: "20%" }} />
+            <col style={{ width: "13%" }} />
             <col style={{ width: "14%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "14%" }} />
-            <col style={{ width: "14%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "12%" }} />
+            <col style={{ width: "13%" }} />
             <col style={{ width: "14%" }} />
           </colgroup>
           <TableHeader>
@@ -1174,14 +1225,19 @@ export function ListView({
               <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Customer</th>
               <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Product</th>
               <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">State</th>
+              <th className="px-3 py-[10px] text-center text-[var(--system-600)]">Call</th>
               <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Total</th>
               <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Delivery</th>
               <th className="rounded-r-[12px] px-3 py-[10px] text-left text-[var(--system-600)]">Date</th>
             </tr>
           </TableHeader>
           <TableBody>
-            {filteredOrders.map((order, index) => (
-              <TableRow
+            {filteredOrders.map((order, index) => {
+              const delivery = getDeliveryProviderDisplay(order.deliveryProvider, order.trackingNumber);
+              const callLog = (order.callLog as CallLog[]) || [];
+
+              return (
+                <TableRow
                 key={order._id}
                 index={index}
                 className={`cursor-pointer ${
@@ -1217,8 +1273,14 @@ export function ListView({
                     isOpen={!!statusDropdownOpen[order._id]}
                     onToggle={(open) => onStatusDropdownToggle(order._id, open)}
                     onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
-                    callLog={(order.callLog as CallLog[]) || []}
+                    callLog={callLog}
+                    showCallSlots={false}
                   />
+                </TableCell>
+                <TableCell className="py-3">
+                  <div className="flex justify-center">
+                    <CallSlotsHover callLog={callLog} />
+                  </div>
                 </TableCell>
                 <TableCell className="py-3 text-[var(--system-600)]">
                   {formatPrice(order.total)}
@@ -1228,7 +1290,7 @@ export function ListView({
                     <div className="flex items-center gap-1.5">
                       <Truck className="w-3.5 h-3.5 text-[var(--blue-300)]" />
                       <span className="text-xs text-[var(--system-600)]">
-                        {order.deliveryProvider}
+                        {delivery.label}
                       </span>
                       <span className="text-[var(--system-300)] text-[10px]">
                         {order.trackingNumber || "—"}
@@ -1241,10 +1303,12 @@ export function ListView({
                 <TableCell className="py-3 text-[var(--system-300)]">
                   {getRelativeTime(order.createdAt)}
                 </TableCell>
-              </TableRow>
-            ))}
+                </TableRow>
+              );
+            })}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
 
         {filteredOrders.length === 0 && (
           <div className="p-12 text-center text-[var(--system-300)]">

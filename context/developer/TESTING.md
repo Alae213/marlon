@@ -23,6 +23,7 @@ This file defines the testing bar for this repo. Keep claims narrow and evidence
 - `tests/unit/delivery-provider-contract.test.js`: shared adapter contract rules for provider onboarding.
 - `tests/unit/delivery-recommendation-engine.test.js`: recommendation scoring and provider ordering.
 - `tests/unit/delivery-rollout-gates.test.js`: rollout gate threshold evaluation.
+- `tests/unit/dialog-regression.test.js`: jsdom-based DOM regression coverage for the shared dialog abstraction, asserting overlay/content unmount cleanly on close and do not accumulate stale layers across reopen cycles.
 - `tests/integration/delivery-create-order-route.test.js`: `/api/delivery/create-order` validation, auth requirement, and owner-only store access.
 - `tests/integration/delivery-integration-public-query.test.js`: public delivery integration query returns metadata only and never leaks credentials.
 - `tests/integration/delivery-analytics-status-events.test.js`: terminal delivery outcomes emit analytics status events.
@@ -31,12 +32,14 @@ This file defines the testing bar for this repo. Keep claims narrow and evidence
 
 - Delivery provider normalization and contract behavior.
 - Delivery credential encryption and fail-closed env handling.
+- Shared dialog DOM regression coverage in jsdom for stale overlay/layer cleanup.
 - A small set of auth-sensitive server paths.
 - Public-query secret non-disclosure for delivery integration metadata.
 
 ## What The Current Suite Does Not Cover
 
 - Browser flows for storefront checkout, editor flows, or merchant order management.
+- Full browser E2E validation for dialog interactions or animation behavior.
 - Broad Clerk auth wiring across the app.
 - Hardened payment webhook handling end to end.
 - Payment initiation and lock/unlock lifecycle coverage.

@@ -8,7 +8,7 @@
 
 ## Summary
 
-The store dashboard is the signed-in landing surface for creating a first store and reopening an existing one. Current runtime behavior lives mainly in `app/page.tsx` and `convex/stores.ts`: a merchant can create one store with name + slug, then enter the editor at `/editor/[storeSlug]`. Multi-store messaging exists in project-level docs, but live runtime is still single-store only.
+The store dashboard is the signed-in landing surface for creating and reopening stores. The canonical v1 product truth is locked in `context/project/OVERVIEW.md` and `context/project/SCOPE.md`: accounts can create unlimited stores, store-level admins exist, and the dashboard/editor flow supports a multi-store workspace. `Current`: runtime behavior in `app/page.tsx` and `convex/stores.ts` is still behind that policy, allowing one store with name + slug before entering `/editor/[storeSlug]`. Implementation work is required before runtime matches canonical product truth.
 
 ---
 
@@ -39,6 +39,7 @@ The store dashboard is the signed-in landing surface for creating a first store 
 
 ### Edge Cases & Rules
 
+- `Canonical`: `context/project/OVERVIEW.md` and `context/project/SCOPE.md` define unlimited stores per account for v1.
 - `Current`: live limit is one store per user. `MAX_STORES_PER_USER = 1` in `convex/stores.ts`, and `app/page.tsx` blocks the second-store path with an `Agency Mode` coming-soon modal.
 - `Current`: slug availability is checked client-side before submit in `app/page.tsx`, then checked again in `convex/stores.ts` before insert.
 - `Partial`: slug generation and validation do not fully agree. `generateSlug` allows Arabic characters while `validateSlug` only accepts `[a-z0-9-]`, and `handleNameChange` compares against `generateSlug(slug)` instead of the generated slug from the name.
@@ -59,10 +60,10 @@ The store dashboard is the signed-in landing surface for creating a first store 
 
 | Aspect | MVP (v1) | Full Version |
 |--------|----------|--------------|
-| Store count | `Current`: one store per owner at runtime | `Planned`: project docs describe unlimited stores and agency support |
+| Store count | `Canonical`: unlimited stores per account in `OVERVIEW.md`/`SCOPE.md`; `Current`: one store per owner at runtime | Runtime fully supports the canonical multi-store policy |
 | Creation form | `Current`: name + slug only | `Planned`: richer onboarding if needed |
-| Agency flow | `Current`: blocking coming-soon modal only | `Planned`: real multi-store and agency workspace flow |
-| Store bootstrap | `Partial`: store row is created, default site content is not initialized automatically | `Planned`: store creation should provision required content rows |
+| Agency flow | `Canonical`: agency/reseller foundations are in scope, but sequenced after solo-first launch; `Current`: blocking coming-soon modal only | Runtime supports the canonical agency-ready workspace model |
+| Store bootstrap | `Partial`: store row is created, default site content is not initialized automatically | Store creation provisions required rows and access scaffolding consistently |
 
 ---
 
@@ -82,7 +83,7 @@ The store dashboard is the signed-in landing surface for creating a first store 
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T-PLACEHOLDER | `[ ]` | TASK-LIST.md not updated in this pass. Follow-ups should sync to real global T-numbers before implementation. |
+| T32 | `[x]` | Remove the single-store runtime cap and align dashboard/store creation flows with the canonical unlimited-store workspace policy in `OVERVIEW.md` and `SCOPE.md`. |
 
 ---
 
@@ -98,14 +99,14 @@ The store dashboard is the signed-in landing surface for creating a first store 
 
 ## Open Questions
 
-- No additional open questions in repo-backed source. The main mismatch is already known: project-level unlimited-store positioning does not match live single-store runtime.
+- None. `context/project/OVERVIEW.md` and `context/project/SCOPE.md` are the canonical store-policy source; the remaining gap is implementation of the unlimited-store runtime.
 
 ---
 
 ## Notes
 
 - Main implementation references: `app/page.tsx`, `convex/stores.ts`, `app/editor/[storeSlug]/page.tsx`.
-- Dashboard cards currently show minimal store metadata; the important live action is opening the editor.
+- Dashboard cards currently show minimal store metadata; the important documented gap is that runtime still behaves like a single-store workspace even though product truth is multi-store.
 
 ---
 

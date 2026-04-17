@@ -16,6 +16,7 @@ export interface CreateCheckoutParams {
   currency?: string;
   customerEmail?: string;
   description?: string;
+  metadata?: Record<string, string>;
 }
 
 export interface CheckoutResult {
@@ -112,6 +113,7 @@ class ChargilyProvider implements PaymentProvider {
               },
               metadata: {
                 storeId: params.storeId,
+                ...(params.metadata ?? {}),
               },
             },
           },
@@ -221,6 +223,7 @@ class SofizPayProvider implements PaymentProvider {
           currency: params.currency || "DZD",
           description: params.description || `Subscription for ${params.storeName}`,
           store_id: params.storeId,
+          metadata: params.metadata,
           customer_email: params.customerEmail,
           return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard?payment=success`,
           webhook_url: process.env.SOFIZPAY_WEBHOOK_URL,
@@ -305,8 +308,7 @@ class SofizPayProvider implements PaymentProvider {
  * Use this when implementing your own payment solution
  */
 class CustomPaymentProvider implements PaymentProvider {
-  async createCheckout(params: CreateCheckoutParams): Promise<CheckoutResult> {
-    // Placeholder - implement your custom payment logic here
+  async createCheckout(): Promise<CheckoutResult> {
     console.warn("Custom payment provider - implementation needed");
     
     return {
@@ -316,8 +318,7 @@ class CustomPaymentProvider implements PaymentProvider {
     };
   }
 
-  verifyWebhook(body: string, signature?: string): Promise<WebhookEvent | null> {
-    // Implement custom webhook verification
+  verifyWebhook(body: string): Promise<WebhookEvent | null> {
     try {
       const data = JSON.parse(body);
       return Promise.resolve({

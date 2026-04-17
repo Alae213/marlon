@@ -1,36 +1,9 @@
 import { query, mutation, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
-import { Id, Doc } from "./_generated/dataModel";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbWithGet = { db: { get: (id: any) => Promise<any> } };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
-type CtxWithDb = DbWithGet & AuthWithIdentity;
-
-// Helper to verify store ownership
-async function assertStoreOwnership(
-  ctx: CtxWithDb,
-  storeId: Id<"stores">,
-  _requireAdmin = false
-) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
-  }
-  
-  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
-  if (!store) {
-    throw new Error("Store not found");
-  }
-  
-  // For admin functions, check if user is the owner
-  if (store.ownerId !== identity.subject) {
-    throw new Error("Forbidden: You do not have permission to access this store.");
-  }
-  
-  return { identity, store };
-}
+import {
+  assertInternalStorePaymentAccess,
+  assertStoreRole,
+} from "./storeAccess";
 
 // Get store by slug
 export const getStoreBySlug = query({
@@ -144,10 +117,7 @@ export const generateSlugSuggestions = query({
   },
 });
 
-// Maximum stores a user can create without Agency Mode
-const MAX_STORES_PER_USER = 1;
-
-// Create a new store
+// Create a new store (with auto-bootstrap owner membership)
 export const createStore = mutation({
   args: {
     name: v.string(),
@@ -165,16 +135,6 @@ export const createStore = mutation({
     const ownerId = identity.subject;
     const now = Date.now();
 
-    // Check store count limit
-    const existingStores = await ctx.db
-      .query("stores")
-      .withIndex("ownerId", (q) => q.eq("ownerId", ownerId))
-      .collect();
-
-    if (existingStores.length >= MAX_STORES_PER_USER) {
-      throw new Error("Store limit reached. Please apply for Agency Mode.");
-    }
-    
     // Check if slug already exists
     const existing = await ctx.db
       .query("stores")
@@ -185,6 +145,7 @@ export const createStore = mutation({
       throw new Error("Slug already exists");
     }
     
+    // Create store with membershipMode enabled for multi-user access
     const storeId = await ctx.db.insert("stores", {
       ownerId: ownerId,
       name: args.name,
@@ -196,8 +157,22 @@ export const createStore = mutation({
       subscription: "trial",
       orderCount: 0,
       trialEndsAt: now + 30 * 24 * 60 * 60 * 1000, // 30 days
+      membershipMode: "memberships_enabled",
       createdAt: now,
       updatedAt: now,
+    });
+
+    // Auto-bootstrap owner membership
+    await ctx.db.insert("storeMemberships", {
+      storeId: storeId,
+      userId: ownerId,
+      role: "owner",
+      status: "active",
+      createdAt: now,
+      updatedAt: now,
+      grantedByUserId: ownerId,
+      source: "owner_bootstrap",
+      permissionsVersion: "v1",
     });
     
     return storeId;
@@ -216,7 +191,7 @@ export const updateStore = mutation({
     wilaya: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { store: _store } = await assertStoreOwnership(ctx, args.storeId);
+    await assertStoreRole(ctx, args.storeId, "owner");
     
     const updates: Record<string, unknown> = {
       updatedAt: Date.now(),
@@ -242,7 +217,7 @@ export const updateSubscription = mutation({
     paidUntil: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    const { store } = await assertStoreOwnership(ctx, args.storeId);
+    const { store } = await assertStoreRole(ctx, args.storeId, "owner");
     
     await ctx.db.patch(args.storeId, {
       subscription: args.subscription,
@@ -277,7 +252,7 @@ export const updateDeliveryPricing = mutation({
   },
   handler: async (ctx, args) => {
     // Verify ownership
-    await assertStoreOwnership(ctx, args.storeId);
+    await assertStoreRole(ctx, args.storeId, "owner");
     
     // Find existing pricing for this wilaya
     const existing = await ctx.db
@@ -447,6 +422,28 @@ export const cleanupLockedStoreOrders = internalMutation({
     }
 
     return { deletedCount: totalDeleted };
+  },
+});
+
+export const activateStoreSubscriptionFromInternalPayment = internalMutation({
+  args: {
+    storeId: v.id("stores"),
+    paidUntil: v.number(),
+    subscription: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { store } = await assertInternalStorePaymentAccess(ctx, args.storeId);
+    const nextSubscription = args.subscription ?? "active";
+    const now = Date.now();
+
+    await ctx.db.patch(args.storeId, {
+      subscription: nextSubscription,
+      paidUntil: args.paidUntil,
+      status: nextSubscription === "active" ? "active" : store.status,
+      updatedAt: now,
+    });
+
+    return args.storeId;
   },
 });
 

@@ -60,10 +60,15 @@ export interface NavbarContent {
 export interface HeroContent {
   title?: string;
   ctaText?: string;
+  titleColor?: string;
   ctaColor?: string;
-  layout?: "left" | "center" | "right";
+  fontFamily?: "serif" | "sans" | "playful";
+  alignment?: "left" | "center" | "right";
   backgroundImageStorageId?: string;
   backgroundImageUrl?: string;
+  focalPointX?: number;
+  focalPointY?: number;
+  zoom?: number;
 }
 
 // ── Inline Editing Types ───────────────────────────────────────

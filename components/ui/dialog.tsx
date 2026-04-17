@@ -10,7 +10,7 @@ import {
 } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { springs } from "@/lib/springs";
 import { useShape } from "@/lib/shape-context";
@@ -46,16 +46,19 @@ const DialogOverlay = forwardRef<
   ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => {
   const open = useContext(DialogOpenContext);
+  const isPresent = useIsPresent();
 
   return (
     <DialogPrimitive.Overlay ref={ref} asChild forceMount {...props}>
       <motion.div
         className={cn(
           "fixed inset-0 z-[var(--z-overlay)] bg-[color:rgb(10_10_10_/_0.36)] backdrop-blur-[2px]",
+          (!open || !isPresent) && "pointer-events-none",
           className
         )}
         initial={{ opacity: 0 }}
         animate={{ opacity: open ? 1 : 0 }}
+        exit={{ opacity: 0 }}
         transition={open ? springs.slow : springs.moderate}
       />
     </DialogPrimitive.Overlay>
@@ -85,50 +88,57 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
     ref
   ) => {
     const open = useContext(DialogOpenContext);
+    const isPresent = useIsPresent();
     const shape = useShape();
 
     return (
-      <DialogPortal forceMount>
-        <DialogOverlay className={overlayClassName} />
-        <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
-          <motion.div
-            className={cn(
-              "fixed left-1/2 top-1/2 z-[var(--z-dialog)] w-[calc(100%-2rem)]",
-              "max-h-[90vh] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-card)] p-[var(--spacing-lg)] text-[var(--color-card-foreground)]",
-              "shadow-[var(--shadow-xl)] focus:outline-none",
-              size === "sm" && "max-w-[400px]",
-              size === "lg" && "max-w-[540px]",
-              shape.container,
-              className
-            )}
-            initial={{ opacity: 0, scale: 0.97, x: "-50%", y: "-50%" }}
-            animate={{
-              opacity: open ? 1 : 0,
-              scale: open ? 1 : 0.97,
-              x: "-50%",
-              y: "-50%",
-            }}
-            transition={open ? springs.slow : springs.moderate}
-          >
-            {children}
-            {showCloseButton && (
-              <DialogPrimitive.Close asChild>
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  className={cn(
-                    "absolute right-[var(--spacing-md)] top-[var(--spacing-md)] text-[var(--system-400)] hover:bg-[var(--system-100)] hover:text-[var(--system-700)]",
-                    closeClassName
-                  )}
-                >
-                  <X />
-                  <span className="sr-only">Close</span>
-                </Button>
-              </DialogPrimitive.Close>
-            )}
-          </motion.div>
-        </DialogPrimitive.Content>
-      </DialogPortal>
+      <AnimatePresence>
+        {open ? (
+          <DialogPortal forceMount>
+            <DialogOverlay className={overlayClassName} />
+            <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
+              <motion.div
+                className={cn(
+                  "fixed left-1/2 top-1/2 z-[var(--z-dialog)] w-[calc(100%-2rem)]",
+                  "max-h-[90vh] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-card)] p-[var(--spacing-lg)] text-[var(--color-card-foreground)]",
+                  "shadow-[var(--shadow-xl)] focus:outline-none",
+                  (!open || !isPresent) && "pointer-events-none",
+                  size === "sm" && "max-w-[400px]",
+                  size === "lg" && "max-w-[540px]",
+                  shape.container,
+                  className
+                )}
+                initial={{ opacity: 0, scale: 0.97, x: "-50%", y: "-50%" }}
+                animate={{
+                  opacity: open ? 1 : 0,
+                  scale: open ? 1 : 0.97,
+                  x: "-50%",
+                  y: "-50%",
+                }}
+                exit={{ opacity: 0, scale: 0.97, x: "-50%", y: "-50%" }}
+                transition={open ? springs.slow : springs.moderate}
+              >
+                {children}
+                {showCloseButton && (
+                  <DialogPrimitive.Close asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      className={cn(
+                        "absolute right-[var(--spacing-md)] top-[var(--spacing-md)] text-[var(--system-400)] hover:bg-[var(--system-100)] hover:text-[var(--system-700)]",
+                        closeClassName
+                      )}
+                    >
+                      <X />
+                      <span className="sr-only">Close</span>
+                    </Button>
+                  </DialogPrimitive.Close>
+                )}
+              </motion.div>
+            </DialogPrimitive.Content>
+          </DialogPortal>
+        ) : null}
+      </AnimatePresence>
     );
   }
 );

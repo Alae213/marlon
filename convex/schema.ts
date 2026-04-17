@@ -29,12 +29,156 @@ export default defineSchema({
     trialEndsAt: v.optional(v.number()),
     paidUntil: v.optional(v.number()),
     lockedAt: v.optional(v.number()),
+    billingState: v.optional(v.union(
+      v.literal("active"),
+      v.literal("overflow_locked"),
+      v.literal("unlock_pending"),
+      v.literal("archived")
+    )),
+    billingStateUpdatedAt: v.optional(v.number()),
+    billingPolicyVersion: v.optional(v.string()),
+    billingCompatibilityMode: v.optional(v.union(
+      v.literal("legacy_trial"),
+      v.literal("canonical")
+    )),
+    currentUnlockPeriodId: v.optional(v.id("storeBillingPeriods")),
+    membershipMode: v.optional(v.union(
+      v.literal("owner_only"),
+      v.literal("memberships_enabled")
+    )),
     createdAt: v.number(),
     updatedAt: v.number(),
   })
-    .index("ownerId", ["ownerId"])
+.index("ownerId", ["ownerId"])
     .index("slug", ["slug"])
-    .index("subscription", ["subscription"]),
+    .index("subscription", ["subscription"])
+    .index("billingState", ["billingState"])
+    .index("billingCompatibilityMode", ["billingCompatibilityMode"]),
+
+  storeBillingPeriods: defineTable({
+    storeId: v.id("stores"),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("active"),
+      v.literal("expired"),
+      v.literal("canceled")
+    ),
+    startedAt: v.number(),
+    endsAt: v.number(),
+    activatedAt: v.optional(v.number()),
+    activatedByUserId: v.optional(v.string()),
+    activationSource: v.union(
+      v.literal("migration"),
+      v.literal("verified_webhook"),
+      v.literal("internal_admin")
+    ),
+    priceDzd: v.number(),
+    policyVersion: v.string(),
+    evidencePaymentAttemptId: v.optional(v.id("paymentAttempts")),
+    notes: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("storeId", ["storeId"])
+    .index("storeStatus", ["storeId", "status"])
+    .index("endsAt", ["endsAt"]),
+
+  paymentAttempts: defineTable({
+    storeId: v.id("stores"),
+    initiatedByUserId: v.string(),
+    provider: v.union(v.literal("chargily"), v.literal("sofizpay")),
+    purpose: v.literal("store_unlock"),
+    status: v.union(
+      v.literal("created"),
+      v.literal("provider_pending"),
+      v.literal("succeeded"),
+      v.literal("failed"),
+      v.literal("expired"),
+      v.literal("canceled")
+    ),
+    amountDzd: v.number(),
+    currency: v.string(),
+    billingPeriodStart: v.optional(v.number()),
+    billingPeriodEnd: v.optional(v.number()),
+    providerCheckoutId: v.optional(v.string()),
+    providerReference: v.optional(v.string()),
+    idempotencyKey: v.string(),
+    requestSnapshot: v.object({
+      storeSlug: v.string(),
+      storeName: v.string(),
+      actorRole: v.union(
+        v.literal("owner"),
+        v.literal("admin"),
+        v.literal("staff"),
+        v.literal("unknown")
+      ),
+      policyVersion: v.string(),
+    }),
+    resolvedMembershipId: v.optional(v.id("storeMemberships")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    expiresAt: v.optional(v.number()),
+  })
+    .index("storeId", ["storeId"])
+    .index("initiatedByUserId", ["initiatedByUserId"])
+    .index("providerCheckout", ["provider", "providerCheckoutId"])
+    .index("idempotencyKey", ["idempotencyKey"]),
+
+  paymentEvidence: defineTable({
+    paymentAttemptId: v.id("paymentAttempts"),
+    storeId: v.id("stores"),
+    provider: v.union(v.literal("chargily"), v.literal("sofizpay")),
+    providerEventId: v.optional(v.string()),
+    providerPaymentId: v.optional(v.string()),
+    eventType: v.string(),
+    verificationStatus: v.union(
+      v.literal("verified"),
+      v.literal("rejected"),
+      v.literal("pending_review")
+    ),
+    verificationMethod: v.union(
+      v.literal("signature"),
+      v.literal("provider_fetch"),
+      v.literal("manual_reconciliation")
+    ),
+    signatureCheckedAt: v.optional(v.number()),
+    receivedAt: v.number(),
+    eventCreatedAt: v.optional(v.number()),
+    payloadHash: v.string(),
+    payloadRedacted: v.any(),
+    duplicateOfEvidenceId: v.optional(v.id("paymentEvidence")),
+    appliedAt: v.optional(v.number()),
+    appliedBillingPeriodId: v.optional(v.id("storeBillingPeriods")),
+  })
+    .index("paymentAttemptId", ["paymentAttemptId"])
+    .index("storeReceivedAt", ["storeId", "receivedAt"])
+    .index("providerEvent", ["provider", "providerEventId"])
+    .index("providerPayment", ["provider", "providerPaymentId"]),
+
+  storeMemberships: defineTable({
+    storeId: v.id("stores"),
+    userId: v.string(),
+    role: v.union(v.literal("owner"), v.literal("admin"), v.literal("staff")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("revoked"),
+      v.literal("pending_acceptance")
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    grantedByUserId: v.string(),
+    revokedAt: v.optional(v.number()),
+    revokedByUserId: v.optional(v.string()),
+    source: v.union(
+      v.literal("owner_bootstrap"),
+      v.literal("invite_accept"),
+      v.literal("migration")
+    ),
+    permissionsVersion: v.string(),
+  })
+    .index("storeUserStatus", ["storeId", "userId", "status"])
+    .index("userStatus", ["userId", "status"])
+    .index("storeRole", ["storeId", "role"]),
 
   products: defineTable({
     storeId: v.string(),

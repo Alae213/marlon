@@ -2,49 +2,25 @@ import { query, mutation, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 import { upsertProductDigest } from "./performanceHelpers";
+import { assertStoreRole } from "./storeAccess";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbWithGet = { db: { get: (id: any) => Promise<any> } };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
-type CtxWithDb = DbWithGet & AuthWithIdentity;
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StorageCtx = { storage: { getUrl: (id: any) => Promise<string | null> } };
 
 // Helper to verify product/store ownership via product
-async function assertProductOwnership(ctx: CtxWithDb, productId: Id<"products">) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized");
-  }
-  
+async function assertProductOwnership(ctx: Parameters<typeof assertStoreRole>[0] & { db: { get: (id: Id<"products">) => Promise<Doc<"products"> | null> } }, productId: Id<"products">) {
   const product = await ctx.db.get(productId) as Doc<"products"> | null;
   if (!product) {
     throw new Error("Product not found");
   }
-  
-  // Get the store and verify ownership
-  const store = await ctx.db.get(product.storeId as Id<"stores">) as Doc<"stores"> | null;
-  if (!store || store.ownerId !== identity.subject) {
-    throw new Error("Forbidden");
-  }
-  
+
+  const { identity, store } = await assertStoreRole(ctx, product.storeId as Id<"stores">, "owner");
   return { identity, product, store };
 }
 
 // Helper to verify store ownership
-async function assertStoreOwnership(ctx: CtxWithDb, storeId: Id<"stores">) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized");
-  }
-  
-  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
-  if (!store || store.ownerId !== identity.subject) {
-    throw new Error("Forbidden");
-  }
-  
-  return { identity, store };
+async function assertStoreOwnership(ctx: Parameters<typeof assertStoreRole>[0], storeId: Id<"stores">) {
+  return await assertStoreRole(ctx, storeId, "owner");
 }
 
 function isAbsoluteUrl(value: string): boolean {

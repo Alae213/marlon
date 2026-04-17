@@ -31,10 +31,11 @@ Do not accept a cleaner abstraction, faster path, or better UX if it weakens any
 
 ### Current
 
-- Store access is mainly enforced with direct `store.ownerId` checks in Convex functions and route handlers.
+- Touched Convex merchant-access paths now route through centralized `convex/storeAccess.ts` helpers.
+- The helper still fails closed to legacy owner-only semantics unless a store is explicitly in `membershipMode=memberships_enabled`.
 - Delivery credential runtime reads are owner-scoped.
 - The delivery route rejects authenticated users who do not own the target store.
-- There is no centralized policy layer yet.
+- The repo is still mixed overall; unrefactored paths may still use direct `store.ownerId` checks.
 
 ### Planned
 

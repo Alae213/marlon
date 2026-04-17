@@ -8,7 +8,7 @@
 
 ## Summary
 
-The storefront content editor is the top part of the store editor that lets an owner adjust basic navbar and hero presentation. The live editing surface is composed in `components/pages/editor/components/products-content.tsx`, with focused controls in `components/pages/editor/components/navbar-editor.tsx` and `components/pages/editor/components/hero-editor.tsx`, backed by `convex/siteContent.ts`.
+The storefront content editor is the top part of the store editor that lets an owner adjust basic navbar and hero presentation. The live editing surface is composed in `components/pages/editor/components/products-content.tsx`, with focused controls in `components/pages/editor/components/navbar-editor.tsx` and `components/pages/editor/components/hero-editor.tsx`, backed by `convex/siteContent.ts`. The navbar remains popover-driven, while the hero now uses direct-manipulation editing on the preview surface itself.
 
 ---
 
@@ -21,7 +21,7 @@ The storefront content editor is the top part of the store editor that lets an o
 
 ## User Stories
 
-- As a store owner, I want to change my logo and hero copy so that the storefront reflects my brand.
+- As a store owner, I want to change my logo and hero presentation directly on the preview surface so that the storefront reflects my brand without filling out a form-like settings row.
 - As a store owner, I want to control navbar appearance and cart visibility so that the storefront layout matches my needs.
 
 ---
@@ -32,18 +32,22 @@ The storefront content editor is the top part of the store editor that lets an o
 
 1. `ProductsContent` loads resolved `navbar` and `hero` sections through `api.siteContent.getSiteContentResolved`.
 2. `NavbarEditor` lets the owner upload/crop a logo, switch between light and dark navbar modes, and toggle cart visibility.
-3. `HeroEditor` lets the owner edit hero title text, CTA label text, hero layout, and hero background image.
-4. Navbar and hero mutations write or upsert `siteContent` rows in `convex/siteContent.ts`.
-5. The public storefront in `app/[slug]/page.tsx` reads those sections and renders the updated navbar and hero.
+3. `HeroEditor` shows hover-highlighted editable regions for the background image, title, and CTA, using blue outline/selection states inspired by the navbar editor interaction language.
+4. Clicking the hero background starts image upload directly, then opens an adjustment dialog with desktop/phone previews plus zoom and focal controls before saving one responsive image.
+5. Clicking the title or CTA opens a floating mini panel for text, color, and shared font/alignment controls. Font and alignment changes made in either panel apply to both title and CTA.
+6. Navbar and hero mutations write or upsert `siteContent` rows in `convex/siteContent.ts`.
+7. The public storefront in `app/[slug]/page.tsx` reads those sections and renders the updated navbar and hero.
 
 ### Edge Cases & Rules
 
 - `Current`: navbar logo upload, navbar theme mode, and cart toggle are live through `setNavbarLogo` and `setNavbarStyles` in `convex/siteContent.ts`.
-- `Current`: hero title, CTA label, layout, and background image are live through `setHeroStyles`.
+- `Current`: hero title, CTA text, title/CTA colors, shared font family, shared alignment, background image, focal point, and zoom are live through `setHeroStyles`.
+- `Current`: hero text limits are enforced in the editor at 40 characters for the title and 18 characters for the CTA.
+- `Current`: default hero content is available even when no stored hero section exists yet. The editor preview falls back to `Meet E-commerce` / `Again`, `Buy Now`, and `/Hero-bg.jpg`.
 - `Partial`: navbar links shown in both editor preview and storefront are placeholders from hard-coded arrays in `components/pages/editor/components/navbar-editor.tsx` and `app/[slug]/page.tsx`; link editing is not live.
-- `Partial`: hero CTA destination is not editable in the current editor. The backend default object still has `ctaLink`, but the editor/storefront flow does not expose or fully use it.
+- `Current`: hero CTA destination is not merchant-editable; the public catalog hero scrolls to the products section by design.
 - `Partial`: footer content is legacy. `ProductsContent` calls `removeAllOwnedFooterContent` on mount, while `app/[slug]/page.tsx` still renders footer data if present.
-- `Partial`: navbar/hero contract drift exists across backend defaults, editor types, and storefront rendering, so fields should be documented conservatively.
+- `Partial`: navbar links and footer handling still drift from the more polished hero behavior.
 
 ---
 
@@ -61,7 +65,7 @@ The storefront content editor is the top part of the store editor that lets an o
 |--------|----------|--------------|
 | Navbar branding | `Current`: logo, light/dark style, cart toggle | `Planned`: richer nav composition |
 | Navbar links | `Partial`: placeholder links only | `Planned`: editable links with real destinations |
-| Hero editing | `Current`: title, CTA label, layout, background image | `Planned`: fuller content controls and stronger schema consistency |
+| Hero editing | `Current`: direct preview editing for title, CTA, colors, shared font/alignment, and responsive background image positioning | `Planned`: richer navigation/footer composition and a tighter typed public/editor contract |
 | Footer editing | `Partial`: legacy content still exists in storefront code but is being removed, not actively edited | `Planned`: either remove footer surface fully or replace with a supported editor |
 
 ---
@@ -82,7 +86,7 @@ The storefront content editor is the top part of the store editor that lets an o
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T-PLACEHOLDER | `[ ]` | TASK-LIST.md not updated in this pass. Sync content-editor follow-ups to real T-numbers before execution. |
+| T43 | `[x]` | Rework the workspace hero editor and public storefront hero to use shared defaults, direct-manipulation editing, shared font/alignment controls, CTA scroll behavior, and improved visual rendering. |
 
 ---
 
@@ -98,13 +102,13 @@ The storefront content editor is the top part of the store editor that lets an o
 
 ## Open Questions
 
-- No additional open questions in repo-backed source. The known unresolved areas are contract drift and whether legacy footer support will be fully removed or replaced.
+- No additional open questions in repo-backed source. The main unresolved areas are placeholder navbar links, legacy footer handling, and whether the hero should later gain merchant-editable CTA destinations.
 
 ---
 
 ## Notes
 
-- Main implementation references: `components/pages/editor/components/products-content.tsx`, `components/pages/editor/components/navbar-editor.tsx`, `components/pages/editor/components/hero-editor.tsx`, `convex/siteContent.ts`, `app/[slug]/page.tsx`.
+- Main implementation references: `components/pages/editor/components/products-content.tsx`, `components/pages/editor/components/navbar-editor.tsx`, `components/pages/editor/components/hero-editor.tsx`, `convex/siteContent.ts`, `app/[slug]/page.tsx`, `lib/hero-content.ts`.
 - `initializeSiteContent` exists in `convex/siteContent.ts`, but store creation does not currently call it.
 
 ---

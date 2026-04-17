@@ -100,12 +100,13 @@ Primary merchant surfaces are Convex functions.
 
 - Route: `POST /api/chargily/create-payment`
 - Status: live payment-initiation route.
-- Current request fields: `storeId`, `storeName`, `amount`.
-- Current response fields: `checkoutUrl`, `checkoutId`, `success`, optional `message`.
+- Current request fields: `storeId`.
+- Current response fields: `checkoutUrl`, `checkoutId`, `paymentAttemptId`, `success`, optional `message`.
 - Current reality:
   - This is the active payment-initiation surface today.
-  - It is not the documented merchant unlock route.
-  - It creates a generic provider checkout via `lib/payment-service`, not a stable store-unlock contract.
+  - The route now authenticates the actor, resolves store access through centralized Convex helpers, and derives amount/store/provider metadata on the server.
+  - It persists a `paymentAttempts` row before calling the provider so future webhook work can reconcile by server-owned attempt metadata.
+  - It is still not the final documented merchant unlock route because webhook trust and billing-policy cutover remain incomplete.
 
 ### Billing state transitions (`Partial`)
 

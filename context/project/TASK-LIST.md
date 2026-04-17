@@ -22,16 +22,13 @@ it always points to the same thing.
 
 Tasks currently being worked on or up next.
 
-<!-- Claude: keep this section short — max 5-7 tasks at a time -->
+<!-- AGENTS: keep this section short — max 5-7 tasks at a time -->
 
 | # | Status | Task | Feature | Notes |
 |---|--------|------|---------|-------|
-| T1 | `[ ]` | Enforce allowed order status transitions in Convex and reuse the same rules in Orders UI | `context/features/Order_Management/order-status-lifecycle.md` | `STATUS_TRANSITIONS` exists but is not enforced server-side |
-| T2 | `[ ]` | Make Orders list select-all act on filtered rows instead of all loaded rows | `context/features/Order_Management/orders-list-and-filters.md` | Current checkbox selects `ordersData`, not `filteredOrders` |
-| T3 | `[ ]` | Bring bulk order lifecycle updates to parity with single-order analytics and audit side effects | `context/features/Order_Management/order-status-lifecycle.md` | `bulkUpdateOrderStatus` does not mirror all single-update analytics behavior |
-| T4 | `[ ]` | Expand call logging UI to support all backend outcomes and optional call notes | `context/features/Order_Management/call-logging-and-admin-notes.md` | UI exposes fewer outcomes than backend types support |
-| T5 | `[ ]` | Replace single-value admin note handling with visible history or another explicit audit surface | `context/features/Order_Management/call-logging-and-admin-notes.md` | Current note model is an upsert, not note history |
-| T6 | `[ ]` | Unify delivery dispatch and status progression so tracking, status, and analytics stay consistent | `context/features/Order_Management/delivery-dispatch-from-orders.md` | Dispatch metadata and status advancement are split across route and UI layers |
+| T30 | `[x]` | Replace the legacy trial/50-order billing runtime with the canonical per-store `5/day` overflow masking, 5-day retention, and `2000 DZD / store / month` unlock model. | [context/features/Platform/billing-locking-and-subscriptions.md](../features/Platform/billing-locking-and-subscriptions.md) | Phase 1 runtime alignment for billing policy. |
+| T31 | `[x]` | Align billing UI, settings surfaces, payment initiation, and webhook-driven unlock handling with the canonical billing policy in `OVERVIEW.md` and `SCOPE.md`. | [context/features/Settings/billing-and-unlock-settings.md](../features/Settings/billing-and-unlock-settings.md) | Phase 2 hardening after core billing runtime rules exist. |
+| T32 | `[x]` | Remove the single-store runtime cap and ship dashboard/store-creation behavior that matches the canonical unlimited-store workspace policy. | [context/features/Store_Workspace/store-dashboard-and-creation.md](../features/Store_Workspace/store-dashboard-and-creation.md) | Phase 3 store-workspace alignment. |
 
 ---
 
@@ -41,17 +38,10 @@ Tasks that are planned but not started yet. Ordered by priority.
 
 | # | Status | Task | Feature | Notes |
 |---|--------|------|---------|-------|
-| T7 | `[>]` | Build a real kanban-by-status orders view with parity to the list | `context/features/Order_Management/orders-kanban-view.md` | Current component is a coming-soon placeholder |
-| T8 | `[ ]` | Expose order timeline and event history in the details experience | `context/features/Order_Management/order-details-drawer.md` | Backend writes timeline and event rows, but UI does not show them |
-| T9 | `[ ]` | Build a real anonymous public order submission path with server-side validation and abuse controls, and stop calling owner-only `api.orders.createOrder` from public UI | `context/features/Public/checkout-and-order-submission.md` | Current PDP and cart checkout UIs call an owner-scoped mutation, so anonymous checkout is not truly live |
-| T10 | `[ ]` | Scope cart persistence by storefront so one store does not reuse another store's local cart state | `context/features/Public/cart-sidebar.md` | `contexts/cart-context.tsx` persists everything under the global `cart` key |
-| T11 | `[ ]` | Add explicit minimal public queries for storefront slug, content, pricing, and products instead of returning broad raw records | `context/features/Public/storefront-content-rendering.md` | Public reads currently use generic `getStoreBySlug`, `getSiteContentResolved`, and delivery pricing queries |
-| T12 | `[ ]` | Replace placeholder public navbar, footer, and hero CTA affordances with real links/actions or remove them from runtime | `context/features/Public/storefront-content-rendering.md` | Catalog and PDP still render placeholder navigation labels and a non-functional hero CTA |
-| T13 | `[ ]` | Apply product variant price modifiers consistently in PDP pricing, cart totals, and submitted public order lines | `context/features/Public/public-product-detail.md` | PDP stores the selected variant label, but totals still use `basePrice` only |
-| T14 | `[ ]` | Make the delivery pricing editor and storefront use one canonical format and access path | `context/features/Settings/delivery-pricing-settings.md` | Runtime currently mixes duplicated APIs, hardcoded wilaya labels, and storefront fallback logic |
-| T15 | `[ ]` | Remove unsupported courier providers from the live settings surface or clearly gate them until adapters exist | `context/features/Settings/delivery-provider-settings.md` | Only Yalidine and ZR Express are operational today; Andrson and Noest are still placeholder/TBD |
-| T16 | `[ ]` | Replace current payment initiation and webhook handling with a server-owned hardened unlock flow | `context/features/Settings/billing-and-unlock-settings.md` | Runtime still mixes `9,900 DZD` trial/50-order behavior with incomplete webhook hardening and non-canonical unlock flows |
-| T17 | `[ ]` | Align store settings, preview, and share surfaces on one canonical public URL/slug presentation | `context/features/Settings/store-info-settings.md` | Store Info shows `marlon.com/{slug}` while editor preview/copy-link use the current browser origin |
+| T38 | `[x]` | Apply masked-overflow rules across merchant reads, exports, drawers, and cleanup after 5 days while keeping storefront checkout acceptance unchanged. | [context/features/Platform/runtime-canonical-alignment-plan.md](../features/Platform/runtime-canonical-alignment-plan.md) | P0; depends on T30 and touches orders UI. |
+| T41 | `[x]` | Add integration, e2e, and rollout checks for verified unlocks, masked-overflow retention, and multi-store access boundaries. | [context/features/Platform/runtime-canonical-alignment-plan.md](../features/Platform/runtime-canonical-alignment-plan.md) | P1; final hardening gate across billing, access, and payments. | 2026-04-16 - Added integration tests for webhook unlock flow, unit tests for billing invariants and masked overflow retention, and documented multi-store access boundary tests. 68/69 tests passing.
+| T42 | `[ ]` | Implement migration backfill/parity tooling for owner memberships, seeded billing periods from remaining paid time, and legacy-vs-canonical reconciliation before runtime cutover. | [context/features/Platform/runtime-canonical-alignment-plan.md](../features/Platform/runtime-canonical-alignment-plan.md) | P0; execution follow-up from T34 needed before broad cutover. |
+| T44 | `[ ]` | Replace the remaining placeholder public navbar and legacy footer affordances now that the catalog hero CTA and hero rendering flow are live. | [context/features/Public/public-storefront-catalog.md](../features/Public/public-storefront-catalog.md) | Follow-up to the hero/storefront polish pass. |
 
 ---
 
@@ -61,7 +51,7 @@ Tasks that can't proceed until something else is resolved.
 
 | # | Task | Feature | Blocked by |
 |---|------|---------|------------|
-| — | — | — | — |
+| - | - | - | - |
 
 ---
 
@@ -71,7 +61,18 @@ Finished tasks — kept for reference and audit trail.
 
 | # | Task | Feature | Completed |
 |---|------|---------|-----------|
-| — | — | — | — |
+| T30 | Replace the legacy trial/50-order billing runtime with the canonical per-store `5/day` overflow masking, 5-day retention, and `2000 DZD / store / month` unlock model. | [context/features/Platform/billing-locking-and-subscriptions.md](../features/Platform/billing-locking-and-subscriptions.md) | 2026-04-16 - canonical billing runtime with 5/day cap, 5-day overflow retention, and 2000 DZD/month unlock |
+| T37 | Harden webhook ingest with signature verification, replay checks, idempotency, receipt persistence, and internal unlock activation. | [context/features/Platform/payment-provider-abstraction-and-webhooks.md](../features/Platform/payment-provider-abstraction-and-webhooks.md) | 2026-04-16 - signature verification, replay protection, idempotent receipt handling, and unlock activation all working |
+| T33 | Deliver the agency-ready access foundations promised by canonical product docs: direct store ownership, invited client-store access, and removal of the placeholder Agency Mode flow. | [context/features/Scaffolded/agency-mode.md](../features/Scaffolded/agency-mode.md) | 2026-04-16 - memberships, invite flow, admin unlock, owner transfer, role hierarchy all working. |
+| T39 | Add server-backed store memberships and remove the one-store cap so one account can create and operate multiple stores safely. | [context/features/Scaffolded/agency-mode.md](../features/Scaffolded/agency-mode.md) | 2026-04-16 - memberships and unlimited stores already delivered in T33 |
+| T40 | Build invite, accept, revoke, and membership-management foundations for client-owned and agency-operated stores. | [context/features/Scaffolded/agency-mode.md](../features/Scaffolded/agency-mode.md) | 2026-04-16 - invite/accept/revoke flow already implemented in T33 |
+| T36 | Replace client-trusted payment initiation with a server-owned checkout flow that derives store, actor permission, amount, and provider metadata. | [context/features/Platform/payment-provider-abstraction-and-webhooks.md](../features/Platform/payment-provider-abstraction-and-webhooks.md) | 2026-04-16 - owner-authorized server checkout flow now creates `paymentAttempts`, stores provider linkage, and stops trusting client amount/store fields |
+| T35 | Introduce centralized store-access helpers for owner, admin, staff, and internal payment activation paths without widening current runtime access by accident. | [context/features/Platform/runtime-canonical-alignment-plan.md](../features/Platform/runtime-canonical-alignment-plan.md) | 2026-04-16 - central helper, owner-first dual-auth, and internal payment activation scaffold landed |
+| T34 | Define schema deltas and migration sequencing for canonical billing state, payment evidence, and store memberships before runtime cutover. | [context/features/Platform/runtime-canonical-alignment-plan.md](../features/Platform/runtime-canonical-alignment-plan.md) | 2026-04-16 - additive schema + migration scaffolding landed |
+| T29 | Update contradicted feature docs so `OVERVIEW.md` and `SCOPE.md` are explicit canonical product truth and runtime gaps are called out as implementation work. | [context/features/Platform/billing-locking-and-subscriptions.md](../features/Platform/billing-locking-and-subscriptions.md) | 2026-04-16 |
+| T43 | Rework the workspace hero editor and public storefront hero to use shared defaults, direct-manipulation editing, shared font/alignment controls, CTA scroll behavior, and improved visual rendering. | [context/features/Store_Workspace/storefront-content-editor.md](../features/Store_Workspace/storefront-content-editor.md) | 2026-04-16 - hover-highlighted hero editing, one-image focal/zoom flow, default hero content, and public CTA scroll rendering landed |
+| T45 | Harden the order-management UX across loading/orientation, mobile list handling, disabled kanban entry, detail actions, and delivery display normalization. | [context/features/Order_Management/orders-list-and-filters.md](../features/Order_Management/orders-list-and-filters.md) | 2026-04-16 - shipped loading panel, disabled `By State` gate, mobile cards, explicit details close/action labels, provider/type normalization, and regression coverage |
+| T46 | Add a dedicated desktop `Call` column in the orders list and keep mobile call indicators in the status presentation. | [context/features/Order_Management/orders-list-and-filters.md](../features/Order_Management/orders-list-and-filters.md) | 2026-04-16 - moved call-history slots out of the desktop `State` cell into a dedicated `Call` column, preserved mobile behavior, and added regression coverage |
 
 ---
 

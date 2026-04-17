@@ -24,6 +24,10 @@ import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/h
 import { useToast } from "@/contexts/toast-context";
 import type { CallLog, OrderStatus } from "@/lib/orders-types";
 import { CALL_OUTCOME_LABELS } from "@/lib/orders-types";
+import {
+  getDeliveryProviderDisplay,
+  getDeliveryTypeDisplay,
+} from "@/lib/order-delivery-display";
 
 interface OrderProductItem {
   productId: string;
@@ -409,6 +413,11 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
   }, [order?._id]);
 
   const normalizedCallLog = useMemo(() => normalizeCallLog(order?.callLog), [order?.callLog]);
+  const deliveryTypeDisplay = getDeliveryTypeDisplay(order?.deliveryType);
+  const deliveryProviderDisplay = getDeliveryProviderDisplay(
+    order?.deliveryProvider,
+    order?.trackingNumber,
+  );
 
   if (!order) return null;
 
@@ -424,21 +433,31 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
           <SheetTitle className="text-[var(--system-300)] body-base font-normal">
             #{order.orderNumber}
           </SheetTitle>
-          {(() => {
-            const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
-            return (
-              <span 
-                className="overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
-                style={{ 
-                  backgroundColor: statusConfig?.bgColor || '#6b728028',
-                  color: statusConfig?.textColor || '#ffffff33',
-                }}
-              >
-                {statusConfig?.icon}
-                {statusConfig?.label || order.status}
-              </span>
-            );
-          })()}
+          <div className="flex items-center gap-2">
+            {(() => {
+              const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
+              return (
+                <span 
+                  className="overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                  style={{ 
+                    backgroundColor: statusConfig?.bgColor || '#6b728028',
+                    color: statusConfig?.textColor || '#ffffff33',
+                  }}
+                >
+                  {statusConfig?.icon}
+                  {statusConfig?.label || order.status}
+                </span>
+              );
+            })()}
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-[var(--system-200)] transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Close order details"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
         </div>
 
         {/* Scrollable Content */}
@@ -531,10 +550,14 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
             <div className="flex justify-between items-center text-[var(--system-200)] text-sm">
               <div className="flex items-center gap-2">
                 <span>Delivery</span>
-                {order.deliveryType && (
+                {deliveryTypeDisplay.label && (
                   <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[var(--system-100)] text-[10px]">
-                    {order.deliveryType === "home" ? <Home className="w-2.5 h-2.5" /> : <Building2 className="w-2.5 h-2.5" />}
-                    <span className="capitalize">{order.deliveryType}</span>
+                    {deliveryTypeDisplay.icon === "home" ? (
+                      <Home className="w-2.5 h-2.5" />
+                    ) : deliveryTypeDisplay.icon === "building" ? (
+                      <Building2 className="w-2.5 h-2.5" />
+                    ) : null}
+                    <span>{deliveryTypeDisplay.label}</span>
                   </span>
                 )}
               </div>
@@ -565,18 +588,16 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/50">Provider</span>
                   <span className="text-sm text-white">
-                    {order.deliveryProvider === "yalidine" ? "Yalidine" : 
-                     order.deliveryProvider === "zr-express" || order.deliveryProvider === "zr_express" ? "ZR Express" :
-                     order.deliveryProvider || "Unknown"}
+                    {deliveryProviderDisplay.label}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-white/50">Tracking #</span>
                   <span className="text-sm text-white font-mono">{order.trackingNumber}</span>
                 </div>
-                {order.deliveryProvider === "yalidine" && (
+                {deliveryProviderDisplay.trackingUrl ? (
                   <a 
-                    href={`https://yalidine.dz/track/${order.trackingNumber}`}
+                    href={deliveryProviderDisplay.trackingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center justify-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
@@ -584,18 +605,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                     Track Package
                     <ExternalLink className="w-3 h-3" />
                   </a>
-                )}
-                {order.deliveryProvider === "zr-express" || order.deliveryProvider === "zr_express" && (
-                  <a 
-                    href={`https://zrexpress.dz/tracking/${order.trackingNumber}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
-                  >
-                    Track Package
-                    <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
+                ) : null}
               </div>
 </section>
           )}
@@ -657,9 +667,9 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
           </div>
 
           {/* Call Controls */}
-           <div className="flex items-center justify-between px-1">
+           <div className="flex flex-col gap-3 px-1 sm:flex-row sm:items-center sm:justify-between">
              <CallSlotsHover callLog={normalizedCallLog} />
-             <div className="flex gap-2">
+             <div className="flex flex-wrap gap-2">
                <CallButton 
                  outcome="answered" 
                  icon={<Phone aria-hidden="true" className="w-3.5 h-3.5" />} 
@@ -671,6 +681,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                <CallButton 
                  outcome="no_answer" 
                  icon={<PhoneMissed aria-hidden="true" className="w-4 h-4" />} 
+                 label="No Answer"
                  bg="bg-[#fa9a34]"
                  onClick={() => handleAddCallLog("no_answer")}
                  disabled={isSavingCallLog}
@@ -678,6 +689,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                <CallButton 
                  outcome="refused" 
                  icon={<PhoneOff aria-hidden="true" className="w-4 h-4" />} 
+                 label="Refused"
                  bg="bg-[#f44055]"
                  onClick={() => handleAddCallLog("refused")}
                  disabled={isSavingCallLog}
@@ -796,7 +808,7 @@ function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDi
     case "packaged":
       return (
         <ActionButton
-          label="Print label"
+          label="Mark as shipped"
           targetStatus="shipped"
           icon={<Package className="w-5 h-5" />}
           onClick={() => onStatusChange(orderId, "shipped")}

@@ -8,7 +8,7 @@
 
 ## Summary
 
-The public catalog at `app/[slug]/page.tsx` is a live browseable storefront route. Current: it resolves the store by slug, then client-fetches navbar, hero, footer, and product data as a snapshot in `useEffect` with `convex.query(...)`, and renders a simple product grid that links into the PDP. Partial: it is not a live SSR/ISR storefront, and some surrounding content chrome is still placeholder or drifting.
+The public catalog at `app/[slug]/page.tsx` is a live browseable storefront route. Current: it resolves the store by slug, then client-fetches navbar, hero, footer, and product data as a snapshot in `useEffect` with `convex.query(...)`, and renders a polished hero plus a simple product grid that links into the PDP. Partial: it is not a live SSR/ISR storefront, and some surrounding nav/footer chrome is still placeholder or drifting.
 
 ---
 
@@ -32,14 +32,15 @@ The public catalog at `app/[slug]/page.tsx` is a live browseable storefront rout
 
 1. `app/[slug]/page.tsx` reads `slug` from the route, resolves the store via `useQuery(api.stores.getStoreBySlug, ...)`, and wraps the page in `CartProvider`.
 2. Once `store._id` is available, the page loads navbar, hero, footer, and product snapshot data with `convex.query(api.siteContent.getSiteContentResolved, ...)` and `convex.query(api.products.getProducts, ...)` inside `useEffect`.
-3. The page renders a hero section when content exists, a product grid linking to `/${slug}/product/${product._id}`, and a lazily mounted `CartSidebar` after the shopper opens the cart.
+3. The page renders a hero section with default fallback content when the hero section is missing, a product grid linking to `/${slug}/product/${product._id}`, and a lazily mounted `CartSidebar` after the shopper opens the cart.
 
 ### Edge Cases & Rules
 - Current: the catalog is client-rendered snapshot content, not SSR, ISR, or a live Convex subscription storefront; public data refreshes on page load, not continuously.
 - Current: product cards come from `api.products.getProducts` in `convex/products.ts`, which returns active and legacy-unset products but excludes records explicitly archived with `isArchived: true`.
 - Current: when no products are returned, the page shows `No products available`.
 - Partial: navbar labels are hardcoded `Shop`, `FAQ`, and `Help` spans in `app/[slug]/page.tsx`; they do not navigate anywhere.
-- Partial: the hero CTA button renders text and color from site content, but no destination or click behavior is wired.
+- Current: the hero CTA button uses the shared button component and smoothly scrolls to the `#products` anchor.
+- Current: the hero supports multiline title text, separate title/CTA colors, shared font/alignment, one responsive background image, focal positioning, zoom, and a bottom white fade for readability.
 - Partial: footer rendering is legacy/drifting; it uses a few footer fields but still repeats the same placeholder labels instead of store-managed navigation.
 
 ---
@@ -60,7 +61,8 @@ This route is the public entry point for storefront browsing.
 |--------|----------|--------------|
 | Catalog rendering | Current: client-side snapshot fetch in `app/[slug]/page.tsx` | SSR/ISR or another explicitly supported public rendering model |
 | Product discovery | Current: simple grid of all active products | Search, filters, categories, merchandising, and pagination |
-| Navigation chrome | Partial: placeholder labels and drifting footer content | Fully wired store-managed navigation and CTA destinations |
+| Hero polish | Current: improved spacing, contrast overlays, responsive composition, and product-scroll CTA | Stronger typed public contracts and a more explicit caching strategy |
+| Navigation chrome | Partial: placeholder labels and drifting footer content remain | Fully wired store-managed navigation and CTA destinations |
 | Cart entry | Current: badge and sidebar open from the catalog when navbar content allows it | Store-scoped cart UX with stronger continuity across pages |
 
 ---
@@ -81,7 +83,7 @@ This route is the public entry point for storefront browsing.
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
 | T11 | `[ ]` | Add explicit minimal public queries for storefront slug, content, pricing, and products instead of returning broad raw records |
-| T12 | `[ ]` | Replace placeholder public navbar, footer, and hero CTA affordances with real links/actions or remove them from runtime |
+| T12 | `[~]` | Replace placeholder public navbar and footer affordances with real links/actions or remove them from runtime; the catalog hero CTA now scrolls to products |
 
 ---
 
@@ -105,6 +107,7 @@ This route is the public entry point for storefront browsing.
 
 - The cart sidebar is mounted only after the shopper opens it once via `hasOpenedCart` in `app/[slug]/page.tsx`.
 - Text content is rendered through normal React escaping, and the hero title/CTA text are additionally stripped of HTML tags before display in `app/[slug]/page.tsx`.
+- The products grid now exposes a stable `products` anchor so the hero CTA has a real scroll target.
 
 ---
 

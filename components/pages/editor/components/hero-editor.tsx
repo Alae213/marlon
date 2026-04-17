@@ -1,360 +1,751 @@
 "use client";
 
-import { useState, useCallback, useRef, type KeyboardEvent, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Upload } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import {
+  Image as ImageIcon,
+  Palette,
+  Type,
+  WandSparkles,
+  X,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { EditorHoverHighlight } from "@/components/ui/EditorHoverHighlight";
+import { cn } from "@/lib/utils";
+import {
+  clampHeroText,
+  HERO_CTA_COLOR_PRESETS,
+  HERO_CTA_MAX,
+  HERO_FONT_LABELS,
+  HERO_TITLE_COLOR_PRESETS,
+  HERO_TITLE_MAX,
+  resolveHeroAlignment,
+  resolveHeroCta,
+  resolveHeroCtaColor,
+  resolveHeroFocalX,
+  resolveHeroFocalY,
+  resolveHeroFont,
+  resolveHeroImage,
+  resolveHeroTitle,
+  resolveHeroTitleColor,
+  resolveHeroZoom,
+  type HeroAlignment,
+  type HeroFontFamily,
+} from "@/lib/hero-content";
+import { getHeroFontClass } from "@/lib/hero-fonts";
 import { useImageUpload } from "../hooks/use-image-upload";
-import type { HeroContent, EditingField } from "../types";
+import type { HeroContent } from "../types";
 
 interface HeroEditorProps {
   storeId: Id<"stores">;
   heroContent: { content: unknown } | null | undefined;
-  editingField: EditingField | null;
-  editValue: string;
-  onEditValueChange: (value: string) => void;
-  onStartEditing: (field: "heroTitle" | "heroCtaText", value: string) => void;
-  onSaveEdit: () => void;
 }
 
-export function HeroEditor({
-  storeId,
-  heroContent,
-  editingField,
-  editValue,
-  onEditValueChange,
-  onStartEditing,
-  onSaveEdit,
-}: HeroEditorProps) {
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
-  const uploadRequestIdRef = useRef(0);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+type ActivePanel = "title" | "cta" | null;
 
+type HeroUpdate = {
+  title?: string;
+  ctaText?: string;
+  titleColor?: string;
+  ctaColor?: string;
+  fontFamily?: HeroFontFamily;
+  alignment?: HeroAlignment;
+  backgroundImageStorageId?: string;
+  focalPointX?: number;
+  focalPointY?: number;
+  zoom?: number;
+};
+
+interface DraftImageState {
+  previewUrl: string;
+  storageId: string;
+  focalPointX: number;
+  focalPointY: number;
+  zoom: number;
+}
+
+interface SharedTypographyControlsProps {
+  alignment: HeroAlignment;
+  fontFamily: HeroFontFamily;
+  onUpdate: (updates: HeroUpdate) => void | Promise<void>;
+}
+
+interface SettingsShellProps {
+  icon: ReactNode;
+  title: string;
+  onClose: () => void;
+  children: ReactNode;
+}
+
+const ALIGNMENT_OPTIONS: HeroAlignment[] = ["left", "center", "right"];
+const FONT_OPTIONS: HeroFontFamily[] = ["serif", "sans", "playful"];
+
+function getSharedTextAlignment(alignment: HeroAlignment) {
+  if (alignment === "left") return "items-start text-left";
+  if (alignment === "right") return "items-end text-right";
+  return "items-center text-center";
+}
+
+function getHeroImageStyle(imageUrl: string, focalX: number, focalY: number, zoom: number): CSSProperties {
+  return {
+    backgroundImage: `url(${imageUrl})`,
+    backgroundPosition: `${focalX}% ${focalY}%`,
+    backgroundSize: `${Math.max(zoom, 1) * 100}%`,
+    backgroundRepeat: "no-repeat",
+  };
+}
+
+function SwatchButton({
+  color,
+  selected,
+  onClick,
+}: {
+  color: string;
+  selected: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={`Choose ${color}`}
+      className={cn(
+        "h-8 w-8 rounded-full border-2 transition-transform hover:scale-105",
+        selected ? "border-[var(--color-primary)]" : "border-white/20"
+      )}
+      style={{ backgroundColor: color }}
+    />
+  );
+}
+
+function SettingsShell({ icon, title, onClose, children }: SettingsShellProps) {
+  return (
+    <>
+      <PopoverHeader className="mb-4 flex-row items-center justify-between gap-3 text-[var(--system-600)]">
+        <div className="flex items-center gap-2">
+          {icon}
+          <PopoverTitle className="text-sm font-semibold">{title}</PopoverTitle>
+        </div>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          className="rounded-full text-[var(--system-400)] hover:bg-black/5 hover:text-[var(--system-600)]"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Close panel</span>
+        </Button>
+      </PopoverHeader>
+      <div className="space-y-4">{children}</div>
+    </>
+  );
+}
+
+function SharedTypographyControls({
+  alignment,
+  fontFamily,
+  onUpdate,
+}: SharedTypographyControlsProps) {
+  return (
+    <>
+      <div className="space-y-2">
+        <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+          <WandSparkles className="h-3.5 w-3.5" />
+          Shared font
+        </span>
+        <div className="grid grid-cols-3 gap-2">
+          {FONT_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => void onUpdate({ fontFamily: option })}
+              className={cn(
+                "rounded-[18px] border px-3 py-2 text-xs font-medium transition-colors",
+                fontFamily === option
+                  ? "border-[var(--color-primary)] bg-[color:rgb(0_112_243_/_0.12)] text-[var(--system-600)]"
+                  : "border-black/10 bg-white text-[var(--system-500)] hover:bg-black/5",
+                getHeroFontClass(option)
+              )}
+            >
+              {HERO_FONT_LABELS[option]}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+          Shared alignment
+        </span>
+        <div className="grid grid-cols-3 gap-2">
+          {ALIGNMENT_OPTIONS.map((option) => (
+            <button
+              key={option}
+              type="button"
+              onClick={() => void onUpdate({ alignment: option })}
+              className={cn(
+                "rounded-[18px] border px-3 py-2 text-xs font-medium capitalize transition-colors",
+                alignment === option
+                  ? "border-[var(--color-primary)] bg-[color:rgb(0_112_243_/_0.12)] text-[var(--system-600)]"
+                  : "border-black/10 bg-white text-[var(--system-500)] hover:bg-black/5"
+              )}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+      </div>
+    </>
+  );
+}
+
+export function HeroEditor({ storeId, heroContent }: HeroEditorProps) {
   const setHeroStyles = useMutation(api.siteContent.setHeroStyles);
   const { uploadToStorage } = useImageUpload();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [activePanel, setActivePanel] = useState<ActivePanel>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [draftImage, setDraftImage] = useState<DraftImageState | null>(null);
+  const [titleInput, setTitleInput] = useState("");
+  const [ctaInput, setCtaInput] = useState("");
 
-  const currentHero = (heroContent?.content ?? undefined) as HeroContent | undefined;
-  const heroTitle = currentHero?.title ?? "Our Online Store";
-  const heroCtaText = currentHero?.ctaText ?? "Shop Now";
-  const heroCtaColor = currentHero?.ctaColor ?? "var(--system-700)";
-  const heroLayout = currentHero?.layout ?? "center";
-  const heroBgUrl = currentHero?.backgroundImageUrl;
-
-  const isEditingTitle = editingField?.field === "heroTitle";
-  const isEditingCta = editingField?.field === "heroCtaText";
-
-  const commitTitleEdit = useCallback(async () => {
-    const nextTitle = editValue.trim();
-    try {
-      if (nextTitle) {
-        await setHeroStyles({ storeId, title: nextTitle });
-      }
-    } catch (error) {
-      console.error("Failed to save hero title:", error);
-      setErrorMessage("Failed to save hero title");
-    } finally {
-      onSaveEdit();
-    }
-  }, [editValue, onSaveEdit, setHeroStyles, storeId]);
-
-  const handleTitleBlur = useCallback(async () => {
-    await commitTitleEdit();
-  }, [commitTitleEdit]);
-
-  const handleTitleKeyDown = useCallback(
-    async (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        // Prevent form submit when nested in a <form>.
-        e.preventDefault();
-        await commitTitleEdit();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onSaveEdit();
-      }
-    },
-    [commitTitleEdit, onSaveEdit]
+  const currentHero = useMemo(
+    () => (heroContent?.content ?? undefined) as HeroContent | undefined,
+    [heroContent]
   );
 
-  const commitCtaEdit = useCallback(async () => {
-    const nextCtaText = editValue.trim();
-    try {
-      if (nextCtaText) {
-        await setHeroStyles({ storeId, ctaText: nextCtaText });
-      }
-    } catch (error) {
-      console.error("Failed to save hero button text:", error);
-      setErrorMessage("Failed to save hero button text");
-    } finally {
-      onSaveEdit();
-    }
-  }, [editValue, onSaveEdit, setHeroStyles, storeId]);
+  const heroTitle = resolveHeroTitle(currentHero?.title);
+  const heroCtaText = resolveHeroCta(currentHero?.ctaText);
+  const titleColor = resolveHeroTitleColor(currentHero?.titleColor);
+  const ctaColor = resolveHeroCtaColor(currentHero?.ctaColor);
+  const fontFamily = resolveHeroFont(currentHero?.fontFamily);
+  const alignment = resolveHeroAlignment(currentHero?.alignment);
+  const backgroundImageUrl = resolveHeroImage(currentHero?.backgroundImageUrl);
+  const focalPointX = resolveHeroFocalX(currentHero?.focalPointX);
+  const focalPointY = resolveHeroFocalY(currentHero?.focalPointY);
+  const zoom = resolveHeroZoom(currentHero?.zoom);
+  const textAlignmentClass = getSharedTextAlignment(alignment);
+  const fontClass = getHeroFontClass(fontFamily);
+  const liveTitle = activePanel === "title" ? titleInput : heroTitle;
+  const liveCta = activePanel === "cta" ? ctaInput : heroCtaText;
 
-  const handleCtaBlur = useCallback(async () => {
-    await commitCtaEdit();
-  }, [commitCtaEdit]);
+  useEffect(() => {
+    setTitleInput(heroTitle);
+  }, [heroTitle]);
 
-  const handleCtaKeyDown = useCallback(
-    async (e: KeyboardEvent<HTMLInputElement>) => {
-      if (e.key === "Enter") {
-        // Prevent form submit when nested in a <form>.
-        e.preventDefault();
-        await commitCtaEdit();
-      } else if (e.key === "Escape") {
-        e.preventDefault();
-        onSaveEdit();
-      }
-    },
-    [commitCtaEdit, onSaveEdit]
-  );
+  useEffect(() => {
+    setCtaInput(heroCtaText);
+  }, [heroCtaText]);
 
-  const handleLayoutChange = useCallback(
-    async (layout: "left" | "center" | "right") => {
+  const persistSharedSettings = useCallback(
+    async (updates: HeroUpdate) => {
       setErrorMessage(null);
       try {
-        await setHeroStyles({ storeId, layout });
-      } catch (error) {
-        console.error("Failed to update hero layout:", error);
-        setErrorMessage("Failed to update hero layout");
+        await setHeroStyles({ storeId, ...updates });
+      } catch {
+        setErrorMessage("Failed to update the hero. Please retry.");
       }
     },
     [setHeroStyles, storeId]
   );
 
-  const handleBackgroundUpload = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const inputEl = e.currentTarget;
-      const file = inputEl.files?.[0];
-      // Allow selecting the same file again.
-      inputEl.value = "";
+  const commitPanelDraft = useCallback(
+    (panel: ActivePanel) => {
+      if (panel === "title") {
+        void persistSharedSettings({ title: titleInput });
+        return;
+      }
+      if (panel === "cta") {
+        void persistSharedSettings({ ctaText: ctaInput });
+      }
+    },
+    [ctaInput, persistSharedSettings, titleInput]
+  );
+
+  const closePanel = useCallback(() => {
+    commitPanelDraft(activePanel);
+    setActivePanel(null);
+  }, [activePanel, commitPanelDraft]);
+
+  const handlePanelOpenChange = useCallback(
+    (panel: Exclude<ActivePanel, null>, open: boolean) => {
+      if (open) {
+        setActivePanel(panel);
+        return;
+      }
+      if (activePanel === panel) {
+        commitPanelDraft(panel);
+      }
+      setActivePanel(null);
+    },
+    [activePanel, commitPanelDraft]
+  );
+
+  const handleBackgroundClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleBackgroundSelected = useCallback(
+    async (event: ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      event.target.value = "";
 
       if (!file) return;
       if (!file.type.startsWith("image/")) {
-        setErrorMessage("Please select an image file");
+        setErrorMessage("Please choose an image file.");
         return;
       }
 
       setErrorMessage(null);
-
-      const requestId = ++uploadRequestIdRef.current;
       setIsUploading(true);
 
-      const reader = new FileReader();
-
-      const finishIfCurrent = () => {
-        if (uploadRequestIdRef.current === requestId) {
-          setIsUploading(false);
-        }
-      };
-
-      reader.onerror = () => {
-        console.error("Failed to read hero background file");
-        if (uploadRequestIdRef.current === requestId) {
-          setErrorMessage("Failed to read image file");
-        }
-        finishIfCurrent();
-      };
-
-      reader.onabort = () => {
-        if (uploadRequestIdRef.current === requestId) {
-          setErrorMessage("Image upload canceled");
-        }
-        finishIfCurrent();
-      };
-
-      reader.onload = async () => {
-        if (uploadRequestIdRef.current !== requestId) return;
-
-        try {
-          const storageId = await uploadToStorage(reader.result as string);
-          if (uploadRequestIdRef.current !== requestId) return;
-          await setHeroStyles({ storeId, backgroundImageStorageId: storageId });
-        } catch (error) {
-          console.error("Failed to upload hero background:", error);
-          if (uploadRequestIdRef.current === requestId) {
-            setErrorMessage("Failed to upload background image");
-          }
-        } finally {
-          finishIfCurrent();
-        }
-      };
-
       try {
-        reader.readAsDataURL(file);
-      } catch (error) {
-        console.error("Failed to read hero background file:", error);
-        if (uploadRequestIdRef.current === requestId) {
-          setErrorMessage("Failed to read image file");
-        }
-        finishIfCurrent();
+        const dataUrl = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error("Unable to read selected image."));
+          reader.readAsDataURL(file);
+        });
+
+        const storageId = await uploadToStorage(dataUrl);
+        setDraftImage({
+          previewUrl: dataUrl,
+          storageId,
+          focalPointX: 50,
+          focalPointY: 50,
+          zoom: 1,
+        });
+      } catch {
+        setErrorMessage("Failed to upload the hero image.");
+      } finally {
+        setIsUploading(false);
       }
     },
-    [uploadToStorage, setHeroStyles, storeId]
+    [uploadToStorage]
   );
 
-  const layoutClass =
-    heroLayout === "left"
-      ? "text-start items-start"
-      : heroLayout === "right"
-        ? "text-end items-end"
-        : "text-center items-center";
+  const saveDraftImage = useCallback(async () => {
+    if (!draftImage) return;
+    await persistSharedSettings({
+      backgroundImageStorageId: draftImage.storageId,
+      focalPointX: draftImage.focalPointX,
+      focalPointY: draftImage.focalPointY,
+      zoom: draftImage.zoom,
+    });
+    setDraftImage(null);
+  }, [draftImage, persistSharedSettings]);
+
+  const heroSurfaceStyle = useMemo(
+    () => getHeroImageStyle(backgroundImageUrl, focalPointX, focalPointY, zoom),
+    [backgroundImageUrl, focalPointX, focalPointY, zoom]
+  );
+
+  const draftSurfaceStyle = useMemo(
+    () =>
+      draftImage
+        ? getHeroImageStyle(
+            draftImage.previewUrl,
+            draftImage.focalPointX,
+            draftImage.focalPointY,
+            draftImage.zoom
+          )
+        : undefined,
+    [draftImage]
+  );
 
   return (
     <>
-      <div>
+      <div className="relative">
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleBackgroundSelected}
+          className="hidden"
+        />
 
         <div
-          className="group relative overflow-hidden min-h-[400px] flex flex-col items-center justify-center p-8"
-          style={
-            heroBgUrl
-              ? { backgroundImage: `url(${heroBgUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-              : {}
-          }
+          className="relative min-h-[470px] overflow-hidden rounded-[32px]"
+          style={heroSurfaceStyle}
         >
-          {!heroBgUrl && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[--system-100] to-[--system-200]" />
-          )}
-
-          {heroBgUrl && (
-            <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white/75 via-white/55 to-white/75" />
-          )}
-
-          <div className={`relative z-10 text-center w-full ${layoutClass} flex flex-col`}>
-            {/* Hero Title - Inline Edit */}
-            {isEditingTitle ? (
-              <input
-                autoFocus
-                type="text"
-                aria-label="Hero title"
-                value={editValue}
-                onChange={(e) => onEditValueChange(e.target.value)}
-                onBlur={handleTitleBlur}
-                onKeyDown={handleTitleKeyDown}
-                className="text-3xl font-bold text-[--system-700] bg-transparent border-b-2 border-[--system-700] text-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--system-700]/30"
-                placeholder="Page title"
-              />
-            ) : (
-              <h1
-                role="button"
-                tabIndex={0}
-                aria-label="Edit hero title"
-                className="text-3xl font-bold text-[--system-700] mb-4 cursor-pointer hover:text-[--system-500] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[--system-700]/40"
-                onClick={() => {
-                  setErrorMessage(null);
-                  onStartEditing("heroTitle", heroTitle);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    setErrorMessage(null);
-                    onStartEditing("heroTitle", heroTitle);
-                  }
-                }}
-              >
-                {heroTitle}
-              </h1>
-            )}
-
-            {/* Hero CTA Button - Inline Edit */}
-            {isEditingCta ? (
-              <input
-                autoFocus
-                type="text"
-                aria-label="Hero button text"
-                value={editValue}
-                onChange={(e) => onEditValueChange(e.target.value)}
-                onBlur={handleCtaBlur}
-                onKeyDown={handleCtaKeyDown}
-                className="px-6 py-3 text-white font-medium bg-transparent border-b-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
-                style={{ backgroundColor: heroCtaColor }}
-                placeholder="Button text"
-              />
-            ) : (
-              <button
-                type="button"
-                aria-label="Edit hero button text"
-                className="px-6 py-3 text-white font-medium cursor-pointer hover:opacity-90 transition-opacity focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[--system-700]/40"
-                style={{ backgroundColor: heroCtaColor }}
-                onClick={() => {
-                  setErrorMessage(null);
-                  onStartEditing("heroCtaText", heroCtaText);
-                }}
-              >
-                {heroCtaText}
-              </button>
-            )}
-          </div>
-
-          {/* Layout Toggle - Show on hover */}
-          <div className="absolute top-2 end-2 flex items-center gap-2 bg-white/90 border border-[--system-200] px-2 py-1.5 rounded-lg opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-            <span className="text-xs text-[--system-400]">Position:</span>
-            <button
-              type="button"
-              aria-pressed={heroLayout === "left"}
-              onClick={async () => {
-                await handleLayoutChange("left");
-              }}
-              className={`px-2 py-1 text-xs border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--system-700]/30 ${heroLayout === "left" ? "border-[--system-700]" : "border-[--system-200]"}`}
-            >
-              Left
-            </button>
-            <button
-              type="button"
-              aria-pressed={heroLayout === "center"}
-              onClick={async () => {
-                await handleLayoutChange("center");
-              }}
-              className={`px-2 py-1 text-xs border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--system-700]/30 ${heroLayout === "center" ? "border-[--system-700]" : "border-[--system-200]"}`}
-            >
-              Center
-            </button>
-            <button
-              type="button"
-              aria-pressed={heroLayout === "right"}
-              onClick={async () => {
-                await handleLayoutChange("right");
-              }}
-              className={`px-2 py-1 text-xs border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[--system-700]/30 ${heroLayout === "right" ? "border-[--system-700]" : "border-[--system-200]"}`}
-            >
-              Right
-            </button>
-          </div>
-        </div>
-
-        <div className="flex items-center justify-between gap-3">
-         
-          <div className="flex items-center gap-2">
-            <input
-              id="hero-bg-upload"
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              onChange={handleBackgroundUpload}
-              aria-label="Upload hero background image"
-              disabled={isUploading}
-              className="hidden"
+          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.18)_0%,rgba(255,255,255,0.66)_52%,rgba(255,255,255,0)_100%)]" />
+          <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white/95 to-transparent" />
+          <button
+            type="button"
+            aria-label="Change hero background image"
+            onClick={handleBackgroundClick}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                handleBackgroundClick();
+              }
+            }}
+            className="group absolute inset-0 z-[5] cursor-pointer rounded-[32px]"
+          >
+            <EditorHoverHighlight
+              isDisabled={!!draftImage || activePanel !== null}
+              className="rounded-[32px] transition-opacity duration-100"
             />
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              aria-busy={isUploading}
-            >
-              <Upload className="w-4 h-4" />
-              Upload Image
-            </Button>
+          </button>
+          {isUploading && (
+            <div className="absolute left-5 top-5 z-20 flex items-center gap-2 rounded-full bg-[color:rgb(9_17_31_/_0.72)] px-3 py-2 text-[11px] font-medium text-white/88">
+              <ImageIcon className="h-3.5 w-3.5" />
+              Uploading image...
+            </div>
+          )}
+
+          <div
+            className={cn(
+              "pointer-events-none relative z-10 flex min-h-[470px] flex-col justify-center gap-6 px-6 py-12 md:px-10",
+              textAlignmentClass
+            )}
+          >
+            <div className="relative flex max-w-3xl flex-col gap-6">
+              <Popover
+                open={activePanel === "title"}
+                onOpenChange={(open) => handlePanelOpenChange("title", open)}
+              >
+                <PopoverTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    className={cn(
+                      "pointer-events-auto group relative cursor-pointer rounded-[28px] p-3 transition-all duration-75"
+                    )}
+                  >
+                    <EditorHoverHighlight
+                      isDisabled={activePanel === "title"}
+                      className="rounded-[28px] transition-opacity duration-75"
+                    />
+                    <h1
+                      className={cn(
+                        "relative z-10 whitespace-pre-line text-4xl leading-[0.9] md:text-6xl",
+                        fontClass
+                      )}
+                      style={{ color: titleColor }}
+                    >
+                      {liveTitle}
+                    </h1>
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  side="bottom"
+                  sideOffset={10}
+                  className="w-[min(360px,calc(100vw-2rem))] rounded-[28px] border-white/60 bg-[color:rgb(255_255_255_/_0.96)] p-4 text-[var(--system-600)] shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur-sm"
+                >
+                  <SettingsShell
+                    icon={<Type className="h-4 w-4" />}
+                    title="Title settings"
+                    onClose={closePanel}
+                  >
+                    <label className="block space-y-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                        {`Title (${titleInput.length}/${HERO_TITLE_MAX})`}
+                      </span>
+                      <textarea
+                        value={titleInput}
+                        rows={3}
+                        maxLength={HERO_TITLE_MAX}
+                        onChange={(event) => setTitleInput(clampHeroText(event.target.value, HERO_TITLE_MAX))}
+                        onBlur={() => void persistSharedSettings({ title: titleInput })}
+                        className="w-full rounded-[20px] border border-black/10 bg-white px-4 py-3 text-sm text-[var(--system-600)] outline-none ring-0 transition-colors focus:border-[var(--color-primary)]"
+                      />
+                    </label>
+
+                    <div className="space-y-2">
+                      <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                        <Palette className="h-3.5 w-3.5" />
+                        Title colors
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {HERO_TITLE_COLOR_PRESETS.map((color) => (
+                          <SwatchButton
+                            key={color}
+                            color={color}
+                            selected={titleColor === color}
+                            onClick={() => void persistSharedSettings({ titleColor: color })}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={titleColor}
+                          onChange={(event) =>
+                            void persistSharedSettings({ titleColor: event.target.value })
+                          }
+                          className="h-8 w-12 cursor-pointer rounded-full border border-white/20 bg-transparent p-0"
+                        />
+                      </div>
+                    </div>
+
+                    <SharedTypographyControls
+                      alignment={alignment}
+                      fontFamily={fontFamily}
+                      onUpdate={persistSharedSettings}
+                    />
+                  </SettingsShell>
+                </PopoverContent>
+              </Popover>
+
+              <Popover
+                open={activePanel === "cta"}
+                onOpenChange={(open) => handlePanelOpenChange("cta", open)}
+              >
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="lg"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                    }}
+                    className={cn(
+                      "pointer-events-auto h-11 rounded-full border-0 px-6 text-[15px] shadow-[0_20px_50px_rgba(23,48,82,0.18)]",
+                      fontClass
+                    )}
+                    style={{ backgroundColor: ctaColor, color: "#ffffff" }}
+                  >
+                    <EditorHoverHighlight
+                      isDisabled={activePanel === "cta"}
+                      className="rounded-full transition-opacity duration-75"
+                    />
+                    <span className="relative z-10">
+                      {liveCta}
+                    </span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  side="bottom"
+                  sideOffset={10}
+                  className="w-[min(360px,calc(100vw-2rem))] rounded-[28px] border-white/60 bg-[color:rgb(255_255_255_/_0.96)] p-4 text-[var(--system-600)] shadow-[0_18px_40px_rgba(15,23,42,0.12)] backdrop-blur-sm"
+                >
+                  <SettingsShell
+                    icon={<Palette className="h-4 w-4" />}
+                    title="CTA settings"
+                    onClose={closePanel}
+                  >
+                    <label className="block space-y-2">
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                        {`CTA (${ctaInput.length}/${HERO_CTA_MAX})`}
+                      </span>
+                      <input
+                        value={ctaInput}
+                        maxLength={HERO_CTA_MAX}
+                        onChange={(event) => setCtaInput(clampHeroText(event.target.value, HERO_CTA_MAX))}
+                        onBlur={() => void persistSharedSettings({ ctaText: ctaInput })}
+                        className="w-full rounded-[20px] border border-black/10 bg-white px-4 py-3 text-sm text-[var(--system-600)] outline-none ring-0 transition-colors focus:border-[var(--color-primary)]"
+                      />
+                    </label>
+
+                    <div className="space-y-2">
+                      <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                        <Palette className="h-3.5 w-3.5" />
+                        CTA colors
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        {HERO_CTA_COLOR_PRESETS.map((color) => (
+                          <SwatchButton
+                            key={color}
+                            color={color}
+                            selected={ctaColor === color}
+                            onClick={() => void persistSharedSettings({ ctaColor: color })}
+                          />
+                        ))}
+                        <input
+                          type="color"
+                          value={ctaColor}
+                          onChange={(event) =>
+                            void persistSharedSettings({ ctaColor: event.target.value })
+                          }
+                          className="h-8 w-12 cursor-pointer rounded-full border border-white/20 bg-transparent p-0"
+                        />
+                      </div>
+                    </div>
+
+                    <SharedTypographyControls
+                      alignment={alignment}
+                      fontFamily={fontFamily}
+                      onUpdate={persistSharedSettings}
+                    />
+                  </SettingsShell>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
         </div>
 
         {errorMessage && (
-          <p className="mt-2 text-xs text-red-600" role="alert" aria-live="polite">
-            {errorMessage}
-          </p>
+          <p className="mt-3 text-sm text-[var(--color-error)]">{errorMessage}</p>
         )}
       </div>
+
+      <Dialog open={!!draftImage} onOpenChange={(open) => !open && setDraftImage(null)}>
+        <DialogContent className="max-w-5xl rounded-[32px] border-white/20 bg-[color:rgb(255_255_255_/_0.96)] p-0 text-[var(--system-600)] shadow-[0_30px_120px_rgba(15,23,42,0.22)]">
+          <DialogHeader className="border-b border-black/6 px-6 py-5">
+            <DialogTitle className="text-lg font-semibold">Adjust hero image</DialogTitle>
+          </DialogHeader>
+
+          {draftImage && (
+            <div className="grid gap-6 p-6 lg:grid-cols-[320px_minmax(0,1fr)]">
+              <div className="space-y-5">
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                    Zoom
+                  </span>
+                  <input
+                    type="range"
+                    min="1"
+                    max="2"
+                    step="0.05"
+                    value={draftImage.zoom}
+                    onChange={(event) =>
+                      setDraftImage((current) =>
+                        current
+                          ? { ...current, zoom: Number(event.target.value) }
+                          : current
+                      )
+                    }
+                    className="w-full"
+                  />
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                    Horizontal focal point
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={draftImage.focalPointX}
+                    onChange={(event) =>
+                      setDraftImage((current) =>
+                        current
+                          ? { ...current, focalPointX: Number(event.target.value) }
+                          : current
+                      )
+                    }
+                    className="w-full"
+                  />
+                </label>
+
+                <label className="block space-y-2">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                    Vertical focal point
+                  </span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="1"
+                    value={draftImage.focalPointY}
+                    onChange={(event) =>
+                      setDraftImage((current) =>
+                        current
+                          ? { ...current, focalPointY: Number(event.target.value) }
+                          : current
+                      )
+                    }
+                    className="w-full"
+                  />
+                </label>
+
+                <div className="rounded-[24px] bg-[var(--system-50)] p-4 text-sm text-[var(--system-500)]">
+                  One image is used for both desktop and phone. Adjust zoom and focal point until both previews look right.
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                    Desktop preview
+                  </p>
+                  <div
+                    className="relative min-h-[280px] overflow-hidden rounded-[28px]"
+                    style={draftSurfaceStyle}
+                  >
+                    <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.68)_56%,rgba(255,255,255,0)_100%)]" />
+                    <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-white/95 to-transparent" />
+                    <div className={cn("relative z-10 flex min-h-[280px] flex-col justify-center gap-4 px-8", textAlignmentClass)}>
+                      <h2 className={cn("max-w-2xl whitespace-pre-line text-5xl leading-[0.92]", fontClass)} style={{ color: titleColor }}>
+                        {liveTitle}
+                      </h2>
+                      <Button
+                        variant="primary"
+                        size="lg"
+                        className={cn("h-11 w-fit rounded-full px-6", fontClass)}
+                        style={{ backgroundColor: ctaColor, color: "#fff" }}
+                      >
+                        {liveCta}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--system-400)]">
+                    Phone preview
+                  </p>
+                  <div className="mx-auto w-[240px] overflow-hidden rounded-[32px] border border-black/8 bg-white p-2">
+                    <div
+                      className="relative min-h-[360px] overflow-hidden rounded-[24px]"
+                      style={draftSurfaceStyle}
+                    >
+                      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.16)_0%,rgba(255,255,255,0.74)_58%,rgba(255,255,255,0)_100%)]" />
+                      <div className="absolute inset-x-0 bottom-0 h-20 bg-gradient-to-t from-white/95 to-transparent" />
+                      <div className={cn("relative z-10 flex min-h-[360px] flex-col justify-center gap-4 px-5", textAlignmentClass)}>
+                        <h2 className={cn("whitespace-pre-line text-3xl leading-[0.96]", fontClass)} style={{ color: titleColor }}>
+                          {liveTitle}
+                        </h2>
+                        <Button
+                          variant="primary"
+                          size="md"
+                          className={cn("w-fit rounded-full px-5", fontClass)}
+                          style={{ backgroundColor: ctaColor, color: "#fff" }}
+                        >
+                          {liveCta}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 border-t border-black/6 px-6 py-5">
+            <Button variant="ghost" onClick={() => setDraftImage(null)}>
+              Cancel
+            </Button>
+            <Button onClick={() => void saveDraftImage()}>Save image</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

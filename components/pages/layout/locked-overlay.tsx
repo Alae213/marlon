@@ -10,13 +10,16 @@ interface LockedOverlayProps {
 }
 
 export function LockedOverlay({ children, showOverlay = true }: LockedOverlayProps) {
-  const { isLocked, openPaymentModal, storeStatus, orderCount, orderLimit, daysRemaining } = useBilling();
+  const { isLocked, openPaymentModal, billingState, todayOrderCount, maxDailyOrders, daysRemaining, compatibilityMode } = useBilling();
 
   if (!isLocked || !showOverlay) {
     return <>{children}</>;
   }
 
-  const isTrialExpired = storeStatus === "trial" && daysRemaining !== null && daysRemaining <= 0;
+  const isCanonical = compatibilityMode === "canonical";
+  const isTrialExpired = !isCanonical && billingState === "unlock_pending" && daysRemaining !== null && daysRemaining <= 0;
+  const displayMaxOrders = isCanonical ? maxDailyOrders : 50;
+  const priceDzd = 2000;
 
   return (
     <div className="relative">
@@ -30,35 +33,42 @@ export function LockedOverlay({ children, showOverlay = true }: LockedOverlayPro
           </div>
           
           <h2 className="text-xl font-bold text-[var(--system-700)] dark:text-[var(--system-100)] mb-2">
-            {isTrialExpired ? "انتهت فترة التجربة" : "تم reached الحد الأقصى"}
+            {isCanonical 
+              ? "Daily limit reached"
+              : isTrialExpired 
+                ? "Trial expired"
+                : "Limit reached"
+            }
           </h2>
           
           <p className="text-[var(--system-500)] dark:text-[var(--system-300)] mb-6">
-            {isTrialExpired 
-              ? `انتهت فترة التجربة المجانية. يرجى الاشتراك للاستمرار في استخدام الخدمة.`
-              : `لقد استخدمت ${orderCount} طلب من ${orderLimit} طلب مجانية. يرجى الاشتراك للاستمرار.`
+            {isCanonical 
+              ? `You've used ${todayOrderCount} of ${maxDailyOrders} free orders today. Subscribe to continue.`
+              : isTrialExpired 
+                ? "Your free trial has ended. Subscribe to continue."
+                : `You've used ${todayOrderCount} of ${displayMaxOrders} free orders. Subscribe to continue.`
             }
           </p>
 
           <div className="bg-[var(--system-100)] dark:bg-[var(--system-700)] rounded-2xl p-4 mb-6">
             <div className="flex items-center justify-center gap-2 text-[#00853f]">
               <CreditCard className="w-5 h-5" />
-              <span className="font-medium">اشتراك سنوي</span>
+              <span className="font-medium">{isCanonical ? "Monthly" : "Annual"}</span>
             </div>
             <p className="text-3xl font-bold text-[var(--system-700)] dark:text-[var(--system-100)] mt-2">
-              9,900 <span className="text-sm font-normal text-[var(--system-400)]">د.ج</span>
+              {priceDzd.toLocaleString()} <span className="text-sm font-normal text-[var(--system-400)]">DZD</span>
             </p>
             <p className="text-sm text-[var(--system-400)] mt-1">
-              بدلاً من 19,800 د.ج
+              {isCanonical ? "per month" : "instead of 19,800 DZD"}
             </p>
           </div>
 
           <Button onClick={openPaymentModal} className="w-full" size="lg">
-            اشتراك الآن
+            Subscribe now
           </Button>
           
           <p className="text-xs text-[var(--system-400)] mt-4">
-           الدفع عبر Chargily - آمن وموثوق
+            Secure payment via Chargily
           </p>
         </div>
       </div>
@@ -72,7 +82,11 @@ interface LockedDataProps {
 }
 
 export function LockedData({ children, fallback = "***" }: LockedDataProps) {
-  const { isLocked } = useBilling();
+  const { isLocked, isOverflow, compatibilityMode } = useBilling();
+
+  if (compatibilityMode === "canonical" && isOverflow) {
+    return <span className="select-none">{fallback}</span>;
+  }
 
   if (isLocked) {
     return <span className="select-none">{fallback}</span>;
@@ -82,7 +96,11 @@ export function LockedData({ children, fallback = "***" }: LockedDataProps) {
 }
 
 export function LockedButton({ children }: { children: React.ReactNode }) {
-  const { isLocked } = useBilling();
+  const { isLocked, isOverflow, compatibilityMode } = useBilling();
+
+  if (compatibilityMode === "canonical" && isOverflow) {
+    return null;
+  }
 
   if (isLocked) {
     return null;

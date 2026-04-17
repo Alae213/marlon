@@ -8,7 +8,7 @@
 
 ## Summary
 
-The orders list is the live primary order-management UI. In `app/orders/[storeSlug]/page.tsx` it loads all store orders, then `components/pages/orders/views/ListView.tsx` handles search, date and status filtering, sorting, row selection, CSV export, status changes, bulk delete, and delivery dispatch shortcuts. Current: this is the main working surface. Partial: selection and bulk behavior still have consistency gaps.
+The orders list is the live primary order-management UI. In `app/orders/[storeSlug]/page.tsx` it loads all store orders, then `components/pages/orders/views/ListView.tsx` handles search, date and status filtering, sorting, row selection, CSV export, status changes, bulk delete, and delivery dispatch shortcuts. Current: this is the main working surface, including a dedicated desktop `Call` column for call-history slots while mobile cards keep the call indicator alongside status. Partial: selection and bulk behavior still have consistency gaps.
 
 ---
 
@@ -42,6 +42,7 @@ The orders list is the live primary order-management UI. In `app/orders/[storeSl
 - Partial: per-row status dropdowns expose all statuses directly, so list actions can bypass the guided sequence shown in the drawer.
 - Current: CSV export uses `filteredOrders` for "Export All" and selected loaded rows for "Export Selected".
 - Current: if filters remove every row, the table shows `No orders found`.
+- Current: desktop rows show call-history slots in a dedicated `Call` column; mobile cards keep the call indicator inside the status presentation.
 
 ---
 

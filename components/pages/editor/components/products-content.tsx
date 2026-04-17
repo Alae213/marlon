@@ -89,7 +89,6 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     startEditing,
     saveInlineEdit,
     handleKeyDown,
-    setEditingField,
     setEditValue,
   } = useInlineEdit({ products });
 
@@ -376,17 +375,6 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               <HeroEditor
                 storeId={storeId}
                 heroContent={heroContent}
-                editingField={editingField}
-                editValue={editValue}
-                onEditValueChange={setEditValue}
-                onStartEditing={(field, value) => {
-                  setEditingField({ productId: "", field });
-                  setEditValue(value);
-                }}
-                onSaveEdit={() => {
-                  setEditingField(null);
-                  setEditValue("");
-                }}
               />
 
               {/* Products Catalog */}

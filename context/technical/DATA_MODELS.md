@@ -11,10 +11,11 @@ Status labels used here:
 
 ## 1) Live Schema Snapshot
 
-- `Current`: Live tables are `users`, `stores`, `products`, `orders`, `orderDigests`, `orderTimelineEvents`, `orderCallEvents`, `productDigests`, `siteContent`, `deliveryPricing`, `deliveryCredentials`, `deliveryAnalyticsEvents`, and `deliveryAnalyticsRollups`.
+- `Current`: Live tables are `users`, `stores`, `storeBillingPeriods`, `paymentAttempts`, `paymentEvidence`, `storeMemberships`, `products`, `orders`, `orderDigests`, `orderTimelineEvents`, `orderCallEvents`, `productDigests`, `siteContent`, `deliveryPricing`, `deliveryCredentials`, `deliveryAnalyticsEvents`, and `deliveryAnalyticsRollups`.
 - `Current`: The live model is mostly owner-centric. `stores.ownerId` is the main tenant/control link.
-- `Current`: There is no live `storeMemberships`, `ownerTransferRequests`, `billingSubscriptions`, `unlockWindows`, `webhookReceipts`, `queueJobs`, `blocklistEntries`, or `reputationSignals` table.
-- `Partial`: Billing/lock state lives mainly on `stores` via trial/subscription/order-count fields, not via a full normalized billing model.
+- `Current`: `storeBillingPeriods`, `paymentAttempts`, `paymentEvidence`, and `storeMemberships` now exist as additive canonical-cutover scaffolding, but runtime billing/access still remains legacy-first.
+- `Current`: There is still no live `ownerTransferRequests`, `billingSubscriptions`, `unlockWindows`, `webhookReceipts`, `queueJobs`, `blocklistEntries`, or `reputationSignals` table.
+- `Partial`: Billing/lock state still lives mainly on legacy `stores` fields at runtime even though normalized canonical scaffolding tables now exist.
 - `Needs verification`: Some ID shapes are inconsistent across tables; several `storeId` fields are plain strings, while some newer tables use `v.id("stores")` or `v.id("orders")` references.
 
 Live entity map:
@@ -88,6 +89,7 @@ Purpose: operational order record with customer, line items, delivery, notes, an
 ### Store config / delivery tables
 
 - `siteContent` - `Current`: flexible per-store content by `section`, with `content` stored as `any`
+- `Current`: the `hero` section now carries `title`, `ctaText`, `titleColor`, `ctaColor`, shared `fontFamily`, shared `alignment`, `backgroundImageStorageId`/resolved URL, and one-image positioning metadata (`focalPointX`, `focalPointY`, `zoom`)
 - `deliveryPricing` - `Current`: per-store, per-wilaya pricing using `homeDelivery` and `officeDelivery`; this is simpler than the previously documented zone-matrix target
 - `deliveryCredentials` - `Current`: encrypted credentials with `storeId`, `provider`, `algorithm`, `ciphertextHex`, `ivHex`, timestamps
 - `Needs verification`: `deliveryCredentials` currently omits an `authTag` field in schema even though AES-GCM normally expects one
@@ -121,14 +123,74 @@ flowchart LR
 
 ## 5) Planned Tables / Redesigns
 
-- `Planned`: `storeMemberships` for role-aware store access beyond a single owner link
+### T34 canonical cutover shape
+
+The current preferred cutover path is additive and compatibility-first. New canonical records should be introduced beside the legacy `stores` billing fields before any runtime source-of-truth switch.
+
+#### `stores` - `Partial` during migration
+
+- Remains the canonical store identity record.
+- `Current`: `ownerId`, `name`, `slug`, profile/contact fields, `status`, and legacy billing fields still exist.
+- `Current` additive fields for cutover:
+  - `billingState`: `active | overflow_locked | unlock_pending | archived`
+  - `billingStateUpdatedAt`
+  - `billingPolicyVersion`
+  - `billingCompatibilityMode`: `legacy_trial | canonical`
+  - `currentUnlockPeriodId` optional
+  - `membershipMode`: `owner_only | memberships_enabled`
+- Migration note: keep `ownerId` and old billing fields until owner-membership parity and canonical billing reads are proven.
+
+#### `storeBillingPeriods` - `Current` scaffolding
+
+Purpose: normalized paid/unlocked time windows per store.
+
+- Key fields: `storeId`, `status`, `startedAt`, `endsAt`, optional `activatedAt`, optional `activatedByUserId`, `activationSource`, `priceDzd`, `policyVersion`, optional `evidencePaymentAttemptId`, optional `notes`, timestamps
+- Expected indexes: `storeId`, `storeId+status`, `endsAt`
+- Cutover role: becomes the canonical paid/unlocked timeline instead of `stores.paidUntil`
+
+#### `paymentAttempts` - `Current` scaffolding
+
+Purpose: server-owned checkout/payment intent record.
+
+- Key fields: `storeId`, `initiatedByUserId`, `provider`, `purpose`, `status`, `amountDzd`, `currency`, optional `billingPeriodStart`, optional `billingPeriodEnd`, optional `providerCheckoutId`, optional `providerReference`, `idempotencyKey`, `requestSnapshot`, optional `resolvedMembershipId`, timestamps
+- Expected indexes: `storeId`, `initiatedByUserId`, `provider+providerCheckoutId`, `idempotencyKey`
+- Security note: client input must not be the authoritative source for store target, amount, or actor role.
+
+#### `paymentEvidence` - `Current` scaffolding
+
+Purpose: immutable evidence ledger for verified payment callbacks or reconciled provider events.
+
+- Key fields: `paymentAttemptId`, `storeId`, `provider`, optional `providerEventId`, optional `providerPaymentId`, `eventType`, `verificationStatus`, `verificationMethod`, optional `signatureCheckedAt`, `receivedAt`, optional `eventCreatedAt`, `payloadHash`, `payloadRedacted`, optional `duplicateOfEvidenceId`, optional `appliedAt`, optional `appliedBillingPeriodId`
+- Expected indexes: `paymentAttemptId`, `storeId+receivedAt`, provider identifiers for dedupe where available
+- Cutover role: replaces informal webhook success handling with append-only evidence before activation.
+
+#### `storeMemberships` - `Current` scaffolding
+
+Purpose: canonical user-to-store access model.
+
+- Key fields: `storeId`, `userId`, `role`, `status`, `createdAt`, `updatedAt`, `grantedByUserId`, optional `revokedAt`, optional `revokedByUserId`, `source`, `permissionsVersion`
+- Expected indexes: unique active `storeId+userId`, plus `userId+status` and `storeId+role`
+- Policy note: owner remains singular by governance even if compatibility keeps `stores.ownerId` alongside memberships.
+
+#### Deferred beyond T34 cutover
+
 - `Planned`: governance tables such as `ownerTransferRequests` for auditable owner transfer/removal workflows
-- `Planned`: normalized billing tables such as `billingSubscriptions`, `unlockWindows`, and `webhookReceipts`
+- `Planned`: invite lifecycle tables such as `storeInvites`; not required to complete the billing/runtime cutover
 - `Planned`: queue/worker tables for delivery dispatch retries and dead-letter handling
 - `Planned`: explicit fraud/risk tables such as blocklists and reputation signals
 - `Planned`: tighter canonical event modeling so order history no longer depends on a mix of embedded arrays plus side tables
 
-Do not treat these as live schema. They are target-state design directions only.
+These tables now exist in `convex/schema.ts`, but they remain migration/cutover scaffolding until later runtime tasks switch reads and writes over.
+
+### Migration sequencing notes
+
+- Add new tables and additive `stores` fields first; do not delete or repurpose legacy billing fields at the start.
+- Backfill one active owner membership per store before any membership-aware read path is allowed.
+- Seed `storeBillingPeriods` from remaining legacy paid time where `stores.paidUntil` is still in the future.
+- Move to dual-write for payment flows: create `paymentAttempts`, append `paymentEvidence`, activate `storeBillingPeriods`, then mirror any temporary compatibility state back to `stores`.
+- Cut over reads in stages and fail closed to owner-only or locked-safe behavior on inconsistency.
+- Retire `stores.subscription`, `orderCount`, `firstOrderAt`, `trialEndsAt`, `paidUntil`, and `lockedAt` only after canonical reads and cleanup jobs are stable.
+- `Current scaffolding`: `convex/canonicalBillingMigrations.ts` provides internal preview and batched backfill helpers for compatibility markers, owner memberships, and seeded billing periods from legacy `paidUntil`.
 
 ## 6) Biggest Live-vs-Target Gaps
 
@@ -138,3 +200,5 @@ Do not treat these as live schema. They are target-state design directions only.
 - `Gap`: Delivery pricing is currently per-wilaya home/office pricing, not the broader planned zone-rule matrix.
 - `Gap`: Authorization data is still mostly owner-centric; do not assume live memberships, delegated roles, or governance workflows.
 - `Gap`: Field names in live schema differ from older docs in several important places, especially `users`, `stores`, `products`, and `orders`.
+- `Gap`: The preferred normalized cutover now splits payment intent (`paymentAttempts`), verified proof (`paymentEvidence`), and unlocked time (`storeBillingPeriods`) instead of overloading `stores`.
+- `Gap`: Membership rollout must begin as an owner-mirroring compatibility layer; admin/staff access should not be widened during schema migration alone.

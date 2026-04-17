@@ -7,7 +7,9 @@ import { api } from "@/convex/_generated/api";
 import { Id, Doc } from "@/convex/_generated/dataModel";
 import { Loader2 } from "lucide-react";
 import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
+import { OrdersSurface } from "@/components/pages/orders/components/OrdersSurface";
 import { useBilling, BillingProvider } from "@/contexts/billing-context";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import {
   useUser,
   UserButton,
@@ -19,7 +21,9 @@ import Link from "next/link";
 import Image from "next/image";
 import type { SortField, SortDirection, CallLog } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
-import { ListView, KanbanView, OrderDetails } from "@/components/pages/orders/views";
+import { OrderDetails } from "@/components/pages/orders/views";
+
+const ORDER_STATE_VIEW_ENABLED = false;
 
 function OrdersContent({
   storeId,
@@ -29,7 +33,13 @@ function OrdersContent({
   storeSlug: string;
 }) {
   const { user, isLoaded } = useUser();
-  useBilling();
+  const { 
+    todayOrderCount, 
+    maxDailyOrders, 
+    ordersRemaining,
+    isLocked,
+    isOverflow,
+  } = useBilling();
 
   // View mode state
   const [viewMode, setViewMode] = useState<"list" | "state">("list");
@@ -143,16 +153,8 @@ function OrdersContent({
     [selectedOrder, user, upsertAdminNoteMutation],
   );
 
-  if (!isLoaded) {
-    return (
-      <div className="h-screen w-full flex items-center justify-center bg-[var(--system-50)]">
-        <Loader2 className="w-6 h-6 animate-spin text-[var(--system-600)]" />
-      </div>
-    );
-  }
-
-  const ordersData = orders || [];
-  const newOrdersCount = ordersData.filter((o) => o.status === "new").length;
+  const isOrdersLoading = orders === undefined;
+  const ordersData = orders ?? [];
 
   const handleSort = (field: SortField) => {
     if (sortField === field) {
@@ -192,57 +194,154 @@ function OrdersContent({
     setSelectAll(false);
   };
 
+  const handleViewModeChange = useCallback((nextMode: "list" | "state") => {
+    if (nextMode === "state" && !ORDER_STATE_VIEW_ENABLED) {
+      return;
+    }
+
+    setViewMode(nextMode);
+  }, []);
+
+  const usagePercentage = Math.min((todayOrderCount / maxDailyOrders) * 100, 100);
+  const isAtLimit = isLocked || isOverflow;
+  const activeViewMode = ORDER_STATE_VIEW_ENABLED ? viewMode : "list";
+
+  // Calculate time until midnight Algeria time (UTC+1)
+  const getTimeUntilReset = () => {
+    const now = new Date();
+    const algiersOffset = 1 * 60 * 60 * 1000; // UTC+1
+    
+    // Get current Algeria time
+    const nowAlgiers = new Date(now.getTime() + algiersOffset);
+    const currentHour = nowAlgiers.getHours();
+    const currentMinute = nowAlgiers.getMinutes();
+    
+    // Calculate minutes until midnight Algeria (24:00 = 0:00 next day)
+    const minutesUntilMidnight = (24 - currentHour) * 60 - currentMinute;
+    
+    const hours = Math.floor(minutesUntilMidnight / 60);
+    const minutes = minutesUntilMidnight % 60;
+    
+    if (hours > 0) {
+      return `${hours}h ${minutes}m`;
+    }
+    return `${minutes}m`;
+  };
+
+  if (!isLoaded) {
+    return (
+      <div className="h-screen w-full flex items-center justify-center bg-[var(--system-50)]">
+        <Loader2 className="w-6 h-6 animate-spin text-[var(--system-600)]" />
+      </div>
+    );
+  }
+
   return (
-    <div className="h-screen w-full bg-[var(--system-50)]">
+    <TooltipProvider>
+      <div className="h-screen w-full bg-[var(--system-50)]">
        {/* Header */}
-      <div className="sticky top-0 px-[12px] w-full flex items-center justify-between py-4">
+      <div className="sticky top-0 z-20 w-full bg-[var(--system-50)] px-[12px] py-3">
+        <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link href="/" className="flex items-center">
             <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
           </Link>
         </div>
-        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+        
+        {/* Usage Progress Bar + User Avatar */}
+        <div className="flex items-center gap-3">
+          <div className="hidden sm:flex items-center gap-2 bg-[var(--system-100)] rounded-full px-3 py-1.5">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center gap-2 cursor-help">
+                  <div className="w-16 h-2 bg-[var(--system-200)] rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full transition-all ${
+                        isAtLimit 
+                          ? "bg-red-500" 
+                          : usagePercentage > 80 
+                            ? "bg-amber-500" 
+                            : "bg-[#00853f]"
+                      }`}
+                      style={{ width: `${usagePercentage}%` }}
+                    />
+                  </div>
+                  <span className="text-xs font-medium text-[var(--system-600)]">
+                    {todayOrderCount}/{maxDailyOrders}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {isAtLimit ? "Daily limit reached" : `Resets ${getTimeUntilReset()} left`}
+              </TooltipContent>
+            </Tooltip>
+          </div>
+          <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
+        </div>
       </div>
-      <div className="max-w-6xl mx-auto h-full">
+        <div className="mt-3 sm:hidden">
+          <div className="rounded-full border border-[var(--system-200)] bg-white px-3 py-2 shadow-[var(--shadow-sm)]">
+            <div className="mb-2 flex items-center justify-between gap-3 text-caption">
+              <span className="font-medium text-[var(--system-600)]">
+                {isAtLimit ? "Limit reached" : `Resets ${getTimeUntilReset()} left`}
+              </span>
+              <span className={isAtLimit ? "text-[var(--color-error)]" : "text-[var(--system-400)]"}>
+                {todayOrderCount}/{maxDailyOrders}
+              </span>
+            </div>
+            <div className="h-2 overflow-hidden rounded-full bg-[var(--system-200)]">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  isAtLimit
+                    ? "bg-red-500"
+                    : usagePercentage > 80
+                      ? "bg-amber-500"
+                      : "bg-[#00853f]"
+                }`}
+                style={{ width: `${usagePercentage}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="mx-auto h-full max-w-6xl px-3 pb-28 sm:px-4 sm:pb-32">
         
 
         {/* Page Title */}
-        <div className="flex items-center justify-between mb-4">
+        <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <h1 className="text-modal text-bold">My Orders</h1>
           </div>
         </div>
 
         {/* Content based on view mode */}
-        {viewMode === "list" && (
-          <ListView
-            orders={ordersData}
-            selectedOrders={selectedOrders}
-            selectAll={selectAll}
-            onSelectAll={handleSelectAll}
-            onOrderSelect={handleOrderSelect}
-            onClearSelection={handleClearSelection}
-            onStatusChange={handleStatusChange}
-            onStatusDropdownToggle={handleStatusDropdownToggle}
-            statusDropdownOpen={statusDropdownOpen}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            isSearchOpen={isSearchOpen}
-            onSearchOpenChange={setIsSearchOpen}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onSort={handleSort}
-            onSortDirectionChange={setSortDirection}
-            onOrderClick={setSelectedOrder}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
-            storeSlug={storeSlug}
-          />
-        )}
-
-        {viewMode === "state" && (
-          <KanbanView viewMode={viewMode} onViewModeChange={setViewMode} />
-        )}
+        <OrdersSurface
+          isOrdersLoading={isOrdersLoading}
+          viewMode={activeViewMode}
+          onViewModeChange={handleViewModeChange}
+          isStateViewEnabled={ORDER_STATE_VIEW_ENABLED}
+          listViewProps={{
+            orders: ordersData,
+            selectedOrders,
+            selectAll,
+            onSelectAll: handleSelectAll,
+            onOrderSelect: handleOrderSelect,
+            onClearSelection: handleClearSelection,
+            onStatusChange: handleStatusChange,
+            onStatusDropdownToggle: handleStatusDropdownToggle,
+            statusDropdownOpen,
+            searchQuery,
+            onSearchQueryChange: setSearchQuery,
+            isSearchOpen,
+            onSearchOpenChange: setIsSearchOpen,
+            sortField,
+            sortDirection,
+            onSort: handleSort,
+            onSortDirectionChange: setSortDirection,
+            onOrderClick: setSelectedOrder,
+            storeSlug,
+          }}
+        />
 
         {/* Order Detail SlideOver */}
         <OrderDetails
@@ -257,7 +356,8 @@ function OrdersContent({
 
         <BottomNavigation storeSlug={storeSlug} currentPage="orders" />
       </div>
-    </div>
+      </div>
+    </TooltipProvider>
   );
 }
 

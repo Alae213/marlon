@@ -1,38 +1,62 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Loader2, CheckCircle, CreditCard, Shield } from "lucide-react";
+
+import { Id } from "@/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface PaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
+  storeId?: Id<"stores">;
   storeName: string;
   onPaymentSuccess?: () => void;
 }
 
-const PLAN_PRICE = 9900;
-const PLAN_PRICE_ANNUAL = 19800;
+const CANONICAL_PRICE_DZD = 2000;
 
-export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: PaymentModalProps) {
+export function PaymentModal({
+  isOpen,
+  onClose,
+  storeId,
+  storeName,
+  onPaymentSuccess,
+}: PaymentModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const canonicalAmount = useQuery(api.canonicalBilling.getCanonicalPaymentAmount);
+  const priceDzd = canonicalAmount?.amountDzd ?? CANONICAL_PRICE_DZD;
+  const periodDays = canonicalAmount?.periodDays ?? 30;
 
   const handlePayment = async () => {
+    if (!storeId) {
+      setErrorMessage("Could not identify store for payment.");
+      return;
+    }
+
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       const response = await fetch("/api/chargily/create-payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          storeName,
-          amount: PLAN_PRICE,
+          storeId,
         }),
       });
 
       const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || "Could not start payment now.");
+      }
       
       if (data.checkoutUrl) {
         window.location.href = data.checkoutUrl;
@@ -42,8 +66,9 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
       }
     } catch (error) {
       console.error("Payment error:", error);
-      setIsSuccess(true);
-      onPaymentSuccess?.();
+      setErrorMessage(
+        error instanceof Error ? error.message : "Could not start payment now.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -53,7 +78,10 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-[460px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
         <DialogHeader className="pr-10">
-          <DialogTitle>الاشتراك في الخطة المدفوعة</DialogTitle>
+          <DialogTitle>
+            Unlock Orders - Monthly
+          </DialogTitle>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">{storeName}</p>
         </DialogHeader>
 
         {isSuccess ? (
@@ -62,13 +90,13 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
               <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
             <h3 className="mb-2 text-xl font-bold text-zinc-900 dark:text-zinc-50">
-              تم الدفع بنجاح
+              Payment successful
             </h3>
             <p className="mb-6 text-zinc-600 dark:text-zinc-400">
-              شكراً لاشتراكك! يمكنك الآن الاستمرار في استخدام الخدمة.
+              Thanks for subscribing! You can now continue using the service.
             </p>
             <Button onClick={onClose} className="w-full">
-              حسناً
+              OK
             </Button>
           </div>
         ) : (
@@ -76,44 +104,45 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
             <div className="rounded-2xl bg-zinc-50 p-6 dark:bg-zinc-800">
               <div className="mb-4 flex items-center justify-between">
                 <span className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                  الاشتراك السنوي
-                </span>
-                <span className="text-sm font-medium text-green-600">
-                  -50%
+                  Monthly subscription
                 </span>
               </div>
               
               <div className="mb-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {PLAN_PRICE.toLocaleString()}
+                  {priceDzd.toLocaleString()}
                 </span>
-                <span className="text-zinc-500">د.ج</span>
+                <span className="text-zinc-500">DZD</span>
               </div>
-              
-              <p className="mb-6 text-sm text-zinc-500 line-through">
-                {PLAN_PRICE_ANNUAL.toLocaleString()} د.ج سنوياً
-              </p>
 
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">طلبات غير محدودة</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">
+                    Unlimited orders for {periodDays} days
+                  </span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">جميع الميزات متاحة</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">All features included</span>
                 </li>
                 <li className="flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">دعم فني متواصل</span>
+                  <span className="text-zinc-600 dark:text-zinc-400">Priority support</span>
                 </li>
               </ul>
             </div>
 
             <div className="flex items-center justify-center gap-2 text-sm text-zinc-500">
               <Shield className="w-4 h-4" />
-              <span>الدفع آمن</span>
+              <span>Secure payment</span>
             </div>
+
+            {errorMessage ? (
+              <p className="text-center text-sm text-red-600 dark:text-red-400">
+                {errorMessage}
+              </p>
+            ) : null}
 
             <Button 
               onClick={handlePayment} 
@@ -124,12 +153,12 @@ export function PaymentModal({ isOpen, onClose, storeName, onPaymentSuccess }: P
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  جاري التحويل...
+                  Processing...
                 </>
               ) : (
                 <>
                   <CreditCard className="w-5 h-5" />
-                  دفع {PLAN_PRICE.toLocaleString()} د.ج
+                  Subscribe now
                 </>
               )}
             </Button>

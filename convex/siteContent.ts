@@ -1,17 +1,25 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
-import { Doc, Id } from "./_generated/dataModel";
+import { Id } from "./_generated/dataModel";
+import { assertStoreRole } from "./storeAccess";
 import {
   decryptDeliveryCredentials,
   encryptDeliveryCredentials,
 } from "./deliveryCredentialsCrypto";
 import { normalizeDeliveryProvider } from "./deliveryProvider";
-
-type StoreOwnerAuthContext = {
-  db: { get: (id: Id<"stores">) => Promise<Doc<"stores"> | null> };
-  auth: { getUserIdentity: () => Promise<{ subject: string } | null> };
-};
+import {
+  DEFAULT_HERO_ALIGNMENT,
+  DEFAULT_HERO_BG_URL,
+  DEFAULT_HERO_CTA,
+  DEFAULT_HERO_CTA_COLOR,
+  DEFAULT_HERO_FOCAL_X,
+  DEFAULT_HERO_FOCAL_Y,
+  DEFAULT_HERO_FONT,
+  DEFAULT_HERO_TITLE,
+  DEFAULT_HERO_TITLE_COLOR,
+  DEFAULT_HERO_ZOOM,
+} from "../lib/hero-content";
 
 const TEST_CONNECTION_RATE_LIMIT_WINDOW_MS = 60_000;
 const TEST_CONNECTION_RATE_LIMIT_MAX_REQUESTS = 5;
@@ -42,22 +50,8 @@ function isRateLimited(
   return { limited: false, retryAfterSeconds: 0 };
 }
 
-async function assertStoreOwner(ctx: StoreOwnerAuthContext, storeId: Id<"stores">) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized");
-  }
-
-  const store = await ctx.db.get(storeId);
-  if (!store) {
-    throw new Error("Store not found");
-  }
-
-  if (store.ownerId !== identity.subject) {
-    throw new Error("Forbidden");
-  }
-
-  return { identity, store };
+async function assertStoreOwner(ctx: Parameters<typeof assertStoreRole>[0], storeId: Id<"stores">) {
+  return await assertStoreRole(ctx, storeId, "owner");
 }
 
 // Type definitions for site content
@@ -73,14 +67,16 @@ interface NavbarContent {
 
 interface HeroContent {
   title?: string;
-  subtitle?: string;
   ctaText?: string;
+  titleColor?: string;
   ctaColor?: string;
-  ctaLink?: string;
-  layout?: "left" | "center" | "right";
+  fontFamily?: "serif" | "sans" | "playful";
+  alignment?: "left" | "center" | "right";
   backgroundImageStorageId?: string;
   backgroundImageUrl?: string;
-  backgroundImage?: string;
+  focalPointX?: number;
+  focalPointY?: number;
+  zoom?: number;
 }
 
 interface DeliveryIntegrationContent {
@@ -115,7 +111,15 @@ export const getSiteContent = query({
       )
       .first();
 
-    if (!content) return null;
+    if (!content) {
+      if (args.section === "navbar") {
+        return { content: DEFAULT_NAVBAR };
+      }
+      if (args.section === "hero") {
+        return { content: DEFAULT_HERO };
+      }
+      return null;
+    }
 
     const typedContent = content.content as SiteContent;
 
@@ -151,7 +155,17 @@ export const getSiteContentResolved = query({
 
     if (args.section === "hero" && (typedContent as HeroContent)?.backgroundImageStorageId) {
       const backgroundImageUrl = await ctx.storage.getUrl((typedContent as HeroContent).backgroundImageStorageId!);
-      return { ...content, content: { ...typedContent, backgroundImageUrl } };
+      return {
+        ...content,
+        content: { ...DEFAULT_HERO, ...typedContent, backgroundImageUrl },
+      };
+    }
+
+    if (args.section === "hero") {
+      return {
+        ...content,
+        content: { ...DEFAULT_HERO, ...typedContent },
+      };
     }
 
     return content;
@@ -178,6 +192,8 @@ export const updateSiteContent = mutation({
     content: v.any(),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) =>
@@ -219,6 +235,8 @@ export const setNavbarStyles = mutation({
     showCart: v.optional(v.boolean()),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
@@ -263,6 +281,8 @@ export const deleteNavbarLogo = mutation({
     storeId: v.id("stores"),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "navbar"))
@@ -290,6 +310,8 @@ export const setNavbarLogo = mutation({
     logoStorageId: v.string(),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const now = Date.now();
 
     const navbarDoc = await ctx.db
@@ -322,11 +344,18 @@ export const setHeroStyles = mutation({
     storeId: v.id("stores"),
     title: v.optional(v.string()),
     ctaText: v.optional(v.string()),
+    titleColor: v.optional(v.string()),
     ctaColor: v.optional(v.string()),
-    layout: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
+    fontFamily: v.optional(v.union(v.literal("serif"), v.literal("sans"), v.literal("playful"))),
+    alignment: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
     backgroundImageStorageId: v.optional(v.string()),
+    focalPointX: v.optional(v.number()),
+    focalPointY: v.optional(v.number()),
+    zoom: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const existing = await ctx.db
       .query("siteContent")
       .withIndex("section", (q) => q.eq("storeId", args.storeId).eq("section", "hero"))
@@ -339,9 +368,14 @@ export const setHeroStyles = mutation({
       ...baseContent,
       ...(args.title !== undefined ? { title: args.title } : {}),
       ...(args.ctaText !== undefined ? { ctaText: args.ctaText } : {}),
+      ...(args.titleColor !== undefined ? { titleColor: args.titleColor } : {}),
       ...(args.ctaColor !== undefined ? { ctaColor: args.ctaColor } : {}),
-      ...(args.layout ? { layout: args.layout } : {}),
+      ...(args.fontFamily !== undefined ? { fontFamily: args.fontFamily } : {}),
+      ...(args.alignment !== undefined ? { alignment: args.alignment } : {}),
       ...(args.backgroundImageStorageId !== undefined ? { backgroundImageStorageId: args.backgroundImageStorageId } : {}),
+      ...(args.focalPointX !== undefined ? { focalPointX: args.focalPointX } : {}),
+      ...(args.focalPointY !== undefined ? { focalPointY: args.focalPointY } : {}),
+      ...(args.zoom !== undefined ? { zoom: args.zoom } : {}),
     };
 
     if (existing) {
@@ -904,16 +938,21 @@ export const testDeliveryConnection = action({
         return { success: false, message: "Unauthorized" };
       }
 
-      const store = await ctx.runQuery(api.stores.getStore, {
-        storeId: args.storeId,
-      });
+      try {
+        await ctx.runQuery(api.storeAccess.getViewerStoreAccess, {
+          storeId: args.storeId,
+          minimumRole: "owner",
+        });
+      } catch (error) {
+        if (error instanceof Error && error.message === "Store not found") {
+          return { success: false, message: "Store not found." };
+        }
 
-      if (!store) {
-        return { success: false, message: "Store not found." };
-      }
+        if (error instanceof Error && (error.message === "Unauthorized" || error.message === "Forbidden")) {
+          return { success: false, message: error.message };
+        }
 
-      if (store.ownerId !== identity.subject) {
-        return { success: false, message: "Forbidden" };
+        throw error;
       }
 
       const rateLimitKey = `${identity.subject}:${args.storeId}`;
@@ -1035,17 +1074,23 @@ export const DEFAULT_NAVBAR: NavbarContent = {
 };
 
 export const DEFAULT_HERO: HeroContent = {
-  title: "متجرنا الإلكتروني",
-  subtitle: "أفضل المنتجات بأسعار منافسة",
-  ctaText: "تسوق الآن",
-  ctaLink: "/#products",
-  layout: "center",
-  backgroundImage: undefined,
+  title: DEFAULT_HERO_TITLE,
+  ctaText: DEFAULT_HERO_CTA,
+  titleColor: DEFAULT_HERO_TITLE_COLOR,
+  ctaColor: DEFAULT_HERO_CTA_COLOR,
+  fontFamily: DEFAULT_HERO_FONT,
+  alignment: DEFAULT_HERO_ALIGNMENT,
+  backgroundImageUrl: DEFAULT_HERO_BG_URL,
+  focalPointX: DEFAULT_HERO_FOCAL_X,
+  focalPointY: DEFAULT_HERO_FOCAL_Y,
+  zoom: DEFAULT_HERO_ZOOM,
 };
 // Initialize default site content for a new store
 export const initializeSiteContent = mutation({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
+    await assertStoreOwner(ctx, args.storeId);
+
     const now = Date.now();
     
     const sections = [

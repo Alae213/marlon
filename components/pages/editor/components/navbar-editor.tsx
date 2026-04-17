@@ -6,8 +6,9 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import dynamic from "next/dynamic";
 import Image from "next/image";
-import { ChevronDown, ImageIcon, MoonStar, Package, SunMedium, Upload } from "lucide-react";
+import { ChevronDown, ImageIcon, MoonStar, SunMedium, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EditorHoverHighlight } from "@/components/ui/EditorHoverHighlight";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
@@ -114,13 +115,9 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                 aria-label="Open navbar settings"
                 className={`cursor-pointer group absolute inset-x-0 top-0 z-20 flex w-full items-center gap-3 rounded-2xl border px-3 py-2 text-left backdrop-blur-xl transition-all duration-200 ${previewClasses}`}
               >
-                <span
-                  className={cn(
-                    "pointer-events-none absolute inset-0 rounded-2xl transition-colors duration-200 -m-2 cursor-pointer",
-                    isPanelOpen
-                      ? "bg-[color:rgb(0_112_243_/_0.2)]"
-                      : "bg-transparent group-hover:bg-[color:rgb(0_112_243_/_0.2)]"
-                  )}
+                <EditorHoverHighlight
+                  isDisabled={isPanelOpen}
+                  className="-m-2 rounded-2xl"
                 />
 
                 <div className="relative z-20 flex min-w-0 flex-1 items-center">
@@ -133,11 +130,13 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                       className="h-10 w-auto rounded-md object-contain"
                     />
                   ) : (
-                    <span
-                      className={`flex h-10 w-10 items-center justify-center rounded-full border ${actionChipClasses}`}
-                    >
-                      <Package className="h-4 w-4" />
-                    </span>
+                    <Image
+                      src="/Favicon.png"
+                      alt="Default store logo"
+                      width={40}
+                      height={40}
+                      className={`h-10 w-10 rounded-full border object-contain p-1 ${actionChipClasses}`}
+                    />
                   )}
                 </div>
 
@@ -189,10 +188,13 @@ export function NavbarEditor({ storeId, navbarContent }: NavbarEditorProps) {
                         className="h-10 w-auto object-contain"
                       />
                     ) : (
-                      <div className="flex items-center gap-2 text-caption text-[var(--system-300)]">
-                        <Package className="h-3.5 w-3.5" />
-                        No logo
-                      </div>
+                      <Image
+                        src="/Favicon.png"
+                        alt="Default store logo preview"
+                        width={40}
+                        height={40}
+                        className="h-10 w-10 rounded-md object-contain"
+                      />
                     )}
                   </div>
 

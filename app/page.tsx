@@ -279,62 +279,10 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
   );
 }
 
-// Agency Mode Modal - Shown when user tries to create a second store
-function AgencyModeModal({ isOpen, onClose }: { 
-  isOpen: boolean; 
-  onClose: () => void;
-}) {
-  if (!isOpen) return null;
-
-  return (
-    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent
-        showCloseButton={false}
-        overlayClassName="bg-black/0"
-        style={{
-          boxShadow: "var(--bottom-nav-shadow)",
-        } as React.CSSProperties}
-        className="max-w-[360px] gap-[12px] overflow-hidden rounded-[64px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
-      >
-        <DialogHeader className="flex h-[58px] flex-row justify-between">
-          <DialogTitle className="headline-2xl text-white">Agency Mode</DialogTitle>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 -m-2 items-center justify-center rounded-full transition-colors duration-150 hover:bg-white/10 active:scale-[0.96]"
-          >
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
-            </svg>
-          </button>
-        </DialogHeader>
-
-        <hr className="h-px w-full rounded-full border-0" style={{ background: "rgba(242, 242, 242, 0.30)", boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.30)" }} />
-
-        <p className="body-base text-[var(--system-300)]">
-          You already have a store. To manage multiple stores, you need to apply for Agency Mode.
-        </p>
-
-        <div className="h-6" />
-
-        <div className="flex w-full gap-3">
-          <Button variant="ghost" size="md" onClick={onClose} className="w-full">
-            Cancel
-          </Button>
-          <Button disabled size="md" className="w-full cursor-not-allowed opacity-50">
-            Coming Soon
-          </Button>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
 // Dashboard Content Component - Main dashboard view with store list and create button
 function DashboardContent() {
   const { user, isLoaded } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [isAgencyModalOpen, setIsAgencyModalOpen] = useState(false);
   const { isConnected } = useRealtime();
 
   const stores = useQuery(api.stores.getUserStores, user ? { userId: user.id } : "skip");
@@ -351,11 +299,7 @@ function DashboardContent() {
   })) || [];
 
   const handleNewStoreClick = () => {
-    if (storesData.length >= 1) {
-      setIsAgencyModalOpen(true);
-    } else {
-      setIsCreateModalOpen(true);
-    }
+    setIsCreateModalOpen(true);
   };
 
   if (!isLoaded) {
@@ -395,7 +339,6 @@ function DashboardContent() {
         </div>
 
       </SignedIn><CreateStoreModal isOpen={isCreateModalOpen} onClose={() => setIsCreateModalOpen(false)} onSuccess={() => { } } />
-      <AgencyModeModal isOpen={isAgencyModalOpen} onClose={() => setIsAgencyModalOpen(false)} />
 
         <p className="label-xs text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
     </div>

@@ -35,6 +35,7 @@ Do not write any code, create any files, or make assumptions about the project u
 | Why certain decisions were made | context/project/DECISIONS.md            |
 | What needs to be done           | context/project/TASK-LIST.md            |
 | A specific feature              | context/features/[feature-name].md      |
+| The feature doc index           | context/features/README.md              |
 | The tech stack                  | context/technical/STACK.md              |
 | System architecture             | context/technical/ARCHITECTURE.md       |
 | Data models & schemas           | context/technical/DATA_MODELS.md        |

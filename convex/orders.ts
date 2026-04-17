@@ -3,6 +3,9 @@ import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
 import { api } from "./_generated/api";
 import { upsertOrderDigest } from "./performanceHelpers";
+import { assertStoreRole } from "./storeAccess";
+import { isStoreOverflowLocked, maskCustomerData } from "./canonicalBilling";
+import { normalizeDeliveryTypeForStorage } from "../lib/order-delivery-display";
 
 function toDeliveryEventType(status: string): "delivered" | "failed" | "rts" | null {
   if (status === "succeeded") {
@@ -41,50 +44,20 @@ function clampCallLog(
   return callLog.slice(callLog.length - MAX_LEGACY_CALL_LOG_ENTRIES);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type DbWithGet = { db: { get: (id: any) => Promise<any> } };
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type AuthWithIdentity = { auth: { getUserIdentity: () => Promise<any> } };
-type CtxWithDb = DbWithGet & AuthWithIdentity;
-
 // Helper to verify store ownership via order
-async function assertOrderOwnership(ctx: CtxWithDb, orderId: Id<"orders">) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
-  }
-  
+async function assertOrderOwnership(ctx: { db: { get: (id: Id<"orders">) => Promise<Doc<"orders"> | null> } } & Parameters<typeof assertStoreRole>[0], orderId: Id<"orders">) {
   const order = await ctx.db.get(orderId) as Doc<"orders"> | null;
   if (!order) {
     throw new Error("Order not found");
   }
-  
-  // Get the store and verify ownership
-  const store = await ctx.db.get(order.storeId as Id<"stores">) as Doc<"stores"> | null;
-  if (!store || store.ownerId !== identity.subject) {
-    throw new Error("Forbidden: You do not have permission to access this store's orders.");
-  }
-  
+
+  const { identity, store } = await assertStoreRole(ctx, order.storeId as Id<"stores">, "owner");
   return { identity, order, store };
 }
 
 // Helper to verify store ownership directly
-async function assertStoreOwnership(ctx: CtxWithDb, storeId: Id<"stores">) {
-  const identity = await ctx.auth.getUserIdentity();
-  if (!identity) {
-    throw new Error("Unauthorized: No user identity found. Please ensure you are signed in.");
-  }
-  
-  const store = await ctx.db.get(storeId) as Doc<"stores"> | null;
-  if (!store) {
-    throw new Error("Store not found");
-  }
-  
-  if (store.ownerId !== identity.subject) {
-    throw new Error("Forbidden: You do not have permission to access this store.");
-  }
-  
-  return { identity, store };
+async function assertStoreOwnership(ctx: Parameters<typeof assertStoreRole>[0], storeId: Id<"stores">) {
+  return await assertStoreRole(ctx, storeId, "owner");
 }
 
 async function appendTimelineEvent(
@@ -133,6 +106,13 @@ export const getOrders = query({
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
       .order("desc")
       .collect();
+    
+    // Apply masking if store is overflow locked
+    const isOverflowLocked = await isStoreOverflowLocked(ctx, args.storeId);
+    if (isOverflowLocked) {
+      return orders.map(maskCustomerData);
+    }
+    
     return orders;
   },
 });
@@ -141,7 +121,14 @@ export const getOrders = query({
 export const getOrder = query({
   args: { orderId: v.id("orders") },
   handler: async (ctx, args) => {
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { order, store } = await assertOrderOwnership(ctx, args.orderId);
+    
+    // Apply masking if store is overflow locked
+    const isOverflowLocked = await isStoreOverflowLocked(ctx, store._id);
+    if (isOverflowLocked) {
+      return maskCustomerData(order);
+    }
+    
     return order;
   },
 });
@@ -159,6 +146,13 @@ export const getOrdersByStatus = query({
       )
       .order("desc")
       .collect();
+    
+    // Apply masking if store is overflow locked
+    const isOverflowLocked = await isStoreOverflowLocked(ctx, args.storeId);
+    if (isOverflowLocked) {
+      return orders.map(maskCustomerData);
+    }
+    
     return orders;
   },
 });
@@ -191,6 +185,15 @@ export const getOrderByNumber = query({
         q.eq("storeId", args.storeId).eq("orderNumber", args.orderNumber)
       )
       .first();
+    
+    if (!order) return null;
+    
+    // Apply masking if store is overflow locked
+    const isOverflowLocked = await isStoreOverflowLocked(ctx, args.storeId);
+    if (isOverflowLocked) {
+      return maskCustomerData(order);
+    }
+    
     return order;
   },
 });
@@ -206,21 +209,30 @@ export const getOrderDigests = query({
     await assertStoreOwnership(ctx, args.storeId);
     const limit = Math.min(200, Math.max(1, args.limit ?? 100));
 
+    let digests;
     if (args.status) {
-      return await ctx.db
+      digests = await ctx.db
         .query("orderDigests")
         .withIndex("storeStatusUpdatedAt", (q) =>
           q.eq("storeId", args.storeId).eq("status", args.status!)
         )
         .order("desc")
         .take(limit);
+    } else {
+      digests = await ctx.db
+        .query("orderDigests")
+        .withIndex("storeUpdatedAt", (q) => q.eq("storeId", args.storeId))
+        .order("desc")
+        .take(limit);
     }
-
-    return await ctx.db
-      .query("orderDigests")
-      .withIndex("storeUpdatedAt", (q) => q.eq("storeId", args.storeId))
-      .order("desc")
-      .take(limit);
+    
+    // Apply masking if store is overflow locked
+    const isOverflowLocked = await isStoreOverflowLocked(ctx, args.storeId);
+    if (isOverflowLocked) {
+      return digests.map(maskCustomerData);
+    }
+    
+    return digests;
   },
 });
 
@@ -252,17 +264,10 @@ export const createOrder = mutation({
   },
   handler: async (ctx, args) => {
     // Verify ownership of the store
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      throw new Error("Unauthorized");
-    }
-    
-    const store = await ctx.db.get(args.storeId);
-    if (!store || store.ownerId !== identity.subject) {
-      throw new Error("Forbidden");
-    }
+    const { store } = await assertStoreOwnership(ctx, args.storeId);
     
     const now = Date.now();
+    const normalizedDeliveryType = normalizeDeliveryTypeForStorage(args.deliveryType);
     const orderId = await ctx.db.insert("orders", {
       storeId: args.storeId,
       orderNumber: args.orderNumber,
@@ -275,7 +280,7 @@ export const createOrder = mutation({
       subtotal: args.subtotal,
       deliveryCost: args.deliveryCost,
       total: args.total,
-      deliveryType: args.deliveryType || "home",
+      deliveryType: normalizedDeliveryType,
       status: "new",
       paymentStatus: "pending",
       callAttempts: 0,
@@ -300,7 +305,7 @@ export const createOrder = mutation({
       });
     }
 
-    const createdOrder = await ctx.db.get(orderId);
+const createdOrder = await ctx.db.get(orderId);
     if (createdOrder) {
       await upsertOrderDigest(ctx, createdOrder);
       const firstTimeline = createdOrder.timeline?.[0];
@@ -311,6 +316,10 @@ export const createOrder = mutation({
         firstTimeline?.note,
         firstTimeline?.timestamp ?? now
       );
+
+      await ctx.runMutation(api.canonicalBilling.checkAndUpdateOverflowState, {
+        storeId: args.storeId,
+      });
     }
 
     return orderId;
@@ -671,11 +680,13 @@ export const purgeLegacyAdminNotesForStore = mutation({
 
     for (const order of orders) {
       const orderAny = order as unknown as Record<string, unknown>;
-      const { _id, _creationTime, adminNotes: _adminNotes, ...rest } = orderAny as {
+      const { _id, ...rest } = orderAny as {
         _id: Id<"orders">;
         _creationTime: number;
         adminNotes?: unknown;
       } & Record<string, unknown>;
+      delete rest._creationTime;
+      delete rest.adminNotes;
 
       const timelineRaw = rest.timeline;
       const timeline = Array.isArray(timelineRaw)

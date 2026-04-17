@@ -13,6 +13,19 @@ import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet";
+import {
+  resolveHeroAlignment,
+  resolveHeroCta,
+  resolveHeroCtaColor,
+  resolveHeroFocalX,
+  resolveHeroFocalY,
+  resolveHeroFont,
+  resolveHeroImage,
+  resolveHeroTitle,
+  resolveHeroTitleColor,
+  resolveHeroZoom,
+} from "@/lib/hero-content";
+import { getHeroFontClass } from "@/lib/hero-fonts";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -105,20 +118,31 @@ function StorefrontContent() {
   const currentHero = heroContent?.content as { 
     title?: string; 
     ctaText?: string; 
+    titleColor?: string;
     ctaColor?: string;
-    layout?: "left" | "center" | "right";
+    fontFamily?: "serif" | "sans" | "playful";
+    alignment?: "left" | "center" | "right";
     backgroundImageUrl?: string;
+    focalPointX?: number;
+    focalPointY?: number;
+    zoom?: number;
   } | undefined;
   // Sanitize user-provided content - React escapes by default, but we add extra protection
   // by stripping any HTML tags if strict mode is needed
   const sanitizeText = (text: string): string => {
     return text.replace(/<[^>]*>/g, "");
   };
-  const heroTitle = sanitizeText(currentHero?.title ?? "");
-  const heroCtaText = sanitizeText(currentHero?.ctaText ?? "");
-  const heroCtaColor = currentHero?.ctaColor ?? "#171717";
-  const heroLayout = currentHero?.layout ?? "center";
-  const heroBgUrl = currentHero?.backgroundImageUrl;
+  const heroTitle = sanitizeText(resolveHeroTitle(currentHero?.title));
+  const heroCtaText = sanitizeText(resolveHeroCta(currentHero?.ctaText));
+  const heroTitleColor = resolveHeroTitleColor(currentHero?.titleColor);
+  const heroCtaColor = resolveHeroCtaColor(currentHero?.ctaColor);
+  const heroAlignment = resolveHeroAlignment(currentHero?.alignment);
+  const heroFont = resolveHeroFont(currentHero?.fontFamily);
+  const heroBgUrl = resolveHeroImage(currentHero?.backgroundImageUrl);
+  const heroFocalX = resolveHeroFocalX(currentHero?.focalPointX);
+  const heroFocalY = resolveHeroFocalY(currentHero?.focalPointY);
+  const heroZoom = resolveHeroZoom(currentHero?.zoom);
+  const heroFontClass = getHeroFontClass(heroFont);
 
   const currentFooter = footerContent?.content as {
     logo?: string;
@@ -239,41 +263,50 @@ function StorefrontContent() {
       </Sheet>
 
       {/* Hero Section */}
-      {heroTitle && (
-        <div 
-          className="relative overflow-hidden h-[calc(100vh-40px)] flex flex-col items-center justify-center mb-10"
-          style={heroBgUrl ? { 
-            backgroundImage: `url(${heroBgUrl})`, 
-            backgroundSize: 'cover', 
-            backgroundPosition: 'center'
-          } : {}}
+      <section
+        className="relative mb-10 min-h-[88svh] overflow-hidden"
+        style={{
+          backgroundImage: `url(${heroBgUrl})`,
+          backgroundSize: `${heroZoom * 100}%`,
+          backgroundPosition: `${heroFocalX}% ${heroFocalY}%`,
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.54)_38%,rgba(255,255,255,0.84)_72%,rgba(255,255,255,0)_100%)]" />
+        <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white to-transparent" />
+        <div
+          className={`relative z-10 mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-center gap-7 px-5 pt-28 pb-16 md:px-8 ${
+            heroAlignment === "left"
+              ? "items-start text-left"
+              : heroAlignment === "right"
+                ? "items-end text-right"
+                : "items-center text-center"
+          }`}
         >
-          {!heroBgUrl && (
-            <div className="absolute inset-0 bg-[var(--system-100)]" />
-          )}
-          
-          <div className={`max-w-6xl mx-auto relative z-10 text-center w-full ${
-            heroLayout === "left" ? "text-start items-start": 
-            heroLayout === "right" ? "text-end items-end": 
-            "text-center items-center"
-          } flex flex-col gap-6`}>
-            <h1 className="display-5xl text-[var(--system-600)]">
+          <div className="max-w-4xl space-y-7">
+            <h1
+              className={`whitespace-pre-line text-5xl leading-[0.9] tracking-[-0.04em] md:text-7xl ${heroFontClass}`}
+              style={{ color: heroTitleColor }}
+            >
               {heroTitle}
             </h1>
-            {heroCtaText && (
-              <Button 
-                className="px-6 py-2 w-fit"
-                style={{ backgroundColor: heroCtaColor }}
-              >
-                {heroCtaText}
-              </Button>
-            )}
+            <Button
+              variant="primary"
+              size="lg"
+              className={`h-11 w-fit rounded-full px-6 shadow-[0_20px_50px_rgba(23,48,82,0.18)] ${heroFontClass}`}
+              style={{ backgroundColor: heroCtaColor, color: "#fff" }}
+              onClick={() => {
+                document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
+            >
+              {heroCtaText}
+            </Button>
           </div>
         </div>
-      )}
+      </section>
 
       {/* Product Catalog Section */}
-      <div className="max-w-6xl mx-auto  min-h-screen">
+      <div id="products" className="max-w-6xl mx-auto  min-h-screen scroll-mt-28">
         <h2 className="headline-2xl mb-6">Products</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 ">
         {filteredProducts.map((product) => (

@@ -96,3 +96,12 @@
 **Options Considered:** (1) No owner removal by admin, (2) Owner confirmation required, (3) Platform support approval only, (4) Unrestricted store-admin removal.
 **Rationale:** Policy B preserves operational flexibility while making ownership change non-unilateral and auditable. Limited break-glass support covers legal/safety incidents without weakening default protections.
 **Consequences:** Supersedes prior unrestricted owner-removal lock in wizard/phase captures. Store role model is now `owner | admin | staff`, platform governance role is `platform_admin`, admin cannot unilaterally remove owner, ownership transfer/removal must include explicit current-owner confirmation, and all governance actions (including break-glass reason code + ticket reference) must remain in immutable audit trail.
+
+---
+
+**Decision:** Use an additive canonical cutover model that separates store identity, unlocked billing periods, payment intent, payment evidence, and memberships before retiring legacy billing fields.
+**Date:** 2026-04-16
+**Context:** T34 required a concrete schema plan for replacing the legacy owner-centric trial/subscription runtime without causing accidental access expansion or ambiguous unlock state during migration.
+**Options Considered:** (1) Keep overloading `stores` with all billing/payment/access state, (2) Big-bang replacement of legacy fields with new ones, (3) Add normalized compatibility-first tables and cut over in stages.
+**Rationale:** The additive staged model minimizes migration risk, preserves auditability, and lets rollout fail closed. Splitting `paymentAttempts`, `paymentEvidence`, `storeBillingPeriods`, and `storeMemberships` keeps trust boundaries clear: intent is not proof, proof is not access, and access is not billing state.
+**Consequences:** Canonical rollout now assumes: `stores` keeps compatibility markers and legacy fields temporarily; `storeBillingPeriods` becomes the paid/unlocked source of truth; `paymentAttempts` is server-owned checkout state; `paymentEvidence` is append-only verified proof; `storeMemberships` starts as owner-mirroring only; legacy trial/subscription stores must be backfilled and reconciled before runtime cutover; and non-owner access must remain disabled until later authorization tasks are complete.

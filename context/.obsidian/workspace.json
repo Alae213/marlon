@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "features/store-editor.md",
+                "file": "features/Store_Workspace/storefront-content-editor.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "store-editor"
+              "title": "storefront-content-editor"
             }
           }
         ]
@@ -185,23 +185,31 @@
   },
   "active": "22fe21bc0f8e5b00",
   "lastOpenFiles": [
-    "features/subscription-billing.md",
-    "features/store-editor.md",
-    "features/_template.md",
-    "developer/TESTING.md",
-    "developer/SECURITY.md",
-    "developer/ONBOARDING.md",
-    "developer/CONVENTIONS.md",
-    "technical/STACK.md",
-    "technical/ENVIRONMENT.md",
-    "technical/DELIVERY_V2_FOUNDATIONS.md",
-    "technical/DATA_MODELS.md",
-    "technical/ARCHITECTURE.md",
-    "technical/API_CONTRACTS.md",
-    "project/DECISIONS.md",
+    "features/Store_Workspace/store-dashboard-and-creation.md",
+    "features/Store_Workspace/store-preview-and-navigation.md",
+    "features/Store_Workspace/storefront-content-editor.md",
+    "features/Scaffolded/marketing-workspace.md",
+    "features/Scaffolded/anonymous-public-checkout-gap.md",
+    "features/Scaffolded/agency-mode.md",
+    "features/Scaffolded/additional-courier-providers.md",
+    "features/Public/storefront-content-rendering.md",
+    "features/Order_Management/call-logging-and-admin-notes.md",
+    "features/Delivery_Internal/delivery-provider-recommendation-engine.md",
+    "features/Delivery_Internal/delivery-provider-adapters.md",
+    "features/Delivery_Internal/delivery-credentials-encryption.md",
+    "features/Delivery_Internal/delivery-analytics-rollups.md",
+    "features/Platform/billing-locking-and-subscriptions.md",
+    "features/README.md",
+    "features/Platform/runtime-canonical-alignment-plan.md",
+    "ops/INFRASTRUCTURE.md",
+    "ops/CI_CD.md",
     "project/TASK-LIST.md",
     "project/SCOPE.md",
+    "project/DECISIONS.md",
+    "project/OVERVIEW.md",
     "project/ROADMAP.md",
-    "project/OVERVIEW.md"
+    "features/Settings/billing-and-unlock-settings.md",
+    "technical/STACK.md",
+    "technical/ENVIRONMENT.md"
   ]
 }

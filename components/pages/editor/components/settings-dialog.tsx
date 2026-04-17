@@ -7,14 +7,16 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DeliveryPricingSettings } from "../settings/delivery-pricing-settings";
 import { DeliveryIntegrationSettings } from "../settings/delivery-integration-settings";
 import { StoreInfoSettings } from "../settings/store-info-settings";
+import { BillingSettings } from "../settings/billing-settings";
 import { Id } from "@/convex/_generated/dataModel";
 
-type SettingsTab = "delivery" | "integration" | "store";
+type SettingsTab = "delivery" | "integration" | "store" | "billing";
 
 const TABS: Array<{ id: SettingsTab; label: string }> = [
   { id: "delivery", label: "Delivery Pricing" },
   { id: "integration", label: "Courier" },
   { id: "store", label: "Store Info" },
+  { id: "billing", label: "Billing" },
 ];
 
 interface SettingsDialogProps {
@@ -26,7 +28,7 @@ interface SettingsDialogProps {
 }
 
 function normalizeSettingsTab(tab?: string): SettingsTab {
-  if (tab === "integration" || tab === "store" || tab === "delivery") {
+  if (tab === "integration" || tab === "store" || tab === "delivery" || tab === "billing") {
     return tab;
   }
 
@@ -51,42 +53,51 @@ function SettingsDialogPanel({ storeId, storeSlug, initialTab }: SettingsDialogP
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
       orientation="vertical"
-      className="grid w-full grid-cols-[13.5rem_minmax(0,1fr)] gap-[var(--spacing-lg)] max-[640px]:grid-cols-1"
+      className="flex w-full gap-[var(--spacing-lg)] max-[640px]:flex-col"
     >
+      {/* Vertical Sidebar Tabs */}
       <TabsList
         aria-label="Store settings sections"
-        className="h-fit w-full rounded-[var(--radius-lg)] bg-[var(--system-800)] p-[var(--spacing-sm)]"
+        className="flex flex-col shrink-0 w-40 gap-1 rounded-[var(--radius-lg)] bg-transparent p-0"
       >
         {TABS.map((tab) => (
           <TabsTrigger
             key={tab.id}
             value={tab.id}
-            className="rounded-[var(--radius-md)] border-0 shadow-none after:hidden px-[var(--spacing-md)] py-[var(--spacing-sm)] text-left text-body-sm text-[var(--system-200)] transition-colors duration-100 hover:bg-[var(--system-600)] hover:text-[var(--system-50)] data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-[var(--color-primary-foreground)] data-[state=active]:shadow-none focus-visible:border-0"
+            className="justify-start px-4 py-2.5 text-left rounded-[var(--radius-md)] text-body-sm text-[var(--system-300)] transition-colors duration-100 hover:bg-[var(--system-700)] hover:text-[var(--system-100)] data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-[var(--color-primary-foreground)] data-[state=active]:shadow-none"
           >
             {tab.label}
           </TabsTrigger>
         ))}
       </TabsList>
 
+      {/* Tab Content */}
       <TabsContent
         value="delivery"
-        className="max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
       >
         <DeliveryPricingSettings storeId={storeId} />
       </TabsContent>
 
       <TabsContent
         value="integration"
-        className="max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
       >
         <DeliveryIntegrationSettings storeId={storeId} />
       </TabsContent>
 
       <TabsContent
         value="store"
-        className="max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
       >
         <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />
+      </TabsContent>
+
+      <TabsContent
+        value="billing"
+        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+      >
+        <BillingSettings storeId={storeId} />
       </TabsContent>
     </Tabs>
   );
