@@ -118,7 +118,7 @@ export function OrderMobileCard({
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0">
               <LockedData fallback="***">
-                <p className="body-base text-[var(--system-700)] truncate">
+                <p className="text-body text-[var(--system-700)] truncate">
                   {highlightMatch(order.customerName, searchQuery)}
                 </p>
                 <p className="text-body-sm text-[var(--system-400)] truncate">

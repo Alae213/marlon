@@ -52,7 +52,7 @@ const DialogOverlay = forwardRef<
     <DialogPrimitive.Overlay ref={ref} asChild forceMount {...props}>
       <motion.div
         className={cn(
-          "fixed inset-0 z-[var(--z-overlay)] bg-[color:rgb(10_10_10_/_0.36)] backdrop-blur-[2px]",
+          "fixed inset-0 z-[var(--z-overlay)] bg-[color:rgb(0_0_0_/_0.01)]",
           (!open || !isPresent) && "pointer-events-none",
           className
         )}
@@ -168,7 +168,7 @@ const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-modal text-[var(--system-700)]", className)}
+    className={cn("text-title text-[var(--system-700)]", className)}
     {...props}
   />
 ));

@@ -1,34 +1,73 @@
-import { TextareaHTMLAttributes, forwardRef } from "react";
+import * as React from "react";
 
-interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  label?: string;
-  error?: string;
+import { cn } from "@/lib/utils";
+
+import { FieldShell, FieldVariant, getFieldInputClasses } from "./field-shell";
+
+export interface TextareaProps
+  extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  label?: React.ReactNode;
+  supportingText?: React.ReactNode;
+  error?: React.ReactNode;
+  variant?: FieldVariant;
+  containerClassName?: string;
+  surfaceClassName?: string;
 }
 
-export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className = "", label, error, ...props }, ref) => {
+export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
+  (
+    {
+      className,
+      containerClassName,
+      disabled,
+      error,
+      id,
+      label,
+      rows = 4,
+      spellCheck = true,
+      supportingText,
+      surfaceClassName,
+      variant = "light",
+      ...props
+    },
+    ref,
+  ) => {
+    const generatedId = React.useId();
+    const textareaId = id ?? `textarea-${generatedId}`;
+    const describedBy = error || supportingText ? `${textareaId}-support` : undefined;
+
     return (
-      <div className="w-full">
-        {label && (
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            {label}
-          </label>
-        )}
+      <FieldShell
+        id={textareaId}
+        label={label}
+        supportingText={supportingText}
+        error={error}
+        variant={variant}
+        disabled={disabled}
+        containerClassName={containerClassName}
+        surfaceClassName={surfaceClassName}
+      >
         <textarea
           ref={ref}
-          className={`w-full rounded-[var(--radius-md)] px-4 py-3 ${
-            error 
-              ? "ring-1 ring-destructive" 
-              : ""
-          } bg-card text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors resize-none disabled:bg-muted disabled:cursor-not-allowed ${className}`}
+          id={textareaId}
+          data-slot="ios-textarea"
+          data-variant={variant}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy}
+          rows={rows}
+          disabled={disabled}
+          spellCheck={spellCheck}
+          className={cn(
+            "block min-h-[var(--field-textarea-min-height)] w-full resize-none border-0 bg-transparent p-0 text-body outline-none ring-0",
+            "disabled:cursor-not-allowed",
+            getFieldInputClasses(variant),
+            className,
+          )}
           {...props}
         />
-        {error && (
-          <p className="mt-1.5 text-sm text-destructive">{error}</p>
-        )}
-      </div>
+      </FieldShell>
     );
-  }
+  },
 );
 
 Textarea.displayName = "Textarea";

@@ -2,6 +2,7 @@
 
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 /**
  * Converts a data URL (base64) to a Blob.
@@ -41,7 +42,7 @@ async function urlToBlob(url: string): Promise<Blob> {
 export function useImageUpload() {
   const generateUploadUrl = useMutation(api.siteContent.generateUploadUrl);
 
-  const uploadToStorage = async (dataUrl: string): Promise<string> => {
+  const uploadToStorage = async (dataUrl: string): Promise<Id<"_storage">> => {
     // Step 1: Get upload URL from Convex
     const uploadUrl = await generateUploadUrl({});
     if (!uploadUrl) {
@@ -66,7 +67,7 @@ export function useImageUpload() {
     }
 
     const json = await res.json();
-    return json.storageId as string;
+    return json.storageId as Id<"_storage">;
   };
 
   /**

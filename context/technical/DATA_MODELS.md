@@ -89,7 +89,7 @@ Purpose: operational order record with customer, line items, delivery, notes, an
 ### Store config / delivery tables
 
 - `siteContent` - `Current`: flexible per-store content by `section`, with `content` stored as `any`
-- `Current`: the `hero` section now carries `title`, `ctaText`, `titleColor`, `ctaColor`, shared `fontFamily`, shared `alignment`, `backgroundImageStorageId`/resolved URL, and one-image positioning metadata (`focalPointX`, `focalPointY`, `zoom`)
+- `Current`: the `hero` section now carries `title`, `ctaText`, `titleColor`, `ctaColor`, shared `alignment`, `backgroundImageStorageId`/resolved URL, and one-image positioning metadata (`focalPointX`, `focalPointY`, `zoom`)
 - `deliveryPricing` - `Current`: per-store, per-wilaya pricing using `homeDelivery` and `officeDelivery`; this is simpler than the previously documented zone-matrix target
 - `deliveryCredentials` - `Current`: encrypted credentials with `storeId`, `provider`, `algorithm`, `ciphertextHex`, `ivHex`, timestamps
 - `Needs verification`: `deliveryCredentials` currently omits an `authTag` field in schema even though AES-GCM normally expects one

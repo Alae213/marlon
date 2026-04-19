@@ -2,9 +2,12 @@
 
 import { useState } from "react";
 import { Truck, Key, CheckCircle, XCircle, Loader2, Eye, EyeOff } from "lucide-react";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
+
+const cardClass = "rounded-2xl border border-[var(--system-200)] bg-[var(--color-card)] p-6 shadow-[var(--shadow-sm)]";
+const cardHeaderClass = "mb-4";
+const cardTitleClass = "text-title text-[var(--system-700)]";
 
 interface DeliverySettingsProps {
   storeId: string;
@@ -69,27 +72,26 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-[--system-700]">
+        <h2 className="text-title text-[--system-700]">
           إعدادات شركات التوصيل
         </h2>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* ZR Express */}
-        <Card>
-          <CardContent className="pt-6">
+        <div className={cardClass}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
                   <Truck className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">ZR Express</h3>
-                  <p className="text-sm text-zinc-500">شركة تطوير الرفاق</p>
+                  <h3 className="text-body text-[var(--system-700)]">ZR Express</h3>
+                  <p className="text-body-sm text-[var(--system-400)]">شركة تطوير الرفاق</p>
                 </div>
               </div>
               {config.isActive && config.provider === "zr_express" && (
-                <span className="flex items-center gap-1 text-sm text-green-600">
+                <span className="text-body-sm flex items-center gap-1 text-green-600">
                   <CheckCircle className="w-4 h-4" />
                   متصل
                 </span>
@@ -111,26 +113,24 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
                 className="w-full"
               >
                 فصل
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                </Button>
+              )}
+        </div>
 
         {/* Yalidine */}
-        <Card>
-          <CardContent className="pt-6">
+        <div className={cardClass}>
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
                   <Truck className="w-6 h-6 text-orange-600 dark:text-orange-400" />
                 </div>
                 <div>
-                  <h3 className="font-medium text-zinc-900 dark:text-zinc-50">Yalidine</h3>
-                  <p className="text-sm text-zinc-500">شركة ياليدين</p>
+                  <h3 className="text-body text-[var(--system-700)]">Yalidine</h3>
+                  <p className="text-body-sm text-[var(--system-400)]">شركة ياليدين</p>
                 </div>
               </div>
               {config.isActive && config.provider === "yalidine" && (
-                <span className="flex items-center gap-1 text-sm text-green-600">
+                <span className="text-body-sm flex items-center gap-1 text-green-600">
                   <CheckCircle className="w-4 h-4" />
                   متصل
                 </span>
@@ -152,22 +152,21 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
                 className="w-full"
               >
                 فصل
-              </Button>
-            )}
-          </CardContent>
-        </Card>
+                </Button>
+              )}
+        </div>
       </div>
 
       {selectedProvider && (
-        <Card>
-          <CardHeader>
-            <CardTitle>
+        <div className={cardClass}>
+          <div className={cardHeaderClass}>
+            <h3 className={cardTitleClass}>
               {selectedProvider === "zr_express" ? "إعدادات ZR Express" : "إعدادات Yalidine"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
+            </h3>
+          </div>
+          <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              <label className="text-body-sm block mb-2 text-[var(--system-600)]">
                 <Key className="w-4 h-4 inline-block ms-2" />
                 API Key
               </label>
@@ -180,7 +179,7 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+              <label className="text-body-sm block mb-2 text-[var(--system-600)]">
                 <Key className="w-4 h-4 inline-block ms-2" />
                 API Secret
               </label>
@@ -194,7 +193,7 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
                 <button
                   type="button"
                   onClick={() => setShowApiSecret(!showApiSecret)}
-                  className="absolute end-3 top-1/2 -translate-y-1/2 text-zinc-400 hover:text-zinc-600"
+                  className="absolute end-3 top-1/2 -translate-y-1/2 text-[var(--system-400)] hover:text-[var(--system-600)]"
                 >
                   {showApiSecret ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -203,7 +202,7 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
 
             {selectedProvider === "zr_express" && (
               <div>
-                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+                <label className="text-body-sm block mb-2 text-[var(--system-600)]">
                   رقم الحساب
                 </label>
                 <Input
@@ -233,37 +232,37 @@ export function DeliverySettings({ storeId: _storeId }: DeliverySettingsProps) {
             </div>
 
             {testResult === "success" && (
-              <div className="flex items-center gap-2 text-green-600 bg-green-50 dark:bg-green-900/20 p-3 rounded-xl">
+              <div className="text-body-sm flex items-center gap-2 rounded-xl bg-green-50 p-3 text-green-600">
                 <CheckCircle className="w-5 h-5" />
                 <span>تم الاتصال بنجاح!</span>
               </div>
             )}
 
             {testResult === "error" && (
-              <div className="flex items-center gap-2 text-red-600 bg-red-50 dark:bg-red-900/20 p-3 rounded-xl">
+              <div className="text-body-sm flex items-center gap-2 rounded-xl bg-red-50 p-3 text-red-600">
                 <XCircle className="w-5 h-5" />
                 <span>فشل الاتصال. يرجى التحقق من البيانات.</span>
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {config.isActive && (
-        <Card>
-          <CardHeader>
-            <CardTitle>إرسال طلبات متعددة</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-4">
+        <div className={cardClass}>
+          <div className={cardHeaderClass}>
+            <h3 className={cardTitleClass}>إرسال طلبات متعددة</h3>
+          </div>
+          <div>
+             <p className="text-body-sm mb-4 text-[var(--system-500)]">
               يمكنك تحديد عدة طلبات في صفحة الطلبات وإرسالها لشركة التوصيل دفعة واحدة.
             </p>
             <Button variant="outline">
               <Truck className="w-4 h-4" />
               إرسال محدد
             </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   );

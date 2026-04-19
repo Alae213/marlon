@@ -28,9 +28,9 @@ const buttonVariants = cva(
         danger: "bg-[var(--color-error)] text-white hover:opacity-90 active:opacity-80",
       },
       size: {
-        sm: "h-7 px-3 text-[12px] gap-1",
-        md: "h-8 px-4 text-[13px] gap-1.5",
-        lg: "h-9 px-5 text-[14px] gap-1.5",
+        sm: "text-caption h-7 gap-1 px-3",
+        md: "text-body-sm h-8 gap-1.5 px-4",
+        lg: "text-body h-10 gap-1.5 px-5",
         "icon-sm": "h-8 w-8 p-0 [&_svg]:h-3.5 [&_svg]:w-3.5",
         icon: "h-9 w-9 p-0 [&_svg]:h-4 [&_svg]:w-4",
         "icon-lg": "h-10 w-10 p-0 [&_svg]:h-5 [&_svg]:w-5",

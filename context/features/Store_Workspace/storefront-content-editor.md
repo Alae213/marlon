@@ -2,7 +2,7 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-18
 
 ---
 
@@ -34,14 +34,14 @@ The storefront content editor is the top part of the store editor that lets an o
 2. `NavbarEditor` lets the owner upload/crop a logo, switch between light and dark navbar modes, and toggle cart visibility.
 3. `HeroEditor` shows hover-highlighted editable regions for the background image, title, and CTA, using blue outline/selection states inspired by the navbar editor interaction language.
 4. Clicking the hero background starts image upload directly, then opens an adjustment dialog with desktop/phone previews plus zoom and focal controls before saving one responsive image.
-5. Clicking the title or CTA opens a floating mini panel for text, color, and shared font/alignment controls. Font and alignment changes made in either panel apply to both title and CTA.
+5. Clicking the title or CTA opens a floating mini panel for text, color, and shared alignment controls. Hero typography is locked to the Inter-only five-scale system, so there is no merchant-facing font-family switch.
 6. Navbar and hero mutations write or upsert `siteContent` rows in `convex/siteContent.ts`.
 7. The public storefront in `app/[slug]/page.tsx` reads those sections and renders the updated navbar and hero.
 
 ### Edge Cases & Rules
 
 - `Current`: navbar logo upload, navbar theme mode, and cart toggle are live through `setNavbarLogo` and `setNavbarStyles` in `convex/siteContent.ts`.
-- `Current`: hero title, CTA text, title/CTA colors, shared font family, shared alignment, background image, focal point, and zoom are live through `setHeroStyles`.
+- `Current`: hero title, CTA text, title/CTA colors, shared alignment, background image, focal point, and zoom are live through `setHeroStyles`; hero typography stays on the Inter-only five-scale system.
 - `Current`: hero text limits are enforced in the editor at 40 characters for the title and 18 characters for the CTA.
 - `Current`: default hero content is available even when no stored hero section exists yet. The editor preview falls back to `Meet E-commerce` / `Again`, `Buy Now`, and `/Hero-bg.jpg`.
 - `Partial`: navbar links shown in both editor preview and storefront are placeholders from hard-coded arrays in `components/pages/editor/components/navbar-editor.tsx` and `app/[slug]/page.tsx`; link editing is not live.
@@ -65,7 +65,7 @@ The storefront content editor is the top part of the store editor that lets an o
 |--------|----------|--------------|
 | Navbar branding | `Current`: logo, light/dark style, cart toggle | `Planned`: richer nav composition |
 | Navbar links | `Partial`: placeholder links only | `Planned`: editable links with real destinations |
-| Hero editing | `Current`: direct preview editing for title, CTA, colors, shared font/alignment, and responsive background image positioning | `Planned`: richer navigation/footer composition and a tighter typed public/editor contract |
+| Hero editing | `Current`: direct preview editing for title, CTA, colors, shared alignment, and responsive background image positioning within the locked Inter-only five-scale typography system | `Planned`: richer navigation/footer composition and a tighter typed public/editor contract |
 | Footer editing | `Partial`: legacy content still exists in storefront code but is being removed, not actively edited | `Planned`: either remove footer surface fully or replace with a supported editor |
 
 ---
@@ -86,7 +86,7 @@ The storefront content editor is the top part of the store editor that lets an o
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T43 | `[x]` | Rework the workspace hero editor and public storefront hero to use shared defaults, direct-manipulation editing, shared font/alignment controls, CTA scroll behavior, and improved visual rendering. |
+| T43 | `[x]` | Rework the workspace hero editor and public storefront hero to use shared defaults, direct-manipulation editing, shared alignment controls, locked Inter-only typography, CTA scroll behavior, and improved visual rendering. |
 
 ---
 

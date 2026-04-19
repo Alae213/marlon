@@ -39,10 +39,6 @@ function SheetOverlay({
         "fixed inset-0 z-[var(--z-sheet)] data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:animate-in data-[state=open]:fade-in-0",
         className
       )}
-      style={{
-        backgroundColor: "var(--sheet-overlay-bg)",
-        backdropFilter: "blur(4px)",
-      }}
       {...props}
     />
   )
@@ -120,7 +116,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn("font-semibold text-[var(--sheet-surface-fg)]", className)}
+      className={cn("text-title text-[var(--sheet-surface-fg)]", className)}
       {...props}
     />
   )
@@ -133,7 +129,7 @@ function SheetDescription({
   return (
     <SheetPrimitive.Description
       data-slot="sheet-description"
-      className={cn("text-sm text-[var(--system-300)] scrollbar-hide", className)}
+      className={cn("text-body-sm text-[var(--system-300)] scrollbar-hide", className)}
       {...props}
     />
   )

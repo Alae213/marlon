@@ -29,15 +29,26 @@
 
 ### Button
 - **Variants**: primary, secondary, ghost, danger
-- **Sizes**: sm (32px), md (40px), lg (48px)
+- **Sizes**: sm (28px, `text-caption`), md (32px, `text-body-sm`), lg (40px, `text-body`)
 - **States**: default, hover, active, disabled, loading
 - **Props**: `variant`, `size`, `disabled`, `loading`, `children`
 
 ### Input
-- **Variants**: text, email, phone, number, search
-- **States**: default, focus, error, disabled
-- **Props**: `label`, `placeholder`, `error`, `type`, `value`
-- **Validation**: Built-in support for Algerian phone/address patterns
+- **Purpose**: Shared iOS-style single-line text field for forms and settings rows
+- **Visual family**: inset-grouped iOS Settings row
+- **Variants**: `light`, `dark`
+- **Layouts**: `stacked` (default), `row`
+- **States**: default, focus, error, disabled, read-only, filled
+- **Props**: `label`, `supportingText`, `error`, `type`, `value`, `leadingAccessory`, `trailingAccessory`, `showClearButton`, `variant`, `layout`
+- **Behavior**: single-line only, clear affordance for editable controlled fields, trait defaults based on field type
+- **Trait guidance**: set `autoComplete`, `inputMode`, `autoCapitalize`, `spellCheck`, and `enterKeyHint` intentionally for email/phone/url/password/numeric fields
+
+### Textarea
+- **Purpose**: Shared multiline text view for longer freeform content
+- **Variants**: `light`, `dark`
+- **States**: default, focus, error, disabled, filled
+- **Props**: `label`, `supportingText`, `error`, `value`, `rows`, `variant`
+- **Behavior**: multiline only; do not use it to mimic a single-line input
 
 ### Select / Dropdown
 - **Purpose**: Single selection from options
@@ -49,6 +60,7 @@
 - **Props**: `open`, `onClose`, `title`, `children`, `actions`
 - **Behavior**: Escape to close, click outside to close (configurable)
 - **Animation**: Scale + fade entrance
+- **Typography**: titles use `text-title`, supporting copy uses `text-body-sm`
 
 ### Toast / Notification
 - **Types**: success, error, warning, info

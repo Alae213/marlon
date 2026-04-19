@@ -32,7 +32,7 @@ const TooltipContent = forwardRef<
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content ref={ref} side={side} sideOffset={sideOffset} className="z-50" {...props}>
         <motion.div
-          className={cn("bg-[var(--system-700)] px-2 py-1 text-[12px] text-[var(--system-50)]", shape.bg, className)}
+          className={cn("text-caption bg-[var(--system-700)] px-2 py-1 text-[var(--system-50)]", shape.bg, className)}
           style={{ fontVariationSettings: fontWeights.medium }}
           initial={initial}
           animate={{ opacity: 1, x: 0, y: 0 }}

@@ -46,7 +46,7 @@ export function Badge({
 
   return (
     <span
-      className={`overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)] ${!bgColor ? variantStyles[variant] : ""} ${className}`}
+      className={`overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 text-micro-label shadow-[var(--shadow-badge)] ${!bgColor ? variantStyles[variant] : ""} ${className}`}
       style={customStyle}
       {...props}
     >

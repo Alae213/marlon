@@ -65,30 +65,40 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
 
   return (
     <div className="space-y-[var(--spacing-md)] text-[--system-700]">
-      <div>
-        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Product Name</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder="Cotton men shirt" />
-      </div>
+      <Input
+        label="Product Name"
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+        placeholder="Cotton men shirt"
+        showClearButton
+        autoComplete="off"
+      />
 
-      <div>
-        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Description</label>
-        <Textarea
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          placeholder="Product description..."
-          rows={3}
-        />
-      </div>
+      <Textarea
+        label="Description"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        placeholder="Product description..."
+        rows={3}
+      />
 
       <div className="grid grid-cols-2 gap-[var(--spacing-md)]">
-        <div>
-          <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Price (DZD)</label>
-          <Input type="number" value={basePrice} onChange={(e) => setBasePrice(e.target.value)} placeholder="2500" />
-        </div>
-        <div>
-          <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Old Price (optional)</label>
-          <Input type="number" value={oldPrice} onChange={(e) => setOldPrice(e.target.value)} placeholder="3000" />
-        </div>
+        <Input
+          label="Price (DZD)"
+          type="number"
+          value={basePrice}
+          onChange={(e) => setBasePrice(e.target.value)}
+          placeholder="2500"
+          inputMode="decimal"
+        />
+        <Input
+          label="Old Price (optional)"
+          type="number"
+          value={oldPrice}
+          onChange={(e) => setOldPrice(e.target.value)}
+          placeholder="3000"
+          inputMode="decimal"
+        />
       </div>
 
       <div>

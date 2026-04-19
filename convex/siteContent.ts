@@ -15,7 +15,6 @@ import {
   DEFAULT_HERO_CTA_COLOR,
   DEFAULT_HERO_FOCAL_X,
   DEFAULT_HERO_FOCAL_Y,
-  DEFAULT_HERO_FONT,
   DEFAULT_HERO_TITLE,
   DEFAULT_HERO_TITLE_COLOR,
   DEFAULT_HERO_ZOOM,
@@ -58,7 +57,7 @@ async function assertStoreOwner(ctx: Parameters<typeof assertStoreRole>[0], stor
 
 interface NavbarContent {
   logo?: string;
-  logoStorageId?: string;
+  logoStorageId?: Id<"_storage">;
   logoUrl?: string;
   background?: "dark" | "light" | "glass";
   textColor?: "dark" | "light";
@@ -70,9 +69,8 @@ interface HeroContent {
   ctaText?: string;
   titleColor?: string;
   ctaColor?: string;
-  fontFamily?: "serif" | "sans" | "playful";
   alignment?: "left" | "center" | "right";
-  backgroundImageStorageId?: string;
+  backgroundImageStorageId?: Id<"_storage">;
   backgroundImageUrl?: string;
   focalPointX?: number;
   focalPointY?: number;
@@ -307,7 +305,7 @@ export const deleteNavbarLogo = mutation({
 export const setNavbarLogo = mutation({
   args: {
     storeId: v.id("stores"),
-    logoStorageId: v.string(),
+    logoStorageId: v.id("_storage"),
   },
   handler: async (ctx, args) => {
     await assertStoreOwner(ctx, args.storeId);
@@ -346,9 +344,8 @@ export const setHeroStyles = mutation({
     ctaText: v.optional(v.string()),
     titleColor: v.optional(v.string()),
     ctaColor: v.optional(v.string()),
-    fontFamily: v.optional(v.union(v.literal("serif"), v.literal("sans"), v.literal("playful"))),
     alignment: v.optional(v.union(v.literal("left"), v.literal("center"), v.literal("right"))),
-    backgroundImageStorageId: v.optional(v.string()),
+    backgroundImageStorageId: v.optional(v.id("_storage")),
     focalPointX: v.optional(v.number()),
     focalPointY: v.optional(v.number()),
     zoom: v.optional(v.number()),
@@ -362,21 +359,21 @@ export const setHeroStyles = mutation({
       .first();
 
     const now = Date.now();
-    const baseContent = existing?.content as HeroContent ?? DEFAULT_HERO;
+    const baseContent: HeroContent =
+      (existing?.content as HeroContent | null | undefined) ?? DEFAULT_HERO;
+    const nextContent: HeroContent = { ...baseContent };
 
-    const nextContent: HeroContent = {
-      ...baseContent,
-      ...(args.title !== undefined ? { title: args.title } : {}),
-      ...(args.ctaText !== undefined ? { ctaText: args.ctaText } : {}),
-      ...(args.titleColor !== undefined ? { titleColor: args.titleColor } : {}),
-      ...(args.ctaColor !== undefined ? { ctaColor: args.ctaColor } : {}),
-      ...(args.fontFamily !== undefined ? { fontFamily: args.fontFamily } : {}),
-      ...(args.alignment !== undefined ? { alignment: args.alignment } : {}),
-      ...(args.backgroundImageStorageId !== undefined ? { backgroundImageStorageId: args.backgroundImageStorageId } : {}),
-      ...(args.focalPointX !== undefined ? { focalPointX: args.focalPointX } : {}),
-      ...(args.focalPointY !== undefined ? { focalPointY: args.focalPointY } : {}),
-      ...(args.zoom !== undefined ? { zoom: args.zoom } : {}),
-    };
+    if (args.title !== undefined) nextContent.title = args.title;
+    if (args.ctaText !== undefined) nextContent.ctaText = args.ctaText;
+    if (args.titleColor !== undefined) nextContent.titleColor = args.titleColor;
+    if (args.ctaColor !== undefined) nextContent.ctaColor = args.ctaColor;
+    if (args.alignment !== undefined) nextContent.alignment = args.alignment;
+    if (args.backgroundImageStorageId !== undefined) {
+      nextContent.backgroundImageStorageId = args.backgroundImageStorageId;
+    }
+    if (args.focalPointX !== undefined) nextContent.focalPointX = args.focalPointX;
+    if (args.focalPointY !== undefined) nextContent.focalPointY = args.focalPointY;
+    if (args.zoom !== undefined) nextContent.zoom = args.zoom;
 
     if (existing) {
       await ctx.db.patch(existing._id, { content: nextContent, updatedAt: now });
@@ -713,6 +710,7 @@ export const getDeliveryCredentialsForOwnerRuntime = query({
       return {
         provider,
         credentials: { apiKey: "", apiToken: "", apiSecret: "", accountNumber: "" },
+        decryptionError: null,
       };
     }
 
@@ -736,6 +734,7 @@ export const getDeliveryCredentialsForOwnerRuntime = query({
       return {
         provider,
         credentials: legacyCredentials,
+        decryptionError: null,
       };
     }
 
@@ -748,6 +747,7 @@ export const getDeliveryCredentialsForOwnerRuntime = query({
       return {
         provider,
         credentials,
+        decryptionError: null,
       };
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unable to decrypt credentials.";
@@ -1078,7 +1078,6 @@ export const DEFAULT_HERO: HeroContent = {
   ctaText: DEFAULT_HERO_CTA,
   titleColor: DEFAULT_HERO_TITLE_COLOR,
   ctaColor: DEFAULT_HERO_CTA_COLOR,
-  fontFamily: DEFAULT_HERO_FONT,
   alignment: DEFAULT_HERO_ALIGNMENT,
   backgroundImageUrl: DEFAULT_HERO_BG_URL,
   focalPointX: DEFAULT_HERO_FOCAL_X,

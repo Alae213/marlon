@@ -163,7 +163,8 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
                   <Input
                     value={groupInput}
                     onChange={(e) => setGroupInput(e.target.value)}
-                    className="h-8 w-40"
+                    containerClassName="w-40"
+                    surfaceClassName="min-h-8 px-3 py-1.5"
                     autoFocus
                     onKeyDown={(e) => {
                       if (e.key === "Enter") handleSaveGroup(group.name);
@@ -219,7 +220,9 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
                     <Input
                       value={optionInput}
                       onChange={(e) => setOptionInput(e.target.value)}
-                      className="h-6 w-24 text-sm"
+                      containerClassName="w-24"
+                      surfaceClassName="min-h-6 px-2.5 py-1"
+                      className="text-body-sm"
                       autoFocus
                       onKeyDown={(e) => {
                         if (e.key === "Enter") handleSaveOption(group.name, variant.name);

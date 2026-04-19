@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Loader2, CheckCircle, CreditCard, Shield } from "lucide-react";
 
 import { Id } from "@/convex/_generated/dataModel";
@@ -76,73 +76,73 @@ export function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-[460px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
-        <DialogHeader className="pr-10">
-          <DialogTitle>
-            Unlock Orders - Monthly
-          </DialogTitle>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">{storeName}</p>
-        </DialogHeader>
+        <DialogContent className="max-w-[460px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+          <DialogHeader className="pr-10">
+            <DialogTitle>
+              Unlock Orders - Monthly
+            </DialogTitle>
+            <p className="text-body-sm text-[var(--system-400)] dark:text-zinc-400">{storeName}</p>
+          </DialogHeader>
 
         {isSuccess ? (
-          <div className="py-8 text-center">
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
-              <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-            </div>
-            <h3 className="mb-2 text-xl font-bold text-zinc-900 dark:text-zinc-50">
-              Payment successful
-            </h3>
-            <p className="mb-6 text-zinc-600 dark:text-zinc-400">
-              Thanks for subscribing! You can now continue using the service.
-            </p>
+            <div className="py-8 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900/30">
+                <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+              </div>
+            <h3 className="text-title mb-2 text-[var(--system-700)] dark:text-zinc-50">
+                Payment successful
+              </h3>
+            <p className="text-body mb-6 text-[var(--system-500)] dark:text-zinc-400">
+                Thanks for subscribing! You can now continue using the service.
+              </p>
             <Button onClick={onClose} className="w-full">
               OK
             </Button>
           </div>
         ) : (
-          <div className="space-y-6">
-            <div className="rounded-2xl bg-zinc-50 p-6 dark:bg-zinc-800">
-              <div className="mb-4 flex items-center justify-between">
-                <span className="text-lg font-medium text-zinc-900 dark:text-zinc-50">
-                  Monthly subscription
-                </span>
-              </div>
-              
-              <div className="mb-4 flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-zinc-900 dark:text-zinc-50">
-                  {priceDzd.toLocaleString()}
-                </span>
-                <span className="text-zinc-500">DZD</span>
-              </div>
+            <div className="space-y-6">
+              <div className="rounded-2xl bg-zinc-50 p-6 dark:bg-zinc-800">
+               <div className="mb-4 flex items-center justify-between">
+                 <span className="text-title text-[var(--system-700)] dark:text-zinc-50">
+                   Monthly subscription
+                 </span>
+               </div>
+                
+               <div className="mb-4 flex items-baseline gap-2">
+                 <span className="text-display text-[var(--system-700)] dark:text-zinc-50">
+                   {priceDzd.toLocaleString()}
+                 </span>
+                 <span className="text-body text-[var(--system-400)]">DZD</span>
+               </div>
 
-              <ul className="space-y-3 text-sm">
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">
-                    Unlimited orders for {periodDays} days
-                  </span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">All features included</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                  <span className="text-zinc-600 dark:text-zinc-400">Priority support</span>
-                </li>
-              </ul>
-            </div>
+               <ul className="space-y-3">
+                 <li className="flex items-center gap-2">
+                   <CheckCircle className="w-4 h-4 text-green-500" />
+                   <span className="text-body-sm text-[var(--system-500)] dark:text-zinc-400">
+                     Unlimited orders for {periodDays} days
+                   </span>
+                 </li>
+                 <li className="flex items-center gap-2">
+                   <CheckCircle className="w-4 h-4 text-green-500" />
+                   <span className="text-body-sm text-[var(--system-500)] dark:text-zinc-400">All features included</span>
+                 </li>
+                 <li className="flex items-center gap-2">
+                   <CheckCircle className="w-4 h-4 text-green-500" />
+                   <span className="text-body-sm text-[var(--system-500)] dark:text-zinc-400">Priority support</span>
+                 </li>
+               </ul>
+             </div>
 
-            <div className="flex items-center justify-center gap-2 text-sm text-zinc-500">
-              <Shield className="w-4 h-4" />
-              <span>Secure payment</span>
-            </div>
+             <div className="text-body-sm flex items-center justify-center gap-2 text-[var(--system-400)]">
+               <Shield className="w-4 h-4" />
+               <span>Secure payment</span>
+             </div>
 
-            {errorMessage ? (
-              <p className="text-center text-sm text-red-600 dark:text-red-400">
-                {errorMessage}
-              </p>
-            ) : null}
+             {errorMessage ? (
+               <p className="text-caption text-center text-red-600 dark:text-red-400">
+                 {errorMessage}
+               </p>
+             ) : null}
 
             <Button 
               onClick={handlePayment} 

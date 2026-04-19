@@ -16,7 +16,6 @@ interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   storeId: string;
-  storeSlug: string;
 }
 
 const formatPrice = (price: number) => {
@@ -47,7 +46,7 @@ const initialFormData: OrderFormData = {
   deliveryType: "stopdesk",
 };
 
-export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebarProps) {
+export function CartSidebar({ isOpen, onClose, storeId }: CartSidebarProps) {
   const { items, updateQuantity, removeItem, total, clearCart } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
@@ -108,9 +107,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
   };
 
   // Calculate delivery cost
-  const deliveryCost = useMemo(() => {
-    return getDeliveryCost(formData.deliveryType);
-  }, [findDeliveryPrice, formData.deliveryType]);
+  const deliveryCost = getDeliveryCost(formData.deliveryType);
 
   const orderTotal = total + deliveryCost;
 
@@ -206,14 +203,14 @@ const handleClose = () => {
           <div className="w-16 h-16 bg-[#16a34a] rounded-full flex items-center justify-center mb-6">
             <Check className="w-8 h-8 text-white" />
           </div>
-          <SheetTitle className="text-xl font-normal text-[var(--sheet-surface-fg)] mb-2">
+          <SheetTitle className="text-title mb-2 text-[var(--sheet-surface-fg)]">
             Order Confirmed!
           </SheetTitle>
-          <p className="text-[var(--system-300)] mb-4">
+          <p className="text-body text-[var(--system-300)] mb-4">
             We will contact you at your phone number to verify your order
           </p>
-          <p className="text-sm text-[var(--system-300)] mb-8">
-            Order Number: <span className="font-medium text-[var(--sheet-surface-fg)]">{orderNumber}</span>
+          <p className="text-body-sm text-[var(--system-300)] mb-8">
+            Order Number: <span className="text-body text-[var(--sheet-surface-fg)]">{orderNumber}</span>
           </p>
           <Button
             onClick={handleClose}
@@ -228,7 +225,7 @@ const handleClose = () => {
       {showCheckout && !orderPlaced && (
         <SheetContent side="right" showCloseButton={false} className="flex flex-col p-0">
           <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
-            <SheetTitle className="text-lg font-normal text-[var(--sheet-surface-fg)]">
+            <SheetTitle className="text-title text-[var(--sheet-surface-fg)]">
               Checkout
             </SheetTitle>
             <button
@@ -241,9 +238,9 @@ const handleClose = () => {
 
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div>
-              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
-                Name *
-              </label>
+               <label className="text-body-sm mb-1 block text-[var(--sheet-surface-fg)]">
+                 Name *
+               </label>
               <input
                 type="text"
                 value={formData.name}
@@ -254,9 +251,9 @@ const handleClose = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
-                Phone *
-              </label>
+               <label className="text-body-sm mb-1 block text-[var(--sheet-surface-fg)]">
+                 Phone *
+               </label>
               <input
                 type="tel"
                 value={formData.phone}
@@ -268,8 +265,8 @@ const handleClose = () => {
                 required
               />
               {phoneError && (
-                <p className="text-xs text-[var(--color-error)] mt-1">{phoneError}</p>
-              )}
+                 <p className="text-caption mt-1 text-[var(--color-error)]">{phoneError}</p>
+               )}
             </div>
 
             <div>
@@ -292,9 +289,9 @@ const handleClose = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
-                Address
-              </label>
+               <label className="text-body-sm mb-1 block text-[var(--sheet-surface-fg)]">
+                 Address
+               </label>
               <input
                 type="text"
                 value={formData.address}
@@ -306,15 +303,15 @@ const handleClose = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-normal text-[var(--sheet-surface-fg)] mb-1">
-                Delivery Type
-              </label>
+               <label className="text-body-sm mb-1 block text-[var(--sheet-surface-fg)]">
+                 Delivery Type
+               </label>
               <div className="flex gap-2">
                 <button
                   type="button"
                   onClick={() => handleInputChange("deliveryType", "stopdesk")}
-                  className={`flex-1 py-2 px-3 border transition-colors ${
-                    formData.deliveryType === "stopdesk"
+                     className={`text-body-sm flex-1 border px-3 py-2 transition-colors ${
+                       formData.deliveryType === "stopdesk"
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                       : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
                   }`}
@@ -324,8 +321,8 @@ const handleClose = () => {
                 <button
                   type="button"
                   onClick={() => handleInputChange("deliveryType", "domicile")}
-                  className={`flex-1 py-2 px-3 border transition-colors ${
-                    formData.deliveryType === "domicile"
+                     className={`text-body-sm flex-1 border px-3 py-2 transition-colors ${
+                       formData.deliveryType === "domicile"
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
                       : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
                   }`}
@@ -339,18 +336,18 @@ const handleClose = () => {
           <SheetFooter className="p-4 border-t border-[var(--sheet-surface-border)] bg-[var(--sheet-surface-bg)]">
             <div className="space-y-2 mb-4">
               <div className="flex items-center justify-between">
-                <span className="text-[var(--system-300)] text-sm">Subtotal</span>
-                <span className="text-[var(--sheet-surface-fg)]">{formatPrice(total)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--system-300)] text-sm">Delivery</span>
-                <span className="text-[var(--sheet-surface-fg)]">{formatPrice(deliveryCost)}</span>
-              </div>
-              <div className="flex items-center justify-between pt-2 border-t border-[var(--system-700)]">
-                <span className="font-medium text-[var(--sheet-surface-fg)]">Total</span>
-                <span className="text-xl font-normal text-[var(--sheet-surface-fg)]">
-                  {formatPrice(orderTotal)}
-                </span>
+                 <span className="text-body-sm text-[var(--system-300)]">Subtotal</span>
+                 <span className="text-body text-[var(--sheet-surface-fg)]">{formatPrice(total)}</span>
+               </div>
+               <div className="flex items-center justify-between">
+                 <span className="text-body-sm text-[var(--system-300)]">Delivery</span>
+                 <span className="text-body text-[var(--sheet-surface-fg)]">{formatPrice(deliveryCost)}</span>
+               </div>
+               <div className="flex items-center justify-between pt-2 border-t border-[var(--system-700)]">
+                 <span className="text-body text-[var(--sheet-surface-fg)]">Total</span>
+                 <span className="text-title text-[var(--sheet-surface-fg)]">
+                   {formatPrice(orderTotal)}
+                 </span>
               </div>
             </div>
             <Button
@@ -375,7 +372,7 @@ const handleClose = () => {
       {!showCheckout && !orderPlaced && (
         <SheetContent side="right" showCloseButton={false} className="flex flex-col p-0">
           <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
-            <SheetTitle className="text-lg font-normal text-[var(--sheet-surface-fg)]">
+            <SheetTitle className="text-title text-[var(--sheet-surface-fg)] tracking-title-arabic" lang="ar">
               سلة المشتريات
             </SheetTitle>
             <button
@@ -389,8 +386,8 @@ const handleClose = () => {
           <div className="flex-1 overflow-y-auto p-4 space-y-4">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
-                <p className="text-[var(--system-300)] mb-4">سلة المشتريات فارغة</p>
-              </div>
+                 <p className="text-body text-[var(--system-300)] tracking-title-arabic" lang="ar">سلة المشتريات فارغة</p>
+               </div>
             ) : (
               items.map((item) => (
                 <div
@@ -408,15 +405,15 @@ const handleClose = () => {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-normal text-[var(--sheet-surface-fg)] truncate">
-                      {item.name}
-                    </h3>
-                    {item.variant && (
-                      <p className="text-sm text-[var(--system-300)]">{item.variant}</p>
-                    )}
-                    <p className="text-[var(--sheet-surface-fg)] font-normal mt-1">
-                      {formatPrice(item.price)}
-                    </p>
+                     <h3 className="text-body text-[var(--sheet-surface-fg)] truncate">
+                       {item.name}
+                     </h3>
+                     {item.variant && (
+                       <p className="text-body-sm text-[var(--system-300)]">{item.variant}</p>
+                     )}
+                     <p className="text-body mt-1 text-[var(--sheet-surface-fg)]">
+                       {formatPrice(item.price)}
+                     </p>
                     <div className="flex items-center gap-3 mt-2">
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
@@ -424,7 +421,7 @@ const handleClose = () => {
                       >
                         <Minus className="w-3.5 h-3.5 text-[var(--system-300)]" />
                       </button>
-                      <span className="w-8 text-center font-normal text-[var(--sheet-surface-fg)]">{item.quantity}</span>
+                       <span className="text-body w-8 text-center text-[var(--sheet-surface-fg)]">{item.quantity}</span>
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
                         className="w-8 h-8 border border-[var(--system-700)] flex items-center justify-center hover:bg-[var(--system-700)] transition-colors rounded-lg"
@@ -447,10 +444,10 @@ const handleClose = () => {
           {items.length > 0 && (
             <SheetFooter className="p-4 border-t border-[var(--system-700)] bg-[var(--sheet-surface-bg)]">
               <div className="flex items-center justify-between mb-4">
-                <span className="text-[var(--system-300)]">المجموع</span>
-                <span className="text-xl font-normal text-[var(--sheet-surface-fg)]">
-                  {formatPrice(total)}
-                </span>
+                 <span className="text-body tracking-title-arabic text-[var(--system-300)]" lang="ar">المجموع</span>
+                 <span className="text-title text-[var(--sheet-surface-fg)]">
+                   {formatPrice(total)}
+                 </span>
               </div>
               <Button
                 onClick={() => setShowCheckout(true)}

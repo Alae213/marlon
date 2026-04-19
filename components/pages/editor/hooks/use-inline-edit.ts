@@ -60,6 +60,7 @@ export function useInlineEdit({ products }: UseInlineEditOptions) {
         name?: string;
         basePrice?: number;
         oldPrice?: number;
+        clearOldPrice?: boolean;
         images?: string[];
       } = {
         productId: editingField.productId as Id<"products">,
@@ -70,7 +71,11 @@ export function useInlineEdit({ products }: UseInlineEditOptions) {
       } else if (editingField.field === "basePrice") {
         updates.basePrice = parseInt(editValue, 10) || 0;
       } else if (editingField.field === "oldPrice") {
-        updates.oldPrice = editValue ? parseInt(editValue, 10) : undefined;
+        if (editValue.trim() === "") {
+          updates.clearOldPrice = true;
+        } else {
+          updates.oldPrice = parseInt(editValue, 10) || 0;
+        }
       }
 
       await updateProduct(updates);

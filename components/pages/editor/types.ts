@@ -62,7 +62,6 @@ export interface HeroContent {
   ctaText?: string;
   titleColor?: string;
   ctaColor?: string;
-  fontFamily?: "serif" | "sans" | "playful";
   alignment?: "left" | "center" | "right";
   backgroundImageStorageId?: string;
   backgroundImageUrl?: string;

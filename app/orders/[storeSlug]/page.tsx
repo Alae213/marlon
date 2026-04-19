@@ -36,7 +36,6 @@ function OrdersContent({
   const { 
     todayOrderCount, 
     maxDailyOrders, 
-    ordersRemaining,
     isLocked,
     isOverflow,
   } = useBilling();
@@ -266,9 +265,9 @@ function OrdersContent({
                       style={{ width: `${usagePercentage}%` }}
                     />
                   </div>
-                  <span className="text-xs font-medium text-[var(--system-600)]">
-                    {todayOrderCount}/{maxDailyOrders}
-                  </span>
+                  <span className="text-caption text-[var(--system-600)]">
+                     {todayOrderCount}/{maxDailyOrders}
+                   </span>
                 </div>
               </TooltipTrigger>
               <TooltipContent>
@@ -310,7 +309,7 @@ function OrdersContent({
         {/* Page Title */}
         <div className="mb-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-modal text-bold">My Orders</h1>
+            <h1 className="text-title text-[var(--system-700)]">My Orders</h1>
           </div>
         </div>
 

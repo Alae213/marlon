@@ -13,19 +13,18 @@ import { Id } from "@/convex/_generated/dataModel";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet";
+import { containsArabicText } from "@/components/primitives/core/typography";
 import {
   resolveHeroAlignment,
   resolveHeroCta,
   resolveHeroCtaColor,
   resolveHeroFocalX,
   resolveHeroFocalY,
-  resolveHeroFont,
   resolveHeroImage,
   resolveHeroTitle,
   resolveHeroTitleColor,
   resolveHeroZoom,
 } from "@/lib/hero-content";
-import { getHeroFontClass } from "@/lib/hero-fonts";
 
 const formatPrice = (price: number) => {
   return new Intl.NumberFormat('en-US', {
@@ -120,7 +119,6 @@ function StorefrontContent() {
     ctaText?: string; 
     titleColor?: string;
     ctaColor?: string;
-    fontFamily?: "serif" | "sans" | "playful";
     alignment?: "left" | "center" | "right";
     backgroundImageUrl?: string;
     focalPointX?: number;
@@ -137,12 +135,11 @@ function StorefrontContent() {
   const heroTitleColor = resolveHeroTitleColor(currentHero?.titleColor);
   const heroCtaColor = resolveHeroCtaColor(currentHero?.ctaColor);
   const heroAlignment = resolveHeroAlignment(currentHero?.alignment);
-  const heroFont = resolveHeroFont(currentHero?.fontFamily);
   const heroBgUrl = resolveHeroImage(currentHero?.backgroundImageUrl);
   const heroFocalX = resolveHeroFocalX(currentHero?.focalPointX);
   const heroFocalY = resolveHeroFocalY(currentHero?.focalPointY);
   const heroZoom = resolveHeroZoom(currentHero?.zoom);
-  const heroFontClass = getHeroFontClass(heroFont);
+  const heroTitleIsArabic = containsArabicText(heroTitle);
 
   const currentFooter = footerContent?.content as {
     logo?: string;
@@ -202,7 +199,7 @@ function StorefrontContent() {
             {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
               <span
                 key={`desktop-${label}`}
-                className={`rounded-full px-3 py-2 text-body-sm ${navbarTextClass} hover:opacity-70 transition-opacity`}
+                className={`text-body-sm rounded-full px-3 py-2 ${navbarTextClass} transition-opacity hover:opacity-70`}
               >
                 {label}
               </span>
@@ -224,7 +221,7 @@ function StorefrontContent() {
               >
                 <CartIcon className="w-4 h-4" />
                 {itemCount > 0 && (
-                  <span className="absolute -top-1 -end-1 flex h-4 w-4 items-center justify-center rounded-full bg-[var(--color-primary)] text-[10px] font-medium text-white">
+                  <span className="text-caption absolute -top-1 -end-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[var(--color-primary)] px-1 font-medium tabular-nums text-white">
                     {itemCount > 9 ? "9+" : itemCount}
                   </span>
                 )}
@@ -238,7 +235,7 @@ function StorefrontContent() {
       <Sheet open={mobileMenuOpen} onOpenChange={(open) => setMobileMenuOpen(open)}>
         <SheetContent side="right" showCloseButton={false} className="w-72 flex flex-col p-0">
           <SheetHeader className="flex items-center justify-between p-4 border-b border-[var(--sheet-surface-border)]">
-            <SheetTitle className="text-lg font-medium text-[var(--sheet-surface-fg)]">
+            <SheetTitle className="text-title tracking-title-arabic" lang="ar">
               القائمة
             </SheetTitle>
             <button
@@ -253,7 +250,7 @@ function StorefrontContent() {
             {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
               <span
                 key={`mobile-${label}`}
-                className="block p-3 rounded-lg bg-[var(--system-700)] text-[var(--sheet-surface-fg)]"
+                className="text-body block rounded-lg bg-[var(--system-700)] p-3 text-[var(--sheet-surface-fg)]"
               >
                 {label}
               </span>
@@ -285,7 +282,8 @@ function StorefrontContent() {
         >
           <div className="max-w-4xl space-y-7">
             <h1
-              className={`whitespace-pre-line text-5xl leading-[0.9] tracking-[-0.04em] md:text-7xl ${heroFontClass}`}
+              lang={heroTitleIsArabic ? "ar" : undefined}
+              className="text-display whitespace-pre-line text-balance text-[var(--system-700)]"
               style={{ color: heroTitleColor }}
             >
               {heroTitle}
@@ -293,7 +291,7 @@ function StorefrontContent() {
             <Button
               variant="primary"
               size="lg"
-              className={`h-11 w-fit rounded-full px-6 shadow-[0_20px_50px_rgba(23,48,82,0.18)] ${heroFontClass}`}
+              className="w-fit rounded-full px-6 shadow-[0_20px_50px_rgba(23,48,82,0.18)]"
               style={{ backgroundColor: heroCtaColor, color: "#fff" }}
               onClick={() => {
                 document.getElementById("products")?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -307,7 +305,7 @@ function StorefrontContent() {
 
       {/* Product Catalog Section */}
       <div id="products" className="max-w-6xl mx-auto  min-h-screen scroll-mt-28">
-        <h2 className="headline-2xl mb-6">Products</h2>
+        <h2 className="text-title mb-6 text-[var(--system-700)]">Products</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 ">
         {filteredProducts.map((product) => (
           <Link
@@ -332,11 +330,11 @@ function StorefrontContent() {
               )}
             </div>
             <div className="px-[2px] flex flex-col gap-2">
-              <h3 className="title-xl text-[var(--system-600)] line-clamp-2">
+              <h3 className="text-title text-[var(--system-600)] line-clamp-2">
                 {product.name}
               </h3>
               <div className="flex items-center justify-between">
-                <span className="body-base text-[var(--system-600)]">
+                <span className="text-body text-[var(--system-600)]">
                   {formatPrice(product.basePrice)}
                 </span>
               </div>
@@ -348,7 +346,7 @@ function StorefrontContent() {
 
       {filteredProducts.length === 0 && (
         <div className="text-center py-16">
-          <p className="body-base text-[var(--system-400)]">No products available</p>
+          <p className="text-body text-[var(--system-400)]">No products available</p>
         </div>
       )}
 
@@ -357,7 +355,6 @@ function StorefrontContent() {
           isOpen={isOpen} 
           onClose={closeCart}
           storeId={store?._id as string}
-          storeSlug={slug}
         />
       )}
 
@@ -375,7 +372,7 @@ function StorefrontContent() {
               </div>
             )}
             {footerDescription && (
-              <p className="title-xl text-[var(--system-400)]">{footerDescription}</p>
+              <p className="text-body text-[var(--system-400)]">{footerDescription}</p>
             )}
           </div>
 
@@ -383,7 +380,7 @@ function StorefrontContent() {
             {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
               <span
                 key={`footer-${label}`}
-                className="body-base text-[var(--system-400)]"
+                className="text-body text-[var(--system-400)]"
               >
                 {label}
               </span>
@@ -392,12 +389,12 @@ function StorefrontContent() {
 
           <div className="flex flex-col items-start gap-6">
             {footerPhone && (
-              <p className="body-base text-[var(--system-400)]">
+              <p className="text-body text-[var(--system-400)]">
                 Phone: {footerPhone}
               </p>
             )}
             {footerEmail && (
-              <p className="body-base text-[var(--system-400)]">
+              <p className="text-body text-[var(--system-400)]">
                 Email: {footerEmail}
               </p>
             )}

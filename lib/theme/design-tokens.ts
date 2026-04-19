@@ -64,37 +64,35 @@ export const brand = {
 export const typography = {
   fontFamily: {
     sans: '"Inter", system-ui, -apple-system, sans-serif',
-    arabic: '"IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif',
+    arabic: '"Inter", system-ui, -apple-system, sans-serif',
   },
   fontWeight: {
-    normal: 400,
-    medium: 500,
-    semibold: 600,
-    bold: 700,
+    caption: 400,
+    bodySm: 400,
+    body: 400,
+    title: 800,
+    display: 900,
+    microLabel: 500,
   },
   fontSize: {
-    caption: "0.75rem",    // 12px
-    bodySm: "0.875rem",   // 14px
-    body: "1rem",         // 16px - MOST USED
-    headingSm: "1.125rem", // 18px
-    heading: "1.25rem",   // 20px
-    modal: "1.5rem",       // 24px
-    page: "2.25rem",       // 36px
+    caption: "0.75rem",
+    bodySm: "0.875rem",
+    body: "1rem",
+    title: "1.5rem",
+    display: "clamp(2.5rem, 1.9545rem + 2.2727vw, 3.5rem)",
   },
   lineHeight: {
-    caption: "1rem",           // 16px
-    bodySm: "1.25rem",         // 20px
-    body: "1.5rem",            // 24px
-    headingSm: "1.5rem",       // 24px
-    heading: "1.75rem",        // 28px
-    modal: "2rem",             // 32px
-    page: "2.75rem",           // 44px
+    caption: "1rem",
+    bodySm: "1.25rem",
+    body: "1.5rem",
+    title: "1.75rem",
+    display: "clamp(2.75rem, 3.2727rem - 1.0909vw, 3.25rem)",
   },
   letterSpacing: {
-    tight: "-0.03em",
-    snug: "-0.02em",
     normal: "0",
-    wide: "0.025em",
+    title: "-0.05em",
+    display: "-0.08em",
+    microLabel: "0.12em",
   },
 } as const;
 
@@ -228,7 +226,7 @@ export const border = {
  * <div style={{ backgroundColor: system[100], color: system[700] }}>
  * <button style={{ backgroundColor: colors.primary, color: colors.primaryForeground }}>
  * <div style={{ padding: spacing.md, borderRadius: radius.md }}>
- * <span style={{ fontSize: typography.fontSize.body, fontWeight: typography.fontWeight.medium }}>
+ * <span style={{ fontSize: typography.fontSize.body, fontWeight: typography.fontWeight.body }}>
  * 
  * @example
  * // ✅ ALSO CORRECT - Using CSS classes with tokens

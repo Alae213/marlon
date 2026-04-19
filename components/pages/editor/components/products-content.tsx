@@ -16,13 +16,8 @@ import {
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { EmptyState } from "@/components/primitives/core/feedback/empty-state";
-import { BottomNavigation } from "@/components/primitives/core/layout/bottom-navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-import type { Product, ProductFormData } from "../types";
 import { useInlineEdit } from "../hooks/use-inline-edit";
 import { useImageUpload } from "../hooks/use-image-upload";
 import { ProductCard } from "./product-card";
@@ -30,6 +25,8 @@ import { ProductForm } from "./product-form";
 import { NavbarEditor } from "./navbar-editor";
 import { HeroEditor } from "./hero-editor";
 import { SettingsDialog } from "./settings-dialog";
+import { BottomNavigation } from "@/components/primitives/core";
+import type { Product, ProductFormData, VariantOption, Variant } from "../types";
 
 // Convex ID validation helper
 function isValidConvexId(id: string): boolean {
@@ -223,9 +220,9 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
       images: product.images || [],
       isArchived: product.isArchived ?? false,
       variants:
-        product.variants?.map((v) => ({
+        product.variants?.map((v: Variant) => ({
           name: v.name,
-          options: v.options.map((o) => ({
+          options: v.options.map((o: VariantOption | string) => ({
             name: typeof o === "string" ? o : o.name,
             priceModifier: typeof o === "string" ? undefined : o.priceModifier,
           })),
@@ -289,9 +286,9 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                   <Image src="/favicon.svg" alt="Marlon" width={27} height={27} className="w-4 h-4" />
                 </div>
                 <div className="group relative cursor-pointer">
-                  <p className="label-xs text-[var(--system-300)]">
+                  <p className="text-micro-label text-[var(--system-300)]">
                     {store?.name ?? storeSlug}
-                    <span className="absolute left-[-42px] top-[42px] mt-1 w-max bg-[var(--system-100)] text-[var(--system-400)] rounded-[6px] label-xs py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-150 pointer-events-none shadow-lg z-50">
+                    <span className="text-micro-label absolute left-[-42px] top-[42px] mt-1 w-max rounded-[6px] bg-[var(--system-100)] px-2 py-1 text-[var(--system-400)] opacity-0 shadow-lg transition-opacity duration-150 pointer-events-none rounded group-hover:opacity-100 z-50">
                       marlon.app/{storeSlug}
                     </span>
                   </p>
@@ -345,7 +342,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                   e.preventDefault();
                   window.open(`/${storeSlug}`, "_blank");
                 }}
-                className="cursor-pointer label-xs justify-center items-center flex flex-row gap-[8px]  text-white bg-white/5 w-fit h-6 px-[8px] rounded-[10px] hover:bg-white/10 transition-all focus:outline-none"
+                className="text-micro-label flex h-6 w-fit cursor-pointer flex-row items-center justify-center gap-[8px] rounded-[10px] bg-white/5 px-[8px] text-white transition-all hover:bg-white/10 focus:outline-none"
               >
                 <Eye className="w-3 h-3 stroke-[2px]" />
                 Preview
@@ -354,7 +351,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 aria-label="Settings"
-                className="cursor-pointer label-xs justify-center items-center flex flex-row gap-[8px]  text-white bg-white/5 w-fit h-6 px-[8px] rounded-[10px] hover:bg-white/10 transition-all focus:outline-none"
+                className="text-micro-label flex h-6 w-fit cursor-pointer flex-row items-center justify-center gap-[8px] rounded-[10px] bg-white/5 px-[8px] text-white transition-all hover:bg-white/10 focus:outline-none"
               >
                 <Settings className="w-3.5 h-3.5 stroke-[2px]" />
               </button>
@@ -365,8 +362,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
           {/* Browser Content — Scrollable Viewport */}
           <ScrollAreaRoot className="w-full h-full overflow-hidden rounded-t-[12px]">
             <ScrollAreaViewport
-              style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-600)] "
+              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-200)] "
             >
               {/* Navbar Editor */}
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />
@@ -378,21 +374,20 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
               />
 
               {/* Products Catalog */}
-              <Card padding="none">
+              <div>
                 {activeProducts.length === 0 ? (
-                  <EmptyState
-                    icon={<ImageIcon className="w-6 h-6 text-[--system-300]" />}
-                    title="No products yet"
-                    description="Start by adding your first product"
-                    action={
-                      <Button onClick={() => setIsAddModalOpen(true)}>
-                        <Plus className="w-4 h-4" />
-                         Add Product
-                      </Button>
-                    }
-                  />
+                  <div className="p-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      <button
+                      onClick={() => setIsAddModalOpen(true)}
+                      aria-label="Add new product"
+                      className="aspect-[1/1.3] cursor-pointer bg-[#EAF3FF]/50 border-3 border-dashed border-[#B4CAF5] rounded-2xl  flex flex-col items-center justify-center"
+                    >
+                      <Plus className="w-10 h-10 strok-3 text-[#B4CAF5]" />
+                    </button>
+                    </div>
+                    
                 ) : (
-                  <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                  <div className="px-16 py-18 pb-32 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                     {activeProducts.map((product) => (
                       <ProductCard
                         key={product._id}
@@ -412,17 +407,19 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                       />
                     ))}
 
-                    {/* Add Product Button */}
+                    {/* Add Product Button  */}
+
                     <button
                       onClick={() => setIsAddModalOpen(true)}
                       aria-label="Add new product"
-                      className="aspect-[1/1.3] bg-white border border-dashed border-[--system-300] rounded-2xl hover:border-[--system-700] transition-all duration-200 flex flex-col items-center justify-center gap-2"
+                      className="aspect-[1/1.3] cursor-pointer bg-[#EAF3FF]/50 border-3 border-dashed border-[#B4CAF5] rounded-2xl  flex flex-col items-center justify-center"
                     >
-                      <Plus className="w-8 h-8 text-[--system-300]" />
+                      <Plus className="w-10 h-10 strok-3 text-[#B4CAF5]" />
                     </button>
+
                   </div>
                 )}
-              </Card>
+              </div>
 
             </ScrollAreaViewport>
             <ScrollAreaScrollbar

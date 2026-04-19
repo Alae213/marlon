@@ -1,8 +1,8 @@
 # Design System
 
 > Single source of truth for all visual design decisions.
-> Based on Apple Human Interface Guidelines + Frosted UI typography scale.
-> Version: 1.0.0
+> Based on the current Marlon token layer and shared primitives.
+> Version: 1.2.0
 
 ---
 
@@ -20,10 +20,10 @@
 
 | Token | Hex | Usage |
 |-------|-----|-------|
-| `--color-primary` | `#0070F3` | Buttons, links, emphasis (Apple systemBlue) |
+| `--color-primary` | `#0070F3` | Buttons, links, emphasis |
 | `--color-primary-foreground` | `#FFFFFF` | Text on primary |
 
-### Gray Scale (Apple systemGray)
+### Gray Scale 
 
 | Token | Hex | Apple Equivalent | Usage |
 |-------|-----|------------------|-------|
@@ -32,13 +32,13 @@
 | `--system-200` | `#E5E5E5` | systemGray4 | Borders, dividers |
 | `--system-300` | `#A3A3A3` | systemGray3 | Placeholder text, icons |
 | `--system-400` | `#737373` | systemGray2 | Secondary text |
-| `--system-500` | `#525252` | systemGray | Tertiary text |
-| `--system-600` | `#404040` | - | Body text |
-| `--system-700` | `#171717` | systemGray (darkest) | Primary text, headings |
-| `--system-800` | `#0A0A0A` | - | Deep surfaces |
+| `--system-500` | `#353737` | systemGray | Tertiary text |
+| `--system-600` | `#262828` | - | Body text |
+| `--system-700` | `#1D1E1F` | systemGray (darkest) | Primary text, headings |
+| `--system-800` | `#0F1011` | - | Deep surfaces |
 | `--system-900` | `#000000` | - | Never use (too harsh) |
 
-### Semantic Colors (Apple Semantic)
+### Semantic Colors 
 
 | Token | Hex | Apple Name | Usage |
 |-------|-----|------------|-------|
@@ -51,15 +51,8 @@
 | `--color-info` | `#5AC8FA` | systemTeal | Info states |
 | `--color-info-bg` | `#5AC8FA1A` | - | Info background (10% opacity) |
 
-### Legacy Status Colors (Keep for Order Status - Don't Change)
 
-| Token | Hex | Usage |
-|-------|-----|-------|
-| `--status-success` | `#1BC57D` | Order succeeded (keep hardcoded) |
-| `--status-warning` | `#FA9A34` | Order pending |
-| `--color-destructive` | `#DC2626` | Error/destructive (standard red) |
-
-### Brand Color (Green - Keep Existing)
+### Brand Color 
 
 | Token | Hex | Usage |
 |-------|-----|-------|
@@ -73,43 +66,47 @@
 
 | Token | Font | Usage |
 |-------|------|-------|
-| `--font-sans` | Inter, system-ui, sans-serif | Primary font |
-| `--font-arabic` | IBM Plex Sans Arabic, Noto Sans Arabic | Arabic text |
+| `--font-sans` | Inter, Helvetica Neue, Arial, sans-serif fallback | All Latin UI copy |
+| `--font-arabic` | Inter, Helvetica Neue, Arial, sans-serif fallback | Arabic UI copy; same family for consistency |
 
-### Font Weights
+### Locked Type Scale
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--font-normal` | 400 | Body text, regular |
-| `--font-medium` | 500 | Emphasis, labels |
-| `--font-semibold` | 600 | Headings, buttons |
-| `--font-bold` | 700 | Rarely used |
+Marlon now uses exactly five semantic scales across storefront and app surfaces.
 
-### Type Scale (Only What Marlon Needs)
+| Token | Size | Line Height | Weight | Letter Spacing | Usage |
+|-------|------|-------------|--------|----------------|-------|
+| `--text-caption` | 12px | 16px | 400 | 0 | captions, metadata, compact support text |
+| `--text-body-sm` | 14px | 20px | 400 | 0 | form labels, controls, dense UI copy |
+| `--text-body` | 16px | 24px | 400 | 0 | default body copy |
+| `--text-title` | 24px | 28px | 800 | -0.05em | section titles, dialogs, order/billing headings |
+| `--text-display` | clamp(40px, 31.27px + 2.27vw, 56px) | clamp(44px, 52.36px - 1.09vw, 52px) | 900 | -0.08em | hero and marquee headlines |
 
-| Token | Size | Line Height | Letter Spacing | Usage |
-|-------|------|-------------|----------------|-------|
-| `--text-caption` | 12px (0.75rem) | 16px (1) | 0 | Labels, badges, timestamps |
-| `--text-body-sm` | 14px (0.875rem) | 20px (1.4) | 0 | Secondary body, form labels |
-| `--text-body` | 16px (1rem) | 24px (1.5) | 0 | **Primary body copy** (most used) |
-| `--text-heading-sm` | 18px (1.125rem) | 24px (1.3) | -0.01em | Emphasized body |
-| `--text-heading` | 20px (1.25rem) | 28px (1.4) | -0.01em | Section headings, card titles |
-| `--text-modal` | 24px (1.5rem) | 32px (1.3) | -0.02em | Modal headings |
-| `--text-page` | 36px (2.25rem) | 44px (1.2) | -0.03em | Page titles, hero |
+Rules:
+
+- Inter only everywhere, including hero/storefront and Arabic UI.
+- Only `title` and `display` use negative tracking.
+- Arabic `title` and `display` content must remove negative tracking.
+- `text-micro-label` is the only uppercase helper; it reuses the caption scale with quiet spacing.
 
 ### Semantic Typography Classes
 
-Use these instead of raw sizes:
+Current semantic classes in `app/globals.css`:
 
 ```css
-.text-caption { font-size: var(--text-caption); line-height: 16px; }
-.text-body-sm { font-size: var(--text-body-sm); line-height: 20px; }
-.text-body { font-size: var(--text-body); line-height: 24px; }
-.text-heading-sm { font-size: var(--text-heading-sm); line-height: 24px; letter-spacing: -0.01em; }
-.text-heading { font-size: var(--text-heading); line-height: 28px; letter-spacing: -0.01em; }
-.text-modal { font-size: var(--text-modal); line-height: 32px; letter-spacing: -0.02em; }
-.text-page { font-size: var(--text-page); line-height: 44px; letter-spacing: -0.03em; }
+.text-caption
+.text-body-sm
+.text-body
+.text-title
+.text-display
+.text-micro-label
 ```
+
+Legacy aliases remain mapped for safety during migration:
+
+- `body-base` -> `text-body`
+- `label-xs` -> `text-micro-label`
+- `text-heading-sm`, `text-heading`, `text-modal`, `title-xl` -> `text-title`
+- `text-page`, `headline-2xl` -> `text-display`
 
 ---
 
@@ -148,6 +145,51 @@ Use these instead of raw sizes:
 | `--shadow-md` | `0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)` | Cards, dropdowns |
 | `--shadow-lg` | `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1)` | Modals, popovers |
 | `--shadow-xl` | `0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)` | Large overlays |
+
+---
+
+## iOS Field Tokens
+
+Shared text entry now follows the **iOS Settings-style inset-grouped field family** by default.
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `--field-row-min-height` | `48px` | Minimum height for single-line field rows |
+| `--field-textarea-min-height` | `92px` | Default minimum height for multiline text views |
+| `--field-padding-x` | `16px` | Horizontal field padding |
+| `--field-padding-y` | `12px` | Vertical field padding |
+| `--field-label-gap` | `8px` | Label-to-field spacing |
+| `--field-support-gap` | `6px` | Field-to-support/error spacing |
+| `--field-accessory-gap` | `12px` | Leading/trailing accessory gap |
+| `--field-group-radius` | `16px` | Rounded inset-group shape |
+| `--field-separator-inset` | `12px` | Inline row label separation |
+
+Color/tone tokens also exist for:
+- light and dark field surfaces
+- borders and focus rings
+- labels, text, placeholders, and supporting text
+- error colors in both light and dark variants
+
+These values are implementation inferences tuned to current iOS control behavior on the web, not published Apple pixel specs.
+
+---
+
+## iOS Field Rules
+
+- Canonical field family: **Settings-style inset-grouped rows**
+- Default form layout: label above field (`stacked`)
+- Optional settings/value layout: label and value inline (`row`)
+- Use `Input` for single-line entry only
+- Use `Textarea` for longer freeform content only
+- Use the shared primitive instead of raw `<input>`/`<textarea>` unless a specialized surface truly requires custom behavior
+- Choose semantic input traits deliberately:
+  - email: email autocomplete/input mode, no autocapitalize
+  - phone: tel autocomplete/input mode, no autocapitalize
+  - url/slug: url input mode, no autocapitalize, no spellcheck
+  - password: secure field defaults, no spellcheck
+  - numeric price/count fields: decimal input mode
+- Placeholder copy is secondary guidance; structured forms should prefer persistent labels
+- Dark panels keep their existing panel chrome, but fields inside them should use the shared `dark` variant rather than custom one-off styling
 
 ---
 
@@ -198,14 +240,17 @@ These areas use dark gradients for attention. **Keep existing hardcoded values:*
 
 ## Migration Guide
 
-1. **Phase 1**: Update globals.css with new tokens
-2. **Phase 2**: Create design-tokens.ts for TypeScript access
-3. **Phase 3**: Fix components using grep + replace
-4. **Phase 4**: Skip dark areas (keep as-is)
+1. **Phase 1**: Keep new work on the five semantic scales only.
+2. **Phase 2**: Prefer semantic classes and shared primitives over raw `text-*` Tailwind sizes.
+3. **Phase 3**: Use legacy aliases only as a transition aid; remove them when touching older surfaces.
+4. **Phase 4**: Preserve existing hardcoded dark-area surfaces unless the task explicitly changes them.
+5. **Phase 5**: When touching existing raw text-entry controls, migrate them to the shared `Input` or `Textarea` and choose `light` or `dark` explicitly for the host surface.
 
 ---
 
 ## Archive
 
 - v0.1 (2024): Initial system with black/white grays
-- v1.0 (2026): Apple design tokens + Frosted UI typography
+- v1.0 (2026): Apple-inspired color tokens + mixed Frosted UI typography
+- v1.1 (2026-04-18): Inter-only five-scale typography system shared across app and storefront
+- v1.2 (2026-04-18): Shared iOS-style field tokens, light/dark field variants, and field migration rules

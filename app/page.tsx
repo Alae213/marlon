@@ -173,7 +173,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
         className="max-w-[360px] gap-[12px] overflow-hidden rounded-[64px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
       >
         <DialogHeader className="flex h-[58px] flex-row justify-between">
-          <DialogTitle className="headline-2xl text-white">
+          <DialogTitle className="title-xl text-white">
             This is what people
             <br />
             will see.
@@ -218,7 +218,7 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
             <div className="flex items-center gap-2">
               <span className="body-base text-[var(--system-200)]">marlon.app/</span>
               <div className="relative w-full">
-                <Input
+                <input
                   type="text"
                   value={slug}
                   onChange={(e) => {

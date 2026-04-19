@@ -2,7 +2,7 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-18
 
 ---
 
@@ -40,7 +40,7 @@ The public catalog at `app/[slug]/page.tsx` is a live browseable storefront rout
 - Current: when no products are returned, the page shows `No products available`.
 - Partial: navbar labels are hardcoded `Shop`, `FAQ`, and `Help` spans in `app/[slug]/page.tsx`; they do not navigate anywhere.
 - Current: the hero CTA button uses the shared button component and smoothly scrolls to the `#products` anchor.
-- Current: the hero supports multiline title text, separate title/CTA colors, shared font/alignment, one responsive background image, focal positioning, zoom, and a bottom white fade for readability.
+- Current: the hero supports multiline title text, separate title/CTA colors, shared alignment, one responsive background image, focal positioning, zoom, and a bottom white fade for readability; typography is locked to the Inter-only five-scale system (`text-display` for the headline and shared UI scales elsewhere).
 - Partial: footer rendering is legacy/drifting; it uses a few footer fields but still repeats the same placeholder labels instead of store-managed navigation.
 
 ---
@@ -61,7 +61,7 @@ This route is the public entry point for storefront browsing.
 |--------|----------|--------------|
 | Catalog rendering | Current: client-side snapshot fetch in `app/[slug]/page.tsx` | SSR/ISR or another explicitly supported public rendering model |
 | Product discovery | Current: simple grid of all active products | Search, filters, categories, merchandising, and pagination |
-| Hero polish | Current: improved spacing, contrast overlays, responsive composition, and product-scroll CTA | Stronger typed public contracts and a more explicit caching strategy |
+| Hero polish | Current: improved spacing, contrast overlays, responsive composition, product-scroll CTA, and locked Inter-only five-scale typography | Stronger typed public contracts and a more explicit caching strategy |
 | Navigation chrome | Partial: placeholder labels and drifting footer content remain | Fully wired store-managed navigation and CTA destinations |
 | Cart entry | Current: badge and sidebar open from the catalog when navbar content allows it | Store-scoped cart UX with stronger continuity across pages |
 

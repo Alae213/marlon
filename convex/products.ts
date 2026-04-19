@@ -261,6 +261,7 @@ export const updateProduct = mutation({
     description: v.optional(v.string()),
     basePrice: v.optional(v.number()),
     oldPrice: v.optional(v.number()),
+    clearOldPrice: v.optional(v.boolean()),
     images: v.optional(v.array(v.string())),
     category: v.optional(v.string()),
     variants: v.optional(
@@ -288,6 +289,7 @@ export const updateProduct = mutation({
     if (args.description !== undefined) updates.description = args.description;
     if (args.basePrice !== undefined) updates.basePrice = args.basePrice;
     if (args.oldPrice !== undefined) updates.oldPrice = args.oldPrice;
+    if (args.clearOldPrice === true) updates.oldPrice = undefined;
     if (args.category !== undefined) updates.category = args.category;
     if (args.variants !== undefined) updates.variants = args.variants;
     
@@ -303,6 +305,7 @@ export const updateProduct = mutation({
       (args.description !== undefined && args.description !== product.description) ||
       (args.basePrice !== undefined && args.basePrice !== product.basePrice) ||
       (args.oldPrice !== undefined && args.oldPrice !== product.oldPrice) ||
+      (args.clearOldPrice === true && product.oldPrice !== undefined) ||
       (args.category !== undefined && args.category !== product.category) ||
       (args.variants !== undefined) ||
       (nextImages !== undefined &&

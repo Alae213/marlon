@@ -208,17 +208,17 @@ function CallSlotsHover({ callLog }: { callLog: NormalizedCallLogItem[] }) {
           className="w-auto min-w-0 p-0 border-0 bg-transparent shadow-none"
         >
           <div
-            className="px-3 py-2 rounded-lg text-xs text-white whitespace-nowrap"
+            className="whitespace-nowrap rounded-lg px-3 py-2 text-white"
             style={{
               background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
             }}
           >
-            <div className="text-[var(--system-200)] text-[10px] mb-1.5 font-medium">
+            <div className="text-micro-label mb-1.5 text-[var(--system-200)]">
               Call History
             </div>
             {callLog.slice().map((call, idx) => (
               <div key={call.id} className="flex items-center gap-2 py-0.5">
-                <span className="text-[var(--system-300)] text-[10px] w-4">
+                <span className="text-caption w-4 text-[var(--system-300)]">
                   #{idx + 1}
                 </span>
                 <span
@@ -227,12 +227,12 @@ function CallSlotsHover({ callLog }: { callLog: NormalizedCallLogItem[] }) {
                     getCallOutcomeBg(call.outcome)
                   )}
                 />
-                <span className="text-white/90">
+                <span className="text-body-sm text-white/90">
                   {call.outcome
                     ? CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label || call.outcome
                     : "Unknown"}
                 </span>
-                <span className="text-white/40 text-[10px]">
+                <span className="text-caption text-white/40">
                   {typeof call.timestamp === "number" ? formatDate(call.timestamp) : "Unknown time"}
                 </span>
               </div>
@@ -430,7 +430,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
       > 
         {/* Header - Sticky using Flex */}
         <div className="flex items-center justify-between w-full p-4 bg-[var(--system-600)]/80 backdrop-blur-md border-b border-white/10 z-20">
-          <SheetTitle className="text-[var(--system-300)] body-base font-normal">
+          <SheetTitle className="text-body text-[var(--system-300)]">
             #{order.orderNumber}
           </SheetTitle>
           <div className="flex items-center gap-2">
@@ -438,7 +438,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
               return (
                 <span 
-                  className="overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                  className="text-micro-label overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 shadow-[var(--shadow-badge)]"
                   style={{ 
                     backgroundColor: statusConfig?.bgColor || '#6b728028',
                     color: statusConfig?.textColor || '#ffffff33',
@@ -465,18 +465,18 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
           {/* Customer Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
             <div className="flex items-center justify-between">
-              <span className="text-[var(--system-200)] text-sm font-medium">Customer</span>
+              <span className="text-micro-label text-[var(--system-200)]">Customer</span>
               <button
                 type="button"
                 onClick={handleCopyOrderInfo}
-                className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[var(--system-300)] text-xs transition-colors"
+                className="text-caption flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1 text-[var(--system-300)] transition-colors hover:bg-white/10"
                 aria-label="Copy order info"
               >
                 <Clipboard className="w-3.5 h-3.5" />
                 {copiedFeedback ? "Copied!" : "Copy"}
               </button>
             </div>
-            <div className="space-y-3 body-base">
+            <div className="space-y-3 text-body">
               {[
                 { label: "Full Name", value: order.customerName },
                 { label: "Wilaya", value: order.customerWilaya },
@@ -485,8 +485,8 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                 { label: "Date", value: formatDate(order.createdAt) },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center">
-                  <span className="min-w-[100px] text-[var(--system-200)] text-sm">{item.label}</span>
-                  <span className="flex-1 text-[var(--system-300)] text-sm truncate">
+                  <span className="text-body-sm min-w-[100px] text-[var(--system-200)]">{item.label}</span>
+                  <span className="text-body-sm flex-1 truncate text-[var(--system-300)]">
                     <LockedData fallback="***">{item.value}</LockedData>
                   </span>
                 </div>
@@ -514,21 +514,21 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="body-base text-[var(--system-100)] text-sm truncate">{item.name}</h4>
+                     <h4 className="text-body truncate text-[var(--system-100)]">{item.name}</h4>
                     <div className="flex items-center gap-1 mt-1">
-                      <span className="bg-white/10 rounded-md px-2 py-0.5 text-[10px] text-white">
+                       <span className="text-caption rounded-md bg-white/10 px-2 py-0.5 text-white">
                         Qty: {item.quantity}
                       </span>
                       {item.variant && (
-                        <span className="bg-white/10 rounded-md px-2 py-0.5 text-[10px] text-white truncate max-w-[100px]">
+                         <span className="text-caption max-w-[100px] truncate rounded-md bg-white/10 px-2 py-0.5 text-white">
                           {item.variant}
                         </span>
                       )}
                     </div>
                   </div>
-                  <div className="text-white font-medium text-sm">
-                    {formatPrice(item.price * item.quantity)}
-                  </div>
+                   <div className="text-body text-white">
+                     {formatPrice(item.price * item.quantity)}
+                   </div>
                 </div>
               ))}
             </div>
@@ -543,15 +543,15 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
 
           {/* Totals Section */}
           <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
-            <div className="flex justify-between items-center text-[var(--system-200)] text-sm">
+            <div className="text-body-sm flex items-center justify-between text-[var(--system-200)]">
               <span>Subtotal</span>
               <span className="text-white">{formatPrice(order.subtotal)}</span>
             </div>
-            <div className="flex justify-between items-center text-[var(--system-200)] text-sm">
+            <div className="text-body-sm flex items-center justify-between text-[var(--system-200)]">
               <div className="flex items-center gap-2">
                 <span>Delivery</span>
                 {deliveryTypeDisplay.label && (
-                  <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/10 text-[var(--system-100)] text-[10px]">
+                  <span className="text-caption flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 text-[var(--system-100)]">
                     {deliveryTypeDisplay.icon === "home" ? (
                       <Home className="w-2.5 h-2.5" />
                     ) : deliveryTypeDisplay.icon === "building" ? (
@@ -564,7 +564,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               <span className="text-white">{formatPrice(order.deliveryCost)}</span>
             </div>
             <div className="h-px bg-white/10 my-1" />
-            <div className="flex justify-between items-center text-white font-semibold text-base">
+            <div className="text-body flex items-center justify-between text-white">
               <span>Total Price</span>
               <span>{formatPrice(order.total)}</span>
             </div>
@@ -582,25 +582,25 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
             <section className="p-3.5 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2">
               <div className="flex items-center gap-2 text-[var(--primary)]">
                 <Truck className="w-4 h-4" />
-                <span className="text-sm font-medium">Delivery Info</span>
+                <span className="text-body text-[var(--primary)]">Delivery Info</span>
               </div>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/50">Provider</span>
-                  <span className="text-sm text-white">
+                  <span className="text-caption text-white/50">Provider</span>
+                  <span className="text-body-sm text-white">
                     {deliveryProviderDisplay.label}
                   </span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-white/50">Tracking #</span>
-                  <span className="text-sm text-white font-mono">{order.trackingNumber}</span>
+                  <span className="text-caption text-white/50">Tracking #</span>
+                  <span className="text-body-sm text-white">{order.trackingNumber}</span>
                 </div>
                 {deliveryProviderDisplay.trackingUrl ? (
                   <a 
                     href={deliveryProviderDisplay.trackingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-1.5 mt-2 py-1.5 px-3 rounded-lg bg-[var(--primary)] text-white text-xs font-medium hover:opacity-90 transition-opacity"
+                    className="text-caption mt-2 flex items-center justify-center gap-1.5 rounded-lg bg-[var(--primary)] px-3 py-1.5 text-white transition-opacity hover:opacity-90"
                   >
                     Track Package
                     <ExternalLink className="w-3 h-3" />
@@ -612,9 +612,9 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
 
           <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-3">
             <div className="flex items-baseline justify-between gap-2">
-              <h3 className="text-sm font-medium text-white/80">Admin Note</h3>
+              <h3 className="text-body text-white/80">Admin Note</h3>
               {typeof currentAdminNoteUpdatedAt === "number" && (
-                <span className="text-[10px] text-white/40">Last updated: {formatDate(currentAdminNoteUpdatedAt)}</span>
+                <span className="text-caption text-white/40">Last updated: {formatDate(currentAdminNoteUpdatedAt)}</span>
               )}
             </div>
 
@@ -629,15 +629,15 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                 setNoteError(null);
               }}
               placeholder="Type a private note here..."
-              className="w-full px-3 py-2 bg-black/20 text-white text-sm resize-none rounded-xl border border-white/10 focus:outline-none focus:border-white/30 transition-colors motion-reduce:transition-none"
+               className="text-body w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white transition-colors focus:border-white/30 focus:outline-none motion-reduce:transition-none"
               rows={3}
               aria-invalid={Boolean(noteError)}
               aria-describedby={noteError ? noteErrorId : undefined}
             />
             {noteError && (
-              <p id={noteErrorId} className="text-xs text-destructive">
-                {noteError}
-              </p>
+               <p id={noteErrorId} className="text-caption text-destructive">
+                 {noteError}
+               </p>
             )}
             
             <div className="flex justify-end">
@@ -659,10 +659,10 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
         <footer className="p-5 flex flex-col gap-3 bg-[var(--system-600)]/80 backdrop-blur-md border-t border-white/10 z-20">
           {/* Phone Number Display */}
           <div className="flex items-center justify-center py-3 rounded-2xl bg-black/40 border border-white/5">
-            <h2 className="text-2xl font-bold text-white tracking-wider">
-              <LockedData fallback="*** *** ***">
-                {formatPhoneSpaced(order.customerPhone)}
-              </LockedData>
+             <h2 className="text-title text-white tracking-title-arabic" lang="ar">
+               <LockedData fallback="*** *** ***">
+                 {formatPhoneSpaced(order.customerPhone)}
+               </LockedData>
             </h2>
           </div>
 
@@ -698,9 +698,9 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
            </div>
 
            {callLogError && (
-             <p className="text-xs text-destructive text-center" role="alert">
-               {callLogError}
-             </p>
+              <p className="text-caption text-center text-destructive" role="alert">
+                {callLogError}
+              </p>
            )}
 
           <div className="h-px w-full px-[22px]">
@@ -755,7 +755,7 @@ function CallButton({
       aria-label={ariaLabel}
       disabled={disabled}
       className={cn(
-        "text-[10px] font-medium h-7 px-3 rounded-lg text-white flex items-center justify-center gap-1.5 transition-all motion-reduce:transition-none motion-reduce:active:scale-100",
+        "text-caption flex h-7 items-center justify-center gap-1.5 rounded-lg px-3 text-white transition-all motion-reduce:transition-none motion-reduce:active:scale-100",
         disabled
           ? "opacity-60 cursor-not-allowed"
           : "hover:opacity-90 active:scale-95 cursor-pointer",
@@ -799,7 +799,7 @@ function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDi
             disabled={isDispatching}
           />
           {dispatchError && (
-            <p className="text-xs text-destructive text-center" role="alert">
+            <p className="text-caption text-center text-destructive" role="alert">
               {dispatchError}
             </p>
           )}
@@ -832,7 +832,7 @@ function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDi
         </div>
       );
     case "succeeded":
-      return <p className="text-center text-white/40 text-sm py-2">Order completed</p>;
+      return <p className="text-body-sm py-2 text-center text-white/40">Order completed</p>;
     case "router":
       return (
         <div className="flex gap-3 w-full">
@@ -877,7 +877,7 @@ function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "flex-1 py-3.5 rounded-2xl border-2 font-semibold text-sm flex flex-col items-center justify-center gap-1.5 transition-all outline-none cursor-pointer bg-white/10 border-white/30 text-white hover:bg-white/20 motion-reduce:transition-none",
+          "text-body-sm flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-white/30 bg-white/10 py-3.5 text-white transition-all outline-none hover:bg-white/20 motion-reduce:transition-none",
           disabled && "opacity-60 cursor-not-allowed"
         )}
       >
@@ -893,7 +893,7 @@ function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "group relative flex-1 py-3.5 rounded-2xl font-semibold text-sm flex flex-col items-center justify-center gap-1.5 outline-none cursor-pointer overflow-hidden focus-visible:ring-2 focus-visible:ring-white/20",
+        "text-body-sm group relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-white/20",
         disabled && "opacity-60 cursor-not-allowed"
       )}
       style={{

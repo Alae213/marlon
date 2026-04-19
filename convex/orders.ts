@@ -680,13 +680,16 @@ export const purgeLegacyAdminNotesForStore = mutation({
 
     for (const order of orders) {
       const orderAny = order as unknown as Record<string, unknown>;
-      const { _id, ...rest } = orderAny as {
+      const {
+        _id,
+        _creationTime: _ignoredCreationTime,
+        adminNotes: _ignoredAdminNotes,
+        ...rest
+      } = orderAny as {
         _id: Id<"orders">;
         _creationTime: number;
         adminNotes?: unknown;
       } & Record<string, unknown>;
-      delete rest._creationTime;
-      delete rest.adminNotes;
 
       const timelineRaw = rest.timeline;
       const timeline = Array.isArray(timelineRaw)

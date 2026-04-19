@@ -49,25 +49,32 @@ export interface ThemeTypography {
   fontFamily: string;
   fontFamilyArabic: string;
   fontSize: {
-    xs: string;
-    sm: string;
-    base: string;
-    lg: string;
-    xl: string;
-    "2xl": string;
-    "3xl": string;
-    "4xl": string;
+    caption: string;
+    bodySm: string;
+    body: string;
+    title: string;
+    display: string;
   };
   fontWeight: {
-    normal: string;
-    medium: string;
-    semibold: string;
-    bold: string;
+    caption: string;
+    bodySm: string;
+    body: string;
+    title: string;
+    display: string;
+    microLabel: string;
   };
   lineHeight: {
-    tight: string;
+    caption: string;
+    bodySm: string;
+    body: string;
+    title: string;
+    display: string;
+  };
+  letterSpacing: {
     normal: string;
-    relaxed: string;
+    title: string;
+    display: string;
+    microLabel: string;
   };
 }
 
@@ -151,27 +158,34 @@ export const lightTheme: Theme = {
   },
   typography: {
     fontFamily: '"Inter", system-ui, -apple-system, sans-serif',
-    fontFamilyArabic: '"IBM Plex Sans Arabic", "Noto Sans Arabic", system-ui, sans-serif',
+    fontFamilyArabic: '"Inter", system-ui, -apple-system, sans-serif',
     fontSize: {
-      xs: "0.75rem",    // 12px
-      sm: "0.875rem",   // 14px
-      base: "1rem",     // 16px
-      lg: "1.125rem",   // 18px
-      xl: "1.25rem",    // 20px
-      "2xl": "1.5rem",  // 24px
-      "3xl": "1.875rem", // 30px
-      "4xl": "2.25rem", // 36px
+      caption: "0.75rem",
+      bodySm: "0.875rem",
+      body: "1rem",
+      title: "1.5rem",
+      display: "clamp(2.5rem, 1.9545rem + 2.2727vw, 3.5rem)",
     },
     fontWeight: {
-      normal: "400",
-      medium: "500",
-      semibold: "600",
-      bold: "700",
+      caption: "400",
+      bodySm: "400",
+      body: "400",
+      title: "800",
+      display: "900",
+      microLabel: "500",
     },
     lineHeight: {
-      tight: "1.25",
-      normal: "1.5",
-      relaxed: "1.75",
+      caption: "1rem",
+      bodySm: "1.25rem",
+      body: "1.5rem",
+      title: "1.75rem",
+      display: "clamp(2.75rem, 3.2727rem - 1.0909vw, 3.25rem)",
+    },
+    letterSpacing: {
+      normal: "0",
+      title: "-0.05em",
+      display: "-0.08em",
+      microLabel: "0.12em",
     },
   },
   radius: {

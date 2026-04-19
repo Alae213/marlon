@@ -42,7 +42,7 @@ export function OrderViewToggle({
       <TabsList className="bg-[var(--system-100)]">
         <TabsTrigger value="list" className="gap-2">
           <ListIcon />
-          <span>List</span>
+          <span className="text-body-sm">List</span>
         </TabsTrigger>
         <TabsTrigger
           value="state"
@@ -54,9 +54,9 @@ export function OrderViewToggle({
           )}
         >
           <KanbanIcon />
-          <span>By State</span>
+          <span className="text-body-sm">By State</span>
           {!isStateViewEnabled ? (
-            <span className="rounded-full bg-[var(--system-200)] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-[0.02em] text-[var(--system-500)]">
+            <span className="text-micro-label rounded-full bg-[var(--system-200)] px-1.5 py-0.5 text-[var(--system-500)]">
               Soon
             </span>
           ) : null}

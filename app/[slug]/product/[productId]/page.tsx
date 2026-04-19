@@ -256,10 +256,10 @@ function ProductDetailContent() {
         <h1 className="headline-2xl text-[var(--system-600)] mb-4">
           Order Confirmed!
         </h1>
-        <p className="body-base text-[var(--system-400)] mb-2">
+        <p className="text-body text-[var(--system-400)] mb-2">
           We will contact you at your phone number to verify your order
         </p>
-        <p className="label-xs text-[var(--system-300)] mb-8">
+        <p className="text-micro-label text-[var(--system-300)] mb-8">
           Order Number: <span className="font-medium">{orderNumber}</span>
         </p>
         <Link
@@ -277,7 +277,7 @@ function ProductDetailContent() {
     return (
       <div className="max-w-6xl mx-auto px-6 py-16 text-center">
         <Package className="w-16 h-16 text-[var(--system-300)] mx-auto mb-4" />
-        <p className="body-base text-[var(--system-400)]">Product not found</p>
+        <p className="text-body text-[var(--system-400)]">Product not found</p>
       </div>
     );
   }
@@ -341,7 +341,7 @@ function ProductDetailContent() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
 
-      <Link href={`/${slug}`} className="inline-flex items-center gap-2 body-base text-[var(--system-400)] hover:text-[var(--system-600)] mb-6">
+      <Link href={`/${slug}`} className="inline-flex items-center gap-2 text-body text-[var(--system-400)] hover:text-[var(--system-600)] mb-6">
         <ArrowRight className="w-4 h-4 rotate-180" />
         Back to Store
       </Link>
@@ -369,7 +369,7 @@ function ProductDetailContent() {
           </div>
 
           {product.description && (
-            <p className="body-base text-[var(--system-400)] mb-6">
+            <p className="text-body text-[var(--system-400)] mb-6">
               {product.description}
             </p>
           )}
@@ -378,7 +378,7 @@ function ProductDetailContent() {
             <div className="mb-6">
               {product.variants.map((variant) => (
                 <div key={variant.name} className="mb-4">
-                  <p className="label-xs text-[var(--system-500)] mb-2">
+                  <p className="text-micro-label text-[var(--system-500)] mb-2">
                     {variant.name}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -402,7 +402,7 @@ function ProductDetailContent() {
           )}
 
           <div className="mb-6">
-            <p className="label-xs text-[var(--system-500)] mb-2">
+            <p className="text-micro-label text-[var(--system-500)] mb-2">
               Quantity
             </p>
             <div className="flex items-center gap-3">
@@ -473,10 +473,10 @@ function ProductDetailContent() {
                   )}
                 </div>
                 <div className="p-3">
-                  <h3 className="body-base text-[var(--system-600)] mb-2 line-clamp-2">
+                  <h3 className="text-body text-[var(--system-600)] mb-2 line-clamp-2">
                     {relatedProduct.name}
                   </h3>
-                  <span className="body-base text-[var(--system-600)]">
+                  <span className="text-body text-[var(--system-600)]">
                     {formatPrice(relatedProduct.basePrice)}
                   </span>
                 </div>
@@ -499,7 +499,7 @@ function ProductDetailContent() {
           
           <div className="space-y-4 w-full">
                 <div>
-                  <label className="block label-xs mb-1 text-[var(--system-500)]">Full Name</label>
+                  <label className="block text-micro-label mb-1 text-[var(--system-500)]">Full Name</label>
                   <input
                     type="text"
                     value={orderData.name}
@@ -509,7 +509,7 @@ function ProductDetailContent() {
                 </div>
                 
                 <div>
-                  <label className="block label-xs mb-1 text-[var(--system-500)]">Phone Number</label>
+                  <label className="block text-micro-label mb-1 text-[var(--system-500)]">Phone Number</label>
                   <input
                     type="tel"
                     value={orderData.phone}
@@ -531,7 +531,7 @@ function ProductDetailContent() {
                     placeholder="05XX XXX XXX"
                   />
                   {phoneError && (
-                    <p className="label-xs text-red-500 mt-1">{phoneError}</p>
+                    <p className="text-micro-label text-red-500 mt-1">{phoneError}</p>
                   )}
                 </div>
 
@@ -555,7 +555,7 @@ function ProductDetailContent() {
                 </div>
 
                 <div>
-                  <label className="block label-xs mb-2 text-[var(--system-500)]">Delivery Type</label>
+                  <label className="block text-micro-label mb-2 text-[var(--system-500)]">Delivery Type</label>
                   <div className="flex flex-col gap-2">
                     <label className="flex items-center gap-3 p-3 bg-[var(--system-50)] rounded-lg cursor-pointer hover:bg-[var(--system-200)] transition-colors">
                       <input
@@ -566,9 +566,9 @@ function ProductDetailContent() {
                         onChange={() => setOrderData({ ...orderData, deliveryType: "stopdesk" })}
                         className="w-4 h-4"
                       />
-                      <span className="body-base text-[var(--system-600)]">Pickup Point</span>
+                      <span className="text-body text-[var(--system-600)]">Pickup Point</span>
                       {selectedWilayaArabic && (
-                        <span className="ms-auto label-xs text-[var(--system-400)]">
+                        <span className="ms-auto text-micro-label text-[var(--system-400)]">
                           {formatPrice(getDeliveryCost("stopdesk"))}
                         </span>
                       )}
@@ -582,9 +582,9 @@ function ProductDetailContent() {
                         onChange={() => setOrderData({ ...orderData, deliveryType: "domicile" })}
                         className="w-4 h-4"
                       />
-                      <span className="body-base text-[var(--system-600)]">Home Delivery</span>
+                      <span className="text-body text-[var(--system-600)]">Home Delivery</span>
                       {selectedWilayaArabic && (
-                        <span className="ms-auto label-xs text-[var(--system-400)]">
+                        <span className="ms-auto text-micro-label text-[var(--system-400)]">
                           {formatPrice(getDeliveryCost("domicile"))}
                         </span>
                       )}
@@ -594,7 +594,7 @@ function ProductDetailContent() {
 
                 {orderData.deliveryType === "domicile" && (
                   <div>
-                    <label className="block label-xs mb-1 text-[var(--system-500)]">Address</label>
+                    <label className="block text-micro-label mb-1 text-[var(--system-500)]">Address</label>
                     <input
                       type="text"
                       value={orderData.address}
@@ -606,15 +606,15 @@ function ProductDetailContent() {
 
                 {/* Order Summary */}
                 <div className="pt-4 mt-4 bg-[var(--system-50)] rounded-xl p-4">
-                  <h3 className="label-xs mb-3 text-[var(--system-500)]">Order Summary</h3>
+                  <h3 className="text-micro-label mb-3 text-[var(--system-500)]">Order Summary</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="body-base text-[var(--system-400)]">Subtotal</span>
-                      <span className="body-base text-[var(--system-600)]">{formatPrice(subtotal)}</span>
+                      <span className="text-body text-[var(--system-400)]">Subtotal</span>
+                      <span className="text-body text-[var(--system-600)]">{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="body-base text-[var(--system-400)]">Delivery</span>
-                      <span className="body-base text-[var(--system-600)]">{deliveryCost > 0 ? formatPrice(deliveryCost) : "Free"}</span>
+                      <span className="text-body text-[var(--system-400)]">Delivery</span>
+                      <span className="text-body text-[var(--system-600)]">{deliveryCost > 0 ? formatPrice(deliveryCost) : "Free"}</span>
                     </div>
                     <div className="flex justify-between title-xl pt-2 mt-2 border-t border-[var(--system-200)]">
                       <span className="text-[var(--system-600)]">Total</span>

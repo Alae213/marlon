@@ -1,4 +1,3 @@
-export type HeroFontFamily = "serif" | "sans" | "playful";
 export type HeroAlignment = "left" | "center" | "right";
 
 export const DEFAULT_HERO_TITLE = "Meet E-commerce\nAgain";
@@ -6,7 +5,6 @@ export const DEFAULT_HERO_CTA = "Buy Now";
 export const DEFAULT_HERO_BG_URL = "/Hero-bg.jpg";
 export const DEFAULT_HERO_TITLE_COLOR = "#173052";
 export const DEFAULT_HERO_CTA_COLOR = "#173052";
-export const DEFAULT_HERO_FONT: HeroFontFamily = "sans";
 export const DEFAULT_HERO_ALIGNMENT: HeroAlignment = "center";
 export const DEFAULT_HERO_FOCAL_X = 50;
 export const DEFAULT_HERO_FOCAL_Y = 50;
@@ -27,12 +25,6 @@ export const HERO_CTA_COLOR_PRESETS = [
   "#1E6F5C",
   "#7C3AED",
 ] as const;
-
-export const HERO_FONT_LABELS: Record<HeroFontFamily, string> = {
-  serif: "Serif",
-  sans: "Sans Serif",
-  playful: "Playful",
-};
 
 export function clampHeroText(value: string, max: number) {
   return value.slice(0, max);
@@ -56,10 +48,6 @@ export function resolveHeroTitleColor(value?: string) {
 
 export function resolveHeroCtaColor(value?: string) {
   return value || DEFAULT_HERO_CTA_COLOR;
-}
-
-export function resolveHeroFont(value?: HeroFontFamily) {
-  return value || DEFAULT_HERO_FONT;
 }
 
 export function resolveHeroAlignment(value?: HeroAlignment) {

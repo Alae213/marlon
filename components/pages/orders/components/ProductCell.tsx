@@ -28,13 +28,13 @@ export function ProductCell({ items }: ProductCellProps) {
         </div>
       )}
       <div className="min-w-0">
-        <p className="body-base text-[var(--system-600)] truncate">{firstItem.name}</p>
+        <p className="text-body text-[var(--system-600)] truncate">{firstItem.name}</p>
         {firstItem.variant && (
-          <p className="body-base text-[var(--system-300)] truncate">{firstItem.variant}</p>
+          <p className="text-body text-[var(--system-300)] truncate">{firstItem.variant}</p>
         )}
       </div>
       {remainingCount > 0 && (
-        <span className="body-base text-[var(--system-300)] whitespace-nowrap">+{remainingCount} more</span>
+        <span className="text-body text-[var(--system-300)] whitespace-nowrap">+{remainingCount} more</span>
       )}
     </div>
   );

@@ -55,32 +55,37 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
       </div>
 
       <div className="space-y-4">
-        <div>
-          <label htmlFor="store-name" className="mb-2 block text-body-sm text-[var(--system-100)]">Store Name</label>
-          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
-            <Input id="store-name" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Enter store name" />
-          </div>
-        </div>
+        <Input
+          id="store-name"
+          type="text"
+          label="Store Name"
+          variant="dark"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="Enter store name"
+          showClearButton
+        />
 
-        <div>
-          <label htmlFor="store-description" className="mb-2 block text-body-sm text-[var(--system-100)]">Description</label>
-          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
-            <Textarea
-              id="store-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter store description"
-              rows={3}
-            />
-          </div>
-        </div>
+        <Textarea
+          id="store-description"
+          label="Description"
+          variant="dark"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Enter store description"
+          rows={3}
+        />
 
-        <div>
-          <label htmlFor="store-phone" className="mb-2 block text-body-sm text-[var(--system-100)]">Phone Number</label>
-          <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
-            <Input id="store-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Enter phone number" />
-          </div>
-        </div>
+        <Input
+          id="store-phone"
+          type="tel"
+          label="Phone Number"
+          variant="dark"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="Enter phone number"
+          showClearButton
+        />
       </div>
 
       <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">

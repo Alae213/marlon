@@ -2,7 +2,7 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-18
 
 ---
 
@@ -33,7 +33,7 @@ Storefront content rendering is the client-side assembly of public navbar, hero,
 1. The public route resolves the store with `api.stores.getStoreBySlug` and waits for `store._id`.
 2. The route then uses `convex.query(...)` inside `useEffect` to fetch section records such as `navbar`, `hero`, and `footer` from `api.siteContent.getSiteContentResolved`.
 3. `convex/siteContent.ts` resolves asset URLs for supported sections and merges missing hero data with repo defaults so a new store still renders a complete hero.
-4. The catalog hero renders multiline title text, shared font/alignment styling, accent colors, one responsive background image with focal/zoom positioning, and a CTA that smoothly scrolls to the products anchor.
+4. The catalog hero renders multiline title text, shared alignment styling, accent colors, one responsive background image with focal/zoom positioning, and a CTA that smoothly scrolls to the products anchor. Typography is locked to the Inter-only five-scale system rather than a configurable hero font family.
 
 ### Edge Cases & Rules
 - Current: the public storefront uses client-side snapshot fetching, not SSR, ISR, or a live public subscription model.
@@ -62,7 +62,7 @@ This feature supplies the public content layer used by catalog and PDP pages.
 |--------|----------|--------------|
 | Rendering model | Current: client-side snapshot fetch after route mount | Intentional public rendering strategy with stronger caching/refresh guarantees |
 | Content contract | Partial: generic section records are cast into local page types | Minimal, typed public DTOs per section |
-| Hero contract | Current: title, CTA text, title/CTA colors, shared font/alignment, background image, focal point, and zoom render on the catalog page | Minimal typed public DTOs with stronger validation and caching |
+| Hero contract | Current: title, CTA text, title/CTA colors, shared alignment, background image, focal point, and zoom render on the catalog page, with hero typography locked to the Inter-only five-scale system | Minimal typed public DTOs with stronger validation and caching |
 | Navigation content | Partial: placeholder labels remain even though the hero CTA now scrolls to products | Fully wired public navigation and CTA destinations |
 | Footer support | Partial: only a subset of footer fields is rendered | Footer rendering stays aligned with stored content schema |
 
@@ -107,7 +107,7 @@ This feature supplies the public content layer used by catalog and PDP pages.
 ## Notes
 
 - `app/[slug]/page.tsx` additionally strips HTML tags from hero text before rendering, while the PDP navbar path mostly relies on React escaping and local typing.
-- The default public hero currently uses repo-defined fallback content: multiline `Meet E-commerce` / `Again`, `Buy Now`, `/Hero-bg.jpg`, shared font/alignment defaults, and neutral focal/zoom values.
+- The default public hero currently uses repo-defined fallback content: multiline `Meet E-commerce` / `Again`, `Buy Now`, `/Hero-bg.jpg`, shared alignment defaults, neutral focal/zoom values, and the locked Inter-only five-scale typography treatment.
 - Public delivery pricing is fetched separately from site content, so storefront rendering currently spans multiple raw public queries instead of one dedicated public contract layer.
 
 ---

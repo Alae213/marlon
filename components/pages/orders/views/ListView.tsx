@@ -161,17 +161,17 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
           className="w-auto min-w-0 p-0 border-0 bg-transparent shadow-none"
         >
           <div
-            className="px-3 py-2 rounded-lg text-xs text-white whitespace-nowrap"
+            className="whitespace-nowrap rounded-lg px-3 py-2 text-white"
             style={{
               background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
             }}
           >
-            <div className="text-[var(--system-200)] text-[10px] mb-1.5 font-medium">
+            <div className="text-micro-label mb-1.5 text-[var(--system-200)]">
               Call History
             </div>
             {callLog.slice().map((call, idx) => (
               <div key={call.id} className="flex items-center gap-2 py-0.5">
-                <span className="text-[var(--system-300)] text-[10px] w-4">
+                <span className="text-caption w-4 text-[var(--system-300)]">
                   #{idx + 1}
                 </span>
                 <span
@@ -180,10 +180,10 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
                     getCallOutcomeBg(call.outcome)
                   )}
                 />
-                <span className="text-white/90">
+                <span className="text-body-sm text-white/90">
                   {CALL_OUTCOME_LABELS[call.outcome]?.label || call.outcome}
                 </span>
-                <span className="text-white/40 text-[10px]">
+                <span className="text-caption text-white/40">
                   {formatDate(call.timestamp)}
                 </span>
               </div>
@@ -280,7 +280,7 @@ function StatusCell({
               return (
                 <MenuRadioItem key={s} value={s} className="rounded-[12px] py-1.5 pl-8">
                   <span
-                    className="overflow-hidden inline-flex items-center gap-1.5 px-2 py-1 text-xs font-medium rounded-[10px] shadow-[var(--shadow-badge)]"
+                    className="text-caption overflow-hidden inline-flex items-center gap-1.5 rounded-[10px] px-2 py-1 shadow-[var(--shadow-badge)]"
                     style={{
                       backgroundColor: sConfig?.bgColor || "#6b728015",
                       color: sConfig?.textColor || "#ffffff01",
@@ -310,7 +310,7 @@ function SelectedStatusSummary({ counts }: { counts: Record<string, number> }) {
         return (
           <span
             key={status}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px] label-xs font-medium"
+            className="text-micro-label inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px]"
             style={{
               backgroundColor: statusConfig?.bgColor || "#6b7280",
               color: statusConfig?.textColor || "#ffffff",
@@ -756,7 +756,7 @@ export function ListView({
         <>
           <div className="absolute -top-1 left-1 z-50 hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-2 py-1 text-[var(--system-600)]">
             <div className="flex items-center gap-1">
-              <span className="body-base mr-2 text-[var(--system-500)]">{selectedOrders.size} selected</span>
+              <span className="text-body mr-2 text-[var(--system-500)]">{selectedOrders.size} selected</span>
               <SelectedStatusSummary counts={selectedOrdersByStatus} />
             </div>
             <div className="flex items-center gap-2">
@@ -764,7 +764,7 @@ export function ListView({
                 <button
                   onClick={handleBulkDispatch}
                   disabled={isBulkDispatching}
-                  className="ml-2 cursor-pointer px-2 py-1 rounded-md bg-[var(--blue-300)] text-white text-xs font-medium hover:bg-[var(--blue-400)] transition-colors flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="text-caption ml-2 flex cursor-pointer items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isBulkDispatching ? (
                     <Loader2 className="w-3 h-3 animate-spin" />
@@ -786,7 +786,7 @@ export function ListView({
           <div className="rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-3 text-[var(--system-600)] md:hidden">
             <div className="flex flex-col gap-3">
               <div className="space-y-2">
-                <span className="body-base text-[var(--system-500)]">{selectedOrders.size} selected</span>
+                <span className="text-body text-[var(--system-500)]">{selectedOrders.size} selected</span>
                 <SelectedStatusSummary counts={selectedOrdersByStatus} />
               </div>
               <div className="flex items-center gap-2">
@@ -794,7 +794,7 @@ export function ListView({
                   <button
                     onClick={handleBulkDispatch}
                     disabled={isBulkDispatching}
-                    className="flex-1 cursor-pointer rounded-md bg-[var(--blue-300)] px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-caption flex-1 cursor-pointer rounded-md bg-[var(--blue-300)] px-3 py-2 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
                   </button>
@@ -827,7 +827,7 @@ export function ListView({
           <MenuTrigger asChild>
             <button
               type="button"
-              className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+              className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
                 activeDateFilter !== "all"
                   ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
                   : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
@@ -881,7 +881,7 @@ export function ListView({
                 <MenuTrigger asChild>
                   <button
                     type="button"
-                    className={`cursor-pointer h-8 px-3 rounded-lg transition-colors flex items-center gap-2 text-sm ${
+                    className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
                       activeFilter !== "all"
                         ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
                         : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
@@ -910,18 +910,18 @@ export function ListView({
             <MenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
               <MenuRadioItem value="all" className="w-full justify-between rounded-[12px]">
                 <span className="text-[var(--system-600)]">All</span>
-                <span className="label-xs text-[var(--system-400)]">{orders.length}</span>
+                <span className="text-micro-label text-[var(--system-400)]">{orders.length}</span>
               </MenuRadioItem>
               {readyToDispatchCount > 0 && (
                 <MenuRadioItem 
                   value="confirmed" 
                   className="w-full justify-between rounded-[12px]"
                 >
-                  <span className="inline-flex items-center gap-1.5 px-2 py-1 label-xs rounded-[8px] bg-[var(--blue-300)]/20 text-[var(--blue-300)] font-medium">
+                  <span className="text-micro-label inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--blue-300)]/20 px-2 py-1 text-[var(--blue-300)]">
                     <PackageCheck className="w-3 h-3" />
                     Ready to Dispatch
                   </span>
-                  <span className="label-xs text-[var(--blue-300)] font-medium">{readyToDispatchCount}</span>
+                  <span className="text-micro-label text-[var(--blue-300)]">{readyToDispatchCount}</span>
                 </MenuRadioItem>
               )}
               {statuses.map((status) => {
@@ -935,7 +935,7 @@ export function ListView({
                     className="w-full justify-between rounded-[12px]"
                   >
                     <span
-                      className="overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 label-xs shadow-[var(--shadow-badge)]"
+                      className="text-micro-label overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 shadow-[var(--shadow-badge)]"
                       style={{
                         backgroundColor: sConfig?.bgColor || "#6b7280",
                         color: sConfig?.textColor || "#ffffff",
@@ -944,7 +944,7 @@ export function ListView({
                       {sConfig?.icon}
                       {sConfig?.label || status}
                     </span>
-                    <span className="label-xs text-[var(--system-400)]">{count}</span>
+                    <span className="text-micro-label text-[var(--system-400)]">{count}</span>
                   </MenuRadioItem>
                 )
               })}
@@ -1044,7 +1044,7 @@ export function ListView({
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
-                className="h-8 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 pe-8 text-sm text-[var(--system-600)] placeholder:text-[var(--system-300)] focus:border-[var(--system-200)] focus:outline-none sm:w-48"
+                className="text-body-sm h-8 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 pe-8 text-[var(--system-600)] placeholder:text-[var(--system-300)] focus:border-[var(--system-200)] focus:outline-none sm:w-48"
               />
               <button
                 onClick={() => onSearchOpenChange(false)}
@@ -1073,7 +1073,7 @@ export function ListView({
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5">
                   <Truck className="w-4 h-4 text-[var(--blue-300)]" />
-                  <span className="text-sm font-medium text-[var(--blue-300)]">
+                  <span className="text-body-sm text-[var(--blue-300)]">
                     {readyToDispatchCount} ready
                   </span>
                 </div>
@@ -1085,7 +1085,7 @@ export function ListView({
             <button
               onClick={handleDispatchAll}
               disabled={isDispatchingAll}
-              className="cursor-pointer flex items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-caption flex cursor-pointer items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDispatchingAll ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -1101,7 +1101,7 @@ export function ListView({
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5">
                   <Truck className="w-4 h-4 text-[var(--system-400)]" />
-                  <span className="text-sm text-[var(--system-400)]">
+                  <span className="text-body-sm text-[var(--system-400)]">
                     {courierStatusSummary.dispatched} dispatched
                   </span>
                 </div>
@@ -1145,7 +1145,7 @@ export function ListView({
             sideOffset={-32}
             className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuLabel className="px-2 py-1 text-xs text-[var(--system-400)]">Export</MenuLabel>
+            <MenuLabel className="text-micro-label px-2 py-1 text-[var(--system-400)]">Export</MenuLabel>
             {selectedOrders.size > 0 ? (
               <MenuItem 
                 onSelect={() => {
@@ -1256,10 +1256,10 @@ export function ListView({
                 </TableCell>
                 <TableCell className="py-3">
                   <LockedData fallback="***">
-                    <p className="body-base text-[var(--system-600)]">
+                    <p className="text-body text-[var(--system-600)]">
                       {highlightMatch(order.customerName, searchQuery)}
                     </p>
-                    <p className="body-base text-[var(--system-300)]">
+                    <p className="text-body text-[var(--system-300)]">
                       {highlightMatch(order.customerPhone, searchQuery)}
                     </p>
                   </LockedData>
@@ -1289,15 +1289,15 @@ export function ListView({
                   {order.deliveryProvider ? (
                     <div className="flex items-center gap-1.5">
                       <Truck className="w-3.5 h-3.5 text-[var(--blue-300)]" />
-                      <span className="text-xs text-[var(--system-600)]">
+                      <span className="text-caption text-[var(--system-600)]">
                         {delivery.label}
                       </span>
-                      <span className="text-[var(--system-300)] text-[10px]">
+                       <span className="text-caption text-[var(--system-300)]">
                         {order.trackingNumber || "—"}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-[var(--system-300)] text-xs">—</span>
+                    <span className="text-caption text-[var(--system-300)]">—</span>
                   )}
                 </TableCell>
                 <TableCell className="py-3 text-[var(--system-300)]">
