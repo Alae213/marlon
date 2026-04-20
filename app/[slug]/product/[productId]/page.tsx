@@ -408,34 +408,33 @@ function ProductDetailContent() {
             <div className="flex items-center gap-3">
               <button
                 onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                className="w-10 h-10 bg-[var(--system-100)] flex items-center justify-center"
+                className="w-10 h-10 bg-[var(--system-100)] flex items-center justify-center rounded-full"
               >
                 -
               </button>
               <span className="w-12 text-center title-xl">{quantity}</span>
               <button
                 onClick={() => setQuantity(quantity + 1)}
-                className="w-10 h-10 bg-[var(--system-100)] flex items-center justify-center"
+                className="w-10 h-10 bg-[var(--system-100)] flex items-center justify-center rounded-full"
               >
                 +
               </button>
             </div>
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex gap-4 h-[44px]">
             {showCart && (
               <Button
-                variant="outline"
+                variant="secondary"
                 onClick={handleAddToCart}
-                className="flex-1 flex items-center justify-center gap-2 h-12"
+                className="flex-1 flex flex-row items-center justify-center gap-2 px-0 h-[44px]"
               >
-                <CartIcon className="w-5 h-5" />
                 Add to Cart
               </Button>
             )}
             <Button
               onClick={() => setShowOrderForm(true)}
-              className="flex-1 flex items-center justify-center gap-2 h-12"
+              className="flex-1 flex items-center justify-center gap-2 text-white h-[44px]"
             >
               Buy Now
             </Button>
@@ -491,25 +490,25 @@ function ProductDetailContent() {
         <DialogContent
           overlayClassName="bg-black/30"
           style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
-          className="max-w-[400px] gap-[12px] overflow-hidden rounded-[48px] border-white/10 bg-[--system-100] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px] [corner-shape:squircle]"
+          className="max-w-[400px] gap-[12px] overflow-hidden rounded-[32px] border border-[var(--sheet-surface-border)] bg-[var(--sheet-surface-bg)] p-[20px] text-[var(--sheet-surface-fg)] shadow-[var(--sheet-surface-shadow)] backdrop-blur-[12px]"
         >
           <DialogHeader>
-            <DialogTitle className="title-xl mb-2 text-white">Confirm Order</DialogTitle>
+            <DialogTitle className="title-xl mb-2 text-[var(--sheet-surface-fg)]">Confirm Order</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 w-full">
                 <div>
-                  <label className="block text-micro-label mb-1 text-[var(--system-500)]">Full Name</label>
+                  <label className="block text-micro-label mb-1 text-[var(--system-300)]">Full Name</label>
                   <input
                     type="text"
                     value={orderData.name}
                     onChange={(e) => setOrderData({ ...orderData, name: e.target.value })}
-                    className="w-full h-10 px-3 bg-[var(--system-50)] rounded-lg"
+                    className="h-10 w-full rounded-lg border border-[var(--system-700)] bg-[var(--system-800)] px-3 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none"
                   />
                 </div>
                 
                 <div>
-                  <label className="block text-micro-label mb-1 text-[var(--system-500)]">Phone Number</label>
+                  <label className="block text-micro-label mb-1 text-[var(--system-300)]">Phone Number</label>
                   <input
                     type="tel"
                     value={orderData.phone}
@@ -525,13 +524,13 @@ function ProductDetailContent() {
                         setPhoneError("");
                       }
                     }}
-                    className={`w-full h-10 px-3 bg-[var(--system-50)] rounded-lg ${
-                      phoneError ? "border border-red-500" : ""
+                    className={`h-10 w-full rounded-lg border bg-[var(--system-800)] px-3 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none ${
+                      phoneError ? "border-[var(--color-error)]" : "border-[var(--system-700)]"
                     }`}
                     placeholder="05XX XXX XXX"
                   />
                   {phoneError && (
-                    <p className="text-micro-label text-red-500 mt-1">{phoneError}</p>
+                    <p className="text-micro-label text-[var(--color-error)] mt-1">{phoneError}</p>
                   )}
                 </div>
 
@@ -555,36 +554,44 @@ function ProductDetailContent() {
                 </div>
 
                 <div>
-                  <label className="block text-micro-label mb-2 text-[var(--system-500)]">Delivery Type</label>
+                  <label className="block text-micro-label mb-2 text-[var(--system-300)]">Delivery Type</label>
                   <div className="flex flex-col gap-2">
-                    <label className="flex items-center gap-3 p-3 bg-[var(--system-50)] rounded-lg cursor-pointer hover:bg-[var(--system-200)] transition-colors">
+                    <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                      orderData.deliveryType === "stopdesk"
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+                        : "border-[var(--system-700)] bg-[var(--system-800)] hover:border-[var(--system-500)]"
+                    }`}>
                       <input
                         type="radio"
                         name="deliveryType"
                         value="stopdesk"
                         checked={orderData.deliveryType === "stopdesk"}
                         onChange={() => setOrderData({ ...orderData, deliveryType: "stopdesk" })}
-                        className="w-4 h-4"
+                        className="h-4 w-4 accent-[var(--color-primary)]"
                       />
-                      <span className="text-body text-[var(--system-600)]">Pickup Point</span>
+                      <span className="text-body text-[var(--sheet-surface-fg)]">Pickup Point</span>
                       {selectedWilayaArabic && (
-                        <span className="ms-auto text-micro-label text-[var(--system-400)]">
+                        <span className="ms-auto text-micro-label text-[var(--system-300)]">
                           {formatPrice(getDeliveryCost("stopdesk"))}
                         </span>
                       )}
                     </label>
-                    <label className="flex items-center gap-3 p-3 bg-[var(--system-50)] rounded-lg cursor-pointer hover:bg-[var(--system-200)] transition-colors">
+                    <label className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors ${
+                      orderData.deliveryType === "domicile"
+                        ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10"
+                        : "border-[var(--system-700)] bg-[var(--system-800)] hover:border-[var(--system-500)]"
+                    }`}>
                       <input
                         type="radio"
                         name="deliveryType"
                         value="domicile"
                         checked={orderData.deliveryType === "domicile"}
                         onChange={() => setOrderData({ ...orderData, deliveryType: "domicile" })}
-                        className="w-4 h-4"
+                        className="h-4 w-4 accent-[var(--color-primary)]"
                       />
-                      <span className="text-body text-[var(--system-600)]">Home Delivery</span>
+                      <span className="text-body text-[var(--sheet-surface-fg)]">Home Delivery</span>
                       {selectedWilayaArabic && (
-                        <span className="ms-auto text-micro-label text-[var(--system-400)]">
+                        <span className="ms-auto text-micro-label text-[var(--system-300)]">
                           {formatPrice(getDeliveryCost("domicile"))}
                         </span>
                       )}
@@ -594,48 +601,50 @@ function ProductDetailContent() {
 
                 {orderData.deliveryType === "domicile" && (
                   <div>
-                    <label className="block text-micro-label mb-1 text-[var(--system-500)]">Address</label>
+                    <label className="block text-micro-label mb-1 text-[var(--system-300)]">Address</label>
                     <input
                       type="text"
                       value={orderData.address}
                       onChange={(e) => setOrderData({ ...orderData, address: e.target.value })}
-                      className="w-full h-10 px-3 bg-[var(--system-50)] rounded-lg"
+                      className="h-10 w-full rounded-lg border border-[var(--system-700)] bg-[var(--system-800)] px-3 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none"
                     />
                   </div>
                 )}
 
                 {/* Order Summary */}
-                <div className="pt-4 mt-4 bg-[var(--system-50)] rounded-xl p-4">
-                  <h3 className="text-micro-label mb-3 text-[var(--system-500)]">Order Summary</h3>
+                <div className="mt-4 rounded-xl border border-[var(--system-700)] bg-[var(--system-800)] p-4">
+                  <h3 className="text-micro-label mb-3 text-[var(--system-300)]">Order Summary</h3>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-body text-[var(--system-400)]">Subtotal</span>
-                      <span className="text-body text-[var(--system-600)]">{formatPrice(subtotal)}</span>
+                      <span className="text-body text-[var(--system-300)]">Subtotal</span>
+                      <span className="text-body text-[var(--sheet-surface-fg)]">{formatPrice(subtotal)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-body text-[var(--system-400)]">Delivery</span>
-                      <span className="text-body text-[var(--system-600)]">{deliveryCost > 0 ? formatPrice(deliveryCost) : "Free"}</span>
+                      <span className="text-body text-[var(--system-300)]">Delivery</span>
+                      <span className="text-body text-[var(--sheet-surface-fg)]">{deliveryCost > 0 ? formatPrice(deliveryCost) : "Free"}</span>
                     </div>
-                    <div className="flex justify-between title-xl pt-2 mt-2 border-t border-[var(--system-200)]">
-                      <span className="text-[var(--system-600)]">Total</span>
-                      <span className="text-[var(--system-600)]">{formatPrice(total)}</span>
+                    <div className="flex justify-between title-xl pt-2 mt-2 border-t border-[var(--system-700)]">
+                      <span className="text-[var(--sheet-surface-fg)]">Total</span>
+                      <span className="text-[var(--sheet-surface-fg)]">{formatPrice(total)}</span>
                     </div>
                   </div>
                 </div>
           </div>
 
-          <div className="flex gap-4 mt-4 w-full">
+          <div className="mt-4 flex w-full gap-4">
             <Button
+              size="md"
               variant="outline"
               onClick={() => setShowOrderForm(false)}
-              className="flex-1 h-10"
+              className="h-10 flex-1 border-[var(--system-700)] bg-[var(--system-800)] text-[var(--system-100)] hover:bg-[var(--system-700)] hover:text-[var(--system-100)]"
             >
               Cancel
             </Button>
             <Button
+              size="md"
               onClick={handleBuyNow}
               disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
-              className="flex-1 h-10"
+              className="h-10 flex-1 bg-[var(--color-primary)] text-white hover:opacity-90"
             >
               Confirm Order
             </Button>
@@ -649,7 +658,6 @@ function ProductDetailContent() {
           isOpen={isOpen}
           onClose={closeCart}
           storeId={store._id as string}
-          storeSlug={slug}
         />
       )}
     </div>

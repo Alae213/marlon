@@ -269,7 +269,6 @@ function StorefrontContent() {
           backgroundRepeat: "no-repeat",
         }}
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.12)_0%,rgba(255,255,255,0.54)_38%,rgba(255,255,255,0.84)_72%,rgba(255,255,255,0)_100%)]" />
         <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-white to-transparent" />
         <div
           className={`relative z-10 mx-auto flex min-h-[88svh] max-w-6xl flex-col justify-center gap-7 px-5 pt-28 pb-16 md:px-8 ${

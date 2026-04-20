@@ -16,6 +16,7 @@ interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   storeId: string;
+  storeSlug?: string;
 }
 
 const formatPrice = (price: number) => {
@@ -245,7 +246,7 @@ const handleClose = () => {
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--system-700)] bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)]"
+                className="w-full rounded-lg border border-[var(--system-700)] bg-[var(--system-800)] px-3 py-2 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none"
                 required
               />
             </div>
@@ -258,7 +259,7 @@ const handleClose = () => {
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleInputChange("phone", e.target.value)}
-                className={`w-full px-3 py-2 border bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)] ${
+                className={`w-full rounded-lg border bg-[var(--system-800)] px-3 py-2 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none ${
                   phoneError ? "border-[var(--color-error)]" : "border-[var(--system-700)]"
                 }`}
                 placeholder="05XX XXX XXX"
@@ -296,7 +297,7 @@ const handleClose = () => {
                 type="text"
                 value={formData.address}
                 onChange={(e) => handleInputChange("address", e.target.value)}
-                className="w-full px-3 py-2 border border-[var(--system-700)] bg-[var(--system-800)] text-[var(--sheet-surface-fg)] focus:outline-none focus:border-[var(--color-primary)]"
+                className="w-full rounded-lg border border-[var(--system-700)] bg-[var(--system-800)] px-3 py-2 text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none disabled:cursor-not-allowed disabled:bg-[var(--system-800)]/60 disabled:text-[var(--system-400)] disabled:opacity-70"
                 placeholder={formData.deliveryType === "domicile" ? "Full address for delivery" : "Not required for stopdesk"}
                 disabled={formData.deliveryType === "stopdesk"}
               />
@@ -313,7 +314,7 @@ const handleClose = () => {
                      className={`text-body-sm flex-1 border px-3 py-2 transition-colors ${
                        formData.deliveryType === "stopdesk"
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
+                      : "border-[var(--system-700)] bg-[var(--system-800)] text-[var(--system-300)] hover:border-[var(--color-primary)] hover:text-[var(--sheet-surface-fg)]"
                   }`}
                 >
                   Stopdesk
@@ -324,7 +325,7 @@ const handleClose = () => {
                      className={`text-body-sm flex-1 border px-3 py-2 transition-colors ${
                        formData.deliveryType === "domicile"
                       ? "border-[var(--color-primary)] bg-[var(--color-primary)]/10 text-[var(--color-primary)]"
-                      : "border-[var(--system-700)] text-[var(--system-300)] hover:border-[var(--color-primary)]"
+                      : "border-[var(--system-700)] bg-[var(--system-800)] text-[var(--system-300)] hover:border-[var(--color-primary)] hover:text-[var(--sheet-surface-fg)]"
                   }`}
                 >
                   Domicile

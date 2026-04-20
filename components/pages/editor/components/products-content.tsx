@@ -10,6 +10,8 @@ import { useRouter } from "next/navigation";
 import {
   Root as ScrollAreaRoot,
   Viewport as ScrollAreaViewport,
+  Scrollbar as ScrollAreaScrollbar,
+  Thumb as ScrollAreaThumb,
 } from "@radix-ui/react-scroll-area";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
@@ -258,8 +260,8 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
             </div>
           </div>
 
-          <ScrollAreaRoot className="h-full w-full overflow-hidden rounded-t-[12px]">
-            <ScrollAreaViewport className="h-full overflow-y-auto rounded-t-[12px]  bg-[var(--system-100)]">
+          <ScrollAreaRoot className="min-h-0 w-full flex-1 overflow-hidden rounded-t-[12px]">
+            <ScrollAreaViewport className="h-full overflow-y-auto rounded-t-[12px] bg-[var(--system-100)]">
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />
               <HeroEditor storeId={storeId} heroContent={heroContent} />
 
@@ -292,6 +294,12 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
                 )}
               </div>
             </ScrollAreaViewport>
+            <ScrollAreaScrollbar
+              orientation="vertical"
+              className="flex w-2 touch-none select-none p-[1px] transition-colors"
+            >
+              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-300)]/0" />
+            </ScrollAreaScrollbar>
           </ScrollAreaRoot>
 
           <BottomNavigation storeSlug={storeSlug} currentPage="products" />

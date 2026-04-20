@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
-import { algeriaWilayas, Wilaya, Commune, getWilayaDisplay } from "@/lib/algeria-data";
+import { useMemo, useRef, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { algeriaWilayas, Commune, getWilayaDisplay, Wilaya } from "@/lib/algeria-data";
+import { cn } from "@/lib/utils";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface WilayaSelectProps {
@@ -13,18 +14,203 @@ interface WilayaSelectProps {
   error?: string;
 }
 
+interface CommuneSelectProps {
+  wilayaValue: string;
+  value: string;
+  onChange: (value: string) => void;
+  label?: string;
+  required?: boolean;
+  error?: string;
+  disabled?: boolean;
+}
+
+interface SearchableLocationSelectProps<T> {
+  value: string;
+  label?: string;
+  required?: boolean;
+  error?: string;
+  disabled?: boolean;
+  options: T[];
+  highlightedIndex: number;
+  search: string;
+  placeholder: string;
+  disabledPlaceholder?: string;
+  searchPlaceholder: string;
+  getKey: (option: T, index: number) => string;
+  getValue: (option: T) => string;
+  getDisplay: (option: T) => string;
+  onSearchChange: (value: string) => void;
+  onHighlightChange: (index: number) => void;
+  onSelect: (option: T) => void;
+  isOpen: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+function SearchableLocationSelect<T>({
+  value,
+  label,
+  required,
+  error,
+  disabled,
+  options,
+  highlightedIndex,
+  search,
+  placeholder,
+  disabledPlaceholder,
+  searchPlaceholder,
+  getKey,
+  getValue,
+  getDisplay,
+  onSearchChange,
+  onHighlightChange,
+  onSelect,
+  isOpen,
+  onOpenChange,
+}: SearchableLocationSelectProps<T>) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const isDisabled = !!disabled;
+  const shownPlaceholder = isDisabled && disabledPlaceholder ? disabledPlaceholder : placeholder;
+
+  return (
+    <div className="relative">
+      {label && (
+        <label className="mb-1 block text-body-sm text-[var(--sheet-surface-fg)]">
+          {label} {required && <span className="text-[var(--color-error)]">*</span>}
+        </label>
+      )}
+
+      <Popover open={isOpen && !isDisabled} onOpenChange={onOpenChange}>
+        <PopoverTrigger asChild>
+          <button
+            type="button"
+            disabled={isDisabled}
+            className={cn(
+              "flex min-h-10 w-full items-center justify-between gap-3 rounded-lg border bg-[var(--system-800)] px-3 py-2 text-start text-body-sm text-[var(--sheet-surface-fg)] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-colors",
+              "focus:border-[var(--color-primary)] focus:outline-none",
+              error ? "border-[var(--color-error)]" : "border-[var(--system-700)]",
+              isDisabled
+                ? "cursor-not-allowed bg-[var(--system-800)]/60 text-[var(--system-400)] opacity-70"
+                : "cursor-pointer hover:border-[var(--system-500)]"
+            )}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+          >
+            <span
+              className={cn(
+                "min-w-0 flex-1 truncate",
+                value ? "text-[var(--sheet-surface-fg)]" : "text-[var(--system-300)]"
+              )}
+            >
+              {value || shownPlaceholder}
+            </span>
+            {!isDisabled && (
+              <ChevronDown
+                className={cn(
+                  "h-4 w-4 shrink-0 text-[var(--system-300)] transition-transform",
+                  isOpen && "rotate-180"
+                )}
+              />
+            )}
+          </button>
+        </PopoverTrigger>
+
+        {!isDisabled && (
+          <PopoverContent
+            align="start"
+            sideOffset={6}
+            className="z-[calc(var(--z-sheet)+1)] w-[var(--radix-popper-anchor-width)] max-w-[calc(100vw-2rem)] overflow-hidden rounded-xl border border-[var(--sheet-surface-border)] bg-[var(--sheet-surface-bg)] p-0 text-[var(--sheet-surface-fg)] shadow-[var(--sheet-surface-shadow)]"
+            onOpenAutoFocus={(event) => {
+              event.preventDefault();
+              inputRef.current?.focus();
+            }}
+            onFocusOutside={() => onOpenChange(false)}
+          >
+            <div className="flex max-h-[300px] flex-col overflow-hidden bg-[var(--sheet-surface-bg)] text-[var(--sheet-surface-fg)]">
+              <div className="border-b border-[var(--sheet-surface-border)] p-2">
+                <input
+                  ref={inputRef}
+                  type="text"
+                  value={search}
+                  onChange={(event) => onSearchChange(event.target.value)}
+                  placeholder={searchPlaceholder}
+                  className="w-full rounded-lg border border-[var(--system-700)] bg-[var(--system-800)] px-3 py-2 text-body-sm text-[var(--sheet-surface-fg)] placeholder:text-[var(--system-400)] focus:border-[var(--color-primary)] focus:outline-none"
+                  onKeyDown={(event) => {
+                    if (event.key === "Escape") {
+                      onOpenChange(false);
+                      return;
+                    }
+                    if (event.key === "ArrowDown") {
+                      event.preventDefault();
+                      onHighlightChange(Math.min(highlightedIndex + 1, Math.max(0, options.length - 1)));
+                    }
+                    if (event.key === "ArrowUp") {
+                      event.preventDefault();
+                      onHighlightChange(Math.max(0, highlightedIndex - 1));
+                    }
+                    if (event.key === "Enter") {
+                      event.preventDefault();
+                      const pick = options[highlightedIndex];
+                      if (pick) onSelect(pick);
+                    }
+                  }}
+                />
+              </div>
+              <div className="flex-1 overflow-y-auto py-1" role="listbox">
+                {options.map((option, index) => {
+                  const optionValue = getValue(option);
+                  const isSelected = value === optionValue;
+                  const isHighlighted = index === highlightedIndex;
+
+                  return (
+                    <button
+                      key={getKey(option, index)}
+                      type="button"
+                      role="option"
+                      aria-selected={isSelected}
+                      onMouseMove={() => onHighlightChange(index)}
+                      onClick={() => onSelect(option)}
+                      className={cn(
+                        "w-full px-3 py-2 text-start text-body-sm transition-colors",
+                        isHighlighted
+                          ? "bg-[var(--system-700)] text-[var(--system-100)]"
+                          : "text-[var(--system-300)] hover:bg-[var(--system-700)] hover:text-[var(--system-100)]",
+                        isSelected && "font-medium text-[var(--sheet-surface-fg)]"
+                      )}
+                    >
+                      <span className="block truncate">{getDisplay(option)}</span>
+                    </button>
+                  );
+                })}
+
+                {options.length === 0 && (
+                  <div className="px-3 py-6 text-center text-body-sm text-[var(--system-400)]">
+                    No results found
+                  </div>
+                )}
+              </div>
+            </div>
+          </PopoverContent>
+        )}
+      </Popover>
+
+      {error && <p className="mt-1 text-caption text-[var(--color-error)]">{error}</p>}
+    </div>
+  );
+}
+
 export function WilayaSelect({ value, onChange, label, required, error }: WilayaSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  const filteredWilayas = algeriaWilayas.filter(w => {
-    const display = getWilayaDisplay(w).toLowerCase();
+  const filteredWilayas = algeriaWilayas.filter((wilaya) => {
+    const display = getWilayaDisplay(wilaya).toLowerCase();
     const searchLower = search.toLowerCase();
-    return display.includes(searchLower) || 
-           w.arabic.includes(search) ||
-           w.french.toLowerCase().includes(searchLower);
+    return (
+      display.includes(searchLower) ||
+      wilaya.arabic.includes(search) ||
+      wilaya.french.toLowerCase().includes(searchLower)
+    );
   });
 
   const handleSelect = (wilaya: Wilaya) => {
@@ -41,145 +227,58 @@ export function WilayaSelect({ value, onChange, label, required, error }: Wilaya
     }
   };
 
-  const handleSearchChange = (value: string) => {
-    setSearch(value);
+  const handleSearchChange = (nextSearch: string) => {
+    setSearch(nextSearch);
     setHighlightedIndex(0);
   };
 
   return (
-    <div className="relative">
-      {label && (
-        <label className="block text-sm font-normal text-foreground mb-1">
-          {label} {required && <span className="text-destructive">*</span>}
-        </label>
-      )}
-
-      <Popover open={isOpen} onOpenChange={handleOpenChange}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            className={`w-full px-3 py-2 border bg-background text-foreground focus:outline-none focus:border-primary flex items-center justify-between ${
-              error ? "border-destructive" : "border-input"
-            } ${!value ? "text-muted-foreground" : ""}`}
-            aria-haspopup="listbox"
-            aria-expanded={isOpen}
-          >
-            <span className={value ? "text-foreground" : "text-muted-foreground"}>
-              {value || "اختر الولاية - Choisissez la wilaya"}
-            </span>
-            <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-          </button>
-        </PopoverTrigger>
-        <PopoverContent
-          align="start"
-          sideOffset={4}
-          className="p-0 w-[var(--radix-popper-anchor-width)] max-w-[calc(100vw-2rem)]"
-          onOpenAutoFocus={(e) => {
-            e.preventDefault();
-            inputRef.current?.focus();
-          }}
-          onFocusOutside={() => setIsOpen(false)}
-        >
-          <div className="bg-popover text-popover-foreground border border-border shadow-lg max-h-[300px] overflow-hidden flex flex-col">
-            <div className="p-2 border-b border-border">
-              <input
-                ref={inputRef}
-                type="text"
-                value={search}
-                onChange={(e) => handleSearchChange(e.target.value)}
-                placeholder="بحث - Rechercher..."
-                className="w-full px-2 py-1 text-sm border border-input bg-background focus:outline-none"
-                onKeyDown={(e) => {
-                  if (e.key === "Escape") {
-                    setIsOpen(false);
-                    return;
-                  }
-                  if (e.key === "ArrowDown") {
-                    e.preventDefault();
-                    setHighlightedIndex((i) => Math.min(i + 1, Math.max(0, filteredWilayas.length - 1)));
-                  }
-                  if (e.key === "ArrowUp") {
-                    e.preventDefault();
-                    setHighlightedIndex((i) => Math.max(0, i - 1));
-                  }
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const pick = filteredWilayas[highlightedIndex];
-                    if (pick) handleSelect(pick);
-                  }
-                }}
-              />
-            </div>
-            <div className="overflow-y-auto flex-1" role="listbox">
-              {filteredWilayas.map((wilaya, idx) => {
-                const display = getWilayaDisplay(wilaya);
-                const isSelected = value === display;
-                const isHighlighted = idx === highlightedIndex;
-                return (
-                  <button
-                    key={wilaya.id}
-                    type="button"
-                    role="option"
-                    aria-selected={isSelected}
-                    onMouseMove={() => setHighlightedIndex(idx)}
-                    onClick={() => handleSelect(wilaya)}
-                    className={`w-full px-3 py-2 text-start transition-colors ${
-                      isHighlighted ? "bg-accent" : "hover:bg-accent"
-                    } ${isSelected ? "font-medium" : ""}`}
-                  >
-                    <span className="text-foreground text-sm">
-                      {wilaya.id} - {wilaya.french} - {wilaya.arabic}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </PopoverContent>
-      </Popover>
-
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-    </div>
+    <SearchableLocationSelect
+      value={value}
+      label={label}
+      required={required}
+      error={error}
+      options={filteredWilayas}
+      highlightedIndex={highlightedIndex}
+      search={search}
+      placeholder="اختر الولاية - Choisissez la wilaya"
+      searchPlaceholder="بحث - Rechercher..."
+      getKey={(wilaya) => String(wilaya.id)}
+      getValue={getWilayaDisplay}
+      getDisplay={(wilaya) => `${wilaya.id} - ${wilaya.french} - ${wilaya.arabic}`}
+      onSearchChange={handleSearchChange}
+      onHighlightChange={setHighlightedIndex}
+      onSelect={handleSelect}
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+    />
   );
 }
 
-interface CommuneSelectProps {
-  wilayaValue: string;
-  value: string;
-  onChange: (value: string) => void;
-  label?: string;
-  required?: boolean;
-  error?: string;
-  disabled?: boolean;
-}
-
-export function CommuneSelect({ wilayaValue, value, onChange, label, required, error, disabled }: CommuneSelectProps) {
+export function CommuneSelect({
+  wilayaValue,
+  value,
+  onChange,
+  label,
+  required,
+  error,
+  disabled,
+}: CommuneSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
 
-  // Derive communes from wilayaValue - no need for useEffect
   const communes = useMemo(() => {
     if (!wilayaValue) return [];
-    const wilaya = algeriaWilayas.find(w => getWilayaDisplay(w) === wilayaValue);
+    const wilaya = algeriaWilayas.find((item) => getWilayaDisplay(item) === wilayaValue);
     return wilaya?.communes || [];
   }, [wilayaValue]);
 
-  /* eslint-disable react-hooks/set-state-in-effect */
-  // Reset UI state when disabled changes
-  useEffect(() => {
-    if (disabled) {
-      setIsOpen(false);
-      setSearch("");
-    }
-  }, [disabled]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+  const isDisabled = disabled || !wilayaValue || communes.length === 0;
 
-  const filteredCommunes = communes.filter(c => {
+  const filteredCommunes = communes.filter((commune) => {
     const searchLower = search.toLowerCase();
-    return c.french.toLowerCase().includes(searchLower) || 
-           c.arabic.includes(search);
+    return commune.french.toLowerCase().includes(searchLower) || commune.arabic.includes(search);
   });
 
   const handleSelect = (commune: Commune) => {
@@ -189,119 +288,39 @@ export function CommuneSelect({ wilayaValue, value, onChange, label, required, e
     setHighlightedIndex(0);
   };
 
-  const handleOpenChangeCom = (open: boolean) => {
+  const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     if (open) {
       setHighlightedIndex(0);
     }
   };
 
-  const handleSearchChangeCom = (value: string) => {
-    setSearch(value);
+  const handleSearchChange = (nextSearch: string) => {
+    setSearch(nextSearch);
     setHighlightedIndex(0);
   };
 
-  const isDisabled = disabled || !wilayaValue || communes.length === 0;
-
   return (
-    <div className="relative">
-      {label && (
-        <label className="block text-sm font-normal text-foreground mb-1">
-          {label} {required && <span className="text-destructive">*</span>}
-        </label>
-      )}
-      
-      <Popover open={isOpen} onOpenChange={handleOpenChangeCom}>
-        <PopoverTrigger asChild>
-          <button
-            type="button"
-            disabled={isDisabled}
-            className={`w-full px-3 py-2 border bg-background text-foreground focus:outline-none focus:border-primary flex items-center justify-between ${
-              error ? "border-destructive" : "border-input"
-            } ${isDisabled ? "opacity-50 cursor-not-allowed" : "cursor-pointer"} ${
-              !value ? "text-muted-foreground" : ""
-            }`}
-            aria-haspopup="listbox"
-            aria-expanded={isOpen}
-          >
-            <span className={value ? "text-foreground" : "text-muted-foreground"}>
-              {value || (isDisabled ? "اختر الولاية أولاً - Choisissez d'abord la wilaya" : "اختر البلدية - Choisissez la commune")}
-            </span>
-            {!isDisabled && (
-              <ChevronDown className={`w-4 h-4 transition-transform ${isOpen ? "rotate-180" : ""}`} />
-            )}
-          </button>
-        </PopoverTrigger>
-        {!isDisabled && (
-          <PopoverContent
-            align="start"
-            sideOffset={4}
-            className="p-0 w-[var(--radix-popper-anchor-width)] max-w-[calc(100vw-2rem)]"
-            onOpenAutoFocus={(e) => {
-              e.preventDefault();
-              inputRef.current?.focus();
-            }}
-            onFocusOutside={() => setIsOpen(false)}
-          >
-            <div className="bg-popover text-popover-foreground border border-border shadow-lg max-h-[300px] overflow-hidden flex flex-col">
-              <div className="p-2 border-b border-border">
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={search}
-                  onChange={(e) => handleSearchChangeCom(e.target.value)}
-                  placeholder="بحث - Rechercher..."
-                  className="w-full px-2 py-1 text-sm border border-input bg-background focus:outline-none"
-                  onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      setIsOpen(false);
-                      return;
-                    }
-                    if (e.key === "ArrowDown") {
-                      e.preventDefault();
-                      setHighlightedIndex((i) => Math.min(i + 1, Math.max(0, filteredCommunes.length - 1)));
-                    }
-                    if (e.key === "ArrowUp") {
-                      e.preventDefault();
-                      setHighlightedIndex((i) => Math.max(0, i - 1));
-                    }
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const pick = filteredCommunes[highlightedIndex];
-                      if (pick) handleSelect(pick);
-                    }
-                  }}
-                />
-              </div>
-              <div className="overflow-y-auto flex-1" role="listbox">
-                {filteredCommunes.map((commune, idx) => {
-                  const isSelected = value === commune.french;
-                  const isHighlighted = idx === highlightedIndex;
-                  return (
-                    <button
-                      key={`${commune.french}-${idx}`}
-                      type="button"
-                      role="option"
-                      aria-selected={isSelected}
-                      onMouseMove={() => setHighlightedIndex(idx)}
-                      onClick={() => handleSelect(commune)}
-                      className={`w-full px-3 py-2 text-start transition-colors ${
-                        isHighlighted ? "bg-accent" : "hover:bg-accent"
-                      } ${isSelected ? "font-medium" : ""}`}
-                    >
-                      <span className="text-foreground text-sm">
-                        {commune.french} - {commune.arabic}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          </PopoverContent>
-        )}
-      </Popover>
-
-      {error && <p className="text-xs text-destructive mt-1">{error}</p>}
-    </div>
+    <SearchableLocationSelect
+      value={value}
+      label={label}
+      required={required}
+      error={error}
+      disabled={isDisabled}
+      options={filteredCommunes}
+      highlightedIndex={highlightedIndex}
+      search={search}
+      placeholder="اختر البلدية - Choisissez la commune"
+      disabledPlaceholder="اختر الولاية أولا - Choisissez d'abord la wilaya"
+      searchPlaceholder="بحث - Rechercher..."
+      getKey={(commune, index) => `${commune.french}-${index}`}
+      getValue={(commune) => commune.french}
+      getDisplay={(commune) => `${commune.french} - ${commune.arabic}`}
+      onSearchChange={handleSearchChange}
+      onHighlightChange={setHighlightedIndex}
+      onSelect={handleSelect}
+      isOpen={isOpen}
+      onOpenChange={handleOpenChange}
+    />
   );
 }
