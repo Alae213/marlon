@@ -64,7 +64,7 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
   }, [name, description, basePrice, oldPrice, images, variants, product, onSubmit, onClose]);
 
   return (
-    <div className="space-y-[var(--spacing-md)] text-[--system-700]">
+    <div className="flex flex-col gap-4 text-[--system-400]">
       <Input
         label="Product Name"
         value={name}
@@ -82,7 +82,7 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
         rows={3}
       />
 
-      <div className="grid grid-cols-2 gap-[var(--spacing-md)]">
+      <div className="grid grid-cols-2 gap-4">
         <Input
           label="Price (DZD)"
           type="number"
@@ -102,24 +102,24 @@ export function ProductForm({ product, onClose, onSubmit, error }: ProductFormPr
       </div>
 
       <div>
-        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">Product Images</label>
+        <label className="mb-4 block text-body-sm text-[--system-500]">Product Images</label>
         <ImageUploader images={images} onImagesChange={setImages} />
       </div>
 
       <div>
-        <label className="mb-[var(--spacing-sm)] block text-body-sm text-[--system-500]">
+        <label className="mb-4 block text-body-sm text-[--system-500]">
           Options (e.g., Size, Color)
         </label>
         <InlineVariantEditor variants={variants} onChange={setVariants} />
       </div>
 
       {error && (
-        <div className="rounded-[var(--radius-md)] border border-[--color-error] bg-[--color-error-bg] p-[var(--spacing-sm)]">
+        <div className="rounded-md border border-[--color-error] bg-[--color-error-bg] p-2">
           <p className="text-body-sm text-[--color-error]">{error}</p>
         </div>
       )}
 
-      <div className="flex gap-[var(--spacing-sm)] pt-[var(--spacing-xs)]">
+      <div className="flex gap-4 pt-4">
         <Button variant="outline" onClick={onClose} className="flex-1">
           Cancel
         </Button>

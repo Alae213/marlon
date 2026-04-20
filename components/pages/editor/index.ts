@@ -7,7 +7,6 @@ export { SettingsDialog } from "./components/settings-dialog";
 export { DeliveryPricingSettings } from "./settings/delivery-pricing-settings";
 export { DeliveryIntegrationSettings } from "./settings/delivery-integration-settings";
 export { StoreInfoSettings } from "./settings/store-info-settings";
-export { useInlineEdit } from "./hooks/use-inline-edit";
 export { useImageUpload } from "./hooks/use-image-upload";
 export { formatPrice, generateId } from "./utils";
 export type {
@@ -18,6 +17,4 @@ export type {
   NavbarContent,
   NavbarLink,
   HeroContent,
-  EditableField,
-  EditingField,
 } from "./types";

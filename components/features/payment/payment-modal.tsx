@@ -76,7 +76,7 @@ export function PaymentModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-        <DialogContent className="max-w-[460px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+      <DialogContent className="max-w-[460px] border-[--system-200] bg-[--color-card] p-6 shadow-[var(--shadow-xl)]">
           <DialogHeader className="pr-10">
             <DialogTitle>
               Unlock Orders - Monthly

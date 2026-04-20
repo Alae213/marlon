@@ -1,21 +1,24 @@
 "use client";
 
+import { motion } from "framer-motion";
 import Image from "next/image";
 import { Edit, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { Product, EditingField } from "../types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import type { Product } from "../types";
 import { formatPrice } from "../utils";
 
 interface ProductCardProps {
   product: Product;
-  editingField: EditingField | null;
-  editValue: string;
-  onEditValueChange: (value: string) => void;
-  onStartEditing: (productId: string, field: "name" | "basePrice" | "oldPrice", value: string | number) => void;
-  onSaveEdit: () => void;
-  onKeyDown: (e: React.KeyboardEvent) => void;
-  onEdit: (product: Product) => void;
+  isHighlighted?: boolean;
+  onOpen: (product: Product) => void;
   onToggleArchive: (productId: string, currentStatus?: boolean) => void;
   deletingProductId: string | null;
   onRequestDelete: (productId: string) => void;
@@ -25,160 +28,140 @@ interface ProductCardProps {
 
 export function ProductCard({
   product,
-  editingField,
-  editValue,
-  onEditValueChange,
-  onStartEditing,
-  onSaveEdit,
-  onKeyDown,
-  onEdit,
+  isHighlighted = false,
+  onOpen,
   onToggleArchive,
   deletingProductId,
   onRequestDelete,
   onCancelDelete,
   onConfirmDelete,
 }: ProductCardProps) {
-  const isEditingName = editingField?.productId === product._id && editingField?.field === "name";
-  const isEditingBasePrice = editingField?.productId === product._id && editingField?.field === "basePrice";
-  const isEditingOldPrice = editingField?.productId === product._id && editingField?.field === "oldPrice";
   const isDeleting = deletingProductId === product._id;
+  const isHidden = product.isArchived === true;
   const showOldPrice = product.oldPrice !== undefined;
   const thumbnailSrc = product.images?.[0] || "/Hero-bg.jpg";
 
   return (
     <>
-      <div className="group relative overflow-hidden transition-all duration-200">
-        <div className="relative flex aspect-square items-center justify-center overflow-hidden rounded-[var(--radius-xl)]">
-          <Image
-            src={thumbnailSrc}
-            alt={product.name}
-            fill
-            sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="object-cover"
-          />
-        </div>
+      <motion.div
+        role="button"
+        tabIndex={0}
+        data-product-card-id={product._id}
+        whileHover={{ scale: 1.01 }}
+        transition={{ type: "spring", duration: 0.2, bounce: 0 }}
+        onClick={() => onOpen(product)}
+        onKeyDown={(event) => {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            onOpen(product);
+          }
+        }}
+        className="group relative cursor-pointer overflow-hidden rounded-[28px] p-0 text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-[#6B97FF]"
+      >
+        <div
+          aria-hidden="true"
+          className={`pointer-events-none absolute inset-0 rounded-[28px] transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] ${
+            isHighlighted
+              ? "bg-[#EAF3FF]/28 shadow-[inset_0_0_0_1px_rgba(107,151,255,0.55),0_22px_40px_-24px_rgba(84,131,207,0.22)]"
+              : "bg-[#EAF3FF]/0 group-hover:bg-[#EAF3FF]/35 group-hover:shadow-[inset_0_0_0_1px_rgba(180,202,245,0.55),0_20px_40px_-24px_rgba(84,131,207,0.3)] hover:bg-[var(--system-200)]/40"
+          }`}
+        />
 
-        <div className="p-[var(--spacing-sm)]">
-          {isEditingName ? (
-            <input
-              autoFocus
-              type="text"
-              value={editValue}
-              onChange={(e) => onEditValueChange(e.target.value)}
-              onBlur={onSaveEdit}
-              onKeyDown={onKeyDown}
-              className="text-body mb-[var(--spacing-sm)] w-full rounded-[var(--radius-md)] border border-[--color-input] bg-[--color-card] px-[var(--spacing-sm)] py-[var(--spacing-xs)] text-[--system-700]"
-              aria-label={`Edit name for ${product.name}`}
+        <div className="relative overflow-hidden rounded-[24px] p-2 ">
+          <div className="relative aspect-[3/4] overflow-hidden rounded-[22px] shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+            <div
+              aria-hidden="true"
+              className={`pointer-events-none absolute left-4 right-4 top-3 z-[1] h-1.5 w-1.5 rounded-full transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] ${
+                isHighlighted
+                  ? "bg-[#6B97FF]/0 shadow-[0_10px_24px_-8px_rgba(84,131,207,0.65)]"
+                  : "bg-transparent"
+              }`}
             />
-          ) : (
+            <Image
+              src={thumbnailSrc}
+              alt={product.name}
+              fill
+              sizes="(min-width: 1024px) 25vw, (min-width: 768px) 33vw, 50vw"
+              className="object-cover transition-transform duration-300 ease-[cubic-bezier(0.2,0,0,1)] group-hover:scale-[1.03] "
+            />
+
+            {isHidden ? (
+              <div className="pointer-events-none absolute left-3 top-3 inline-flex items-center gap-1 rounded-full bg-black/65 px-2.5 py-1 text-caption font-medium text-white backdrop-blur-sm">
+                <EyeOff className="h-3.5 w-3.5" />
+                Hidden
+              </div>
+            ) : null}
+          </div>
+
+          <div className="space-y-2 p-3">
+            <div className="text-title text-[var(--system-600)]">{product.name}</div>
+            <div className="flex items-center gap-2">
+              <p className="text-title font-bold text-[var(--system-600)]">{formatPrice(product.basePrice)}</p>
+              {showOldPrice ? (
+                <p className="text-title font-medium text-[var(--system-300)] line-through">
+                  {product.oldPrice ? formatPrice(product.oldPrice) : ""}
+                </p>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="absolute right-3 top-3 flex gap-2 opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
             <button
               type="button"
-              className="text-body mb-[var(--spacing-sm)] line-clamp-2 cursor-pointer text-left text-[--system-700] hover:text-[--system-400]"
-              onClick={() => onStartEditing(product._id, "name", product.name)}
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onOpen(product);
+              }}
+              className="rounded-xl bg-[var(--system-600)] p-3 text-white transition-colors hover:bg-[var(--system-400)]"
+              title="Edit"
+              aria-label={`Edit ${product.name}`}
             >
-              {product.name}
+              <Edit className="h-4 w-4" />
             </button>
-          )}
 
-          <div className="flex items-center gap-[var(--spacing-sm)]">
-            {isEditingBasePrice ? (
-              <input
-                autoFocus
-                type="number"
-                value={editValue}
-                onChange={(e) => onEditValueChange(e.target.value)}
-                onBlur={onSaveEdit}
-                onKeyDown={onKeyDown}
-                className="text-body w-24 rounded-[var(--radius-md)] border border-[--color-input] bg-[--color-card] px-[var(--spacing-sm)] py-[var(--spacing-xs)] font-semibold tabular-nums text-[--system-700]"
-                aria-label={`Edit base price for ${product.name}`}
-              />
-            ) : (
-              <button
-                type="button"
-                className="text-body cursor-pointer font-semibold tabular-nums text-[--system-700] hover:text-[--system-400]"
-                onClick={() => onStartEditing(product._id, "basePrice", product.basePrice)}
-              >
-                {formatPrice(product.basePrice)}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onToggleArchive(product._id, product.isArchived);
+              }}
+              className="rounded-xl bg-[var(--system-600)] p-3 text-white transition-colors hover:bg-[var(--system-400)]"
+              title={isHidden ? "Unhide" : "Hide"}
+              aria-label={isHidden ? `Unhide ${product.name}` : `Hide ${product.name}`}
+            >
+              {isHidden ? (
+                <Eye className="h-4 w-4 text-[var(--color-success)]" />
+              ) : (
+                <EyeOff className="h-4 w-4 text-[var(--color-warning)]" />
+              )}
+            </button>
 
-            {showOldPrice &&
-              (isEditingOldPrice ? (
-                <input
-                  autoFocus
-                  type="number"
-                  value={editValue}
-                  onChange={(e) => onEditValueChange(e.target.value)}
-                  onBlur={onSaveEdit}
-                  onKeyDown={onKeyDown}
-                  className="text-caption w-24 rounded-[var(--radius-md)] border border-[--color-input] bg-[--color-card] px-[var(--spacing-xs)] py-[var(--spacing-xs)] line-through tabular-nums text-[--system-300]"
-                  placeholder="Old price"
-                  aria-label={`Edit old price for ${product.name}`}
-                /> 
-              ) : ( 
-                <button
-                  type="button"
-                  className="text-caption cursor-pointer line-through text-[--system-300] hover:text-[--system-400]"
-                  onClick={() => onStartEditing(product._id, "oldPrice", product.oldPrice || "")}
-                >
-                  {product.oldPrice && formatPrice(product.oldPrice)}
-                </button>
-              ))}
+            <button
+              type="button"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onRequestDelete(product._id);
+              }}
+              className="rounded-xl bg-[var(--system-600)] p-3 text-white transition-colors hover:bg-[var(--system-400)]"
+              title="Delete"
+              aria-label={`Delete ${product.name}`}
+            >
+              <Trash2 className="h-4 w-4 text-[var(--destructive)]" />
+            </button>
           </div>
         </div>
+      </motion.div>
 
-        <div className="absolute top-[var(--spacing-sm)] end-[var(--spacing-sm)] flex gap-[var(--spacing-xs)] opacity-100 transition-opacity md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100">
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onEdit(product);
-            }}
-            className="rounded-[var(--radius-md)] border border-[--color-border] bg-[--color-card] p-[var(--spacing-sm)] shadow-[var(--shadow-sm)] transition-colors hover:bg-[--system-50]"
-            title="Edit"
-            aria-label={`Edit ${product.name}`}
-          >
-            <Edit className="w-4 h-4 text-[--system-400]" />
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onToggleArchive(product._id, product.isArchived);
-            }}
-            className="rounded-[var(--radius-md)] border border-[--color-border] bg-[--color-card] p-[var(--spacing-sm)] shadow-[var(--shadow-sm)] transition-colors hover:bg-[--system-50]"
-            title={product.isArchived ? "Activate" : "Deactivate"}
-            aria-label={product.isArchived ? `Activate ${product.name}` : `Deactivate ${product.name}`}
-          >
-            {product.isArchived ? (
-              <Eye className="w-4 h-4 text-[--color-success]" />
-            ) : (
-              <EyeOff className="w-4 h-4 text-[--color-warning]" />
-            )}
-          </button>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRequestDelete(product._id);
-            }}
-            className="rounded-[var(--radius-md)] border border-[--color-border] bg-[--color-card] p-[var(--spacing-sm)] shadow-[var(--shadow-sm)] transition-colors hover:bg-[--color-error-bg]"
-            title="Delete"
-            aria-label={`Delete ${product.name}`}
-          >
-            <Trash2 className="w-4 h-4 text-[--destructive]" />
-          </button>
-        </div>
-      </div>
-
-      <Dialog open={isDeleting} onOpenChange={(open) => !open && onCancelDelete()}>
+      <Dialog open={isDeleting} onOpenChange={(nextOpen) => !nextOpen && onCancelDelete()}>
         <DialogContent className="max-w-[360px]">
-          <DialogHeader className="pr-10">
+          <DialogHeader>
             <DialogTitle>Delete product?</DialogTitle>
-            <DialogDescription>This action will archive the product from the storefront.</DialogDescription>
+            <DialogDescription>
+              This permanently removes the product from your workspace.
+            </DialogDescription>
           </DialogHeader>
           <DialogFooter>
             <Button variant="outline" onClick={onCancelDelete}>

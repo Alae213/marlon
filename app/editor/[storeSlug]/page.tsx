@@ -5,7 +5,6 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Loader2 } from "lucide-react";
-import { RealtimeProvider } from "@/contexts/realtime-context";
 import { ProductsContent } from "@/components/pages/editor";
 
 export default function EditorPage() {
@@ -37,9 +36,5 @@ export default function EditorPage() {
     );
   }
 
-  return (
-    <RealtimeProvider storeId={storeId}>
-      <ProductsContent storeId={storeId} storeSlug={storeSlug} />
-    </RealtimeProvider>
-  );
+  return <ProductsContent storeId={storeId} storeSlug={storeSlug} />;
 }

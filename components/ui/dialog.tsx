@@ -13,7 +13,6 @@ import { X } from "lucide-react";
 import { AnimatePresence, motion, useIsPresent } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { springs } from "@/lib/springs";
-import { useShape } from "@/lib/shape-context";
 import { Button } from "@/components/ui/button";
 
 const DialogOpenContext = createContext(false);
@@ -89,7 +88,6 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
   ) => {
     const open = useContext(DialogOpenContext);
     const isPresent = useIsPresent();
-    const shape = useShape();
 
     return (
       <AnimatePresence>
@@ -98,14 +96,16 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
             <DialogOverlay className={overlayClassName} />
             <DialogPrimitive.Content ref={ref} asChild forceMount {...props}>
               <motion.div
+                style={{
+                  boxShadow: "var(--bottom-nav-shadow)",
+                } as React.CSSProperties}
                 className={cn(
                   "fixed left-1/2 top-1/2 z-[var(--z-dialog)] w-[calc(100%-2rem)]",
-                  "max-h-[90vh] overflow-y-auto border border-[var(--color-border)] bg-[var(--color-card)] p-[var(--spacing-lg)] text-[var(--color-card-foreground)]",
-                  "shadow-[var(--shadow-xl)] focus:outline-none",
+                  "max-h-[90vh] overflow-y-auto rounded-3xl border-white/10 bg-[--system-600] bg-[image:var(--gradient-popup)] p-[20px] text-white backdrop-blur-[12px]",
+                  "focus:outline-none",
                   (!open || !isPresent) && "pointer-events-none",
                   size === "sm" && "max-w-[400px]",
                   size === "lg" && "max-w-[540px]",
-                  shape.container,
                   className
                 )}
                 initial={{ opacity: 0, scale: 0.97, x: "-50%", y: "-50%" }}
@@ -125,12 +125,13 @@ const DialogContent = forwardRef<HTMLDivElement, DialogContentProps>(
                       variant="ghost"
                       size="icon-sm"
                       className={cn(
-                        "absolute right-[var(--spacing-md)] top-[var(--spacing-md)] text-[var(--system-400)] hover:bg-[var(--system-100)] hover:text-[var(--system-700)]",
+        "absolute right-4 top-4 text-[var(--system-400)] hover:bg-[var(--system-100)]/10 hover:text-[var(--system-100)]",
                         closeClassName
                       )}
                     >
-                      <X />
-                      <span className="sr-only">Close</span>
+                      <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path fillRule="evenodd" clipRule="evenodd" d="M10 0C4.47714 0 0 4.47714 0 10C0 15.5229 4.47714 20 10 20C15.5229 20 20 15.5229 20 10C20 4.47714 15.5229 0 10 0ZM10.0001 9.03577L6.591 5.62668L5.62677 6.59091L9.03586 10L5.62677 13.4091L6.591 14.3733L10.0001 10.9642L13.4092 14.3733L14.3734 13.4091L10.9643 10L14.3734 6.59091L13.4092 5.62668L10.0001 9.03577Z" fill="white" fillOpacity="0.35"/>
+            </svg>
                     </Button>
                   </DialogPrimitive.Close>
                 )}
@@ -147,7 +148,7 @@ DialogContent.displayName = "DialogContent";
 function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("mb-[var(--spacing-md)] flex flex-col gap-1 text-left", className)}
+      className={cn("flex flex-col gap-1 text-left", className)}
       {...props}
     />
   );
@@ -156,7 +157,7 @@ function DialogHeader({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
 function DialogFooter({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn("mt-[var(--spacing-md)] flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
+      className={cn("w-full flex flex-col-reverse gap-2 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );
@@ -168,7 +169,7 @@ const DialogTitle = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
     ref={ref}
-    className={cn("text-title text-[var(--system-700)]", className)}
+    className={cn("title-xl text-[var(--system-100)]", className)}
     {...props}
   />
 ));
@@ -180,7 +181,7 @@ const DialogDescription = forwardRef<
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
     ref={ref}
-    className={cn("text-body-sm text-[var(--system-400)]", className)}
+    className={cn("text-body text-[var(--system-300)]", className)}
     {...props}
   />
 ));

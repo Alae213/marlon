@@ -31,19 +31,19 @@ const toneClasses: Record<
 > = {
   light: {
     surface:
-      "border-[color:var(--field-border-light)] bg-[color:var(--field-surface-light)] text-[color:var(--field-text-light)] shadow-[var(--field-shadow-light)] focus-within:border-[color:var(--field-focus-light)] focus-within:ring-[3px] focus-within:ring-[color:var(--field-focus-ring-light)]",
-    label: "text-[color:var(--field-label-light)]",
-    supporting: "text-[color:var(--field-supporting-light)]",
+      "border-none bg-[var(--system-600)] text-[var(--system-100)] ",
+    label: "text-[var(--system-300)]",
+    supporting: "text-[var(--system-200)]",
     input:
-      "text-[color:var(--field-text-light)] placeholder:text-[color:var(--field-placeholder-light)]",
+      "text-[var(--system-100)] placeholder:text-[var(--system-400)]",
   },
   dark: {
     surface:
-      "border-[color:var(--field-border-dark)] bg-[color:var(--field-surface-dark)] text-[color:var(--field-text-dark)] shadow-[var(--field-shadow-dark)] focus-within:border-[color:var(--field-focus-dark)] focus-within:ring-[3px] focus-within:ring-[color:var(--field-focus-ring-dark)]",
-    label: "text-[color:var(--field-label-dark)]",
-    supporting: "text-[color:var(--field-supporting-dark)]",
+      "border-none bg-[var(--system-600)] text-[var(--system-100)] ",
+    label: "text-[var(--system-300)]",
+    supporting: "text-[var(--system-200)]",
     input:
-      "text-[color:var(--field-text-dark)] placeholder:text-[color:var(--field-placeholder-dark)]",
+      "text-[var(--system-100)] placeholder:text-[var(--system-400)]",
   },
 };
 
@@ -74,7 +74,7 @@ export function FieldShell({
         <label
           htmlFor={id}
           className={cn(
-            "mb-[var(--field-label-gap)] block text-body-sm",
+            "mb-2 block text-body-sm font-medium",
             tone.label,
             labelClassName,
           )}
@@ -88,16 +88,16 @@ export function FieldShell({
         data-layout={layout}
         data-invalid={error ? "true" : "false"}
         className={cn(
-          "group relative w-full rounded-[var(--field-group-radius)] border transition-[border-color,box-shadow,background-color,color]",
+          "group relative w-full rounded-[16px] border transition-[border-color,background-color,color]",
           layout === "row"
-            ? "flex min-h-[var(--field-row-min-height)] items-center gap-[var(--field-accessory-gap)] px-[var(--field-padding-x)] py-[var(--field-padding-y)]"
-            : "px-[var(--field-padding-x)] py-[var(--field-padding-y)]",
+            ? "flex min-h-10 items-center gap-2 px-3 py-2"
+            : "px-3 py-2",
           disabled && "opacity-60",
           tone.surface,
           error &&
             (variant === "dark"
-              ? "border-[color:var(--field-error-dark)] focus-within:border-[color:var(--field-error-dark)] focus-within:ring-[color:var(--field-error-ring-dark)]"
-              : "border-[color:var(--field-error-light)] focus-within:border-[color:var(--field-error-light)] focus-within:ring-[color:var(--field-error-ring-light)]"),
+              ? "border-[var(--color-error)] focus-within:border-[var(--color-error)] focus-within:ring-[var(--color-error)]/20"
+              : "border-[var(--color-error)] focus-within:border-[var(--color-error)] focus-within:ring-[var(--color-error)]/20"),
           surfaceClassName,
         )}
       >
@@ -105,7 +105,7 @@ export function FieldShell({
           <label
             htmlFor={id}
             className={cn(
-              "min-w-0 shrink-0 pe-[var(--field-separator-inset)] text-body-sm",
+              "min-w-0 shrink-0 pr-2 text-body-sm font-medium",
               tone.label,
               labelClassName,
             )}
@@ -120,11 +120,11 @@ export function FieldShell({
         <p
           id={`${id}-support`}
           className={cn(
-            "mt-[var(--field-support-gap)] text-caption",
+            "mt-1 text-caption",
             error
               ? variant === "dark"
-                ? "text-[color:var(--field-error-dark)]"
-                : "text-[color:var(--field-error-light)]"
+                ? "text-[var(--color-error)]"
+                : "text-[var(--color-error)]"
               : tone.supporting,
             supportingTextClassName,
           )}

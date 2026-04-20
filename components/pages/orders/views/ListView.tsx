@@ -1319,7 +1319,7 @@ export function ListView({
 
       {/* Delete Confirmation Modal */}
       <Dialog open={showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(false)}>
-        <DialogContent className="max-w-[360px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+      <DialogContent className="max-w-[360px] border-[--system-200] bg-[--color-card] p-6 shadow-[var(--shadow-xl)]">
           <DialogHeader className="pr-10">
             <div className="mb-2 flex items-center gap-3">
               <div className="rounded-full bg-red-100 p-3">

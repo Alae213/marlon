@@ -88,7 +88,7 @@ export function StoreInfoSettings({ storeId, storeSlug }: StoreInfoSettingsProps
         />
       </div>
 
-      <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+      <div className="rounded-lg bg-[var(--system-700)] p-4">
         <p className="mb-1 text-caption text-[var(--system-200)]">Store URL</p>
         <p className="text-body-sm text-[var(--system-50)]">marlon.com/{storeSlug}</p>
       </div>

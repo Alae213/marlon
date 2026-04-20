@@ -52,9 +52,9 @@ export function DeliveryPricingSettings({ storeId }: DeliveryPricingSettingsProp
         {savedMessage && <span className="text-body-sm text-[var(--color-success)]">Saved</span>}
       </div>
 
-      <div className="overflow-hidden rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-xs)]">
+      <div className="overflow-hidden rounded-lg bg-[var(--system-700)] p-1">
         <div className="overflow-x-auto">
-          <table className="min-w-[560px] w-full rounded-[var(--radius-md)] bg-[var(--system-800)]">
+        <table className="min-w-[560px] w-full rounded-md bg-[var(--system-800)]">
             <thead className="bg-[var(--system-700)]">
               <tr>
                 <th scope="col" className="p-2 text-left text-caption text-[var(--system-100)] sm:p-3 sm:text-body-sm">Wilaya</th>
@@ -76,7 +76,7 @@ export function DeliveryPricingSettings({ storeId }: DeliveryPricingSettingsProp
                     <th scope="row" className="p-2 text-left text-caption text-[var(--system-50)] sm:p-3 sm:text-body-sm">{wilaya}</th>
                     <td className="p-2 sm:p-3">
                       <label htmlFor={homeInputId} className="sr-only">{`${wilaya} home delivery price`}</label>
-                      <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                      <div className="rounded-md bg-[var(--system-600)] p-[2px]">
                         <Input
                           id={homeInputId}
                           type="number"
@@ -90,7 +90,7 @@ export function DeliveryPricingSettings({ storeId }: DeliveryPricingSettingsProp
                     </td>
                     <td className="p-2 sm:p-3">
                       <label htmlFor={officeInputId} className="sr-only">{`${wilaya} office delivery price`}</label>
-                      <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                      <div className="rounded-md bg-[var(--system-600)] p-[2px]">
                         <Input
                           id={officeInputId}
                           type="number"

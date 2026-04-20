@@ -71,15 +71,3 @@ export interface HeroContent {
 }
 
 // ── Inline Editing Types ───────────────────────────────────────
-
-export type EditableField =
-  | "name"
-  | "basePrice"
-  | "oldPrice"
-  | "heroTitle"
-  | "heroCtaText";
-
-export interface EditingField {
-  productId: string;
-  field: EditableField;
-}

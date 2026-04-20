@@ -1,34 +1,29 @@
 "use client";
 
-import { useState, useMemo, useCallback, useEffect } from "react";
-import { useQuery, useMutation } from "convex/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
-import { Plus, Image as ImageIcon, Settings, Eye, Copy, Check } from "lucide-react";
+import { Settings, Eye, Copy, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
   Root as ScrollAreaRoot,
   Viewport as ScrollAreaViewport,
-  Scrollbar as ScrollAreaScrollbar,
-  Thumb as ScrollAreaThumb,
 } from "@radix-ui/react-scroll-area";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useToast } from "@/contexts/toast-context";
 
-import { useInlineEdit } from "../hooks/use-inline-edit";
-import { useImageUpload } from "../hooks/use-image-upload";
+import { AddProductTile } from "./add-product-tile";
 import { ProductCard } from "./product-card";
-import { ProductForm } from "./product-form";
 import { NavbarEditor } from "./navbar-editor";
 import { HeroEditor } from "./hero-editor";
 import { SettingsDialog } from "./settings-dialog";
+import { EditorProductDetailModal } from "./editor-product-detail-modal";
 import { BottomNavigation } from "@/components/primitives/core";
-import type { Product, ProductFormData, VariantOption, Variant } from "../types";
 
-// Convex ID validation helper
 function isValidConvexId(id: string): boolean {
   return typeof id === "string" && id.length > 0 && /^[a-zA-Z0-9]+$/.test(id);
 }
@@ -46,21 +41,15 @@ interface ProductsContentProps {
 }
 
 export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
-  // ── UI State ────────────────────────────────────────────────
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | null>(null);
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
-
-  // ── Router ──────────────────────────────────────────────────
+  const [highlightedProductId, setHighlightedProductId] = useState<string | null>(null);
   const router = useRouter();
+  const { showToast } = useToast();
 
-  // ── Convex Queries ──────────────────────────────────────────
-  const products = useQuery(api.products.getProducts, { storeId });
+  const products = useQuery(api.products.getAllProducts, { storeId });
   const store = useQuery(api.stores.getStore, { storeId });
   const navbarContent = useQuery(api.siteContent.getSiteContentResolved, {
     storeId,
@@ -71,37 +60,42 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     section: "hero",
   });
 
-  // ── Convex Mutations ────────────────────────────────────────
-  const createProduct = useMutation(api.products.createProduct);
-  const updateProduct = useMutation(api.products.updateProduct);
+  const createQuickProduct = useMutation(api.products.createQuickProduct);
   const archiveProduct = useMutation(api.products.archiveProduct);
   const unarchiveProduct = useMutation(api.products.unarchiveProduct);
-  const removeAllOwnedFooterContent = useMutation(api.siteContent.removeAllOwnedFooterContent);
-
-  // ── Hooks ───────────────────────────────────────────────────
-  const { resolveImageStorageIds } = useImageUpload();
-  const {
-    editingField,
-    editValue,
-    startEditing,
-    saveInlineEdit,
-    handleKeyDown,
-    setEditValue,
-  } = useInlineEdit({ products });
-
-  // ── Derived Data ────────────────────────────────────────────
-  const activeProducts = useMemo(() => {
-    if (!products) return [];
-    return products.filter((p) => !p.isArchived);
-  }, [products]);
+  const deleteHiddenProduct = useMutation(api.products.deleteHiddenProduct);
+  const workspaceProducts = useMemo(() => products ?? [], [products]);
+  const selectedProduct = useMemo(
+    () => workspaceProducts.find((product) => product._id === selectedProductId) ?? null,
+    [selectedProductId, workspaceProducts],
+  );
 
   useEffect(() => {
-    void removeAllOwnedFooterContent().catch((err) => {
-      console.error("Failed to clean legacy footer content:", err);
-    });
-  }, [removeAllOwnedFooterContent]);
+    if (!highlightedProductId) {
+      return;
+    }
 
-  // ── Copy Handler ────────────────────────────────────────────
+    const card = document.querySelector<HTMLElement>(
+      `[data-product-card-id="${highlightedProductId}"]`,
+    );
+
+    if (!card) {
+      return;
+    }
+
+    window.requestAnimationFrame(() => {
+      card.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    });
+
+    const timeout = window.setTimeout(() => {
+      setHighlightedProductId(null);
+    }, 2200);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [highlightedProductId, workspaceProducts]);
+
   const handleCopy = useCallback(async () => {
     const url = `${window.location.origin}/${storeSlug}`;
     await navigator.clipboard.writeText(url);
@@ -109,151 +103,62 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [storeSlug]);
 
-  // ── Product Handlers ────────────────────────────────────────
-
-  // Shared helper for saving product (create or update)
-  const saveProduct = useCallback(
-    async (
-      product: ProductFormData,
-      mutation: typeof createProduct | typeof updateProduct,
-      options: {
-        isUpdate: boolean;
-        onSuccess: () => void;
-        setError: (error: string | null) => void;
-      }
-    ) => {
-      options.setError(null);
-      setIsSaving(true);
-      try {
-        const storageIds = await resolveImageStorageIds(product.images);
-
-        if (options.isUpdate) {
-          if (!product.productId) {
-            throw new Error("Product ID is required for updates");
-          }
-          await updateProduct({
-            productId: product.productId,
-            name: product.name,
-            description: product.description || undefined,
-            basePrice: product.basePrice,
-            oldPrice: product.oldPrice || undefined,
-            images: storageIds,
-            variants: product.variants,
-          });
-        } else {
-          await createProduct({
-            storeId,
-            name: product.name,
-            description: product.description || undefined,
-            basePrice: product.basePrice,
-            oldPrice: product.oldPrice || undefined,
-            images: storageIds,
-            variants: product.variants,
-          });
-        }
-        options.onSuccess();
-      } catch (err) {
-        console.error("Failed to save product:", err);
-        const message = err instanceof Error ? err.message : "Failed to save product";
-        options.setError(message);
-      } finally {
-        setIsSaving(false);
-      }
-    },
-    [createProduct, updateProduct, resolveImageStorageIds, storeId]
-  );
-
-  const handleAddProduct = useCallback(
-    async (product: ProductFormData) => {
-      await saveProduct(product, createProduct, {
-        isUpdate: false,
-        onSuccess: () => setIsAddModalOpen(false),
-        setError: setError,
-      });
-    },
-    [saveProduct]
-  );
-
-  const handleUpdateProduct = useCallback(
-    async (product: ProductFormData) => {
-      await saveProduct(product, updateProduct, {
-        isUpdate: true,
-        onSuccess: () => setEditingProduct(null),
-        setError: setUpdateError,
-      });
-    },
-    [saveProduct]
-  );
+  const handleQuickCreate = useCallback(async () => {
+    try {
+      const productId = await createQuickProduct({ storeId });
+      setHighlightedProductId(productId);
+    } catch (error) {
+      console.error("Failed to create hidden product:", error);
+      showToast("Failed to create hidden product", "error");
+    }
+  }, [createQuickProduct, showToast, storeId]);
 
   const handleToggleArchive = useCallback(
     async (productId: string, currentStatus?: boolean) => {
       try {
-        const validId = toProductId(productId, "toggle archive");
+        const validId = toProductId(productId, "toggle product visibility");
         if (currentStatus) {
           await unarchiveProduct({ productId: validId });
         } else {
           await archiveProduct({ productId: validId });
         }
       } catch (error) {
-        console.error("Failed to toggle archive:", error);
+        console.error("Failed to toggle product visibility:", error);
+        showToast("Failed to update product visibility", "error");
       }
     },
-    [archiveProduct, unarchiveProduct]
+    [archiveProduct, showToast, unarchiveProduct],
   );
 
-  const handleDeleteProduct = useCallback(
+  const handleDeleteHiddenProduct = useCallback(
     async (productId: string) => {
       try {
         const validId = toProductId(productId, "delete product");
-        await archiveProduct({ productId: validId });
+        await deleteHiddenProduct({ productId: validId });
+        if (selectedProductId === productId) {
+          setSelectedProductId(null);
+        }
         setDeletingProductId(null);
+        showToast("Product deleted", "success");
       } catch (error) {
         console.error("Failed to delete product:", error);
+        showToast("Failed to delete product", "error");
       }
     },
-    [archiveProduct]
+    [deleteHiddenProduct, selectedProductId, showToast],
   );
-
-  const handleEditProduct = useCallback((product: Product) => {
-    setEditingProduct({
-      ...product,
-      images: product.images || [],
-      isArchived: product.isArchived ?? false,
-      variants:
-        product.variants?.map((v: Variant) => ({
-          name: v.name,
-          options: v.options.map((o: VariantOption | string) => ({
-            name: typeof o === "string" ? o : o.name,
-            priceModifier: typeof o === "string" ? undefined : o.priceModifier,
-          })),
-        })) || [],
-    });
-  }, []);
-
-  const handleEditSubmit = useCallback(
-    async (updated: ProductFormData) => {
-      await handleUpdateProduct(updated);
-      // Don't close here — handleUpdateProduct closes on success
-    },
-    [handleUpdateProduct]
-  );
-
-  // ── Render ──────────────────────────────────────────────────
 
   return (
     <div className="h-screen w-full">
-
-      {/* Browser Chrome Window */}
-      <div className="flex flex-col items-center justify-center bg-[var(--system-200)] h-full">
-        {/* Header */}
-      <div className="px-[12px] w-full flex items-center justify-between pt-4">
-        <div className="flex items-center gap-3">
-          <Link href="/" className="flex items-center">
-            <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
-          </Link>
+      <div className="flex h-full flex-col items-center justify-center bg-[var(--system-200)]">
+        <div className="flex w-full items-center justify-between px-[12px] pt-4">
+          <div className="flex items-center gap-3">
+            <Link href="/" className="flex items-center">
+              <Image src="/Logo-text.svg" alt="Marlon Logo" width={118} height={36} className="h-[10px] w-auto" />
+            </Link>
+          </div>
+          <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
         </div>
-        <UserButton afterSignOutUrl="/" appearance={{ elements: { avatarBox: "w-9 h-9" } }} />
-      </div>
 
         <div className="flex-1" />
         <div
@@ -261,233 +166,146 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
             background: "linear-gradient(0deg, #434545 100%, #212525 0%)",
             boxShadow: "var(--shadow-xl-shadow)",
           }}
-          className="flex flex-col gap-[8px] w-full h-[100vh] max-w-7xl mx-auto px-[12px] pt-[8px] pb-[0px] rounded-t-[20px] overflow-hidden"
+          className="mx-auto flex h-[100vh] w-full max-w-7xl flex-col gap-[8px] overflow-hidden rounded-t-[20px] px-[12px] pb-[0px] pt-[8px]"
         >
-          {/* Browser Window Header */}
-          <div className="px-[8px] flex items-center justify-between h-[24px]">
-            {/* Left */}
-            <div className="w-[150px] flex items-center gap-2">
+          <div className="flex h-[24px] items-center justify-between px-[8px]">
+            <div className="flex w-[150px] items-center gap-2">
               <button
                 onClick={() => router.push("/")}
-                className="flex items-center justify-center cursor-pointer"
+                className="flex cursor-pointer items-center justify-center"
               >
                 <Image src="/windw.svg" alt="marlon" width={24} height={24} className="w-8" />
               </button>
-              
             </div>
 
-            {/* Center */}
-            <div className="flex-1 flex justify-center h-[26px]">
+            <div className="flex h-[26px] flex-1 justify-center">
               <div
                 style={{ boxShadow: "var(--shadow-inside-shadow)" }}
-                className="h-full bg-black/40 flex flex-row justify-between items-center gap-2 rounded-[8px] p-[3px] pl-[6px] py-1 w-[300px]"
+                className="flex h-full w-[300px] flex-row items-center justify-between gap-2 rounded-[8px] bg-black/40 p-[3px] py-1 pl-[6px]"
               >
-                <div className="flex items-center gap-2 w-[50px]">
-                  <Image src="/favicon.svg" alt="Marlon" width={27} height={27} className="w-4 h-4" />
+                <div className="flex w-[50px] items-center gap-2">
+                  <Image src="/favicon.svg" alt="Marlon" width={27} height={27} className="h-4 w-4" />
                 </div>
                 <div className="group relative cursor-pointer">
                   <p className="text-micro-label text-[var(--system-300)]">
                     {store?.name ?? storeSlug}
-                    <span className="text-micro-label absolute left-[-42px] top-[42px] mt-1 w-max rounded-[6px] bg-[var(--system-100)] px-2 py-1 text-[var(--system-400)] opacity-0 shadow-lg transition-opacity duration-150 pointer-events-none rounded group-hover:opacity-100 z-50">
+                    <span className="text-micro-label pointer-events-none absolute left-[-42px] top-[42px] z-50 mt-1 w-max rounded bg-[var(--system-100)] px-2 py-1 text-[var(--system-400)] opacity-0 shadow-lg transition-opacity duration-150 group-hover:opacity-100">
                       marlon.app/{storeSlug}
                     </span>
                   </p>
                 </div>
-                <div className="w-[50px] flex justify-end">
-                <button
-                  onClick={handleCopy}
-                  aria-label="Copy store URL"
-                  className="cursor-pointer w-4 h-4 flex items-center justify-center rounded hover:bg-white/10 transition-all duration-200"
-                >
-                  <AnimatePresence mode="wait">
-                    {!copied ? (
-                      <motion.div
-                        key="copy"
-                        initial={{ opacity: 0, scale: 0.8 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.8 }}
-                      >
-                        <Copy className="w-3 h-3 text-[var(--system-300)]" />
-                      </motion.div>
-                    ) : (
-                      <motion.div
-                        key="check"
-                        initial={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
-                        animate={{
-                          opacity: 1,
-                          scale: 1,
-                          filter: "blur(0px)",
-                          transition: { duration: 0.1, type: "spring", stiffness: 500, damping: 25 },
-                        }}
-                        exit={{
-                          opacity: 0,
-                          scale: 0.5,
-                          filter: "blur(4px)",
-                          transition: { duration: 0.1 },
-                        }}
-                      >
-                        <Check className="w-3 h-3 text-[--color-success] stroke-[3px]" />
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </button>
+                <div className="flex w-[50px] justify-end">
+                  <button
+                    onClick={handleCopy}
+                    aria-label="Copy store URL"
+                    className="flex h-4 w-4 cursor-pointer items-center justify-center rounded transition-all duration-200 hover:bg-white/10"
+                  >
+                    <AnimatePresence mode="wait">
+                      {!copied ? (
+                        <motion.div
+                          key="copy"
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.8 }}
+                        >
+                          <Copy className="h-3 w-3 text-[var(--system-300)]" />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="check"
+                          initial={{ opacity: 0, scale: 0.5, filter: "blur(4px)" }}
+                          animate={{
+                            opacity: 1,
+                            scale: 1,
+                            filter: "blur(0px)",
+                            transition: { duration: 0.1, type: "spring", stiffness: 500, damping: 25 },
+                          }}
+                          exit={{
+                            opacity: 0,
+                            scale: 0.5,
+                            filter: "blur(4px)",
+                            transition: { duration: 0.1 },
+                          }}
+                        >
+                          <Check className="h-3 w-3 stroke-[3px] text-[--color-success]" />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </button>
                 </div>
               </div>
             </div>
- 
-            {/* Right */}
-            <div className="flex justify-end gap-1 w-[150px]">
+
+            <div className="flex w-[150px] justify-end gap-1">
               <button
-                onClick={(e) => {
-                  e.preventDefault();
+                onClick={(event) => {
+                  event.preventDefault();
                   window.open(`/${storeSlug}`, "_blank");
                 }}
                 className="text-micro-label flex h-6 w-fit cursor-pointer flex-row items-center justify-center gap-[8px] rounded-[10px] bg-white/5 px-[8px] text-white transition-all hover:bg-white/10 focus:outline-none"
               >
-                <Eye className="w-3 h-3 stroke-[2px]" />
+                <Eye className="h-3 w-3 stroke-[2px]" />
                 Preview
               </button>
-              
+
               <button
                 onClick={() => setIsSettingsOpen(true)}
                 aria-label="Settings"
                 className="text-micro-label flex h-6 w-fit cursor-pointer flex-row items-center justify-center gap-[8px] rounded-[10px] bg-white/5 px-[8px] text-white transition-all hover:bg-white/10 focus:outline-none"
               >
-                <Settings className="w-3.5 h-3.5 stroke-[2px]" />
+                <Settings className="h-3.5 w-3.5 stroke-[2px]" />
               </button>
-              
             </div>
           </div>
 
-          {/* Browser Content — Scrollable Viewport */}
-          <ScrollAreaRoot className="w-full h-full overflow-hidden rounded-t-[12px]">
-            <ScrollAreaViewport
-              className="bg-[var(--system-100)] h-full overflow-y-auto rounded-t-[12px] border-t border-[var(--system-200)] "
-            >
-              {/* Navbar Editor */}
+          <ScrollAreaRoot className="h-full w-full overflow-hidden rounded-t-[12px]">
+            <ScrollAreaViewport className="h-full overflow-y-auto rounded-t-[12px]  bg-[var(--system-100)]">
               <NavbarEditor storeId={storeId} navbarContent={navbarContent} />
+              <HeroEditor storeId={storeId} heroContent={heroContent} />
 
-              {/* Hero Editor */}
-              <HeroEditor
-                storeId={storeId}
-                heroContent={heroContent}
-              />
-
-              {/* Products Catalog */}
-              <div>
-                {activeProducts.length === 0 ? (
-                  <div className="p-10 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                      <button
-                      onClick={() => setIsAddModalOpen(true)}
-                      aria-label="Add new product"
-                      className="aspect-[1/1.3] cursor-pointer bg-[#EAF3FF]/50 border-3 border-dashed border-[#B4CAF5] rounded-2xl  flex flex-col items-center justify-center"
-                    >
-                      <Plus className="w-10 h-10 strok-3 text-[#B4CAF5]" />
-                    </button>
-                    </div>
-                    
+              <div className="px-16 py-[4.5rem]">
+                <h2 className="text-title px-4 mb-6 font-semibold text-[var(--system-700)]">
+                  Our Products
+                </h2>
+                {workspaceProducts.length === 0 ? (
+                  <div className="grid grid-cols-2 gap-4 px-16 py-[4.5rem] pb-32 md:grid-cols-3 lg:grid-cols-4">
+                    <AddProductTile onClick={handleQuickCreate} />
+                  </div>
                 ) : (
-                  <div className="px-16 py-18 pb-32 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {activeProducts.map((product) => (
+                  <div className="grid grid-cols-2 gap-4  pb-32 md:grid-cols-3 lg:grid-cols-4">
+                    {workspaceProducts.map((product) => (
                       <ProductCard
                         key={product._id}
                         product={product}
-                        editingField={editingField}
-                        editValue={editValue}
-                        onEditValueChange={setEditValue}
-                        onStartEditing={startEditing}
-                        onSaveEdit={saveInlineEdit}
-                        onKeyDown={handleKeyDown}
-                        onEdit={handleEditProduct}
+                        isHighlighted={highlightedProductId === product._id}
+                        onOpen={(nextProduct) => setSelectedProductId(nextProduct._id)}
                         onToggleArchive={handleToggleArchive}
                         deletingProductId={deletingProductId}
                         onRequestDelete={setDeletingProductId}
                         onCancelDelete={() => setDeletingProductId(null)}
-                        onConfirmDelete={handleDeleteProduct}
+                        onConfirmDelete={handleDeleteHiddenProduct}
                       />
                     ))}
 
-                    {/* Add Product Button  */}
-
-                    <button
-                      onClick={() => setIsAddModalOpen(true)}
-                      aria-label="Add new product"
-                      className="aspect-[1/1.3] cursor-pointer bg-[#EAF3FF]/50 border-3 border-dashed border-[#B4CAF5] rounded-2xl  flex flex-col items-center justify-center"
-                    >
-                      <Plus className="w-10 h-10 strok-3 text-[#B4CAF5]" />
-                    </button>
-
+                    <AddProductTile onClick={handleQuickCreate} />
                   </div>
                 )}
               </div>
-
             </ScrollAreaViewport>
-            <ScrollAreaScrollbar
-              orientation="vertical"
-              className="flex w-2 touch-none select-none p-[1px] transition-colors"
-            >
-              <ScrollAreaThumb className="relative flex-1 rounded-full bg-[var(--system-300)]/0" />
-            </ScrollAreaScrollbar>
           </ScrollAreaRoot>
 
-          {/* Bottom Navigation */}
           <BottomNavigation storeSlug={storeSlug} currentPage="products" />
         </div>
         <div className="flex-1" />
       </div>
 
-      {/* Add Product Modal */}
-      <Dialog
-        open={isAddModalOpen}
-        onOpenChange={(open) => {
-          setIsAddModalOpen(open);
-          if (!open) setError(null);
-        }}
-      >
-        <DialogContent className="gap-[var(--spacing-md)] border-[--system-200] bg-[--system-50] p-[var(--spacing-md)] text-[--system-700] shadow-[var(--shadow-lg)]">
-          <DialogHeader className="gap-[var(--spacing-xs)] pr-[calc(var(--spacing-md)+2.25rem)]">
-            <DialogTitle>Add new product</DialogTitle>
-          </DialogHeader>
-          <ProductForm
-            onClose={() => {
-              setIsAddModalOpen(false);
-              setError(null);
-            }}
-            onSubmit={handleAddProduct}
-            error={error}
-          />
-        </DialogContent>
-      </Dialog>
+      <EditorProductDetailModal
+        open={selectedProduct !== null}
+        product={selectedProduct}
+        storeSlug={storeSlug}
+        onClose={() => setSelectedProductId(null)}
+      />
 
-      {/* Edit Product Modal */}
-      <Dialog
-        open={!!editingProduct}
-        onOpenChange={(open) => {
-          if (!open) {
-            setEditingProduct(null);
-            setUpdateError(null);
-          }
-        }}
-      >
-        <DialogContent className="max-w-[560px] gap-0 border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
-          <DialogHeader className="mb-[var(--spacing-lg)] pr-10">
-            <DialogTitle>Edit product</DialogTitle>
-          </DialogHeader>
-          {editingProduct && (
-            <ProductForm
-              product={editingProduct}
-              onClose={() => {
-                setEditingProduct(null);
-                setUpdateError(null);
-              }}
-              onSubmit={handleEditSubmit}
-              error={updateError}
-            />
-          )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Settings Dialog */}
       <SettingsDialog
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}

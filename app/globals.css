@@ -27,20 +27,12 @@
   --color-popover-foreground: var(--popover-foreground);
   --font-sans: var(--font-sans);
   --font-arabic: var(--font-arabic);
-  --spacing-xs: var(--spacing-xs);
-  --spacing-sm: var(--spacing-sm);
-  --spacing-md: var(--spacing-md);
-  --spacing-lg: var(--spacing-lg);
-  --spacing-xl: var(--spacing-xl);
-  --spacing-2xl: var(--spacing-2xl);
-  --spacing-3xl: var(--spacing-3xl);
-  --radius-none: var(--radius-none);
-  --radius-sm: var(--radius-sm);
-  --radius-md: var(--radius-md);
-  --radius-lg: var(--radius-lg);
-  --radius-xl: var(--radius-xl);
-  --radius-2xl: var(--radius-2xl);
-  --radius-full: var(--radius-full);
+  --radius-sm: 0.375rem;
+  --radius-md: 0.625rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+  --radius-2xl: 1.5rem;
+  --radius-full: 9999px;
   --shadow-sm: var(--shadow-sm);
   --shadow-md: var(--shadow-md);
   --shadow-lg: var(--shadow-lg);
@@ -131,77 +123,7 @@
   --popover: #FFFFFF;
   --popover-foreground: var(--system-700);
 
-  /* ===========================================
-     SPACING
-     =========================================== */
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-  --spacing-2xl: 3rem;
-  --spacing-3xl: 4rem;
 
-
-
-  /* ===========================================
-     RADIUS 
-     =========================================== */
-  --radius-none: 0;
-  --radius-sm: 0.375rem;   /* 6px */
-  --radius-md: 0.625rem;   /* 10px */
-  --radius-lg: 1rem;       /* 16px */
-  --radius-xl: 1.25rem;    /* 20px */
-  --radius-2xl: 1.5rem;    /* 24px */
-  --radius-full: 9999px;
-
-  /* ===========================================
-      SHADOWS
-      =========================================== */
-  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.05);
-  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
-
-  /* ===========================================
-     iOS FIELD TOKENS
-     =========================================== */
-  --field-row-min-height: 3rem;
-  --field-textarea-min-height: 5.75rem;
-  --field-padding-x: 1rem;
-  --field-padding-y: 0.75rem;
-  --field-label-gap: 0.5rem;
-  --field-support-gap: 0.375rem;
-  --field-accessory-gap: 0.75rem;
-  --field-group-radius: 1rem;
-  --field-separator-inset: 0.75rem;
-
-  --field-surface-light: #ffffff;
-  --field-border-light: #d8d8dc;
-  --field-text-light: var(--system-700);
-  --field-label-light: var(--system-500);
-  --field-placeholder-light: var(--system-400);
-  --field-supporting-light: var(--system-400);
-  --field-focus-light: #0a84ff;
-  --field-focus-ring-light: rgb(10 132 255 / 0.18);
-  --field-error-light: var(--color-error);
-  --field-error-ring-light: rgb(255 59 48 / 0.16);
-  --field-shadow-light: 0 1px 0 rgb(255 255 255 / 0.82), 0 0 0 1px rgb(0 0 0 / 0.02);
-
-  --field-surface-dark: rgb(255 255 255 / 0.08);
-  --field-border-dark: rgb(255 255 255 / 0.14);
-  --field-text-dark: var(--system-50);
-  --field-label-dark: rgb(255 255 255 / 0.72);
-  --field-placeholder-dark: rgb(255 255 255 / 0.4);
-  --field-supporting-dark: rgb(255 255 255 / 0.58);
-  --field-focus-dark: rgb(10 132 255 / 0.95);
-  --field-focus-ring-dark: rgb(10 132 255 / 0.22);
-  --field-error-dark: #ff7b72;
-  --field-error-ring-dark: rgb(255 123 114 / 0.18);
-  --field-shadow-dark:
-    inset 0 1px 0 rgb(255 255 255 / 0.08),
-    inset 0 -1px 0 rgb(0 0 0 / 0.16),
-    0 0 0 1px rgb(255 255 255 / 0.02);
 
   /* ===========================================
        TYPOGRAPHY - Font Stack
@@ -222,7 +144,7 @@
   --text-body-sm: 0.875rem;
   --leading-body-sm: 1.25rem;     /* 20px */
   --tracking-body-sm: 0;
-  --weight-body-sm: 400;
+  --weight-body-sm: 500;
 
   /* Body: 16px - Primary body copy (MOST USED) */
   --text-body: 1rem;
@@ -233,7 +155,7 @@
   /* Title: 24px / 28px - Section and page titles */
   --text-title: 1.5rem;
   --leading-title: 1.75rem;
-  --tracking-title: -0.06em;
+  --tracking-title: -0.05em;
   --weight-title: 700;
 
   /* Display: 40/44 up to 56/52 - Hero and marquee headlines */
@@ -242,7 +164,7 @@
   --tracking-display: -0.06em;
   --weight-display: 700;
 
-  --tracking-micro-label: 0.12em;
+  --tracking-micro-label: 0em;
   --weight-micro-label: 500;
 
 /* ===========================================
@@ -258,8 +180,7 @@
   /* ===========================================
       COMPONENT-SPECIFIC SHADOWS
       =========================================== */
-  --shadow-badge: 0 1px 2px rgb(0 0 0 / 0.15);
-  --shadow-popup: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+ 
   --gradient-popup: linear-gradient(145deg, rgba(30, 31, 32, 0.98), rgba(21, 22, 23, 0.96));
 
   /* ===========================================
@@ -379,7 +300,6 @@
   line-height: var(--leading-caption);
   letter-spacing: var(--tracking-micro-label);
   font-weight: var(--weight-micro-label);
-  text-transform: uppercase;
 }
 
 

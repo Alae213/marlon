@@ -234,7 +234,7 @@ export const border = {
  * // In Tailwind (use var(--) for CSS variables):
  * <div className="bg-[--system-100] text-[--system-700]">
  * <button className="bg-[--color-primary] text-white">
- * <div className="p-[--spacing-md] rounded-[--radius-md]">
+ * <div className="p-4 rounded-md">
  */
 
 // ===========================================

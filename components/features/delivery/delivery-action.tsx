@@ -119,7 +119,7 @@ export function DeliveryAction({
           if (!open) setResult(null);
         }}
       >
-        <DialogContent className="max-w-[480px] border-[--system-200] bg-[--color-card] p-[var(--spacing-lg)] shadow-[var(--shadow-xl)]">
+      <DialogContent className="max-w-[480px] border-[--system-200] bg-[--color-card] p-6 shadow-[var(--shadow-xl)]">
           <DialogHeader className="pr-10">
             <DialogTitle>Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨ Ù„Ù„ØªÙˆØµÙŠÙ„</DialogTitle>
             <DialogDescription>Ø·Ù„Ø¨ {orderNumber}</DialogDescription>

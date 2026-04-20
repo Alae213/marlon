@@ -5,15 +5,15 @@ import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import type { IconComponent } from "@/lib/icon-context";
 import { cn } from "@/lib/utils";
-import { useShape } from "@/lib/shape-context";
 
 const buttonVariants = cva(
   [
     "group relative inline-flex items-center justify-center outline-none cursor-pointer",
+    "rounded-xl",
     "text-box-trim-both text-box-edge-cap-alphabetic",
     "transition-all duration-80",
     "disabled:opacity-50 disabled:pointer-events-none",
-    "focus-visible:ring-1 focus-visible:ring-[#6B97FF]",
+    "focus-visible:ring-1 focus-visible:ring-[#6B97FF] ",
   ],
   {
     variants: {
@@ -28,9 +28,9 @@ const buttonVariants = cva(
         danger: "bg-[var(--color-error)] text-white hover:opacity-90 active:opacity-80",
       },
       size: {
-        sm: "text-caption h-7 gap-1 px-3",
-        md: "text-body-sm h-8 gap-1.5 px-4",
-        lg: "text-body h-10 gap-1.5 px-5",
+        sm: "text-caption h-7 gap-1 px-3 font-semibold",
+        md: "text-body-sm h-8 gap-1.5 px-4 font-semibold",
+        lg: "text-body h-10 gap-1.5 px-5 font-semibold",
         "icon-sm": "h-8 w-8 p-0 [&_svg]:h-3.5 [&_svg]:w-3.5",
         icon: "h-9 w-9 p-0 [&_svg]:h-4 [&_svg]:w-4",
         "icon-lg": "h-10 w-10 p-0 [&_svg]:h-5 [&_svg]:w-5",
@@ -82,7 +82,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     const Comp = asChild ? Slot : "button";
     const isIconOnly = size === "icon" || size === "icon-sm" || size === "icon-lg";
     const iconSize = size === "sm" ? 14 : size === "lg" ? 20 : 16;
-    const shape = useShape();
 
     return (
       <Comp
@@ -94,7 +93,6 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
             iconLeft: !isIconOnly && !!LeadingIcon,
             iconRight: !isIconOnly && !!TrailingIcon,
           }),
-          shape.button,
           className
         )}
         disabled={disabled || loading}

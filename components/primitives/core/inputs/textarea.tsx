@@ -58,7 +58,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           disabled={disabled}
           spellCheck={spellCheck}
           className={cn(
-            "block min-h-[var(--field-textarea-min-height)] w-full resize-none border-0 bg-transparent p-0 text-body outline-none ring-0",
+            "text-[var(--system-100)] block min-h-[var(--field-textarea-min-height)] w-full resize-none border-0 bg-transparent p-0 text-body outline-none ring-0",
             "disabled:cursor-not-allowed",
             getFieldInputClasses(variant),
             className,

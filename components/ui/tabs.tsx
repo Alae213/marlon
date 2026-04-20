@@ -20,7 +20,6 @@ import type { IconComponent } from "@/lib/icon-context";
 import { cn } from "@/lib/utils";
 import { springs } from "@/lib/springs";
 import { fontWeights } from "@/lib/font-weight";
-import { useShape } from "@/lib/shape-context";
 import { useProximityHover } from "@/hooks/use-proximity-hover";
 
 /* ─────────────────────── Contexts ─────────────────────── */
@@ -147,7 +146,6 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
   ({ children, className, ...props }, ref) => {
     const containerRef = useRef<HTMLDivElement>(null);
     const [isMouseInside, setIsMouseInside] = useState(false);
-    const shape = useShape();
     const valueOrderCtx = useContext(TabsValueOrderContext);
     const setOptimisticIdx = useCallback((_index: number) => {}, []);
 
@@ -273,8 +271,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
             setHoveredIndex(null);
           }}
           className={cn(
-            "relative inline-flex items-center gap-0.5 p-1 select-none bg-muted",
-            shape.container,
+            "relative inline-flex items-center gap-0.5 rounded-xl bg-muted p-1 select-none",
             className
           )}
           {...props}
@@ -283,8 +280,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
           {selectedRect && (
             <motion.div
               className={cn(
-                "absolute pointer-events-none bg-background shadow-sm dark:shadow-[0_1px_2px_rgba(0,0,0,0.4)]",
-                shape.bg
+                "absolute pointer-events-none rounded-lg bg-background shadow-sm dark:shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
               )}
               initial={false}
               animate={{
@@ -306,8 +302,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
             {hoverRect && !isHoveringSelected && selectedRect && (
               <motion.div
                 className={cn(
-                  "absolute pointer-events-none bg-accent/40 dark:bg-accent/25",
-                  shape.bg
+                  "absolute pointer-events-none rounded-lg bg-accent/40 dark:bg-accent/25"
                 )}
                 initial={{
                   left: selectedRect.left,
@@ -351,8 +346,7 @@ const TabsList = forwardRef<HTMLDivElement, TabsListProps>(
             {focusRect && (
               <motion.div
                 className={cn(
-                  "absolute pointer-events-none z-20 border border-[#6B97FF]",
-                  shape.focusRing
+                  "absolute pointer-events-none z-20 rounded-xl border border-[#6B97FF]"
                 )}
                 initial={false}
                 animate={{
@@ -497,7 +491,7 @@ const TabsTrigger = forwardRef<
   <TabsPrimitive.Trigger
     ref={ref}
     className={cn(
-      "inline-flex items-center justify-center rounded-[var(--radius-md)] px-3 py-1.5 text-[13px] text-[var(--system-400)] transition-colors data-[state=active]:bg-[var(--system-50)] data-[state=active]:text-[var(--system-700)]",
+      "inline-flex items-center justify-center rounded-md px-3 py-1.5 text-[13px] text-[var(--system-400)] transition-colors data-[state=active]:bg-[var(--system-50)] data-[state=active]:text-[var(--system-700)]",
       className
     )}
     {...props}

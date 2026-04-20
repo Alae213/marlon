@@ -6,7 +6,6 @@ import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { springs } from "@/lib/springs";
 import { fontWeights } from "@/lib/font-weight";
-import { useShape } from "@/lib/shape-context";
 import type React from "react";
 
 const TooltipProvider = TooltipPrimitive.Provider;
@@ -17,8 +16,6 @@ const TooltipContent = forwardRef<
   React.ComponentRef<typeof TooltipPrimitive.Content>,
   React.ComponentPropsWithoutRef<typeof TooltipPrimitive.Content>
 >(({ className, side = "top", sideOffset = 8, children, ...props }, ref) => {
-  const shape = useShape();
-
   const initial =
     side === "top"
       ? { opacity: 0, y: 4 }
@@ -32,7 +29,10 @@ const TooltipContent = forwardRef<
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content ref={ref} side={side} sideOffset={sideOffset} className="z-50" {...props}>
         <motion.div
-          className={cn("text-caption bg-[var(--system-700)] px-2 py-1 text-[var(--system-50)]", shape.bg, className)}
+          className={cn(
+            "rounded-lg bg-[var(--system-700)] px-2 py-1 text-caption text-[var(--system-50)]",
+            className,
+          )}
           style={{ fontVariationSettings: fontWeights.medium }}
           initial={initial}
           animate={{ opacity: 1, x: 0, y: 0 }}

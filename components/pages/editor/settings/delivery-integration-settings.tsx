@@ -116,7 +116,7 @@ function ProviderCard({
   const accountNumberId = `${provider}-account-number`;
 
   return (
-    <div className={`rounded-[var(--radius-lg)] p-[var(--spacing-md)] transition-all ${state.enabled ? "bg-[var(--system-700)]" : "bg-[var(--system-800)]"}`}>
+                          <div className={`rounded-lg p-4 transition-all ${state.enabled ? "bg-[var(--system-700)]" : "bg-[var(--system-800)]"}`}>
       <div className="flex items-center justify-between mb-4">
         <Switch label={config.label} checked={state.enabled} onToggle={() => onToggle(!state.enabled)} />
         {state.enabled && state.hasStoredCredentials && (
@@ -132,7 +132,7 @@ function ProviderCard({
         <div className="space-y-4">
           <div>
             <label htmlFor={apiKeyId} className="mb-2 block text-caption text-[var(--system-100)]">API Key</label>
-            <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                              <div className="rounded-md bg-[var(--system-600)] p-[2px]">
               <Input
                 id={apiKeyId}
                 type="password"
@@ -147,7 +147,7 @@ function ProviderCard({
           {requirements.required.includes("apiSecret") && (
             <div>
               <label htmlFor={apiSecretId} className="mb-2 block text-caption text-[var(--system-100)]">API Secret</label>
-              <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                              <div className="rounded-md bg-[var(--system-600)] p-[2px]">
                 <Input
                   id={apiSecretId}
                   type="password"
@@ -163,7 +163,7 @@ function ProviderCard({
           {requirements.optional.includes("accountNumber") && (
             <div>
               <label htmlFor={accountNumberId} className="mb-2 block text-caption text-[var(--system-100)]">Account Number (optional)</label>
-              <div className="rounded-[var(--radius-md)] bg-[var(--system-600)] p-[2px]">
+                              <div className="rounded-md bg-[var(--system-600)] p-[2px]">
                 <Input
                   id={accountNumberId}
                   type="text"
@@ -410,7 +410,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
 
   if (deliveryIntegration === undefined) {
     return (
-      <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+      <div className="rounded-lg bg-[var(--system-700)] p-4">
         <p className="text-body-sm text-[var(--system-300)]">Loading courier settings...</p>
       </div>
     );
@@ -425,7 +425,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         </p>
       </div>
 
-      <div className="text-caption rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-sm)] text-[var(--system-200)]">
+          <div className="text-caption rounded-lg bg-[var(--system-700)] p-2 text-[var(--system-200)]">
         Credentials are write-only. Existing keys are never displayed after save.
       </div>
 
@@ -450,7 +450,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         !enabledProviders["zr-express"] &&
         !enabledProviders.andrson &&
         !enabledProviders.noest && (
-          <div className="rounded-[var(--radius-lg)] bg-[var(--system-700)] p-[var(--spacing-md)]">
+      <div className="rounded-lg bg-[var(--system-700)] p-4">
             <p className="text-body-sm text-[var(--system-200)]">
               No courier enabled. Shipping will be handled manually.
             </p>

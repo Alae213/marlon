@@ -1,8 +1,9 @@
 import { query, mutation, type QueryCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { Id, Doc } from "./_generated/dataModel";
-import { upsertProductDigest } from "./performanceHelpers";
+import { deleteProductDigest, upsertProductDigest } from "./performanceHelpers";
 import { assertStoreRole } from "./storeAccess";
+import { QUICK_PRODUCT_DEFAULTS } from "../lib/product-editor";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 type StorageCtx = { storage: { getUrl: (id: any) => Promise<string | null> } };
@@ -87,17 +88,35 @@ async function queryActiveProducts(
   return [...active, ...legacyUnset];
 }
 
+function sortProducts<T extends { sortOrder?: number; _creationTime: number }>(products: T[]) {
+  return [...products].sort((a, b) => {
+    const aSort = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    const bSort = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
+    if (aSort !== bSort) return aSort - bSort;
+    return a._creationTime - b._creationTime;
+  });
+}
+
+async function getNextProductSortOrder(
+  ctx: { db: { query: QueryCtx["db"]["query"] } },
+  storeId: Id<"stores">,
+) {
+  const products = await ctx.db
+    .query("products")
+    .withIndex("storeId", (q) => q.eq("storeId", storeId))
+    .collect();
+
+  return products.length > 0
+    ? Math.max(...products.map((product) => product.sortOrder ?? 0)) + 1
+    : 0;
+}
+
 // Get all products for a store
 export const getProducts = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
     const products = await queryActiveProducts(ctx, args.storeId);
-    return products.sort((a, b) => {
-      const aSort = a.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      const bSort = b.sortOrder ?? Number.MAX_SAFE_INTEGER;
-      if (aSort !== bSort) return aSort - bSort;
-      return a._creationTime - b._creationTime;
-    });
+    return sortProducts(products);
   },
 });
 
@@ -131,12 +150,13 @@ export const getProductDigests = query({
 export const getAllProducts = query({
   args: { storeId: v.id("stores") },
   handler: async (ctx, args) => {
+    await assertStoreRole(ctx, args.storeId, "staff");
     const products = await ctx.db
       .query("products")
       .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
       .order("asc")
       .collect();
-    return products;
+    return sortProducts(products);
   },
 });
 
@@ -218,16 +238,7 @@ export const createProduct = mutation({
     const normalizedImages = await normalizeProductImageUrls(ctx, args.images);
     
     const now = Date.now();
-    
-    // Get all products to find the actual max sortOrder
-    const products = await ctx.db
-      .query("products")
-      .withIndex("storeId", (q) => q.eq("storeId", args.storeId))
-      .collect();
-    
-    const sortOrder = products.length > 0
-      ? Math.max(...products.map(p => p.sortOrder ?? 0)) + 1
-      : 0;
+    const sortOrder = await getNextProductSortOrder(ctx, args.storeId);
     
     const productId = await ctx.db.insert("products", {
       storeId: args.storeId,
@@ -249,6 +260,38 @@ export const createProduct = mutation({
       await upsertProductDigest(ctx, createdProduct);
     }
     
+    return productId;
+  },
+});
+
+export const createQuickProduct = mutation({
+  args: {
+    storeId: v.id("stores"),
+  },
+  handler: async (ctx, args) => {
+    await assertStoreOwnership(ctx, args.storeId);
+
+    const now = Date.now();
+    const sortOrder = await getNextProductSortOrder(ctx, args.storeId);
+
+    const productId = await ctx.db.insert("products", {
+      storeId: args.storeId,
+      name: QUICK_PRODUCT_DEFAULTS.name,
+      description: QUICK_PRODUCT_DEFAULTS.description,
+      basePrice: QUICK_PRODUCT_DEFAULTS.basePrice,
+      images: [...QUICK_PRODUCT_DEFAULTS.images],
+      variants: undefined,
+      isArchived: true,
+      sortOrder,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    const createdProduct = await ctx.db.get(productId);
+    if (createdProduct) {
+      await upsertProductDigest(ctx, createdProduct);
+    }
+
     return productId;
   },
 });
@@ -471,6 +514,18 @@ export const reorderProducts = mutation({
     }
     
     return changedCount;
+  },
+});
+
+export const deleteHiddenProduct = mutation({
+  args: {
+    productId: v.id("products"),
+  },
+  handler: async (ctx, args) => {
+    await assertProductOwnership(ctx, args.productId);
+    await deleteProductDigest(ctx, args.productId);
+    await ctx.db.delete(args.productId);
+    return args.productId;
   },
 });
 

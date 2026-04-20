@@ -53,18 +53,18 @@ function SettingsDialogPanel({ storeId, storeSlug, initialTab }: SettingsDialogP
       value={activeTab}
       onValueChange={(value) => setActiveTab(value as SettingsTab)}
       orientation="vertical"
-      className="flex w-full gap-[var(--spacing-lg)] max-[640px]:flex-col"
+          className="flex w-full gap-6 max-[640px]:flex-col"
     >
       {/* Vertical Sidebar Tabs */}
       <TabsList
         aria-label="Store settings sections"
-        className="flex flex-col shrink-0 w-40 gap-1 rounded-[var(--radius-lg)] bg-transparent p-0"
+                className="flex flex-col shrink-0 w-40 gap-1 rounded-lg bg-transparent p-0"
       >
         {TABS.map((tab) => (
           <TabsTrigger
             key={tab.id}
             value={tab.id}
-            className="justify-start px-4 py-2.5 text-left rounded-[var(--radius-md)] text-body-sm text-[var(--system-300)] transition-colors duration-100 hover:bg-[var(--system-700)] hover:text-[var(--system-100)] data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-[var(--color-primary-foreground)] data-[state=active]:shadow-none"
+                    className="justify-start px-4 py-2.5 text-left rounded-md text-body-sm text-[var(--system-300)] transition-colors duration-100 hover:bg-[var(--system-700)] hover:text-[var(--system-100)] data-[state=active]:bg-[var(--color-primary)] data-[state=active]:text-[var(--color-primary-foreground)] data-[state=active]:shadow-none"
           >
             {tab.label}
           </TabsTrigger>
@@ -74,28 +74,28 @@ function SettingsDialogPanel({ storeId, storeSlug, initialTab }: SettingsDialogP
       {/* Tab Content */}
       <TabsContent
         value="delivery"
-        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+              className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-xl bg-[var(--system-800)] p-6 text-[var(--system-100)]"
       >
         <DeliveryPricingSettings storeId={storeId} />
       </TabsContent>
 
       <TabsContent
         value="integration"
-        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+              className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-xl bg-[var(--system-800)] p-6 text-[var(--system-100)]"
       >
         <DeliveryIntegrationSettings storeId={storeId} />
       </TabsContent>
 
       <TabsContent
         value="store"
-        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+              className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-xl bg-[var(--system-800)] p-6 text-[var(--system-100)]"
       >
         <StoreInfoSettings storeId={storeId} storeSlug={storeSlug} />
       </TabsContent>
 
       <TabsContent
         value="billing"
-        className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-[var(--radius-xl)] bg-[var(--system-800)] p-[var(--spacing-lg)] text-[var(--system-100)]"
+              className="flex-1 max-h-[68vh] min-h-0 overflow-y-auto scrollbar-hide rounded-xl bg-[var(--system-800)] p-6 text-[var(--system-100)]"
       >
         <BillingSettings storeId={storeId} />
       </TabsContent>
@@ -112,7 +112,7 @@ export function SettingsDialog({ isOpen, onClose, storeId, storeSlug, initialTab
         showCloseButton={false}
         overlayClassName="bg-black/40"
         style={{ boxShadow: "var(--shadow-xl-shadow)" }}
-        className="w-[92vw] max-w-[900px] gap-[var(--spacing-lg)] overflow-hidden rounded-[var(--radius-2xl)] bg-[var(--system-700)] bg-[image:var(--gradient-popup)] p-[var(--spacing-lg)] text-[var(--system-50)] backdrop-blur-[12px] [corner-shape:squircle]"
+        className="w-[92vw] max-w-[900px] gap-6 overflow-hidden rounded-2xl bg-[var(--system-700)] bg-[image:var(--gradient-popup)] p-6 text-[var(--system-50)] backdrop-blur-[12px] [corner-shape:squircle]"
       >
         <DialogHeader className="w-full">
           <div className="flex items-center justify-between w-full">
