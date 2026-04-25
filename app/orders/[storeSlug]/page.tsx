@@ -19,7 +19,8 @@ import {
 } from "@clerk/nextjs";
 import Link from "next/link";
 import Image from "next/image";
-import type { SortField, SortDirection, CallLog } from "@/lib/orders-types";
+import type { SortField, SortDirection, CallOutcome } from "@/lib/orders-types";
+import { getCodPaymentStatusForOrderStatus } from "@/lib/orders-types";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 import { OrderDetails } from "@/components/pages/orders/views";
 
@@ -83,9 +84,11 @@ function OrdersContent({
 
         // Update local state if selected
         if (selectedOrder?._id === orderId) {
+          const codPaymentStatus = getCodPaymentStatusForOrderStatus(newStatus);
           setSelectedOrder({
             ...selectedOrder,
             status: newStatus,
+            ...(codPaymentStatus ? { codPaymentStatus } : {}),
             updatedAt: Date.now(),
           });
         }
@@ -97,9 +100,9 @@ function OrdersContent({
   );
 
   const handleAddCallLog = useCallback(
-    async (orderId: string, outcome: CallLog["outcome"], notes?: string) => {
+    async (orderId: string, outcome: CallOutcome, notes?: string) => {
       try {
-        await addCallLogMutation({
+        const result = await addCallLogMutation({
           orderId: orderId as Id<"orders">,
           outcome,
           notes,
@@ -107,14 +110,26 @@ function OrdersContent({
 
         // Update local state if this is the selected order
         if (selectedOrder?._id === orderId) {
+          const createdAt = Date.now();
+          const nextStatus =
+            result && typeof result === "object" && "status" in result && typeof result.status === "string"
+              ? result.status
+              : selectedOrder.status;
+          const codPaymentStatus = getCodPaymentStatusForOrderStatus(nextStatus);
+
           setSelectedOrder({
             ...selectedOrder,
+            status: nextStatus,
+            ...(codPaymentStatus ? { codPaymentStatus } : {}),
+            callAttempts: (selectedOrder.callAttempts || 0) + 1,
+            lastCallOutcome: outcome,
+            lastCallAt: createdAt,
             callLog: [
               ...(selectedOrder.callLog || []),
               {
-                id: `call_${Date.now()}`,
-                timestamp: Date.now(),
-                outcome: outcome as CallLog["outcome"],
+                id: `call_${createdAt}`,
+                timestamp: createdAt,
+                outcome,
                 notes,
               },
             ],

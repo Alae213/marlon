@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { useUser, SignIn, SignedIn, SignedOut } from "@clerk/nextjs";
+import { useUser, SignUp, SignedIn, SignedOut } from "@clerk/nextjs";
+import { track } from "@vercel/analytics/react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id, Doc } from "@/convex/_generated/dataModel";
@@ -11,10 +12,10 @@ import {
   Plus, 
   ExternalLink, 
   Loader2,
+  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/primitives/core/inputs/input";
-import { RealtimeProvider, useRealtime } from "@/contexts/realtime-context";
+import { RealtimeProvider } from "@/contexts/realtime-context";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Types
@@ -29,19 +30,170 @@ interface StoreData {
   subscription: string;
 }
 
+type SellingStage = "already_online" | "dm_orders" | "pre_launch" | "exploring";
+type HeardFrom = "tiktok_instagram" | "youtube_podcasts" | "friend" | "events_linkedin";
+type Bottleneck = "confirmation" | "customer_details" | "delivery_handoff" | "status_tracking";
+type ExpectedDailyOrders = "0_5" | "6_20" | "21_50" | "50_plus";
+
+type PreSignupAnswers = {
+  sellingStage: SellingStage | null;
+  heardFrom: HeardFrom[];
+  bottlenecks: Bottleneck[];
+  expectedDailyOrders: ExpectedDailyOrders | null;
+};
+
+type QuestionId = keyof PreSignupAnswers;
+
+type PreSignupOptionValue = SellingStage | HeardFrom | Bottleneck | ExpectedDailyOrders;
+
+type PreSignupQuestion = {
+  id: QuestionId;
+  title: string;
+  multiple: boolean;
+  options: Array<{
+    label: string;
+    value: PreSignupOptionValue;
+  }>;
+};
+
+type StoredPreSignupState = {
+  step: number;
+  completed: boolean;
+  answers: PreSignupAnswers;
+  expiresAt: number;
+};
+
+const PRE_SIGNUP_STORAGE_KEY = "marlon-pre-signup";
+const PRE_SIGNUP_STORAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+const emptyPreSignupAnswers: PreSignupAnswers = {
+  sellingStage: null,
+  heardFrom: [],
+  bottlenecks: [],
+  expectedDailyOrders: null,
+};
+
+const preSignupQuestions: PreSignupQuestion[] = [
+  {
+    id: "sellingStage",
+    title: "Where are you with selling right now? 🛍️",
+    multiple: false,
+    options: [
+      { label: "I already sell online", value: "already_online" },
+      { label: "I take orders in DMs", value: "dm_orders" },
+      { label: "I'm preparing to launch", value: "pre_launch" },
+      { label: "Just exploring for now", value: "exploring" },
+    ],
+  },
+  {
+    id: "heardFrom",
+    title: "So, where did you hear about me? 👀",
+    multiple: true,
+    options: [
+      { label: "TikTok / Instagram Reels", value: "tiktok_instagram" },
+      { label: "YouTube / Podcasts", value: "youtube_podcasts" },
+      { label: "A friend told me", value: "friend" },
+      { label: "Events / LinkedIn", value: "events_linkedin" },
+    ],
+  },
+  {
+    id: "bottlenecks",
+    title: "What gets messy after someone says \"I want it\"? 😅",
+    multiple: true,
+    options: [
+      { label: "Confirming the order", value: "confirmation" },
+      { label: "Getting phone + address details", value: "customer_details" },
+      { label: "Sending it to delivery", value: "delivery_handoff" },
+      { label: "Tracking who paid / delivered / cancelled", value: "status_tracking" },
+    ],
+  },
+  {
+    id: "expectedDailyOrders",
+    title: "On a good day, how many COD orders could you get? 📦",
+    multiple: false,
+    options: [
+      { label: "0-5", value: "0_5" },
+      { label: "6-20", value: "6_20" },
+      { label: "21-50", value: "21_50" },
+      { label: "50+", value: "50_plus" },
+    ],
+  },
+];
+
+const isPreSignupAnswers = (value: unknown): value is PreSignupAnswers => {
+  if (!value || typeof value !== "object") return false;
+  const answers = value as Partial<PreSignupAnswers>;
+  return (
+    (answers.sellingStage === null || typeof answers.sellingStage === "string") &&
+    Array.isArray(answers.heardFrom) &&
+    Array.isArray(answers.bottlenecks) &&
+    (answers.expectedDailyOrders === null || typeof answers.expectedDailyOrders === "string")
+  );
+};
+
+const safeTrack = (eventName: string, properties: Record<string, string | number | boolean>) => {
+  try {
+    track(eventName, properties);
+  } catch {
+    // Analytics must never block onboarding.
+  }
+};
+
+const getDefaultPreSignupState = (): StoredPreSignupState => ({
+  step: 0,
+  completed: false,
+  answers: emptyPreSignupAnswers,
+  expiresAt: 0,
+});
+
+const readStoredPreSignupState = (): StoredPreSignupState => {
+  if (typeof window === "undefined") return getDefaultPreSignupState();
+
+  try {
+    const stored = window.localStorage.getItem(PRE_SIGNUP_STORAGE_KEY);
+    if (!stored) return getDefaultPreSignupState();
+
+    const parsed = JSON.parse(stored) as Partial<StoredPreSignupState>;
+    if (!parsed.expiresAt || parsed.expiresAt < Date.now()) {
+      window.localStorage.removeItem(PRE_SIGNUP_STORAGE_KEY);
+      return getDefaultPreSignupState();
+    }
+
+    if (!isPreSignupAnswers(parsed.answers)) return getDefaultPreSignupState();
+
+    return {
+      answers: parsed.answers,
+      completed: !!parsed.completed,
+      expiresAt: parsed.expiresAt,
+      step:
+        typeof parsed.step === "number"
+          ? Math.min(Math.max(parsed.step, 0), preSignupQuestions.length - 1)
+          : 0,
+    };
+  } catch {
+    window.localStorage.removeItem(PRE_SIGNUP_STORAGE_KEY);
+    return getDefaultPreSignupState();
+  }
+};
+
+const getSelectedValues = (
+  answers: PreSignupAnswers,
+  question: PreSignupQuestion
+): PreSignupOptionValue[] => {
+  switch (question.id) {
+    case "sellingStage":
+      return answers.sellingStage ? [answers.sellingStage] : [];
+    case "heardFrom":
+      return answers.heardFrom;
+    case "bottlenecks":
+      return answers.bottlenecks;
+    case "expectedDailyOrders":
+      return answers.expectedDailyOrders ? [answers.expectedDailyOrders] : [];
+  }
+};
+
 // Store Card Component - Displays individual store with status and basic info
 function StoreCard({ store }: { store: StoreData }) {
-  const getStatusBadge = () => {
-    switch (store.subscription) {
-      case "active":
-        return <span className="text-xs text-[--color-success]">Active</span>;
-      case "trial":
-        return <span className="text-xs text-[--system-400]">Trial</span>;
-      default:
-        return null;
-    }
-  };
-
   return (
     <Link href={`/editor/${store.slug}`} className="group block">
       <div className="flex flex-col items-start cursor-pointer justify-between w-[200px] h-[200px] bg-[var(--system-300)] p-[20px] active:scale-[0.96] transition-transform duration-150"
@@ -71,7 +223,6 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
 }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -130,14 +281,11 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
       return;
     }
     
-    setIsLoading(true);
-    
     try {
       const isAvailable = await slugAvailable;
       if (!isAvailable) {
         setError("This URL is already taken. Please choose another one");
         setIsCreating(false);
-        setIsLoading(false);
         return;
       }
       
@@ -148,15 +296,13 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
       });
       
       setIsCreating(false);
-      setIsLoading(false);
       onSuccess();
       onClose();
       setName("");
       setSlug("");
-    } catch (_err) {
+    } catch {
       setError("An error occurred. Please try again");
       setIsCreating(false);
-      setIsLoading(false);
     }
   };
 
@@ -283,7 +429,6 @@ function CreateStoreModal({ isOpen, onClose, onSuccess }: {
 function DashboardContent() {
   const { user, isLoaded } = useUser();
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const { isConnected } = useRealtime();
 
   const stores = useQuery(api.stores.getUserStores, user ? { userId: user.id } : "skip");
 
@@ -346,48 +491,280 @@ function DashboardContent() {
   );
 }
 
-// Landing Page Component - Public landing page for unauthenticated users
-function LandingPage() {
-  const [isSignInOpen, setIsSignInOpen] = useState(false);
+function NewStorePreview({ isSignUpOpen, onContinue }: {
+  isSignUpOpen: boolean;
+  onContinue: () => void;
+}) {
+  return (
+    <div className="flex h-screen w-full flex-col items-center justify-between bg-[var(--system-50)] px-4 py-10">
+      <Image src="/logo.svg" alt="Marlon Logo" width={71} height={22} />
+
+      <div
+        aria-hidden={isSignUpOpen}
+        className={`flex flex-col items-center gap-6 transition-opacity duration-200 ${isSignUpOpen ? "pointer-events-none select-none opacity-70" : ""}`}
+      >
+        <button
+          type="button"
+          onClick={onContinue}
+          className="flex h-[200px] w-[200px] cursor-pointer flex-col items-start justify-between bg-[var(--system-100)] p-[20px] text-left transition-transform duration-150 active:scale-[0.96]"
+          style={{ borderRadius: "32px" }}
+        >
+          <div className="flex h-12 w-12 items-center justify-center rounded-[26px] bg-[var(--system-200)]">
+            <Plus className="h-5 w-5 text-[var(--system-600)]" />
+          </div>
+
+          <p className="body-base text-[var(--system-600)]">new store </p>
+        </button>
+
+        {!isSignUpOpen && (
+          <Button
+            type="button"
+            size="lg"
+            onClick={onContinue}
+            className="h-12 min-w-[220px]"
+          >
+            Continue with Google
+          </Button>
+        )}
+      </div>
+
+      <p className="label-xs text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
+    </div>
+  );
+}
+
+function PreSignupQuestionScreen({
+  answers,
+  currentStep,
+  onBack,
+  onNext,
+  onSelect,
+}: {
+  answers: PreSignupAnswers;
+  currentStep: number;
+  onBack: () => void;
+  onNext: () => void;
+  onSelect: (question: PreSignupQuestion, value: PreSignupOptionValue) => void;
+}) {
+  const question = preSignupQuestions[currentStep];
+  const progress = ((currentStep + 1) / preSignupQuestions.length) * 100;
+  const selectedValues = getSelectedValues(answers, question);
+  const canContinue = selectedValues.length > 0;
 
   return (
-    <div className="min-h-screen bg-white">
-      <header className="flex items-center justify-between px-8 py-6">
-        
-      </header>
-
-      <main className="flex min-h-[calc(100vh-88px)] flex-col items-center justify-center px-4">
-        <div className="w-full max-w-lg text-center">
-
-          <SignedOut>
-            <div className="flex flex-col items-center gap-4">
-              <Button onClick={() => setIsSignInOpen(true)} className="flex h-12 w-full max-w-xs items-center justify-center gap-3">
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
-                  <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                  <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                </svg>
-                Sign in with Google
-              </Button>
-            </div>
-          </SignedOut>
+    <main className="flex min-h-screen w-full items-center justify-center bg-[var(--system-50)] px-4 py-6">
+      <section className="flex w-full max-w-[520px] flex-col gap-8">
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <Image src="/logo.svg" alt="Marlon Logo" width={71} height={22} />
+            <span className="label-xs text-[var(--system-400)]">
+              {currentStep + 1} / {preSignupQuestions.length}
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-[var(--system-200)]">
+            <div
+              className="h-full rounded-full bg-[var(--system-700)] transition-[width] duration-300 ease-out"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
         </div>
-      </main>
 
-      <Dialog open={isSignInOpen} onOpenChange={setIsSignInOpen}>
-        <DialogContent
-          className="max-w-[440px] border-0 bg-transparent p-0 shadow-none"
-          closeClassName="right-3 top-3 bg-white/92 text-[--system-500] shadow-[var(--shadow-md)] hover:bg-white hover:text-[--system-700]"
-        >
-          <SignIn routing="virtual" fallbackRedirectUrl="/" />
-        </DialogContent>
-      </Dialog>
-    </div>
+        <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-3">
+            <p className="label-xs text-[var(--system-400)]">
+              {question.multiple ? "Choose all that fit" : "Choose one"}
+            </p>
+            <h1 className="text-title text-[var(--system-700)]">
+              {question.title}
+            </h1>
+          </div>
+
+          <div className="grid gap-3">
+            {question.options.map((option) => {
+              const isSelected = selectedValues.includes(option.value);
+
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={isSelected}
+                  onClick={() => onSelect(question, option.value)}
+                  className={`flex min-h-[56px] w-full items-center justify-between rounded-[18px] border p-4 text-left text-body text-[var(--system-700)] transition-all duration-150 active:scale-[0.99] ${
+                    isSelected
+                      ? "border-[var(--system-700)] bg-[var(--system-700)] text-[var(--system-50)] shadow-[var(--shadow-md)]"
+                      : "border-[var(--system-200)] bg-white hover:border-[var(--system-300)] hover:bg-[var(--system-100)]"
+                  }`}
+                >
+                  <span>{option.label}</span>
+                  <span
+                    className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border transition-colors ${
+                      isSelected
+                        ? "border-white/30 bg-white text-[var(--system-700)]"
+                        : "border-[var(--system-300)] bg-transparent"
+                    }`}
+                  >
+                    {isSelected && <Check className="h-3.5 w-3.5" />}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <div className="flex gap-3">
+          {currentStep > 0 && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="lg"
+              onClick={onBack}
+              className="h-12 flex-1"
+            >
+              Back
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="lg"
+            onClick={onNext}
+            disabled={!canContinue}
+            className="h-12 flex-1"
+          >
+            Next
+          </Button>
+        </div>
+      </section>
+    </main>
+  );
+}
+
+// Landing Page Component - Public landing page for unauthenticated users
+function LandingPage() {
+  const [preSignupState, setPreSignupState] = useState<StoredPreSignupState>(readStoredPreSignupState);
+  const [isSignUpOpen, setIsSignUpOpen] = useState(preSignupState.completed);
+  const { answers, completed: showPreview, step: currentStep } = preSignupState;
+
+  useEffect(() => {
+    try {
+      const stateToStore: StoredPreSignupState = {
+        ...preSignupState,
+        expiresAt: Date.now() + PRE_SIGNUP_STORAGE_TTL_MS,
+      };
+      window.localStorage.setItem(PRE_SIGNUP_STORAGE_KEY, JSON.stringify(stateToStore));
+    } catch {
+      // Local persistence is helpful, not required.
+    }
+  }, [preSignupState]);
+
+  const handleSelect = (question: PreSignupQuestion, value: PreSignupOptionValue) => {
+    setPreSignupState((previousState) => {
+      const previousAnswers = previousState.answers;
+
+      if (question.multiple) {
+        const key = question.id as "heardFrom" | "bottlenecks";
+        const selectedValues = previousAnswers[key] as PreSignupOptionValue[];
+        const isSelected = selectedValues.includes(value);
+
+        return {
+          ...previousState,
+          answers: {
+            ...previousAnswers,
+            [key]: isSelected
+              ? selectedValues.filter((selectedValue) => selectedValue !== value)
+              : [...selectedValues, value],
+          },
+        };
+      }
+
+      return {
+        ...previousState,
+        answers: {
+          ...previousAnswers,
+          [question.id]: value,
+        },
+      };
+    });
+  };
+
+  const handleBack = () => {
+    setPreSignupState((previousState) => ({
+      ...previousState,
+      step: Math.max(previousState.step - 1, 0),
+    }));
+  };
+
+  const handleNext = () => {
+    const question = preSignupQuestions[currentStep];
+    const selectedValues = getSelectedValues(answers, question);
+
+    if (selectedValues.length === 0) return;
+
+    safeTrack("pre_signup_step_completed", {
+      step: currentStep + 1,
+      question: question.id,
+      selectionCount: selectedValues.length,
+    });
+
+    selectedValues.forEach((selectedValue) => {
+      safeTrack("pre_signup_option_selected", {
+        step: currentStep + 1,
+        question: question.id,
+        option: selectedValue,
+      });
+    });
+
+    if (currentStep === preSignupQuestions.length - 1) {
+      setPreSignupState((previousState) => ({
+        ...previousState,
+        completed: true,
+      }));
+      setIsSignUpOpen(true);
+      safeTrack("pre_signup_completed", {
+        questionCount: preSignupQuestions.length,
+      });
+      return;
+    }
+
+    setPreSignupState((previousState) => ({
+      ...previousState,
+      step: Math.min(previousState.step + 1, preSignupQuestions.length - 1),
+    }));
+  };
+
+  if (showPreview) {
+    return (
+      <>
+        <NewStorePreview
+          isSignUpOpen={isSignUpOpen}
+          onContinue={() => setIsSignUpOpen(true)}
+        />
+
+        <Dialog open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
+          <DialogContent
+            className="max-w-[440px] border-0 bg-transparent p-0 shadow-none"
+            closeClassName="right-3 top-3 bg-white/92 text-[--system-500] shadow-[var(--shadow-md)] hover:bg-white hover:text-[--system-700]"
+          >
+            <SignUp routing="virtual" fallbackRedirectUrl="/" />
+          </DialogContent>
+        </Dialog>
+      </>
+    );
+  }
+
+  return (
+    <PreSignupQuestionScreen
+      answers={answers}
+      currentStep={currentStep}
+      onBack={handleBack}
+      onNext={handleNext}
+      onSelect={handleSelect}
+    />
   );
 }
 
 // Main Page Component - Root page with authentication and dashboard
 export default function HomePage() {
-  const { user, isLoaded } = useUser();
+  const { user } = useUser();
   
   return (
     <RealtimeProvider userId={user?.id as Id<"users">}>

@@ -5,6 +5,7 @@ import { Truck, Loader2, CheckCircle, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useParams } from "next/navigation";
+import { normalizeOrderStatus } from "@/lib/orders-types";
 
 interface DeliveryActionProps {
   orderId: string;
@@ -81,7 +82,7 @@ export function DeliveryAction({
         setResult("error");
         setErrorMessage(data.error || "ÙØ´Ù„ Ø¥Ø±Ø³Ø§Ù„ Ø§Ù„Ø·Ù„Ø¨");
       }
-    } catch (_error) {
+    } catch {
       setResult("error");
       setErrorMessage("Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ø§Ù„Ø®Ø§Ø¯Ù…");
     } finally {
@@ -89,8 +90,13 @@ export function DeliveryAction({
     }
   };
 
-  const isShipped = currentStatus === "shipped" || trackingNumber;
-  const canShip = currentStatus === "packaged" || currentStatus === "confirmed";
+  const canonicalStatus = normalizeOrderStatus(currentStatus);
+  const isShipped =
+    canonicalStatus === "dispatched" ||
+    canonicalStatus === "in_transit" ||
+    canonicalStatus === "delivered" ||
+    Boolean(trackingNumber);
+  const canShip = canonicalStatus === "confirmed";
 
   if (isShipped) {
     return (

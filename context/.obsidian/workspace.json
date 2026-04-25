@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "features/Store_Workspace/storefront-content-editor.md",
+                "file": "project/OVERVIEW.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "storefront-content-editor"
+              "title": "OVERVIEW"
             }
           }
         ]
@@ -185,9 +185,16 @@
   },
   "active": "22fe21bc0f8e5b00",
   "lastOpenFiles": [
+    "project/ROADMAP.md",
+    "project/DECISIONS.md",
+    "project/OVERVIEW.md",
+    "features/Order_Management/order-details-drawer.md",
+    "features/Order_Management/delivery-dispatch-from-orders.md",
+    "project/SCOPE.md",
+    "technical/DATA_MODELS.md",
+    "features/Store_Workspace/storefront-content-editor.md",
     "features/Store_Workspace/store-dashboard-and-creation.md",
     "features/Store_Workspace/store-preview-and-navigation.md",
-    "features/Store_Workspace/storefront-content-editor.md",
     "features/Scaffolded/marketing-workspace.md",
     "features/Scaffolded/anonymous-public-checkout-gap.md",
     "features/Scaffolded/agency-mode.md",
@@ -203,13 +210,6 @@
     "features/Platform/runtime-canonical-alignment-plan.md",
     "ops/INFRASTRUCTURE.md",
     "ops/CI_CD.md",
-    "project/TASK-LIST.md",
-    "project/SCOPE.md",
-    "project/DECISIONS.md",
-    "project/OVERVIEW.md",
-    "project/ROADMAP.md",
-    "features/Settings/billing-and-unlock-settings.md",
-    "technical/STACK.md",
-    "technical/ENVIRONMENT.md"
+    "project/TASK-LIST.md"
   ]
 }

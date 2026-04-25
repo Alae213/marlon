@@ -20,11 +20,13 @@ export function toOrderDigest(order: Doc<"orders">) {
     customerWilaya: order.customerWilaya,
     status: order.status,
     paymentStatus: order.paymentStatus,
+    codPaymentStatus: order.codPaymentStatus,
     total: order.total,
     subtotal: order.subtotal,
     deliveryCost: order.deliveryCost,
     deliveryProvider: order.deliveryProvider,
     trackingNumber: order.trackingNumber,
+    riskFlags: order.riskFlags,
     productsCount: order.products.length,
     primaryProductName: firstProduct?.name,
     primaryProductImage: firstProduct?.image,
@@ -89,4 +91,3 @@ export async function deleteProductDigest(ctx: MutationCtx, productId: Id<"produ
     await ctx.db.delete(existing._id);
   }
 }
-

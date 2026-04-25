@@ -363,7 +363,7 @@ function createOrder(overrides: Record<string, unknown> = {}) {
     deliveryCost: 500,
     total: 2000,
     deliveryType: "domicile",
-    status: "packaged",
+    status: "dispatch_ready",
     paymentStatus: "pending",
     callAttempts: 0,
     callLog: [],
@@ -464,7 +464,7 @@ describe("order management UX regressions", () => {
     expect(view.queryByText("Mock kanban view")).toBeNull();
   });
 
-  it("renders the clarified packaged action labels and an explicit close control in the order details sheet", () => {
+  it("renders the dispatch-ready action labels and an explicit close control in the order details sheet", () => {
     const view = render(
       <OrderDetails
         order={createOrder()}
@@ -478,9 +478,10 @@ describe("order management UX regressions", () => {
     );
 
     expect(view.getByRole("button", { name: /close order details/i })).toBeTruthy();
-    expect(view.getByRole("button", { name: "Mark as shipped" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Mark as dispatched" })).toBeTruthy();
     expect(view.getByRole("button", { name: "Answered" })).toBeTruthy();
     expect(view.getByRole("button", { name: "No Answer" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Wrong Number" })).toBeTruthy();
     expect(view.getByRole("button", { name: "Refused" })).toBeTruthy();
   });
 
@@ -550,5 +551,50 @@ describe("order management UX regressions", () => {
 
     fireEvent.click(desktop.getByRole("button", { name: /call history/i }));
     expect(handleOrderClick).toHaveBeenCalledWith(expect.objectContaining({ _id: "order_1" }));
+  });
+
+  it("limits the row status dropdown to server-allowed merchant actions and answered-call confirmation", () => {
+    const order = createOrder({ status: "new" });
+    const view = render(
+      <ListView
+        {...createListViewProps({
+          orders: [order],
+        })}
+        viewMode="list"
+        onViewModeChange={() => undefined}
+        isStateViewEnabled={false}
+      />,
+    );
+
+    const desktopContainer = view.container.querySelector('div.hidden.overflow-visible[class*="md:block"]');
+    const statusCell = desktopContainer?.querySelector("tbody td:nth-child(4)");
+
+    expect(statusCell).toBeTruthy();
+
+    const statusMenu = within(statusCell as HTMLElement);
+    expect(statusMenu.getByText("Awaiting Confirmation")).toBeTruthy();
+    expect(statusMenu.queryByText("Confirmed")).toBeNull();
+    expect(statusMenu.getByText("Cancelled")).toBeTruthy();
+    expect(statusMenu.getByText("Blocked")).toBeTruthy();
+    expect(statusMenu.queryByText("Delivered")).toBeNull();
+
+    cleanup();
+
+    const answeredOrder = createOrder({ status: "new", lastCallOutcome: "answered" });
+    const answeredView = render(
+      <ListView
+        {...createListViewProps({
+          orders: [answeredOrder],
+        })}
+        viewMode="list"
+        onViewModeChange={() => undefined}
+        isStateViewEnabled={false}
+      />,
+    );
+    const answeredDesktop = answeredView.container.querySelector('div.hidden.overflow-visible[class*="md:block"]');
+    const answeredStatusCell = answeredDesktop?.querySelector("tbody td:nth-child(4)");
+    const answeredStatusMenu = within(answeredStatusCell as HTMLElement);
+
+    expect(answeredStatusMenu.getByText("Confirmed")).toBeTruthy();
   });
 });

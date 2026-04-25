@@ -46,8 +46,16 @@ import type {
   OrderStatus,
   CallLog,
 } from "@/lib/orders-types";
-import { STATUS_LABELS, CALL_OUTCOME_LABELS } from "@/lib/orders-types";
-import { STATUS_CONFIG } from "@/lib/status-icons";
+import {
+  CALL_OUTCOME_LABELS,
+  ORDER_STATUSES,
+  STATUS_LABELS,
+  getMerchantTransitionsForOrder,
+  getOrderStatusLabel,
+  normalizeOrderStatus,
+  normalizeOrderRiskFlags,
+} from "@/lib/orders-types";
+import { getStatusConfig } from "@/lib/status-icons";
 import { ProductCell } from "../components/ProductCell";
 import { OrderMobileCard } from "../components/OrderMobileCard";
 import { OrderViewToggle } from "../components/OrderViewToggle";
@@ -96,7 +104,11 @@ function highlightMatch(text: string, query: string): React.ReactNode {
   );
 }
 
-const statuses: OrderStatus[] = ["new", "confirmed", "packaged", "shipped", "succeeded", "canceled", "blocked", "router"];
+const statuses: OrderStatus[] = [...ORDER_STATUSES];
+
+function getCanonicalOrderStatus(status: string): OrderStatus | null {
+  return normalizeOrderStatus(status);
+}
 
 // Max call slots to display
 const MAX_CALL_SLOTS = 4;
@@ -119,9 +131,18 @@ function getCallOutcomeBg(outcome?: string): string {
       return "bg-[#FFA86B]";
     case "refused":
       return "bg-[#FF5978]";
+    case "wrong_number":
+      return "bg-[var(--system-400)]";
     default:
       return "bg-[var(--system-200)]";
   }
+}
+
+function isOrderReadyForDispatch(order: Doc<"orders">): boolean {
+  return (
+    getCanonicalOrderStatus(order.status) === "confirmed" &&
+    normalizeOrderRiskFlags(order.riskFlags).length === 0
+  );
 }
 
 // CallSlotsHover Component - same design as OrderDetails
@@ -222,6 +243,7 @@ interface ListViewProps {
 
 // Status Dropdown Component
 function StatusCell({ 
+  order,
   status, 
   isOpen, 
   onToggle, 
@@ -229,6 +251,7 @@ function StatusCell({
   callLog,
   showCallSlots = true,
 }: { 
+  order?: Doc<"orders">;
   status: string; 
   isOpen: boolean; 
   onToggle: (open: boolean) => void;
@@ -236,8 +259,10 @@ function StatusCell({
   callLog?: CallLog[];
   showCallSlots?: boolean;
 }) {
-  const statusConfig = STATUS_CONFIG[status as OrderStatus];
-  const statusLabel = STATUS_LABELS[status as OrderStatus];
+  const canonicalStatus = getCanonicalOrderStatus(status);
+  const statusConfig = getStatusConfig(status);
+  const statusLabel = canonicalStatus ? STATUS_LABELS[canonicalStatus] : undefined;
+  const statusOptions = getMerchantTransitionsForOrder(status, order, "merchant");
 
   return (
     <Menu open={isOpen} onOpenChange={onToggle}>
@@ -274,9 +299,13 @@ function StatusCell({
           sideOffset={-32}
           className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
         >
-          <MenuRadioGroup value={status} onValueChange={onStatusChange}>
-            {statuses.map((s) => {
-              const sConfig = STATUS_CONFIG[s]
+          <MenuRadioGroup value={canonicalStatus ?? status} onValueChange={onStatusChange}>
+            {statusOptions.length === 0 ? (
+              <MenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
+                No merchant actions
+              </MenuItem>
+            ) : statusOptions.map((s) => {
+              const sConfig = getStatusConfig(s)
               return (
                 <MenuRadioItem key={s} value={s} className="rounded-[12px] py-1.5 pl-8">
                   <span
@@ -287,7 +316,7 @@ function StatusCell({
                     }}
                   >
                     {sConfig?.icon}
-                    {sConfig?.label || s}
+                    {sConfig?.label || getOrderStatusLabel(s)}
                   </span>
                 </MenuRadioItem>
               )
@@ -306,7 +335,7 @@ function SelectedStatusSummary({ counts }: { counts: Record<string, number> }) {
         const count = counts[status];
         if (count === 0) return null;
 
-        const statusConfig = STATUS_CONFIG[status];
+        const statusConfig = getStatusConfig(status);
         return (
           <span
             key={status}
@@ -399,7 +428,7 @@ export function ListView({
 
   // Delivery quick stats
   const readyToDispatchCount = useMemo(() => {
-    return orders.filter((o) => o.status === "confirmed").length;
+    return orders.filter(isOrderReadyForDispatch).length;
   }, [orders]);
 
   const courierStatusSummary = useMemo(() => {
@@ -407,7 +436,7 @@ export function ListView({
     for (const order of orders) {
       if (order.deliveryProvider && order.trackingNumber) {
         summary.dispatched++;
-      } else if (order.status === "confirmed") {
+      } else if (isOrderReadyForDispatch(order)) {
         summary.pending++;
       }
     }
@@ -461,7 +490,10 @@ export function ListView({
     let filtered = [...orders];
     
     // Filter by hidden statuses
-    filtered = filtered.filter(order => !hiddenStatuses.has(order.status as OrderStatus));
+    filtered = filtered.filter((order) => {
+      const canonicalStatus = getCanonicalOrderStatus(order.status);
+      return !canonicalStatus || !hiddenStatuses.has(canonicalStatus);
+    });
     
     // Filter by date
     const startOfToday = new Date();
@@ -492,7 +524,7 @@ export function ListView({
     }
     
     if (activeFilter !== "all") {
-      filtered = filtered.filter(order => order.status === activeFilter);
+      filtered = filtered.filter((order) => getCanonicalOrderStatus(order.status) === activeFilter);
     }
     
     filtered.sort((a, b) => {
@@ -539,7 +571,7 @@ export function ListView({
   const handleDispatchAll = useCallback(async () => {
     if (isDispatchingAll) return;
     
-    const confirmedOrders = orders.filter((o) => o.status === "confirmed");
+    const confirmedOrders = orders.filter(isOrderReadyForDispatch);
     if (confirmedOrders.length === 0) return;
     
     setIsDispatchingAll(true);
@@ -570,7 +602,6 @@ export function ListView({
         const data = await response.json();
         
         if (data.success) {
-          await onStatusChange(order._id, "packaged");
           successCount++;
         } else {
           failCount++;
@@ -589,13 +620,14 @@ export function ListView({
     } else {
       showToast("Failed to dispatch orders", "error");
     }
-  }, [orders, isDispatchingAll, onStatusChange, storeSlug, showToast]);
+  }, [orders, isDispatchingAll, storeSlug, showToast]);
 
   const handleBulkDispatch = useCallback(async () => {
     if (isBulkDispatching) return;
     
     const confirmedSelectedIds = orders
-      .filter((o) => selectedOrders.has(o._id) && o.status === "confirmed")
+      .filter((o) => selectedOrders.has(o._id))
+      .filter(isOrderReadyForDispatch)
       .map((o) => o._id);
     
     if (confirmedSelectedIds.length === 0) return;
@@ -632,7 +664,6 @@ export function ListView({
         const data = await response.json();
         
         if (data.success) {
-          await onStatusChange(order._id, "packaged");
           successCount++;
         } else {
           failCount++;
@@ -653,7 +684,7 @@ export function ListView({
     } else {
       showToast("Failed to dispatch orders", "error");
     }
-  }, [orders, selectedOrders, isBulkDispatching, onStatusChange, storeSlug, showToast]);
+  }, [orders, selectedOrders, isBulkDispatching, storeSlug, showToast]);
 
   // Export to CSV
   const handleExportCSV = useCallback((exportAll: boolean) => {
@@ -738,13 +769,17 @@ export function ListView({
     }
     for (const order of orders) {
       if (selectedOrders.has(order._id)) {
-        const orderStatus = order.status as OrderStatus;
-        if (counts[orderStatus] !== undefined) {
+        const orderStatus = getCanonicalOrderStatus(order.status);
+        if (orderStatus && counts[orderStatus] !== undefined) {
           counts[orderStatus]++;
         }
       }
     }
     return counts;
+  }, [orders, selectedOrders]);
+
+  const selectedDispatchableCount = useMemo(() => {
+    return orders.filter((order) => selectedOrders.has(order._id) && isOrderReadyForDispatch(order)).length;
   }, [orders, selectedOrders]);
 
   return (
@@ -760,7 +795,7 @@ export function ListView({
               <SelectedStatusSummary counts={selectedOrdersByStatus} />
             </div>
             <div className="flex items-center gap-2">
-              {selectedOrdersByStatus.confirmed > 0 && (
+              {selectedDispatchableCount > 0 && (
                 <button
                   onClick={handleBulkDispatch}
                   disabled={isBulkDispatching}
@@ -790,7 +825,7 @@ export function ListView({
                 <SelectedStatusSummary counts={selectedOrdersByStatus} />
               </div>
               <div className="flex items-center gap-2">
-                {selectedOrdersByStatus.confirmed > 0 && (
+                {selectedDispatchableCount > 0 && (
                   <button
                     onClick={handleBulkDispatch}
                     disabled={isBulkDispatching}
@@ -893,7 +928,7 @@ export function ListView({
                         ? "Filter" 
                         : activeFilter === "confirmed" 
                           ? `Ready (${readyToDispatchCount})`
-                          : STATUS_CONFIG[activeFilter as OrderStatus]?.label || activeFilter}
+                          : getStatusConfig(activeFilter)?.label || activeFilter}
                     </span>
                   </button>
                 </MenuTrigger>
@@ -925,8 +960,8 @@ export function ListView({
                 </MenuRadioItem>
               )}
               {statuses.map((status) => {
-                const sConfig = STATUS_CONFIG[status]
-                const count = orders.filter((o) => o.status === status).length
+                const sConfig = getStatusConfig(status)
+                const count = orders.filter((o) => getCanonicalOrderStatus(o.status) === status).length
 
                 return (
                   <MenuRadioItem
@@ -953,7 +988,7 @@ export function ListView({
             <MenuSeparator />
             <MenuLabel>Hide States</MenuLabel>
             {statuses.map((status) => {
-              const sConfig = STATUS_CONFIG[status]
+              const sConfig = getStatusConfig(status)
               const isHidden = hiddenStatuses.has(status)
 
               return (
@@ -1188,6 +1223,7 @@ export function ListView({
               onOrderSelect={onOrderSelect}
               statusControl={
                 <StatusCell
+                  order={order}
                   status={order.status}
                   isOpen={!!statusDropdownOpen[order._id]}
                   onToggle={(open) => onStatusDropdownToggle(order._id, open)}
@@ -1269,6 +1305,7 @@ export function ListView({
                 </TableCell>
                 <TableCell className="py-3" onClick={(e) => e.stopPropagation()}>
                   <StatusCell
+                    order={order}
                     status={order.status}
                     isOpen={!!statusDropdownOpen[order._id]}
                     onToggle={(open) => onStatusDropdownToggle(order._id, open)}

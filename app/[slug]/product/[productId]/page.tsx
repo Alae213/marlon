@@ -7,12 +7,13 @@ import Image from "next/image";
 import { ArrowRight, Package, Check } from "lucide-react";
 import { CartIcon } from "@/components/primitives/core/media/cart-icon";
 import { useCart, CartProvider } from "@/contexts/cart-context";
-import { useQuery, useMutation, useConvex } from "convex/react";
+import { useQuery, useConvex } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { ImageCarousel } from "@/components/features/shared/image-carousel";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
+import { createPublicCheckoutIdempotencyKey } from "@/lib/public-checkout-client";
 import { Button } from "@/components/ui/button";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -60,6 +61,11 @@ function ProductDetailContent() {
   const [orderPlaced, setOrderPlaced] = useState(false);
   const [orderNumber, setOrderNumber] = useState("");
   const [phoneError, setPhoneError] = useState("");
+  const [orderError, setOrderError] = useState("");
+  const [isSubmittingOrder, setIsSubmittingOrder] = useState(false);
+  const [checkoutIdempotencyKey, setCheckoutIdempotencyKey] = useState(
+    () => createPublicCheckoutIdempotencyKey()
+  );
 
   const store = useQuery(api.stores.getStoreBySlug, slug ? { slug } : "skip");
   const [navbarContent, setNavbarContent] = useState<{ content?: unknown } | null>(null);
@@ -186,16 +192,9 @@ function ProductDetailContent() {
 
   const variantString = Object.values(selectedVariants).join(" - ");
 
-  const createOrder = useMutation(api.orders.createOrder);
-
-  const generateOrderNumber = () => {
-    const timestamp = Date.now().toString(36).toUpperCase();
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-    return `ORD-${timestamp}-${random}`;
-  };
-
   const handleBuyNow = async () => {
     if (!product || !store) return;
+    setOrderError("");
     
     // Validate phone before submitting
     const phoneValidation = validateAlgerianPhone(orderData.phone);
@@ -204,34 +203,50 @@ function ProductDetailContent() {
       return;
     }
     
+    setIsSubmittingOrder(true);
     try {
-      await createOrder({
-        storeId: store._id as Id<"stores">,
-        orderNumber: generateOrderNumber(),
-        customerName: orderData.name,
-        customerPhone: orderData.phone,
-        customerWilaya: orderData.wilaya,
-        customerCommune: orderData.commune || undefined,
-        customerAddress: orderData.address || undefined,
-        products: [{
+      const response = await fetch("/api/orders/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": checkoutIdempotencyKey,
+        },
+        body: JSON.stringify({
+          storeSlug: slug,
+          idempotencyKey: checkoutIdempotencyKey,
+          customerName: orderData.name,
+          customerPhone: orderData.phone,
+          customerWilaya: orderData.wilaya,
+          customerCommune: orderData.commune || undefined,
+          customerAddress: orderData.address || undefined,
+          deliveryType: orderData.deliveryType,
+          products: [{
           productId: product._id,
-          name: product.name,
-          image: product.images?.[0],
-          price: product.basePrice,
           quantity,
           variant: variantString || undefined,
-        }],
-        subtotal,
-        deliveryCost,
-        total,
-        deliveryType: orderData.deliveryType,
+          }],
+        }),
       });
+
+      const data = await response.json().catch(() => null);
+      if (!response.ok || !data?.success) {
+        throw new Error(data?.error || "Failed to create order.");
+      }
       
-      setOrderNumber(generateOrderNumber());
+      setOrderNumber(data.orderNumber);
       setOrderPlaced(true);
+      setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
     } catch (error) {
-      console.error("Failed to create order:", error);
+      setOrderError(error instanceof Error ? error.message : "Failed to create order.");
+    } finally {
+      setIsSubmittingOrder(false);
     }
+  };
+
+  const openOrderForm = () => {
+    setOrderError("");
+    setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
+    setShowOrderForm(true);
   };
 
   const handleAddToCart = () => {
@@ -433,7 +448,7 @@ function ProductDetailContent() {
               </Button>
             )}
             <Button
-              onClick={() => setShowOrderForm(true)}
+              onClick={openOrderForm}
               className="flex-1 flex items-center justify-center gap-2 text-white h-[44px]"
             >
               Buy Now
@@ -631,6 +646,12 @@ function ProductDetailContent() {
                 </div>
           </div>
 
+          {orderError && (
+            <p className="text-caption mt-3 text-[var(--color-error)]" role="alert">
+              {orderError}
+            </p>
+          )}
+
           <div className="mt-4 flex w-full gap-4">
             <Button
               size="md"
@@ -643,10 +664,10 @@ function ProductDetailContent() {
             <Button
               size="md"
               onClick={handleBuyNow}
-              disabled={!orderData.name || !orderData.phone || !orderData.wilaya}
+              disabled={isSubmittingOrder || !orderData.name || !orderData.phone || !orderData.wilaya}
               className="h-10 flex-1 bg-[var(--color-primary)] text-white hover:opacity-90"
             >
-              Confirm Order
+              {isSubmittingOrder ? "Processing..." : "Confirm Order"}
             </Button>
           </div>
         </DialogContent>
@@ -658,6 +679,7 @@ function ProductDetailContent() {
           isOpen={isOpen}
           onClose={closeCart}
           storeId={store._id as string}
+          storeSlug={slug}
         />
       )}
     </div>

@@ -2,13 +2,13 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-25
 
 ---
 
 ## Summary
 
-Delivery dispatch is live from the orders list and order details drawer. Both send a POST request to `app/api/delivery/create-order/route.ts`, which authenticates the caller, re-resolves store ownership, loads per-store delivery credentials, creates the courier order synchronously, records analytics, and patches tracking/provider data back onto the order. Current: owners can dispatch confirmed orders from Orders. Partial: status progression is split across route and UI layers and is not yet robustly unified.
+Delivery dispatch is live from the orders list and order details drawer. Both send a POST request to `app/api/delivery/create-order/route.ts`, which authenticates the caller, re-resolves store ownership, loads the confirmed order, loads per-store delivery credentials, creates the courier order synchronously, and then records tracking, provider, `dispatched` status, timeline, digest, and dispatch analytics through the server-owned `api.orders.markOrderDispatchedFromDeliveryApi` mutation. Current: owners can dispatch confirmed COD orders from Orders without a separate client-side status mutation.
 
 ---
 
@@ -32,16 +32,21 @@ Delivery dispatch is live from the orders list and order details drawer. Both se
 
 1. The owner dispatches from `components/pages/orders/views/ListView.tsx` (`Dispatch All` or `Dispatch Selected`) or from `components/pages/orders/views/OrderDetails.tsx`.
 2. The client posts order/customer payload data plus `storeSlug` and provider hint to `app/api/delivery/create-order/route.ts`.
-3. The route checks auth, rate-limits requests, resolves the owned store, loads delivery config, records an `attempted` analytics event, calls the provider, records `dispatched` on success, and patches tracking/provider fields via `api.orders.markOrderDispatchedFromDeliveryApi`.
-4. The UI then calls `onStatusChange(..., "packaged")` on success, so tracking metadata and status advancement happen in separate steps.
+3. The route checks auth, rate-limits requests, resolves the owned store, loads the order, returns idempotent success if the order already has dispatch metadata, loads delivery config, and calls the provider.
+4. On provider success, the route requires a tracking number and calls `api.orders.markOrderDispatchedFromDeliveryApi`, which verifies the order is still confirmed, writes tracking/provider fields, moves the lifecycle to `dispatched`, appends timeline/digest data, and records one `dispatched` analytics event.
+5. On provider failure, the route records one failed delivery analytics event and leaves the order status/tracking fields unchanged.
 
 ### Edge Cases & Rules
 
 - Current: only authenticated owners of the target store can dispatch; the route rejects mismatched `storeId`/`storeSlug` and non-owner access.
 - Current: the route uses an in-memory rate limit per user and client IP.
 - Current: provider credentials are loaded server-side; if store credentials are missing, the route can only use emergency fallback secrets when `DELIVERY_ALLOW_GLOBAL_CREDENTIAL_FALLBACK=true`.
-- Partial: dispatch success can patch tracking/provider data even if the later UI status update fails.
-- Partial: the route records `attempted` and `dispatched` analytics, while status-driven analytics are handled separately in `convex/orders.ts`.
+- Current: successful dispatch is server-owned and no longer depends on a follow-up UI status mutation.
+- Current: duplicate dispatch requests for already-dispatched orders with tracking are idempotent and do not call the courier again.
+- Current: confirmed orders that already have tracking/provider metadata from the old split flow are recovered to `dispatched` without creating another courier order.
+- Current: provider failure leaves the order in its previous valid state.
+- Current: `lib/delivery-status-sync.ts` maps live provider statuses into canonical order states, including `refused`, `unreachable`, and `returned`.
+- Current: Andrson and Noest are hidden from the settings UI and gated in the dispatch route until live adapters exist.
 - Current: list bulk dispatch loops requests sequentially in the client; there is no dedicated batch dispatch API.
 
 ---
@@ -62,8 +67,8 @@ This feature joins order management, delivery credentials, and analytics.
 |--------|----------|--------------|
 | Dispatch entry points | Current: list and drawer can dispatch | Add more resilient queueing/retry controls |
 | Credential loading | Current: owner-scoped runtime credentials with optional emergency fallback | Keep fallback incident-only and minimize operational ambiguity |
-| Status progression | Partial: success sets tracking in route, then status in UI | Atomic or centrally orchestrated dispatch/status progression |
-| Bulk dispatch | Current: client-side loop over selected/confirmed orders | Dedicated server batch dispatch with consistent side effects |
+| Status progression | Current: provider success is recorded through one server-owned order mutation that writes tracking and `dispatched` together | More resilient queued dispatch/retry controls |
+| Bulk dispatch | Current: client-side loop over selected/confirmed orders, but each request now uses the same server-owned dispatch side effects as single dispatch | Dedicated server batch dispatch with queueing and retry policy |
 
 ---
 
@@ -83,8 +88,8 @@ This feature joins order management, delivery credentials, and analytics.
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T6 | `[ ]` | Unify delivery dispatch and status progression so tracking, status, and analytics stay consistent across layers |
-| T3 | `[ ]` | Bring bulk/batch behavior to parity with single-order analytics side effects where dispatch changes lifecycle state |
+| T6 | `[x]` | Unify delivery dispatch and status progression so tracking, status, and analytics stay consistent across layers |
+| T3 | `[x]` | Bring bulk/batch behavior to parity with single-order analytics side effects where dispatch changes lifecycle state |
 
 ---
 
@@ -92,21 +97,21 @@ This feature joins order management, delivery credentials, and analytics.
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-partial`
 
-**Last tested:** Not recorded in repo
+**Last tested:** 2026-04-25
 
-**Outcome:** Dispatch code is live and repo-backed, but this documentation update did not add a fresh browser validation result.
+**Outcome:** Targeted dispatch route, order lifecycle, provider mapper, lifecycle unit, and delivery provider contract tests pass. The order-management UI regression file is still blocked by a Windows `EPERM` read on `node_modules/ansi-regex/index.js`.
 
 ## Open Questions
 
-- None. The main weakness is known technical split-brain between route success and later status mutation.
+- None for Phase 4. Full audit-event normalization and bulk status analytics parity remain later hardening work.
 
 ---
 
 ## Notes
 
-- Successful dispatch returns `trackingNumber` and `deliveryFee` to the caller, but the route itself is responsible for patching courier metadata back to the order.
+- Successful dispatch returns `trackingNumber`, `deliveryFee`, and `status` to the caller; Convex is responsible for the lifecycle write and analytics event.
 - The drawer labels the confirmed-state action `Send to delivery company`; the list surfaces `Dispatch All` and `Dispatch Selected` shortcuts.
 
 ---

@@ -51,7 +51,7 @@ function createCtx({ order }) {
 // This test was failing before T41 work started due to changes in storeAccess.ts
 // Skipping for now - the test coverage for delivery analytics exists in other tests
 describe.skip("orders.updateOrderStatus delivery analytics events", () => {
-  it("emits delivered analytics event when order succeeds", async () => {
+  it("emits delivered analytics event when order is delivered", async () => {
     const { ctx, runMutationMock } = createCtx({
       order: {
         _id: "order_1",
@@ -65,7 +65,7 @@ describe.skip("orders.updateOrderStatus delivery analytics events", () => {
 
     await runUpdateOrderStatus(ctx, {
       orderId: "order_1",
-      status: "succeeded",
+      status: "delivered",
     });
 
     expect(runMutationMock).toHaveBeenCalledTimes(1);

@@ -15,11 +15,12 @@ interface ProviderConfig {
   label: string;
 }
 
+const LIVE_PROVIDERS: Provider[] = ["yalidine", "zr-express"];
+const LIVE_PROVIDER_SET = new Set<Provider>(LIVE_PROVIDERS);
+
 const PROVIDERS: ProviderConfig[] = [
   { value: "yalidine", label: "Yalidine" },
   { value: "zr-express", label: "ZR Express" },
-  { value: "andrson", label: "Andrson" },
-  { value: "noest", label: "Noest Express" },
 ];
 
 interface DeliveryIntegrationSettingsProps {
@@ -262,12 +263,14 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
         enabledProviders?: string[];
       };
       
-      const enabled = data.enabledProviders || (data.provider && data.provider !== "none" ? [data.provider] : []);
+      const enabled = (
+        data.enabledProviders || (data.provider && data.provider !== "none" ? [data.provider] : [])
+      ).filter((provider): provider is Provider => LIVE_PROVIDER_SET.has(provider as Provider));
       const newEnabled: EnabledProvidersState = {
         yalidine: enabled.includes("yalidine"),
         "zr-express": enabled.includes("zr-express"),
-        andrson: enabled.includes("andrson"),
-        noest: enabled.includes("noest"),
+        andrson: false,
+        noest: false,
       };
       setEnabledProviders(newEnabled);
       setProviderStates((prev) => {
@@ -298,7 +301,7 @@ export function DeliveryIntegrationSettings({ storeId }: DeliveryIntegrationSett
       };
 
       const enabledProviderList = (Object.entries(nextEnabledProviders) as Array<[Provider, boolean]>)
-        .filter(([, isEnabled]) => isEnabled)
+        .filter(([providerName, isEnabled]) => isEnabled && LIVE_PROVIDER_SET.has(providerName))
         .map(([providerName]) => providerName);
       const providerForMutation: "yalidine" | "zr-express" | "andrson" | "noest" | "none" =
         enabledProviderList[0] ?? "none";

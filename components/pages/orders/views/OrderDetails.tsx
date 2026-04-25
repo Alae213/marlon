@@ -8,6 +8,7 @@ import {
   Phone,
   Package,
   CheckCircle,
+  CircleAlert,
   X,
   PhoneOff,
   PhoneMissed,
@@ -15,15 +16,25 @@ import {
   Building2,
   Truck,
   ExternalLink,
-  Clipboard
+  Clipboard,
+  HandCoins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
 import { useToast } from "@/contexts/toast-context";
-import type { CallLog, OrderStatus } from "@/lib/orders-types";
-import { CALL_OUTCOME_LABELS } from "@/lib/orders-types";
+import type { CallLog, CallOutcome, OrderStatus } from "@/lib/orders-types";
+import {
+  CALL_OUTCOME_LABELS,
+  COD_PAYMENT_STATUS_LABELS,
+  ORDER_RISK_FLAG_LABELS,
+  getMerchantTransitionsForOrder,
+  getCodPaymentStatusForOrderStatus,
+  normalizeOrderStatus,
+  normalizeCodPaymentStatus,
+  normalizeOrderRiskFlags,
+} from "@/lib/orders-types";
 import {
   getDeliveryProviderDisplay,
   getDeliveryTypeDisplay,
@@ -37,7 +48,7 @@ interface OrderProductItem {
   quantity: number;
   variant?: string;
 }
-import { STATUS_CONFIG } from "@/lib/status-icons";
+import { getStatusConfig } from "@/lib/status-icons";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -282,7 +293,9 @@ export function OrderDetails({
   const [noteError, setNoteError] = useState<string | null>(null);
   const noteTextareaId = useId();
   const noteErrorId = useId();
+  const callNoteTextareaId = useId();
 
+  const [callNoteDraft, setCallNoteDraft] = useState("");
   const [callLogError, setCallLogError] = useState<string | null>(null);
   const [isSavingCallLog, setIsSavingCallLog] = useState(false);
 
@@ -327,7 +340,7 @@ export function OrderDetails({
       const data = await response.json();
 
       if (data.success) {
-        await onStatusChange(order._id, "packaged");
+        showToast(data.duplicate ? "Order already dispatched" : "Order dispatched", "success");
       } else {
         setDispatchError(data.error || "Failed to dispatch order");
       }
@@ -336,7 +349,7 @@ export function OrderDetails({
     } finally {
       setIsDispatching(false);
     }
-  }, [order, isDispatching, onStatusChange, storeSlug]);
+  }, [order, isDispatching, showToast, storeSlug]);
 
   // ── Copy Order Info Handler ───────────────────────────────────────────────
 
@@ -360,19 +373,21 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
   // ── Handlers ────────────────────────────────────────────────────────────
 
   const handleAddCallLog = useCallback(
-    async (outcome: CallLog["outcome"]) => {
+    async (outcome: CallOutcome) => {
       if (!order || isSavingCallLog) return;
       setCallLogError(null);
       setIsSavingCallLog(true);
       try {
-        await onAddCallLog(order._id, outcome);
+        const note = callNoteDraft.trim();
+        await onAddCallLog(order._id, outcome, note || undefined);
+        setCallNoteDraft("");
       } catch {
         setCallLogError("Failed to save call log. Please try again.");
       } finally {
         setIsSavingCallLog(false);
       }
     },
-    [order, onAddCallLog, isSavingCallLog],
+    [order, onAddCallLog, isSavingCallLog, callNoteDraft],
   );
 
   const hasAdminNoteChanged = adminNoteDraft.trim() !== currentAdminNoteText.trim();
@@ -402,6 +417,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
     if (!isOpen) {
       setCallLogError(null);
       setIsSavingCallLog(false);
+      setCallNoteDraft("");
     }
   }, [isOpen]);
 
@@ -409,10 +425,12 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
     if (order?._id) {
       setCallLogError(null);
       setIsSavingCallLog(false);
+      setCallNoteDraft("");
     }
   }, [order?._id]);
 
   const normalizedCallLog = useMemo(() => normalizeCallLog(order?.callLog), [order?.callLog]);
+  const riskFlags = useMemo(() => normalizeOrderRiskFlags(order?.riskFlags), [order?.riskFlags]);
   const deliveryTypeDisplay = getDeliveryTypeDisplay(order?.deliveryType);
   const deliveryProviderDisplay = getDeliveryProviderDisplay(
     order?.deliveryProvider,
@@ -420,6 +438,11 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
   );
 
   if (!order) return null;
+
+  const canonicalStatus = normalizeOrderStatus(order.status);
+  const codPaymentStatus =
+    normalizeCodPaymentStatus(order.codPaymentStatus) ||
+    getCodPaymentStatusForOrderStatus(order.status);
 
   return (
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()} >
@@ -435,7 +458,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
           </SheetTitle>
           <div className="flex items-center gap-2">
             {(() => {
-              const statusConfig = STATUS_CONFIG[order.status as OrderStatus];
+              const statusConfig = getStatusConfig(order.status);
               return (
                 <span 
                   className="text-micro-label overflow-hidden rounded-[10px] inline-flex items-center gap-1.5 px-2 py-1 shadow-[var(--shadow-badge)]"
@@ -500,6 +523,25 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                         boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
                 }} />
               </div>
+
+          {riskFlags.length > 0 && (
+            <section className="flex flex-col gap-2 p-3.5 rounded-2xl border border-[#FC9239]/25 bg-[#FC9239]/10">
+              <div className="flex items-center gap-2 text-[#FC9239]">
+                <CircleAlert className="h-4 w-4" />
+                <span className="text-body-sm">Risk flags</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {riskFlags.map((flag) => (
+                  <span
+                    key={flag}
+                    className="text-caption rounded-md border border-[#FC9239]/25 bg-black/10 px-2 py-1 text-[#FC9239]"
+                  >
+                    {ORDER_RISK_FLAG_LABELS[flag]}
+                  </span>
+                ))}
+              </div>
+            </section>
+          )}
 
           {/* Products Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
@@ -568,6 +610,14 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               <span>Total Price</span>
               <span>{formatPrice(order.total)}</span>
             </div>
+            {codPaymentStatus && (
+              <div className="text-body-sm flex items-center justify-between text-[var(--system-200)]">
+                <span>COD</span>
+                <span className="rounded-md bg-white/10 px-2 py-0.5 text-white">
+                  {COD_PAYMENT_STATUS_LABELS[codPaymentStatus]}
+                </span>
+              </div>
+            )}
           </section>
 
           <div className="h-px w-full px-[22px]">
@@ -578,7 +628,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               </div>
 
           {/* Tracking Info Section - shown after dispatch */}
-          {order.trackingNumber && (order.status === "packaged" || order.status === "shipped") && (
+          {order.trackingNumber && (canonicalStatus === "dispatch_ready" || canonicalStatus === "dispatched" || canonicalStatus === "in_transit") && (
             <section className="p-3.5 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2">
               <div className="flex items-center gap-2 text-[var(--primary)]">
                 <Truck className="w-4 h-4" />
@@ -686,6 +736,14 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                  onClick={() => handleAddCallLog("no_answer")}
                  disabled={isSavingCallLog}
                />
+               <CallButton
+                 outcome="wrong_number"
+                 icon={<CircleAlert aria-hidden="true" className="w-4 h-4" />}
+                 label="Wrong Number"
+                 bg="bg-[var(--system-400)]"
+                 onClick={() => handleAddCallLog("wrong_number")}
+                 disabled={isSavingCallLog}
+               />
                <CallButton 
                  outcome="refused" 
                  icon={<PhoneOff aria-hidden="true" className="w-4 h-4" />} 
@@ -696,6 +754,21 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                />
              </div>
            </div>
+
+           <label htmlFor={callNoteTextareaId} className="sr-only">
+             Call note
+           </label>
+           <textarea
+             id={callNoteTextareaId}
+             value={callNoteDraft}
+             onChange={(event) => {
+               setCallNoteDraft(event.target.value);
+               setCallLogError(null);
+             }}
+             placeholder="Call note..."
+             rows={2}
+             className="text-body-sm w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-white/35 transition-colors focus:border-white/30 focus:outline-none motion-reduce:transition-none"
+           />
 
            {callLogError && (
               <p className="text-caption text-center text-destructive" role="alert">
@@ -712,9 +785,10 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
 
           {/* Status Actions */}
           <div className="w-full">
-            <StatusActionButtons 
-              status={order.status as OrderStatus} 
-              orderId={order._id} 
+            <StatusActionButtons
+              status={order.status}
+              order={order}
+              orderId={order._id}
               onStatusChange={onStatusChange}
               onDispatch={handleDispatch}
               isDispatching={isDispatching}
@@ -767,37 +841,70 @@ function CallButton({
   );
 }
 
-function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDispatching, dispatchError }: { 
-  status: OrderStatus, orderId: string, onStatusChange: (id: string, s: string) => void, onDispatch?: () => void, isDispatching?: boolean, dispatchError?: string | null
+function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatch, isDispatching, dispatchError }: {
+  status: string, order: Doc<"orders">, orderId: string, onStatusChange: (id: string, s: string) => void, onDispatch?: () => void, isDispatching?: boolean, dispatchError?: string | null
 }) {
-  switch (status) {
+  const canonicalStatus = normalizeOrderStatus(status);
+  const allowedTransitions = getMerchantTransitionsForOrder(status, order, "merchant");
+  const renderTransitionActionButton = (props: {
+    label: string;
+    targetStatus: OrderStatus;
+    icon?: ReactNode;
+    onClick: () => void;
+    disabled?: boolean;
+  }) => {
+    if (!allowedTransitions.includes(props.targetStatus)) {
+      return null;
+    }
+
+    return <ActionButton {...props} />;
+  };
+
+  switch (canonicalStatus) {
     case "new":
       return (
         <div className="flex gap-3 w-full">
-          <ActionButton
-            label="Confirm"
-            targetStatus="confirmed"
-            icon={<CheckCircle className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "confirmed")}
-          />
-          <ActionButton
-            label="Cancel"
-            targetStatus="canceled"
-            icon={<X className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "canceled")}
-          />
+          {renderTransitionActionButton({
+            label: "Confirm",
+            targetStatus: "confirmed",
+            icon: <CheckCircle className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "confirmed"),
+          })}
+          {renderTransitionActionButton({
+            label: "Cancel",
+            targetStatus: "cancelled",
+            icon: <X className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "cancelled"),
+          })}
+        </div>
+      );
+    case "awaiting_confirmation":
+      return (
+        <div className="flex gap-3 w-full">
+          {renderTransitionActionButton({
+            label: "Confirm",
+            targetStatus: "confirmed",
+            icon: <CheckCircle className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "confirmed"),
+          })}
+          {renderTransitionActionButton({
+            label: "Cancel",
+            targetStatus: "cancelled",
+            icon: <X className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "cancelled"),
+          })}
         </div>
       );
     case "confirmed":
       return (
         <div className="flex flex-col gap-2 w-full">
-          <ActionButton
-            label={isDispatching ? "Dispatching..." : "Send to delivery company"}
-            targetStatus="packaged"
-            icon={<Package className="w-5 h-5" />}
-            onClick={() => onDispatch?.()}
-            disabled={isDispatching}
-          />
+          {renderTransitionActionButton({
+            label: isDispatching ? "Dispatching..." : "Send to delivery company",
+            targetStatus: "dispatch_ready",
+            icon: <Package className="w-5 h-5" />,
+            onClick: () => onDispatch?.(),
+            disabled: isDispatching,
+          })}
           {dispatchError && (
             <p className="text-caption text-center text-destructive" role="alert">
               {dispatchError}
@@ -805,61 +912,75 @@ function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDi
           )}
         </div>
       );
-    case "packaged":
-      return (
-        <ActionButton
-          label="Mark as shipped"
-          targetStatus="shipped"
-          icon={<Package className="w-5 h-5" />}
-          onClick={() => onStatusChange(orderId, "shipped")}
-        />
-      );
-    case "shipped":
-      return (
-        <div className="flex gap-3 w-full">
-          <ActionButton
-            label="Succeed"
-            targetStatus="succeeded"
-            icon={<CheckCircle className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "succeeded")}
-          />
-          <ActionButton
-            label="Return (Router)"
-            targetStatus="router"
-            icon={<Package className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "router")}
-          />
-        </div>
-      );
-    case "succeeded":
-      return <p className="text-body-sm py-2 text-center text-white/40">Order completed</p>;
-    case "router":
+    case "dispatch_ready":
+      return renderTransitionActionButton({
+        label: "Mark as dispatched",
+        targetStatus: "dispatched",
+        icon: <Truck className="w-5 h-5" />,
+        onClick: () => onStatusChange(orderId, "dispatched"),
+      });
+    case "dispatched":
+    case "in_transit":
+      return <p className="text-body-sm py-2 text-center text-white/40">Waiting for courier update</p>;
+    case "delivery_failed":
+    case "unreachable":
       return (
         <div className="flex gap-3 w-full">
-          <ActionButton
-            label="Return to Confirmed"
-            targetStatus="confirmed"
-            icon={<CheckCircle className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "confirmed")}
-          />
-          <ActionButton
-            label="Cancel Order"
-            targetStatus="canceled"
-            icon={<X className="w-5 h-5" />}
-            onClick={() => onStatusChange(orderId, "canceled")}
-          />
+          {renderTransitionActionButton({
+            label: "Retry Confirmation",
+            targetStatus: "awaiting_confirmation",
+            icon: <CheckCircle className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "awaiting_confirmation"),
+          })}
+          {renderTransitionActionButton({
+            label: "Mark Returned",
+            targetStatus: "returned",
+            icon: <Package className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "returned"),
+          })}
         </div>
       );
-    case "canceled":
+    case "returned":
+      return (
+        <div className="flex gap-3 w-full">
+          {renderTransitionActionButton({
+            label: "Retry Confirmation",
+            targetStatus: "awaiting_confirmation",
+            icon: <CheckCircle className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "awaiting_confirmation"),
+          })}
+          {renderTransitionActionButton({
+            label: "Cancel Order",
+            targetStatus: "cancelled",
+            icon: <X className="w-5 h-5" />,
+            onClick: () => onStatusChange(orderId, "cancelled"),
+          })}
+        </div>
+      );
+    case "delivered":
+      return renderTransitionActionButton({
+        label: "Mark COD Collected",
+        targetStatus: "cod_collected",
+        icon: <HandCoins className="w-5 h-5" />,
+        onClick: () => onStatusChange(orderId, "cod_collected"),
+      });
+    case "cod_collected":
+      return renderTransitionActionButton({
+        label: "Mark COD Reconciled",
+        targetStatus: "cod_reconciled",
+        icon: <CheckCircle className="w-5 h-5" />,
+        onClick: () => onStatusChange(orderId, "cod_reconciled"),
+      });
+    case "cod_reconciled":
+      return <p className="text-body-sm py-2 text-center text-white/40">COD reconciled</p>;
+    case "cancelled":
     case "blocked":
-      return (
-        <ActionButton
-          label="Reopen Order"
-          targetStatus="new"
-          icon={<CheckCircle className="w-5 h-5" />}
-          onClick={() => onStatusChange(orderId, "new")}
-        />
-      );
+      return renderTransitionActionButton({
+        label: "Reopen Order",
+        targetStatus: "new",
+        icon: <CheckCircle className="w-5 h-5" />,
+        onClick: () => onStatusChange(orderId, "new"),
+      });
     default:
       return null;
   }
@@ -868,7 +989,7 @@ function StatusActionButtons({ status, orderId, onStatusChange, onDispatch, isDi
 function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
   label: string, targetStatus: OrderStatus, icon?: ReactNode, onClick: () => void, disabled?: boolean
 }) {
-  const statusConfig = STATUS_CONFIG[targetStatus];
+  const statusConfig = getStatusConfig(targetStatus);
   
   if (!statusConfig) {
     return (

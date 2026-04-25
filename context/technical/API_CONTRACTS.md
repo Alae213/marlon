@@ -19,7 +19,7 @@ Use this file as an entrypoint map, not a promise of future payloads.
 - Errors:
   - `Current`: no single shared error envelope. Convex functions mostly throw plain errors; route handlers return ad hoc JSON.
 - Idempotency:
-  - `Current`: not a platform-wide guarantee. Sensitive POST flows should be treated as non-idempotent unless code proves otherwise.
+  - `Current`: not a platform-wide guarantee. `POST /api/orders/create` supports public checkout idempotency through `publicIdempotencyKey`; other sensitive POST flows should be treated as non-idempotent unless code proves otherwise.
 - Billing/lock model:
   - `Current`: store billing is trial/subscription based, not the planned `5/day` overflow/unlock model.
   - `Current`: `convex/stores.ts` uses a 30-day trial window, locks after more than 50 orders in the active trial window, tracks `paidUntil` for active subscriptions, and deletes old orders from long-locked stores after 20 days.
@@ -65,7 +65,7 @@ Primary merchant surfaces are Convex functions.
 | Surface | Entrypoint | Auth reality |
 |---|---|---|
 | Order lists and reads | `convex/orders.ts` -> `getOrders`, `getOrder`, `getOrdersByStatus`, `getOrderByNumber`, `getOrderDigests`, `getNewOrdersCount` | Owner-scoped. |
-| Order mutations | `convex/orders.ts` -> `updateOrderStatus`, `bulkUpdateOrderStatus`, `updateOrderNotes`, `upsertAdminNote`, `addCallLog`, `updateTrackingNumber` | Owner-scoped. |
+| Order mutations | `convex/orders.ts` -> `updateOrderStatus`, `bulkUpdateOrderStatus`, `updateOrderNotes`, `upsertAdminNote`, `addCallLog`, `updateTrackingNumber` | Owner-scoped; confirmation now requires answered-call evidence and `addCallLog` can move pre-fulfillment lifecycle states. |
 | Delivery sync-back | `convex/orders.ts` -> `markOrderDispatchedFromDeliveryApi` | Owner-scoped mutation used by delivery route. |
 
 ### Merchant storefront/content + delivery integration (`Current`)
@@ -89,6 +89,7 @@ Primary merchant surfaces are Convex functions.
   - Requires authenticated Clerk user.
   - Resolves store by `storeId` or `storeSlug`.
   - Enforces owner-only access, not admin/staff policy.
+  - Loads the server-side order record and rejects dispatch unless the order is `confirmed`.
   - Loads store delivery credentials from Convex and dispatches synchronously.
   - Writes delivery analytics and tries to patch order tracking metadata.
 - Current caveats:
@@ -133,25 +134,29 @@ Primary merchant surfaces are Convex functions.
   - No durable replay defense or webhook dedupe ledger is in place.
   - Activation currently calls `convex/stores.ts` -> `updateSubscription`, which enforces owner auth; the webhook path does not supply owner auth, so end-to-end activation is not a hardened or reliable contract yet.
 
-## Deprecated / Mock
-
-### Public order submit route (`Deprecated/Mock`)
+### Public order submit route (`Current`)
 
 - Route: `POST /api/orders/create`
-- Status: mock only.
+- Status: live public checkout route.
 - Current behavior:
-  - Validates a handful of request fields.
-  - Returns a fabricated `orderId`.
-  - Does not create a Convex order.
-- Important truth gap:
-  - The documented public checkout route is not live.
-  - The current Convex order creation path, `convex/orders.ts` -> `createOrder`, requires authenticated ownership and is incompatible with anonymous storefront checkout.
+  - Does not require Clerk auth.
+  - Accepts `storeSlug`, `idempotencyKey`, customer fields, delivery type, and products with `productId`, `quantity`, and optional `variant`.
+  - Ignores client-supplied product names, prices, subtotal, delivery cost, and total.
+  - Calls `convex/orders.ts` -> `createPublicOrder`.
+  - Returns `orderId`, `orderNumber`, `duplicate`, and server-computed `totals`.
+  - Maps malformed payloads, invalid phones/products/stores, duplicate recent orders, and velocity limits to safe JSON errors.
+  - Adds lightweight order `riskFlags` for duplicate phone, repeated cancelled/refused history, and high-frequency submissions.
+- Current caveats:
+  - Abuse controls are lightweight and order-based, not a full fraud/risk engine.
+  - The route creates orders directly; lead/checkout-attempt tracking is still planned for a later phase.
+
+## Deprecated / Mock
 
 ## Planned Contracts And Policy Targets
 
 These are target directions only; exact payload guarantees should not be assumed until live entrypoints exist.
 
-- Public anonymous checkout with a real public order-create contract.
+- Lead/checkout-attempt tracking before public order conversion.
 - Merchant lock/unlock behavior based on `5/day`, `Africa/Algiers` reset boundaries, masked overflow orders, and timed cleanup/unlock restoration.
 - A stable merchant unlock/initiation surface instead of the current generic payment route.
 - Hardened Chargily webhook processing with signature verification, replay-window enforcement, durable dedupe, and a trusted internal activation path.
@@ -162,8 +167,7 @@ These are target directions only; exact payload guarantees should not be assumed
 ## Biggest Known Gaps
 
 - Merchant API docs should treat Convex functions as the primary live surface; most documented REST merchant routes do not exist.
-- Anonymous checkout is not live today.
-- Current order submit implementations are split between a mock route and an owner-only Convex mutation.
+- Public checkout is now live, but checkout attempts/leads are not separately tracked yet.
 - Billing runtime does not match the planned overflow/unlock contract.
 - Payment initiation is currently `POST /api/chargily/create-payment`, not a stable merchant unlock endpoint.
 - Chargily webhook route exists, but hardening and activation correctness are incomplete.

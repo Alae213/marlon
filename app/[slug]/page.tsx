@@ -354,6 +354,7 @@ function StorefrontContent() {
           isOpen={isOpen} 
           onClose={closeCart}
           storeId={store?._id as string}
+          storeSlug={slug}
         />
       )}
 

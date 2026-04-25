@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { createDeliveryOrder, DeliveryProvider, DeliveryCredentials } from "@/lib/delivery-api";
 import { toDeliveryApiProvider, normalizeDeliveryProvider } from "@/lib/delivery-provider";
+import { normalizeOrderStatus, type OrderStatus } from "@/lib/order-lifecycle";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
@@ -23,9 +24,37 @@ type StoreDoc = {
   slug: string;
 };
 
+type DispatchOrderDoc = {
+  _id: Id<"orders">;
+  storeId: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerWilaya: string;
+  customerCommune?: string;
+  customerAddress?: string;
+  products: Array<{ name: string; quantity: number; price: number }>;
+  total: number;
+  status: string;
+  deliveryProvider?: string;
+  trackingNumber?: string;
+};
+
 const CREATE_ORDER_RATE_LIMIT_WINDOW_MS = 60_000;
 const CREATE_ORDER_RATE_LIMIT_MAX_REQUESTS = 20;
 const createOrderRateLimit = new Map<string, { count: number; resetAt: number }>();
+const DISPATCH_RECORDED_STATUSES = new Set<OrderStatus>([
+  "dispatch_ready",
+  "dispatched",
+  "in_transit",
+  "delivered",
+  "delivery_failed",
+  "refused",
+  "unreachable",
+  "returned",
+  "cod_collected",
+  "cod_reconciled",
+]);
 
 class HttpError extends Error {
   status: number;
@@ -137,6 +166,10 @@ function parseProviderHint(provider: unknown): string | undefined {
     throw new HttpError(400, "Invalid delivery provider.");
   }
 
+  if (!toDeliveryApiProvider(normalizedProvider)) {
+    throw new HttpError(400, "Unsupported delivery provider.");
+  }
+
   return normalizedProvider;
 }
 
@@ -236,6 +269,48 @@ async function loadDeliveryConfig(
   throw new HttpError(400, "Missing delivery credentials for this store.");
 }
 
+async function loadDispatchOrder(
+  convex: ConvexHttpClient,
+  orderId: string,
+  storeId: Id<"stores">
+) {
+  let order: DispatchOrderDoc | null = null;
+  try {
+    order = (await convex.query(api.orders.getOrder, {
+      orderId: orderId as Id<"orders">,
+    })) as DispatchOrderDoc | null;
+  } catch {
+    throw new HttpError(404, "Order not found.");
+  }
+
+  if (!order) {
+    throw new HttpError(404, "Order not found.");
+  }
+
+  if (order.storeId !== storeId) {
+    throw new HttpError(403, "Order does not belong to this store.");
+  }
+
+  const canonicalStatus = normalizeOrderStatus(order.status);
+  const duplicateDispatch =
+    Boolean(order.trackingNumber && order.deliveryProvider) &&
+    Boolean(canonicalStatus && DISPATCH_RECORDED_STATUSES.has(canonicalStatus));
+
+  if (duplicateDispatch) {
+    return { order, duplicate: true, recoverExistingDispatch: false };
+  }
+
+  if (canonicalStatus === "confirmed" && order.trackingNumber && order.deliveryProvider) {
+    return { order, duplicate: false, recoverExistingDispatch: true };
+  }
+
+  if (canonicalStatus !== "confirmed") {
+    throw new HttpError(409, "Order must be confirmed before dispatch.");
+  }
+
+  return { order, duplicate: false, recoverExistingDispatch: false };
+}
+
 function toErrorResponse(error: unknown) {
   if (error instanceof HttpError) {
     return NextResponse.json({ success: false, error: error.message }, { status: error.status });
@@ -319,71 +394,83 @@ export async function POST(request: NextRequest) {
     const storeId = typeof body.storeId === "string" ? body.storeId : undefined;
     const storeSlug = typeof body.storeSlug === "string" ? body.storeSlug : undefined;
     const orderId = typeof body.orderId === "string" ? body.orderId : "";
-    const customerName = typeof body.customerName === "string" ? body.customerName : "";
-    const customerPhone = typeof body.customerPhone === "string" ? body.customerPhone : "";
-    const customerWilaya = typeof body.customerWilaya === "string" ? body.customerWilaya : "";
-    const customerCommune = typeof body.customerCommune === "string" ? body.customerCommune : "";
-    const customerAddress = typeof body.customerAddress === "string" ? body.customerAddress : "";
-    const products = Array.isArray(body.products)
-      ? (body.products as Array<{ name: string; quantity: number; price: number }>)
-      : [];
-    const total = typeof body.total === "number" ? body.total : 0;
     const providerHint = parseProviderHint(body.provider);
 
-    if (!orderId || !customerName || !customerPhone || !customerWilaya) {
+    if (!orderId) {
       throw new HttpError(400, "Missing required fields.");
     }
 
     const convex = getConvexClient(token);
     const resolvedStoreId = await resolveOwnedStoreId(convex, userId, storeId, storeSlug);
-    const config = await loadDeliveryConfig(convex, resolvedStoreId, providerHint);
-
-    await recordDeliveryEventSafe(convex, {
-      storeId: resolvedStoreId,
+    const { order, duplicate, recoverExistingDispatch } = await loadDispatchOrder(
+      convex,
       orderId,
-      eventType: "attempted",
-      provider: config.provider,
-      region: customerWilaya,
-    });
+      resolvedStoreId
+    );
+
+    if (duplicate) {
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        trackingNumber: order.trackingNumber,
+        provider: order.deliveryProvider,
+        status: normalizeOrderStatus(order.status),
+      });
+    }
+
+    if (recoverExistingDispatch) {
+      const dispatchRecord = await convex.mutation(api.orders.markOrderDispatchedFromDeliveryApi, {
+        orderId: orderId as Id<"orders">,
+        trackingNumber: order.trackingNumber!,
+        provider: order.deliveryProvider!,
+      });
+
+      return NextResponse.json({
+        success: true,
+        duplicate: true,
+        recovered: true,
+        trackingNumber: order.trackingNumber,
+        provider: order.deliveryProvider,
+        status:
+          dispatchRecord && typeof dispatchRecord === "object" && "status" in dispatchRecord
+            ? dispatchRecord.status
+            : "dispatched",
+      });
+    }
+
+    const config = await loadDeliveryConfig(convex, resolvedStoreId, providerHint);
 
     const result = await createDeliveryOrder(config.provider, config.credentials, {
       storeId: resolvedStoreId,
       orderId,
-      customerName,
-      customerPhone,
-      customerWilaya,
-      customerCommune,
-      customerAddress,
-      products,
-      total,
+      customerName: order.customerName,
+      customerPhone: order.customerPhone,
+      customerWilaya: order.customerWilaya,
+      customerCommune: order.customerCommune ?? "",
+      customerAddress: order.customerAddress ?? "",
+      products: order.products,
+      total: order.total,
     });
 
     if (result.success) {
-      await recordDeliveryEventSafe(convex, {
-        storeId: resolvedStoreId,
-        orderId,
-        eventType: "dispatched",
-        provider: config.provider,
-        region: customerWilaya,
-        trackingNumber: result.trackingNumber,
-      });
-
-      if (result.trackingNumber) {
-        try {
-          await convex.mutation(api.orders.markOrderDispatchedFromDeliveryApi, {
-            orderId: orderId as Id<"orders">,
-            trackingNumber: result.trackingNumber,
-            provider: config.provider,
-          });
-        } catch (orderPatchError) {
-          console.warn("Delivery dispatch metadata sync skipped:", orderPatchError);
-        }
+      if (!result.trackingNumber) {
+        throw new HttpError(502, "Delivery provider did not return a tracking number.");
       }
+
+      const dispatchRecord = await convex.mutation(api.orders.markOrderDispatchedFromDeliveryApi, {
+        orderId: orderId as Id<"orders">,
+        trackingNumber: result.trackingNumber,
+        provider: config.provider,
+      });
 
       return NextResponse.json({
         success: true,
         trackingNumber: result.trackingNumber,
         deliveryFee: result.deliveryFee,
+        status:
+          dispatchRecord && typeof dispatchRecord === "object" && "status" in dispatchRecord
+            ? dispatchRecord.status
+            : "dispatched",
       });
     }
 
@@ -392,7 +479,7 @@ export async function POST(request: NextRequest) {
       orderId,
       eventType: "failed",
       provider: config.provider,
-      region: customerWilaya,
+      region: order.customerWilaya,
       reason: result.error,
     });
 

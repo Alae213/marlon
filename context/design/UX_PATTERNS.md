@@ -38,6 +38,15 @@
 - Show success toast on completion
 - Redirect or reset form after success
 
+## Pre-Signup Onboarding
+
+### Unauthenticated Entry
+- Non-authenticated users start directly on Question 1; do not place a landing CTA or intro step before it.
+- Use a 4-step progress bar with `1 / 4` style step text.
+- Single-choice questions require one selected option; multi-select questions require at least one selected option.
+- After completion, show the authenticated-style `new store` preview and open the Google sign-up modal immediately.
+- If the sign-up modal closes, keep the preview visible and show a `Continue with Google` action.
+
 ## Loading States
 
 ### Skeleton Screens

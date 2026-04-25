@@ -69,7 +69,8 @@ Purpose: catalog products with optional variants.
 Purpose: operational order record with customer, line items, delivery, notes, and some embedded history.
 
 - Key fields: `storeId`, `orderNumber`, customer fields (`customerName`, `customerPhone`, `customerWilaya`, optional commune/address), `products[]`, `subtotal`, `deliveryCost`, `total`, `status`
-- Optional operations fields: `paymentStatus`, call metrics, delivery/tracking fields, `notes`
+- Optional operations fields: legacy/display `paymentStatus`, COD-specific `codPaymentStatus`, call metrics, delivery/tracking fields, public-checkout `riskFlags`, `notes`
+- Current COD payment substates: `pending_collection`, `collected`, `not_collected`, `reconciliation_pending`, `reconciled`
 - Embedded history still present: optional `callLog[]`, `auditTrail[]`, `timeline[]`, admin-note fields
 - Indexes: `storeId`, `storeCreatedAt`, `status`, `orderNumber`, `storeOrderNumber`, `storeUpdatedAt`
 - Reality note: live orders are not modeled with masked-overflow snapshots, retention markers, or normalized audit-only history yet
@@ -78,7 +79,7 @@ Purpose: operational order record with customer, line items, delivery, notes, an
 
 ### Order-facing tables
 
-- `orderDigests` - `Current`: denormalized order list/read model with headline customer, total, status, provider, and product-summary fields; indexed by `orderId`, store/update, store/status/update, and store/order number
+- `orderDigests` - `Current`: denormalized order list/read model with headline customer, total, status, COD payment status, provider, risk flags, and product-summary fields; indexed by `orderId`, store/update, store/status/update, and store/order number
 - `orderTimelineEvents` - `Current`: per-order timeline events with `status`, optional `note`, `createdAt`; indexed by order/date and store/date
 - `orderCallEvents` - `Current`: per-order call outcomes with optional notes; indexed by order/date and store/date
 

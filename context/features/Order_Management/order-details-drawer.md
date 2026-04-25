@@ -2,13 +2,13 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-24
 
 ---
 
 ## Summary
 
-The order details drawer is live in `components/pages/orders/views/OrderDetails.tsx` and opens from the list view. It is the focused order workspace for customer info, product lines, totals, delivery tracking, call logging, admin notes, copy-to-clipboard, and guided status actions. Current: the drawer is functional and central to single-order handling. Partial: it does not expose the full order timeline already written on the backend.
+The order details drawer is live in `components/pages/orders/views/OrderDetails.tsx` and opens from the list view. It is the focused order workspace for customer info, product lines, totals, delivery tracking, call logging, risk flags, admin notes, copy-to-clipboard, and guided status actions. Current: the drawer is functional and central to single-order handling. Partial: it does not expose the full order timeline already written on the backend.
 
 ---
 
@@ -32,14 +32,15 @@ The order details drawer is live in `components/pages/orders/views/OrderDetails.
 
 1. Clicking a row in `components/pages/orders/views/ListView.tsx` sets `selectedOrder` in `app/orders/[storeSlug]/page.tsx`.
 2. `OrderDetails` opens as a right-side sheet and renders customer, product, totals, tracking, admin note, and call controls from the live order object.
-3. The owner can copy customer details, log a call outcome, save a private note, or use the footer action buttons to move the order forward.
+3. The owner can copy customer details, log a call outcome with an optional note, save a private note, or use the footer action buttons to move the order forward.
 
 ### Edge Cases & Rules
 
 - Current: the drawer is controlled entirely by the selected order already loaded on the page; it does not fetch a richer per-order payload on open.
-- Current: tracking info is only shown when `trackingNumber` exists and status is `packaged` or `shipped`.
+- Current: tracking info is only shown when `trackingNumber` exists and status is `dispatch_ready`, `dispatched`, or `in_transit`.
 - Current: footer actions are status-specific through `StatusActionButtons` in `components/pages/orders/views/OrderDetails.tsx`.
-- Partial: the drawer offers a guided lifecycle, but it is not authoritative because the list dropdown still allows direct status jumps.
+- Current: confirmation actions are hidden until the order has answered-call evidence; the server enforces the same rule.
+- Current: risk flags from public checkout are shown in the drawer as operational warnings.
 - Partial: backend timeline and event records exist in `convex/orders.ts`, but the drawer does not show a full timeline, delivery event log, or note history.
 
 ---
@@ -59,7 +60,7 @@ The drawer is the single-order layer on top of the list page.
 | Aspect | MVP (v1) | Full Version |
 |--------|----------|--------------|
 | Order workspace | Current: customer, products, totals, tracking, note, calls, status actions | Add richer audit history and deeper editing flows |
-| Status controls | Current: guided buttons per current status | Enforced lifecycle with shared rules across drawer and list |
+| Status controls | Current: guided buttons per current status, with answered-call confirmation gating | Provider/system-owned actions separated into dedicated flows |
 | Tracking view | Current: provider + tracking number + external links when present | Show provider state refresh and courier events |
 | Audit visibility | Partial: recent call bars and last note metadata only | Full timeline/history surface from `timeline` and event tables |
 
@@ -90,11 +91,11 @@ The drawer is the single-order layer on top of the list page.
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-partial`
 
-**Last tested:** Not recorded in repo
+**Last tested:** 2026-04-24
 
-**Outcome:** The drawer is live in code, but no browser verification result was added during this documentation pass.
+**Outcome:** Lint and TypeScript pass for the drawer changes; the Bun UI regression file was blocked by a Windows `EPERM` dependency-read error before assertions completed.
 
 ## Open Questions
 

@@ -3,6 +3,45 @@
  */
 
 // Order status icons are managed in status-icons.tsx
+import {
+  ORDER_STATUS_LABELS,
+  ORDER_STATUS_TRANSITIONS,
+  ORDER_STATUSES,
+  type OrderStatus,
+} from "./order-lifecycle";
+import type { CodPaymentStatus } from "./order-cod-payment";
+import type { CallOutcome, OrderRiskFlag } from "./order-confirmation";
+
+export type { OrderStatus, OrderTransitionActor } from "./order-lifecycle";
+export type { CodPaymentStatus } from "./order-cod-payment";
+export type { CallOutcome, OrderRiskFlag } from "./order-confirmation";
+export {
+  ORDER_STATUSES,
+  normalizeOrderStatus,
+  getOrderStatusLabel,
+  getAllowedOrderStatusTransitions,
+  canTransitionOrderStatus,
+  assertOrderStatusTransition,
+} from "./order-lifecycle";
+export {
+  COD_PAYMENT_STATUSES,
+  COD_PAYMENT_STATUS_LABELS,
+  assertCanReconcileCodPayment,
+  getCodPaymentStatusForOrderStatus,
+  isCodPaymentStatus,
+  normalizeCodPaymentStatus,
+} from "./order-cod-payment";
+export {
+  CALL_OUTCOMES,
+  CALL_OUTCOME_LABELS,
+  NO_ANSWER_UNREACHABLE_THRESHOLD,
+  ORDER_RISK_FLAGS,
+  ORDER_RISK_FLAG_LABELS,
+  getCallOutcomeLifecycleTransition,
+  getMerchantTransitionsForOrder,
+  hasAnsweredCallEvidence,
+  normalizeOrderRiskFlags,
+} from "./order-confirmation";
 
 // Order item in an order
 export interface OrderItem {
@@ -19,7 +58,7 @@ export interface OrderItem {
 export interface CallLog {
   id: string;
   timestamp: number;
-  outcome: "answered" | "no_answer" | "wrong_number" | "refused";
+  outcome: CallOutcome;
   notes?: string;
 }
 
@@ -47,49 +86,23 @@ export interface Order {
   subtotal: number;
   deliveryCost: number;
   total: number;
+  codPaymentStatus?: CodPaymentStatus;
   deliveryType: "home_delivery" | "office_delivery" | "pickup";
   trackingNumber?: string;
   callLog: CallLog[];
   adminNoteText?: string;
   adminNoteUpdatedAt?: number;
   adminNoteUpdatedBy?: string;
+  riskFlags?: OrderRiskFlag[];
   auditTrail: AuditTrailEntry[];
 }
-
-// Order status types
-export type OrderStatus = 
-  | "new" 
-  | "confirmed" 
-  | "packaged" 
-  | "shipped" 
-  | "succeeded" 
-  | "canceled" 
-  | "blocked"
-  | "router";
 
 // Sort types
 export type SortField = "date" | "total" | "status";
 export type SortDirection = "asc" | "desc";
 
 // Status labels for display (without icons - icons are in status-icons.tsx)
-export const STATUS_LABELS: Record<OrderStatus, { label: string; variant: "default" | "success" | "warning" | "danger" | "info" }> = {
-  new: { label: "New", variant: "info" },
-  confirmed: { label: "Confirmed", variant: "success" },
-  packaged: { label: "Packaged", variant: "warning" },
-  shipped: { label: "Shipped", variant: "info" },
-  succeeded: { label: "Succeeded", variant: "success" },
-  canceled: { label: "Canceled", variant: "danger" },
-  blocked: { label: "Blocked", variant: "danger" },
-  router: { label: "Router", variant: "danger" },
-};
-
-// Call outcome labels
-export const CALL_OUTCOME_LABELS: Record<CallLog["outcome"], { label: string; icon: string }> = {
-  answered: { label: "Answered", icon: "✓" },
-  no_answer: { label: "No Answer", icon: "✗" },
-  wrong_number: { label: "Wrong Number", icon: "!" },
-  refused: { label: "Refused", icon: "✗" },
-};
+export const STATUS_LABELS = ORDER_STATUS_LABELS;
 
 // Delivery type labels
 export const DELIVERY_TYPE_LABELS: Record<Order["deliveryType"], string> = {
@@ -99,13 +112,5 @@ export const DELIVERY_TYPE_LABELS: Record<Order["deliveryType"], string> = {
 };
 
 // Status transition map - what statuses can each status transition to
-export const STATUS_TRANSITIONS: Partial<Record<OrderStatus, OrderStatus[]>> = {
-  new: ["confirmed", "canceled", "blocked", "router"],
-  confirmed: ["packaged", "canceled", "blocked", "router"],
-  packaged: ["shipped", "canceled"],
-  shipped: ["succeeded", "router", "canceled"],
-  succeeded: [],
-  canceled: ["new"], // Can reopen
-  blocked: ["new"], // Can reopen
-  router: ["new", "confirmed", "canceled"],
-};
+export const STATUS_TRANSITIONS = ORDER_STATUS_TRANSITIONS.merchant;
+export const statuses = [...ORDER_STATUSES];

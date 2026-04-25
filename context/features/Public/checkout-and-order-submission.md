@@ -1,14 +1,14 @@
 # Feature: Checkout and Order Submission
 
-> **Status:** `in-progress`
+> **Status:** `current`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-24
 
 ---
 
 ## Summary
 
-Public checkout UI exists in two places: the PDP "Buy Now" dialog in `app/[slug]/product/[productId]/page.tsx` and the cart drawer checkout flow in `components/features/cart/cart-sidebar.tsx`. Current: both flows collect customer details, validate Algerian phone numbers on the client, estimate delivery, and build order payloads. Partial: neither flow is truly live for anonymous shoppers because both call `api.orders.createOrder`, and `convex/orders.ts:createOrder` currently requires authenticated store-owner access.
+Public checkout UI exists in two places: the PDP "Buy Now" dialog in `app/[slug]/product/[productId]/page.tsx` and the cart drawer checkout flow in `components/features/cart/cart-sidebar.tsx`. Current: both flows submit to `POST /api/orders/create`, which calls `convex/orders.ts:createPublicOrder` without owner auth and creates real orders through a server-owned validation path.
 
 ---
 
@@ -31,16 +31,19 @@ Public checkout UI exists in two places: the PDP "Buy Now" dialog in `app/[slug]
 ### Happy Path
 
 1. The shopper opens checkout either from the PDP dialog or from the cart drawer and fills name, phone, wilaya, optional commune, optional address, and delivery type.
-2. The UI formats and validates the phone number with `formatPhoneInput` and `validateAlgerianPhone`, then computes subtotal, delivery, and total on the client.
-3. The UI calls `useMutation(api.orders.createOrder)` with the built payload. In the current runtime, that mutation only succeeds for an authenticated owner of the target store.
+2. The UI formats and validates the phone number with `formatPhoneInput` and `validateAlgerianPhone`, then sends customer fields, delivery type, product IDs, quantities, variants, store slug, and an idempotency key to `POST /api/orders/create`.
+3. The route strips client-supplied prices/totals and calls `api.orders.createPublicOrder`.
+4. `createPublicOrder` resolves the store by slug, validates phone/product ownership, computes product subtotal, delivery cost, and total server-side, stamps lightweight risk flags when prior order history warrants it, writes the order, digest, and timeline entry, updates store order count/billing state, and returns the stored order number.
 
 ### Edge Cases & Rules
-- Current: the live public UI does not use `app/api/orders/create/route.ts`; that route is a mock-only stub and is unused by the storefront.
-- Partial: anonymous shoppers cannot truly submit orders today because `convex/orders.ts:createOrder` rejects unauthenticated users and non-owners.
+- Current: the live public UI uses `app/api/orders/create/route.ts`; the old mock route has been replaced.
+- Current: anonymous shoppers can submit real orders without calling owner-only `api.orders.createOrder`.
 - Current: checkout requires name, phone, and wilaya in the UI before the submit button enables; commune and address remain optional, with address effectively needed only for domicile delivery.
-- Current: delivery pricing is publicly read and then duplicated with client fallbacks, so the final amount shown to shoppers can depend on local fallback logic as well as stored pricing records.
-- Partial: the PDP and cart flows duplicate most checkout logic instead of sharing one canonical public order path.
-- Partial: the PDP success screen uses a freshly generated order number after submission instead of reusing the number sent in the mutation payload.
+- Current: delivery pricing is still estimated in the UI, but the saved order amount is computed in `createPublicOrder` from server-resolved product and delivery records.
+- Current: duplicate submit protection uses `publicIdempotencyKey` on orders and the `storeIdempotencyKey` index.
+- Current: abuse controls reject malformed payloads, invalid products, recent duplicate orders, excessive per-phone velocity, and excessive per-store velocity.
+- Current: accepted orders may carry `riskFlags` for duplicate phone, repeated cancelled/refused history, and high-frequency submissions.
+- Current: the PDP success screen uses the stored order number returned by the server.
 
 ---
 
@@ -59,9 +62,9 @@ This feature is the write-side bridge from public browsing into order management
 | Aspect | MVP (v1) | Full Version |
 |--------|----------|--------------|
 | Checkout surfaces | Current: PDP dialog and cart drawer forms exist | One intentional public checkout architecture |
-| Order submission | Partial: UI calls a real mutation, but that mutation is owner-only | Anonymous-safe order creation with server validation and abuse controls |
-| Delivery pricing | Partial: public reads plus duplicated UI fallbacks | One canonical public quote/order pricing path |
-| Runtime status | Partial: browseable storefront with non-live anonymous checkout | End-to-end anonymous order placement that creates real owner-visible orders |
+| Order submission | Current: public route plus `createPublicOrder` create real anonymous orders | More durable abuse controls and checkout attempt tracking |
+| Delivery pricing | Current: UI estimate plus server-owned saved totals | One canonical quote/order pricing path shared by all checkout surfaces |
+| Runtime status | Current: end-to-end anonymous order placement creates owner-visible orders | Lead/checkout attempt recovery and richer fraud controls |
 
 ---
 
@@ -69,10 +72,10 @@ This feature is the write-side bridge from public browsing into order management
 
 ## Security Considerations
 
-- Current: `convex/orders.ts:createOrder` fails closed by requiring authenticated owner access. This blocks anonymous public checkout, but it is safer than exposing an unauthenticated write without server checks.
-- Partial: the current public checkout attempts send customer PII from the browser, yet there is no dedicated anonymous-safe server entry point with durable rate limiting, spam resistance, or narrow public validation documented in the repo.
-- Current: store authorization on the write path is based on server-side `store.ownerId` checks, not slug or client claims. Do not describe a public policy layer that does not exist.
-- Partial: delivery totals are computed client-side from publicly readable pricing plus fallbacks, so the displayed amount is not yet a hardened server-owned quote.
+- Current: `convex/orders.ts:createOrder` remains owner-only for merchant-created orders.
+- Current: anonymous checkout writes go through `createPublicOrder`, which resolves store/product data server-side and ignores client-supplied prices/totals.
+- Current: customer PII is sent only in the POST body and stored on the order; route errors avoid echoing PII.
+- Partial: abuse controls are implemented in Convex but are still lightweight and not a full fraud/risk engine.
 
 ## Tasks
 
@@ -80,7 +83,7 @@ This feature is the write-side bridge from public browsing into order management
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T9 | `[ ]` | Build a real anonymous public order submission path with server-side validation and abuse controls, and stop calling owner-only `api.orders.createOrder` from public UI |
+| T9 | `[x]` | Build a real anonymous public order submission path with server-side validation and abuse controls, and stop calling owner-only `api.orders.createOrder` from public UI |
 
 ---
 
@@ -88,22 +91,22 @@ This feature is the write-side bridge from public browsing into order management
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-pass`
 
-**Last tested:** Not recorded in repo
+**Last tested:** 2026-04-24
 
-**Outcome:** The repo shows checkout UI and payload construction, but anonymous order submission is not live in the current runtime and there is no browser verification record here.
+**Outcome:** Targeted public route, public Convex mutation, and lifecycle regression tests pass.
 
 ## Open Questions
 
-- Which server entry point should own future anonymous checkout: a dedicated public Convex mutation, a hardened Next route, or another server path? The current repo contains an owner-only mutation and an unused mock route.
+- None currently. The live entry point is `POST /api/orders/create` backed by `api.orders.createPublicOrder`.
 
 ---
 
 ## Notes
 
-- The owner-only mutation behavior explains why these docs describe checkout as Partial even though the forms and confirmation states exist in the UI.
-- `app/api/orders/create/route.ts` should not be treated as a fallback implementation; it currently returns mock success only and is not wired into the public pages.
+- `app/api/orders/create/route.ts` is the public boundary and strips client-trusted price fields before calling Convex.
+- `convex/orders.ts:createPublicOrder` stores `publicIdempotencyKey` for duplicate-submit protection.
 
 ---
 

@@ -2,13 +2,13 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-24
 
 ---
 
 ## Summary
 
-The orders list is the live primary order-management UI. In `app/orders/[storeSlug]/page.tsx` it loads all store orders, then `components/pages/orders/views/ListView.tsx` handles search, date and status filtering, sorting, row selection, CSV export, status changes, bulk delete, and delivery dispatch shortcuts. Current: this is the main working surface, including a dedicated desktop `Call` column for call-history slots while mobile cards keep the call indicator alongside status. Partial: selection and bulk behavior still have consistency gaps.
+The orders list is the live primary order-management UI. In `app/orders/[storeSlug]/page.tsx` it loads all store orders, then `components/pages/orders/views/ListView.tsx` handles search, date and status filtering, sorting, row selection, CSV export, status changes, bulk delete, and delivery dispatch shortcuts. Current: this is the main working surface, including a dedicated desktop `Call` column for call-history slots while mobile cards keep the call indicator alongside status. Confirmation actions are now gated by answered-call evidence. Partial: selection and bulk behavior still have consistency gaps.
 
 ---
 
@@ -39,10 +39,11 @@ The orders list is the live primary order-management UI. In `app/orders/[storeSl
 - Current: search matches `orderNumber`, `customerName`, and `customerPhone`; it does not search product names or notes.
 - Current: hidden-status preferences persist in `localStorage` under `marlon-hidden-statuses`.
 - Partial: the header checkbox selects all loaded orders via `ordersData.map(...)` in `app/orders/[storeSlug]/page.tsx`, not only the currently filtered rows shown in the table.
-- Partial: per-row status dropdowns expose all statuses directly, so list actions can bypass the guided sequence shown in the drawer.
+- Current: per-row status dropdowns expose only server-allowed merchant actions and hide `confirmed` until answered-call evidence exists.
 - Current: CSV export uses `filteredOrders` for "Export All" and selected loaded rows for "Export Selected".
 - Current: if filters remove every row, the table shows `No orders found`.
 - Current: desktop rows show call-history slots in a dedicated `Call` column; mobile cards keep the call indicator inside the status presentation.
+- Current: automatic dispatch shortcuts only count confirmed orders without risk flags; the delivery route also rejects unconfirmed dispatch requests server-side.
 
 ---
 
@@ -92,11 +93,11 @@ This feature is the top-level entry point for the rest of Order Management.
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-partial`
 
-**Last tested:** Not recorded in repo
+**Last tested:** 2026-04-24
 
-**Outcome:** Live code shows the feature is implemented, but this doc refresh did not add a browser test record.
+**Outcome:** Lint and TypeScript pass for list changes; backend dispatch guard tests pass. The Bun UI regression file was blocked by a Windows `EPERM` dependency-read error before assertions completed.
 
 ## Open Questions
 

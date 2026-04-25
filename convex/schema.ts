@@ -227,12 +227,25 @@ export default defineSchema({
     deliveryType: v.optional(v.string()),
     status: v.string(),
     paymentStatus: v.optional(v.string()),
+    codPaymentStatus: v.optional(v.union(
+      v.literal("pending_collection"),
+      v.literal("collected"),
+      v.literal("not_collected"),
+      v.literal("reconciliation_pending"),
+      v.literal("reconciled")
+    )),
     callAttempts: v.optional(v.number()),
     lastCallOutcome: v.optional(v.string()),
     lastCallAt: v.optional(v.number()),
     trackingNumber: v.optional(v.string()),
     deliveryProvider: v.optional(v.string()),
     deliveryDispatchedAt: v.optional(v.number()),
+    publicIdempotencyKey: v.optional(v.string()),
+    riskFlags: v.optional(v.array(v.union(
+      v.literal("duplicate_phone"),
+      v.literal("repeated_cancelled_or_refused"),
+      v.literal("high_frequency_submissions")
+    ))),
     notes: v.optional(v.string()),
     // Extended fields for order management
     callLog: v.optional(v.array(v.object({
@@ -265,6 +278,7 @@ export default defineSchema({
     .index("status", ["storeId", "status"])
     .index("orderNumber", ["orderNumber"])
     .index("storeOrderNumber", ["storeId", "orderNumber"])
+    .index("storeIdempotencyKey", ["storeId", "publicIdempotencyKey"])
     .index("storeUpdatedAt", ["storeId", "updatedAt"]),
 
   orderDigests: defineTable({
@@ -276,11 +290,23 @@ export default defineSchema({
     customerWilaya: v.string(),
     status: v.string(),
     paymentStatus: v.optional(v.string()),
+    codPaymentStatus: v.optional(v.union(
+      v.literal("pending_collection"),
+      v.literal("collected"),
+      v.literal("not_collected"),
+      v.literal("reconciliation_pending"),
+      v.literal("reconciled")
+    )),
     total: v.number(),
     subtotal: v.number(),
     deliveryCost: v.number(),
     deliveryProvider: v.optional(v.string()),
     trackingNumber: v.optional(v.string()),
+    riskFlags: v.optional(v.array(v.union(
+      v.literal("duplicate_phone"),
+      v.literal("repeated_cancelled_or_refused"),
+      v.literal("high_frequency_submissions")
+    ))),
     productsCount: v.number(),
     primaryProductName: v.optional(v.string()),
     primaryProductImage: v.optional(v.string()),

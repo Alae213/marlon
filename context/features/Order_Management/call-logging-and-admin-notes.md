@@ -2,13 +2,13 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-24
 
 ---
 
 ## Summary
 
-Call logging and private admin notes are live from the order details drawer. `app/orders/[storeSlug]/page.tsx` wires `addCallLog` and `upsertAdminNote`, while `components/pages/orders/views/OrderDetails.tsx` exposes buttons for call outcomes and a textarea for one private note value. `convex/orders.ts` stores both embedded order fields and normalized event rows. Current: owners can log calls and keep a note. Partial: the UI exposes fewer call outcomes than the backend types support, and notes are upserts rather than a note history.
+Call logging and private admin notes are live from the order details drawer. `app/orders/[storeSlug]/page.tsx` wires `addCallLog` and `upsertAdminNote`, while `components/pages/orders/views/OrderDetails.tsx` exposes buttons for all supported call outcomes, optional call notes, and a textarea for one private note value. `convex/orders.ts` stores both embedded order fields and normalized event rows. Current: call outcomes are lifecycle evidence; notes remain single-value upserts rather than a note history.
 
 ---
 
@@ -30,16 +30,17 @@ Call logging and private admin notes are live from the order details drawer. `ap
 
 ### Happy Path
 
-1. The owner opens an order drawer and taps a call outcome button or edits the admin note field.
+1. The owner opens an order drawer and taps a call outcome button, optionally enters a call note, or edits the admin note field.
 2. `app/orders/[storeSlug]/page.tsx` sends `api.orders.addCallLog` or `api.orders.upsertAdminNote`.
-3. `convex/orders.ts` patches the order record, appends timeline entries, inserts `orderCallEvents` or `orderTimelineEvents`, and updates the order digest.
+3. `convex/orders.ts` validates the call outcome, patches the order record, appends timeline entries, inserts `orderCallEvents` or `orderTimelineEvents`, updates the order digest, and may move the order lifecycle according to the call evidence.
 
 ### Edge Cases & Rules
 
-- Current: the drawer exposes `answered`, `no_answer`, and `refused` buttons only.
-- Partial: backend types in `lib/orders-types.ts` also support `wrong_number`, but the drawer has no button for it.
+- Current: the drawer exposes `answered`, `no_answer`, `wrong_number`, and `refused`.
+- Current: `answered` moves `new` orders to `awaiting_confirmation`; merchant confirmation requires answered-call evidence.
+- Current: `refused` can move pre-fulfillment orders to `refused`, `wrong_number` can move them to `blocked`, and three `no_answer` calls can move them to `unreachable`.
 - Current: the list and drawer both show compact call-history bars based on the embedded `callLog` array.
-- Current: `addCallLog` accepts optional notes server-side, but the current drawer UI does not collect a call note.
+- Current: `addCallLog` accepts optional notes and the drawer collects a short call note.
 - Current: `upsertAdminNote` stores one trimmed `adminNoteText` value plus last-updated metadata.
 - Partial: saving a new admin note overwrites the previous note; there is no user-visible note history.
 
@@ -59,7 +60,7 @@ This feature is embedded in the drawer and reflected lightly in the list.
 
 | Aspect | MVP (v1) | Full Version |
 |--------|----------|--------------|
-| Call outcomes | Partial: three quick-action outcomes in drawer | Full outcome coverage with notes and richer follow-up states |
+| Call outcomes | Current: all supported quick-action outcomes plus optional call note | Full outcome coverage with richer follow-up states |
 | Call history | Current: recent bars + hover details from embedded `callLog` | Full event history UI from `orderCallEvents` |
 | Admin note model | Current: single upserted note with last-updated timestamp | Multi-entry note history or comment thread |
 | Audit visibility | Partial: backend records more than UI exposes | Timeline and note history visible in drawer |
@@ -82,7 +83,7 @@ This feature is embedded in the drawer and reflected lightly in the list.
 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
-| T4 | `[ ]` | Expand call logging UI to support all backend outcomes and optional call notes |
+| T4 | `[x]` | Expand call logging UI to support all backend outcomes and optional call notes |
 | T5 | `[ ]` | Add visible admin-note history or another explicit audit surface instead of single-value overwrite |
 
 ---
@@ -91,11 +92,11 @@ This feature is embedded in the drawer and reflected lightly in the list.
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-partial`
 
-**Last tested:** Not recorded in repo
+**Last tested:** 2026-04-24
 
-**Outcome:** The repo shows working call-log and note mutations, but no current browser test result is documented.
+**Outcome:** Backend lifecycle/call tests pass. The React UI file is lint-clean and TypeScript-clean, but its Bun regression run was blocked by a Windows `EPERM` dependency-read error before assertions ran.
 
 ## Open Questions
 
@@ -105,7 +106,7 @@ This feature is embedded in the drawer and reflected lightly in the list.
 
 ## Notes
 
-- The local page state appends a synthetic call entry immediately after a successful mutation in `app/orders/[storeSlug]/page.tsx`; the durable source remains `convex/orders.ts`.
+- The local page state appends a synthetic call entry and uses the mutation return status immediately after a successful mutation in `app/orders/[storeSlug]/page.tsx`; the durable source remains `convex/orders.ts`.
 - Backend event tables (`orderCallEvents`, `orderTimelineEvents`) are ahead of the current UI.
 
 ---
