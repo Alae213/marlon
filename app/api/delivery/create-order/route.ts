@@ -3,6 +3,13 @@ import { auth } from "@clerk/nextjs/server";
 import { createDeliveryOrder, DeliveryProvider, DeliveryCredentials } from "@/lib/delivery-api";
 import { toDeliveryApiProvider, normalizeDeliveryProvider } from "@/lib/delivery-provider";
 import { normalizeOrderStatus, type OrderStatus } from "@/lib/order-lifecycle";
+import {
+  getDeliveryActionMessage,
+  isDeliveryAuthRuntimeError,
+  isLikelyProviderAvailabilityError,
+  type ActionHint,
+  type DeliveryActionCode,
+} from "@/lib/order-action-feedback";
 import { api } from "@/convex/_generated/api";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/convex/_generated/dataModel";
@@ -58,17 +65,22 @@ const DISPATCH_RECORDED_STATUSES = new Set<OrderStatus>([
 
 class HttpError extends Error {
   status: number;
+  code: DeliveryActionCode;
+  action?: ActionHint;
 
-  constructor(status: number, message: string) {
-    super(message);
+  constructor(status: number, code: DeliveryActionCode, message?: string, action?: ActionHint) {
+    const safeMessage = message ?? getDeliveryActionMessage(code);
+    super(safeMessage);
+    this.code = code;
     this.status = status;
+    this.action = action;
   }
 }
 
 function getConvexClient(authToken: string) {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   if (!convexUrl) {
-    throw new Error("Missing NEXT_PUBLIC_CONVEX_URL. Delivery API cannot load store credentials.");
+    throw new HttpError(500, "DELIVERY_NOT_CONFIGURED", "Delivery service is not configured.");
   }
 
   const convex = new ConvexHttpClient(convexUrl);
@@ -158,16 +170,16 @@ function parseProviderHint(provider: unknown): string | undefined {
   }
 
   if (typeof provider !== "string") {
-    throw new HttpError(400, "Invalid delivery provider.");
+    throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Invalid delivery provider.");
   }
 
   const normalizedProvider = normalizeDeliveryProvider(provider);
   if (normalizedProvider === "none") {
-    throw new HttpError(400, "Invalid delivery provider.");
+    throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Invalid delivery provider.");
   }
 
   if (!toDeliveryApiProvider(normalizedProvider)) {
-    throw new HttpError(400, "Unsupported delivery provider.");
+    throw new HttpError(400, "DELIVERY_PROVIDER_UNSUPPORTED");
   }
 
   return normalizedProvider;
@@ -180,7 +192,7 @@ async function resolveOwnedStoreId(
   storeSlug?: string
 ) {
   if (!storeId && !storeSlug) {
-    throw new HttpError(400, "Missing store context: provide storeId or storeSlug.");
+    throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Missing store context: provide storeId or storeSlug.");
   }
 
   let storeFromId: StoreDoc | null = null;
@@ -190,11 +202,11 @@ async function resolveOwnedStoreId(
         storeId: storeId as Id<"stores">,
       })) as StoreDoc | null;
     } catch {
-      throw new HttpError(400, "Invalid storeId.");
+      throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Invalid storeId.");
     }
 
     if (!storeFromId) {
-      throw new HttpError(404, "Store not found.");
+      throw new HttpError(404, "DELIVERY_BAD_REQUEST", "Store not found.");
     }
   }
 
@@ -205,21 +217,21 @@ async function resolveOwnedStoreId(
     })) as StoreDoc | null;
 
     if (!storeFromSlug) {
-      throw new HttpError(404, "Store not found.");
+      throw new HttpError(404, "DELIVERY_BAD_REQUEST", "Store not found.");
     }
   }
 
   if (storeFromId && storeFromSlug && storeFromId._id !== storeFromSlug._id) {
-    throw new HttpError(400, "storeId does not match storeSlug.");
+    throw new HttpError(400, "DELIVERY_BAD_REQUEST", "storeId does not match storeSlug.");
   }
 
   const store = storeFromId ?? storeFromSlug;
   if (!store) {
-    throw new HttpError(400, "Missing store context: provide storeId or storeSlug.");
+    throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Missing store context: provide storeId or storeSlug.");
   }
 
   if (store.ownerId !== userId) {
-    throw new HttpError(403, "You do not have access to this store.");
+    throw new HttpError(403, "DELIVERY_FORBIDDEN");
   }
 
   return store._id;
@@ -228,7 +240,8 @@ async function resolveOwnedStoreId(
 async function loadDeliveryConfig(
   convex: ConvexHttpClient,
   storeId: Id<"stores">,
-  providerHint?: string
+  providerHint?: string,
+  setupHref?: string
 ) {
   const integration = (await convex.query(api.siteContent.getDeliveryCredentialsForOwnerRuntime, {
     storeId,
@@ -238,9 +251,18 @@ async function loadDeliveryConfig(
   const providerFromHint = normalizeDeliveryProvider(providerHint);
   const normalizedProvider = providerFromStore !== "none" ? providerFromStore : providerFromHint;
   const provider = toDeliveryApiProvider(normalizedProvider);
+  const setupAction = setupHref
+    ? {
+        label: "Open Courier settings",
+        href: setupHref,
+      }
+    : undefined;
 
   if (!provider) {
-    throw new HttpError(400, "No supported delivery provider configured for this store.");
+    if (normalizedProvider !== "none") {
+      throw new HttpError(400, "DELIVERY_PROVIDER_UNSUPPORTED", undefined, setupAction);
+    }
+    throw new HttpError(400, "DELIVERY_NOT_CONFIGURED", undefined, setupAction);
   }
 
   const credentialsFromStore: DeliveryCredentials = {
@@ -257,7 +279,8 @@ async function loadDeliveryConfig(
   if (integration?.decryptionError?.includes("DELIVERY_CREDENTIALS_KEY")) {
     throw new HttpError(
       500,
-      "Missing DELIVERY_CREDENTIALS_KEY. Configure it in Convex environment settings before creating delivery orders."
+      "DELIVERY_NOT_CONFIGURED",
+      "Delivery credentials cannot be decrypted. Configure DELIVERY_CREDENTIALS_KEY before dispatching."
     );
   }
 
@@ -266,7 +289,7 @@ async function loadDeliveryConfig(
     return { provider, credentials: emergencyFallback };
   }
 
-  throw new HttpError(400, "Missing delivery credentials for this store.");
+  throw new HttpError(400, "DELIVERY_CREDENTIALS_MISSING", undefined, setupAction);
 }
 
 async function loadDispatchOrder(
@@ -280,15 +303,15 @@ async function loadDispatchOrder(
       orderId: orderId as Id<"orders">,
     })) as DispatchOrderDoc | null;
   } catch {
-    throw new HttpError(404, "Order not found.");
+    throw new HttpError(404, "DELIVERY_ORDER_NOT_FOUND");
   }
 
   if (!order) {
-    throw new HttpError(404, "Order not found.");
+    throw new HttpError(404, "DELIVERY_ORDER_NOT_FOUND");
   }
 
   if (order.storeId !== storeId) {
-    throw new HttpError(403, "Order does not belong to this store.");
+    throw new HttpError(403, "DELIVERY_FORBIDDEN", "Order does not belong to this store.");
   }
 
   const canonicalStatus = normalizeOrderStatus(order.status);
@@ -300,12 +323,16 @@ async function loadDispatchOrder(
     return { order, duplicate: true, recoverExistingDispatch: false };
   }
 
-  if (canonicalStatus === "confirmed" && order.trackingNumber && order.deliveryProvider) {
+  if (
+    (canonicalStatus === "confirmed" || canonicalStatus === "dispatch_ready") &&
+    order.trackingNumber &&
+    order.deliveryProvider
+  ) {
     return { order, duplicate: false, recoverExistingDispatch: true };
   }
 
-  if (canonicalStatus !== "confirmed") {
-    throw new HttpError(409, "Order must be confirmed before dispatch.");
+  if (canonicalStatus !== "confirmed" && canonicalStatus !== "dispatch_ready") {
+    throw new HttpError(409, "DELIVERY_NOT_CONFIRMED");
   }
 
   return { order, duplicate: false, recoverExistingDispatch: false };
@@ -313,11 +340,35 @@ async function loadDispatchOrder(
 
 function toErrorResponse(error: unknown) {
   if (error instanceof HttpError) {
-    return NextResponse.json({ success: false, error: error.message }, { status: error.status });
+    return NextResponse.json(
+      {
+        success: false,
+        error: error.message,
+        code: error.code,
+        action: error.action,
+      },
+      { status: error.status }
+    );
+  }
+
+  if (isDeliveryAuthRuntimeError(error)) {
+    const code: DeliveryActionCode = "DELIVERY_AUTH_REQUIRED";
+    return NextResponse.json(
+      {
+        success: false,
+        error: getDeliveryActionMessage(code),
+        code,
+      },
+      { status: 401 }
+    );
   }
 
   return NextResponse.json(
-    { success: false, error: "Internal server error" },
+    {
+      success: false,
+      error: getDeliveryActionMessage("DELIVERY_PROVIDER_UNAVAILABLE"),
+      code: "DELIVERY_PROVIDER_UNAVAILABLE",
+    },
     { status: 500 }
   );
 }
@@ -356,15 +407,12 @@ export async function POST(request: NextRequest) {
     const userId = authResult.userId;
 
     if (!userId) {
-      return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+      throw new HttpError(401, "DELIVERY_AUTH_REQUIRED");
     }
 
     const token = await authResult.getToken({ template: "convex" });
     if (!token) {
-      return NextResponse.json(
-        { success: false, error: "Unable to authenticate delivery request." },
-        { status: 401 }
-      );
+      throw new HttpError(401, "DELIVERY_AUTH_REQUIRED", "Unable to authenticate delivery request.");
     }
 
     const rateLimitKey = `create-order:${userId}:${getClientIp(request)}`;
@@ -375,12 +423,10 @@ export async function POST(request: NextRequest) {
     );
 
     if (rateLimit.limited) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Too many create-order requests. Try again in ${rateLimit.retryAfterSeconds}s.`,
-        },
-        { status: 429 }
+      throw new HttpError(
+        429,
+        "DELIVERY_RATE_LIMITED",
+        `Too many dispatch requests. Try again in ${rateLimit.retryAfterSeconds}s.`
       );
     }
 
@@ -388,7 +434,7 @@ export async function POST(request: NextRequest) {
     try {
       body = (await request.json()) as Record<string, unknown>;
     } catch {
-      throw new HttpError(400, "Invalid JSON body.");
+      throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Invalid JSON body.");
     }
 
     const storeId = typeof body.storeId === "string" ? body.storeId : undefined;
@@ -397,7 +443,7 @@ export async function POST(request: NextRequest) {
     const providerHint = parseProviderHint(body.provider);
 
     if (!orderId) {
-      throw new HttpError(400, "Missing required fields.");
+      throw new HttpError(400, "DELIVERY_BAD_REQUEST", "Missing required fields.");
     }
 
     const convex = getConvexClient(token);
@@ -438,7 +484,12 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const config = await loadDeliveryConfig(convex, resolvedStoreId, providerHint);
+    const config = await loadDeliveryConfig(
+      convex,
+      resolvedStoreId,
+      providerHint,
+      storeSlug ? `/editor/${storeSlug}?settings=integration` : undefined
+    );
 
     const result = await createDeliveryOrder(config.provider, config.credentials, {
       storeId: resolvedStoreId,
@@ -454,7 +505,7 @@ export async function POST(request: NextRequest) {
 
     if (result.success) {
       if (!result.trackingNumber) {
-        throw new HttpError(502, "Delivery provider did not return a tracking number.");
+        throw new HttpError(502, "DELIVERY_TRACKING_MISSING");
       }
 
       const dispatchRecord = await convex.mutation(api.orders.markOrderDispatchedFromDeliveryApi, {
@@ -474,19 +525,28 @@ export async function POST(request: NextRequest) {
       });
     }
 
+    const providerCode = isLikelyProviderAvailabilityError(result.error)
+      ? "DELIVERY_PROVIDER_UNAVAILABLE"
+      : "DELIVERY_PROVIDER_REJECTED";
+    const providerMessage =
+      providerCode === "DELIVERY_PROVIDER_REJECTED" && result.error
+        ? `Delivery provider rejected the order: ${result.error}`
+        : getDeliveryActionMessage(providerCode);
+
     await recordDeliveryEventSafe(convex, {
       storeId: resolvedStoreId,
       orderId,
       eventType: "failed",
       provider: config.provider,
       region: order.customerWilaya,
-      reason: result.error,
+      reason: providerMessage,
     });
 
     return NextResponse.json(
       {
         success: false,
-        error: result.error,
+        error: providerMessage,
+        code: providerCode,
       },
       { status: 400 }
     );
@@ -495,7 +555,9 @@ export async function POST(request: NextRequest) {
       return toErrorResponse(error);
     }
 
-    console.error("Delivery API error:", error);
+    if (!isDeliveryAuthRuntimeError(error)) {
+      console.error("Delivery API error:", error);
+    }
     return toErrorResponse(error);
   }
 }
@@ -547,7 +609,9 @@ export async function GET(request: NextRequest) {
       { status: 404 }
     );
   } catch (error) {
-    console.error("Delivery status error:", error);
+    if (!isDeliveryAuthRuntimeError(error)) {
+      console.error("Delivery status error:", error);
+    }
     return toErrorResponse(error);
   }
 }

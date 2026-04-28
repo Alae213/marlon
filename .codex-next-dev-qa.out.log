@@ -1,0 +1,73 @@
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.20.10.7:3000
+- Environments: .env.local
+✓ Ready in 1055ms
+- Experiments (use with caution):
+  · cpus: 1
+  ✓ optimizeCss
+  ✓ workerThreads
+
+ GET /orders/alaa 200 in 1734ms (next.js: 950ms, proxy.ts: 29ms, application-code: 755ms)
+ POST /orders/alaa 200 in 46ms (next.js: 13ms, proxy.ts: 14ms, application-code: 19ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /alaa 200 in 956ms (next.js: 755ms, proxy.ts: 10ms, application-code: 191ms)
+ POST /alaa 200 in 37ms (next.js: 11ms, proxy.ts: 11ms, application-code: 15ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Finished filesystem cache database compaction in 11.3s
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 946ms (next.js: 740ms, proxy.ts: 12ms, application-code: 193ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 49ms (next.js: 11ms, proxy.ts: 21ms, application-code: 17ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 429ms (next.js: 26ms, proxy.ts: 13ms, application-code: 390ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 82ms (next.js: 19ms, proxy.ts: 28ms, application-code: 35ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 500 in 608ms (next.js: 223ms, application-code: 385ms)
+ POST /api/orders/create 503 in 284ms (next.js: 82ms, application-code: 202ms)
+ POST /api/orders/create 503 in 318ms (next.js: 2ms, application-code: 315ms)
+ POST /api/orders/create 503 in 307ms (next.js: 2ms, application-code: 305ms)
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 123ms (next.js: 10ms, proxy.ts: 27ms, application-code: 86ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 38ms (next.js: 9ms, proxy.ts: 12ms, application-code: 17ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 0ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 500 in 314ms (next.js: 4ms, application-code: 311ms)
+ POST /api/orders/create 503 in 428ms (next.js: 5ms, application-code: 423ms)
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 111ms (next.js: 10ms, proxy.ts: 21ms, application-code: 80ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 36ms (next.js: 11ms, proxy.ts: 13ms, application-code: 12ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 0ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 200 in 355ms (next.js: 3ms, application-code: 352ms)
+ POST /api/orders/create 200 in 281ms (next.js: 3ms, application-code: 278ms)
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 112ms (next.js: 11ms, proxy.ts: 8ms, application-code: 93ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 49ms (next.js: 8ms, proxy.ts: 26ms, application-code: 15ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /alaa/product/jd77vb4f8x646t9drqc93de74x854y3q 200 in 234ms (next.js: 15ms, proxy.ts: 8ms, application-code: 210ms)
+ POST /alaa/product/jd77vb4f8x646t9drqc93de74x854y3q 200 in 46ms (next.js: 9ms, proxy.ts: 25ms, application-code: 12ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 0ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 200 in 413ms (next.js: 3ms, application-code: 410ms)
+ POST /api/orders/create 200 in 282ms (next.js: 15ms, application-code: 268ms)
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 274ms (next.js: 24ms, proxy.ts: 15ms, application-code: 236ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 49ms (next.js: 15ms, proxy.ts: 15ms, application-code: 18ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 200 in 401ms (next.js: 3ms, application-code: 398ms)
+ POST /api/orders/create 503 in 310ms (next.js: 2ms, application-code: 308ms)
+ POST /api/orders/create 400 in 339ms (next.js: 2ms, application-code: 337ms)
+ POST /api/orders/create 404 in 386ms (next.js: 1980µs, application-code: 384ms)
+ POST /api/delivery/create-order 500 in 483ms (next.js: 180ms, application-code: 303ms)
+ GET /editor/alaa?settings=integration 200 in 1020ms (next.js: 745ms, proxy.ts: 19ms, application-code: 255ms)
+ POST /editor/alaa?settings=integration 200 in 72ms (next.js: 24ms, proxy.ts: 18ms, application-code: 29ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /orders/alaa 200 in 130ms (next.js: 17ms, proxy.ts: 20ms, application-code: 93ms)
+ POST /orders/alaa 200 in 35ms (next.js: 10ms, proxy.ts: 10ms, application-code: 15ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 0ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /alaa 200 in 127ms (next.js: 19ms, proxy.ts: 13ms, application-code: 95ms)
+ POST /alaa 200 in 45ms (next.js: 7ms, proxy.ts: 24ms, application-code: 14ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Compiled in 600ms
+ POST /api/delivery/create-order 200 in 1152ms (next.js: 373ms, proxy.ts: 258ms, application-code: 522ms)
+ POST /api/orders/create 400 in 1718ms (next.js: 147ms, application-code: 1570ms)
+✓ Compiled in 136ms
+ POST /api/delivery/create-order 401 in 454ms (next.js: 161ms, proxy.ts: 261ms, application-code: 32ms)
+ POST /api/orders/create 400 in 714ms (next.js: 109ms, application-code: 605ms)
+ GET /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 826ms (next.js: 227ms, proxy.ts: 9ms, application-code: 589ms)
+ POST /alaa/product/jd7228ksx2189mfdhcw0qv7kqd84ym75 200 in 65ms (next.js: 19ms, proxy.ts: 33ms, application-code: 13ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/checkout-attempts 200 in 393ms (next.js: 43ms, application-code: 350ms)
+ POST /api/orders/create 200 in 362ms (next.js: 5ms, application-code: 357ms)

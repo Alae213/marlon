@@ -1,8 +1,16 @@
 import { describe, expect, it, mock } from "bun:test";
 
-import { createPublicOrder } from "@/convex/orders";
+import {
+  abandonPublicCheckoutAttempt,
+  createPublicOrder,
+  recoverPublicCheckoutAttempt,
+  startPublicCheckoutAttempt,
+} from "@/convex/orders";
 
 const runCreatePublicOrder = createPublicOrder._handler;
+const runStartPublicCheckoutAttempt = startPublicCheckoutAttempt._handler;
+const runAbandonPublicCheckoutAttempt = abandonPublicCheckoutAttempt._handler;
+const runRecoverPublicCheckoutAttempt = recoverPublicCheckoutAttempt._handler;
 
 function createProduct(overrides = {}) {
   return {
@@ -72,7 +80,7 @@ function createExistingOrder(overrides = {}) {
   };
 }
 
-function createCtx({ store = createStore(), products = [createProduct()], orders = [], deliveryPricing = [] } = {}) {
+function createCtx({ store = createStore(), products = [createProduct()], orders = [], deliveryPricing = [], checkoutAttempts = [] } = {}) {
   const stores = [store];
   const orderDigests = [];
   const orderTimelineEvents = [];
@@ -80,13 +88,14 @@ function createCtx({ store = createStore(), products = [createProduct()], orders
     const target =
       stores.find((item) => item._id === id) ??
       orders.find((item) => item._id === id) ??
-      orderDigests.find((item) => item._id === id);
+      orderDigests.find((item) => item._id === id) ??
+      checkoutAttempts.find((item) => item._id === id);
     if (target) {
       Object.assign(target, patch);
     }
   });
   const insertMock = mock(async (table, doc) => {
-    const id = `${table}_${orders.length + orderDigests.length + orderTimelineEvents.length + 1}`;
+    const id = `${table}_${orders.length + orderDigests.length + orderTimelineEvents.length + checkoutAttempts.length + 1}`;
     const record = { _id: id, ...doc };
     if (table === "orders") {
       orders.push(record);
@@ -94,6 +103,8 @@ function createCtx({ store = createStore(), products = [createProduct()], orders
       orderDigests.push(record);
     } else if (table === "orderTimelineEvents") {
       orderTimelineEvents.push(record);
+    } else if (table === "checkoutAttempts") {
+      checkoutAttempts.push(record);
     }
     return id;
   });
@@ -107,6 +118,9 @@ function createCtx({ store = createStore(), products = [createProduct()], orders
           }
           if (table === "orders" && indexName === "storeIdempotencyKey") {
             return orders.find((item) => item.publicIdempotencyKey) ?? null;
+          }
+          if (table === "checkoutAttempts" && indexName === "storeAttemptKey") {
+            return checkoutAttempts.find((item) => item.storeId === store._id) ?? null;
           }
           if (table === "orderDigests" && indexName === "orderId") {
             return null;
@@ -143,6 +157,7 @@ function createCtx({ store = createStore(), products = [createProduct()], orders
             stores.find((item) => item._id === id) ??
             products.find((item) => item._id === id) ??
             orders.find((item) => item._id === id) ??
+            checkoutAttempts.find((item) => item._id === id) ??
             null
           );
         },
@@ -153,6 +168,8 @@ function createCtx({ store = createStore(), products = [createProduct()], orders
     },
     orders,
     orderDigests,
+    checkoutAttempts,
+    orderTimelineEvents,
     patchMock,
     insertMock,
   };
@@ -178,7 +195,7 @@ const validArgs = {
 
 describe("orders.createPublicOrder", () => {
   it("creates a real anonymous order with server-resolved product and delivery totals", async () => {
-    const { ctx, orders } = createCtx({
+    const { ctx, orders, checkoutAttempts } = createCtx({
       deliveryPricing: [{ storeId: "store_1", wilaya: "Alger", homeDelivery: 700, officeDelivery: 400 }],
     });
 
@@ -196,6 +213,15 @@ describe("orders.createPublicOrder", () => {
         status: "new",
         paymentStatus: "pending",
         publicIdempotencyKey: "checkout-key-123",
+        checkoutAttemptId: checkoutAttempts[0]._id,
+      }),
+    );
+    expect(checkoutAttempts).toHaveLength(1);
+    expect(checkoutAttempts[0]).toEqual(
+      expect.objectContaining({
+        lifecycle: "converted",
+        convertedOrderId: orders[0]._id,
+        productCount: 2,
       }),
     );
     expect(orders[0].products).toEqual([
@@ -220,6 +246,77 @@ describe("orders.createPublicOrder", () => {
     expect(second.duplicate).toBe(true);
     expect(second.orderId).toBe(first.orderId);
     expect(state.orders).toHaveLength(1);
+    expect(state.checkoutAttempts).toHaveLength(1);
+  });
+
+  it("creates and links a checkout attempt before order conversion", async () => {
+    const state = createCtx();
+
+    const attempt = await runStartPublicCheckoutAttempt(state.ctx, {
+      storeSlug: "demo-store",
+      attemptKey: "attempt-key-123",
+      products: [{ productId: "prod_1", quantity: 1 }],
+    });
+
+    expect(attempt.lifecycle).toBe("started");
+    expect(state.checkoutAttempts[0]).toEqual(
+      expect.objectContaining({
+        lifecycle: "started",
+      }),
+    );
+    expect(state.checkoutAttempts[0].convertedOrderId).toBeUndefined();
+
+    const order = await runCreatePublicOrder(state.ctx, {
+      ...validArgs,
+      idempotencyKey: "checkout-linked-order",
+      checkoutAttemptKey: "attempt-key-123",
+    });
+
+    expect(order.checkoutAttemptId).toBe(attempt.checkoutAttemptId);
+    expect(state.checkoutAttempts[0]).toEqual(
+      expect.objectContaining({
+        lifecycle: "converted",
+        convertedOrderId: order.orderId,
+      }),
+    );
+  });
+
+  it("marks abandoned and recovered checkout attempts without creating orders", async () => {
+    const state = createCtx();
+
+    await runStartPublicCheckoutAttempt(state.ctx, {
+      storeSlug: "demo-store",
+      attemptKey: "attempt-abandon-1",
+      products: [{ productId: "prod_1", quantity: 1 }],
+    });
+
+    const abandoned = await runAbandonPublicCheckoutAttempt(state.ctx, {
+      storeSlug: "demo-store",
+      attemptKey: "attempt-abandon-1",
+    });
+
+    expect(abandoned.lifecycle).toBe("abandoned");
+    expect(state.orders).toHaveLength(0);
+    expect(state.checkoutAttempts[0]).toEqual(
+      expect.objectContaining({
+        lifecycle: "abandoned",
+      }),
+    );
+    expect(state.checkoutAttempts[0].convertedOrderId).toBeUndefined();
+
+    const recovered = await runRecoverPublicCheckoutAttempt(state.ctx, {
+      storeSlug: "demo-store",
+      attemptKey: "attempt-abandon-1",
+      recoverySource: "sms",
+    });
+
+    expect(recovered.lifecycle).toBe("recovered");
+    expect(state.checkoutAttempts[0]).toEqual(
+      expect.objectContaining({
+        lifecycle: "recovered",
+        recoverySource: "sms",
+      }),
+    );
   });
 
   it("rejects invalid phone numbers safely", async () => {

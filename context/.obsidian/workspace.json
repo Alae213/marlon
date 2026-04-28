@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "project/OVERVIEW.md",
+                "file": "technical/INFORMATION_SYSTEM_DESIGN.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "OVERVIEW"
+              "title": "INFORMATION_SYSTEM_DESIGN"
             }
           }
         ]
@@ -185,13 +185,19 @@
   },
   "active": "22fe21bc0f8e5b00",
   "lastOpenFiles": [
+    "technical/DATA_MODELS.md",
+    "technical/USER_EXPERIENCE.md",
+    "technical/INFORMATION_SYSTEM_DESIGN.md",
+    "technical/API_CONTRACTS.md",
+    "technical/STACK.md",
+    "technical/ARCHITECTURE.md",
+    "technical/ENVIRONMENT.md",
+    "project/OVERVIEW.md",
     "project/ROADMAP.md",
     "project/DECISIONS.md",
-    "project/OVERVIEW.md",
     "features/Order_Management/order-details-drawer.md",
     "features/Order_Management/delivery-dispatch-from-orders.md",
     "project/SCOPE.md",
-    "technical/DATA_MODELS.md",
     "features/Store_Workspace/storefront-content-editor.md",
     "features/Store_Workspace/store-dashboard-and-creation.md",
     "features/Store_Workspace/store-preview-and-navigation.md",
@@ -204,12 +210,6 @@
     "features/Delivery_Internal/delivery-provider-recommendation-engine.md",
     "features/Delivery_Internal/delivery-provider-adapters.md",
     "features/Delivery_Internal/delivery-credentials-encryption.md",
-    "features/Delivery_Internal/delivery-analytics-rollups.md",
-    "features/Platform/billing-locking-and-subscriptions.md",
-    "features/README.md",
-    "features/Platform/runtime-canonical-alignment-plan.md",
-    "ops/INFRASTRUCTURE.md",
-    "ops/CI_CD.md",
-    "project/TASK-LIST.md"
+    "features/Delivery_Internal/delivery-analytics-rollups.md"
   ]
 }

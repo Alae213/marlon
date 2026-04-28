@@ -35,7 +35,7 @@ export function getCodPaymentStatusForOrderStatus(status: unknown): CodPaymentSt
   }
 
   if (canonicalStatus === "delivered") {
-    return "reconciliation_pending";
+    return "collected";
   }
 
   if (canonicalStatus === "cod_collected") {
@@ -68,10 +68,12 @@ export function assertCanReconcileCodPayment(status: unknown, codPaymentStatus: 
   const canonicalStatus = normalizeOrderStatus(status);
   const canonicalCodStatus = normalizeCodPaymentStatus(codPaymentStatus);
 
-  if (
-    canonicalStatus !== "cod_collected" ||
-    (canonicalCodStatus !== "collected" && codPaymentStatus !== undefined)
-  ) {
+  const hasCollectedCod = canonicalCodStatus === "collected";
+  const canReconcile =
+    (canonicalStatus === "delivered" || canonicalStatus === "cod_collected") &&
+    (hasCollectedCod || codPaymentStatus === undefined);
+
+  if (!canReconcile) {
     throw new Error("COD_RECONCILIATION_REQUIRES_COLLECTED_PAYMENT");
   }
 

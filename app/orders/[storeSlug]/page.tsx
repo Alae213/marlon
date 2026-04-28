@@ -21,8 +21,13 @@ import Link from "next/link";
 import Image from "next/image";
 import type { SortField, SortDirection, CallOutcome } from "@/lib/orders-types";
 import { getCodPaymentStatusForOrderStatus } from "@/lib/orders-types";
+import {
+  getOrderStatusFeedbackCode,
+  getOrderStatusFeedbackMessage,
+} from "@/lib/order-action-feedback";
 import { RealtimeProvider } from "@/contexts/realtime-context";
 import { OrderDetails } from "@/components/pages/orders/views";
+import { useToast } from "@/contexts/toast-context";
 
 const ORDER_STATE_VIEW_ENABLED = false;
 
@@ -64,6 +69,8 @@ function OrdersContent({
   const [selectedOrder, setSelectedOrder] = useState<Doc<"orders"> | null>(
     null,
   );
+  const [updatingOrderIds, setUpdatingOrderIds] = useState<Set<string>>(() => new Set());
+  const { showToast } = useToast();
 
   const orders = useQuery(
     api.orders.getOrders,
@@ -75,11 +82,13 @@ function OrdersContent({
   const upsertAdminNoteMutation = useMutation(api.orders.upsertAdminNote);
 
   const handleStatusChange = useCallback(
-    async (orderId: string, newStatus: string) => {
+    async (orderId: string, newStatus: string, note?: string) => {
+      setUpdatingOrderIds((prev) => new Set(prev).add(orderId));
       try {
         await updateOrderStatus({
           orderId: orderId as Id<"orders">,
           status: newStatus,
+          note,
         });
 
         // Update local state if selected
@@ -93,10 +102,17 @@ function OrdersContent({
           });
         }
       } catch (error) {
-        console.error("Failed to update status:", error);
+        const code = getOrderStatusFeedbackCode(error);
+        showToast(getOrderStatusFeedbackMessage(code), "error");
+      } finally {
+        setUpdatingOrderIds((prev) => {
+          const next = new Set(prev);
+          next.delete(orderId);
+          return next;
+        });
       }
     },
-    [selectedOrder, updateOrderStatus],
+    [selectedOrder, showToast, updateOrderStatus],
   );
 
   const handleAddCallLog = useCallback(
@@ -190,12 +206,19 @@ function OrdersContent({
     setSelectAll(newSelected.size === ordersData.length);
   };
 
-  const handleSelectAll = (checked: boolean) => {
+  const handleSelectAll = (checked: boolean, visibleOrderIds?: string[]) => {
     setSelectAll(checked);
+    const scopedOrderIds = visibleOrderIds ?? ordersData.map((o) => o._id);
     if (checked) {
-      setSelectedOrders(new Set(ordersData.map((o) => o._id)));
+      setSelectedOrders((prev) => new Set([...prev, ...scopedOrderIds]));
     } else {
-      setSelectedOrders(new Set());
+      setSelectedOrders((prev) => {
+        const next = new Set(prev);
+        for (const orderId of scopedOrderIds) {
+          next.delete(orderId);
+        }
+        return next;
+      });
     }
   };
 
@@ -353,6 +376,7 @@ function OrdersContent({
             onSort: handleSort,
             onSortDirectionChange: setSortDirection,
             onOrderClick: setSelectedOrder,
+            updatingOrderIds,
             storeSlug,
           }}
         />
@@ -365,6 +389,7 @@ function OrdersContent({
           onStatusChange={handleStatusChange}
           onAddCallLog={handleAddCallLog}
           onUpsertAdminNote={handleUpsertAdminNote}
+          isStatusUpdating={selectedOrder ? updatingOrderIds.has(selectedOrder._id) : false}
           storeSlug={storeSlug}
         />
 
@@ -378,15 +403,16 @@ function OrdersContent({
 export default function OrdersPage() {
   const params = useParams();
   const storeSlug = params?.storeSlug as string;
+  const { user, isLoaded } = useUser();
 
   const store = useQuery(
     api.stores.getStoreBySlug,
-    storeSlug ? { slug: storeSlug } : "skip",
+    storeSlug && isLoaded ? { slug: storeSlug } : "skip",
   );
 
   const storeId = store?._id as Id<"stores"> | undefined;
 
-  if (!store && storeSlug) {
+  if (!isLoaded || (!store && storeSlug)) {
     return (
       <div className="max-w-6xl mx-auto flex items-center justify-center min-h-[400px]">
         <Loader2 className="w-6 h-6 animate-spin text-[--system-gray-900]" />
@@ -394,11 +420,34 @@ export default function OrdersPage() {
     );
   }
 
+  if (!user) {
+    return <RedirectToSignIn />;
+  }
+
   if (!storeId) {
     return (
       <div className="max-w-6xl mx-auto">
         <div className="bg-[--system-gray-6] border border-[--system-gray-4] p-12 text-center">
           <p className="text-[--system-gray-600]">Store not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (store.ownerId !== user.id) {
+    return (
+      <div className="max-w-6xl mx-auto flex min-h-[400px] items-center justify-center px-4">
+        <div className="rounded-2xl border border-[var(--system-200)] bg-white p-8 text-center shadow-[var(--shadow-sm)]">
+          <p className="text-body text-[var(--system-700)]">You do not have access to this store.</p>
+          <p className="mt-2 text-body-sm text-[var(--system-400)]">
+            Switch to the store owner account or choose a store from your dashboard.
+          </p>
+          <Link
+            href="/"
+            className="mt-4 inline-flex h-9 items-center justify-center rounded-xl bg-[var(--system-700)] px-4 text-body-sm font-semibold text-white"
+          >
+            Back to dashboard
+          </Link>
         </div>
       </div>
     );

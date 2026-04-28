@@ -21,7 +21,7 @@ export const CALL_OUTCOME_LABELS: Record<CallOutcome, { label: string; icon: str
   refused: { label: "Refused", icon: "X" },
 };
 
-export const NO_ANSWER_UNREACHABLE_THRESHOLD = 3;
+export const NO_ANSWER_UNREACHABLE_THRESHOLD = 4;
 
 export const ORDER_RISK_FLAGS = [
   "duplicate_phone",
@@ -99,10 +99,20 @@ export function getNoAnswerAttemptCount(callLog: CallEvidence[]): number {
   return callLog.filter((call) => call.outcome === "no_answer").length;
 }
 
+export function shouldPromptUnreachableAfterNoAnswer(
+  order: OrderConfirmationEvidence | null | undefined
+): boolean {
+  const currentStatus = normalizeOrderStatus(order?.status);
+  if (currentStatus !== "new" && currentStatus !== "awaiting_confirmation") {
+    return false;
+  }
+
+  return getNoAnswerAttemptCount(order?.callLog ?? []) >= NO_ANSWER_UNREACHABLE_THRESHOLD;
+}
+
 export function getCallOutcomeLifecycleTransition(
   order: OrderConfirmationEvidence,
-  outcome: CallOutcome,
-  nextCallLog: CallEvidence[]
+  outcome: CallOutcome
 ): OrderStatus | null {
   const currentStatus = normalizeOrderStatus(order.status);
   if (!currentStatus) {
@@ -127,14 +137,6 @@ export function getCallOutcomeLifecycleTransition(
   }
 
   if (outcome === "no_answer") {
-    const noAnswerAttempts = getNoAnswerAttemptCount(nextCallLog);
-    if (
-      noAnswerAttempts >= NO_ANSWER_UNREACHABLE_THRESHOLD &&
-      (currentStatus === "new" || currentStatus === "awaiting_confirmation")
-    ) {
-      return "unreachable";
-    }
-
     if (currentStatus === "new") {
       return "awaiting_confirmation";
     }

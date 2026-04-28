@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { ConvexHttpClient } from "convex/browser";
 
 import { api } from "@/convex/_generated/api";
+import {
+  getPublicOrderCodeFromError,
+  getPublicOrderErrorMessage,
+  type PublicOrderErrorCode,
+} from "@/lib/order-action-feedback";
 
 type PublicOrderProductInput = {
   productId?: unknown;
@@ -12,6 +17,8 @@ type PublicOrderProductInput = {
 type PublicOrderBody = {
   storeSlug?: unknown;
   idempotencyKey?: unknown;
+  checkoutAttemptId?: unknown;
+  checkoutAttemptKey?: unknown;
   customerName?: unknown;
   customerPhone?: unknown;
   customerWilaya?: unknown;
@@ -22,16 +29,23 @@ type PublicOrderBody = {
   products?: unknown;
 };
 
-const PUBLIC_ORDER_ERROR_RESPONSES: Array<[string, number, string]> = [
-  ["PUBLIC_ORDER_INVALID_STORE", 404, "Store not found."],
-  ["PUBLIC_ORDER_INVALID_IDEMPOTENCY_KEY", 400, "Invalid idempotency key."],
-  ["PUBLIC_ORDER_MISSING_FIELDS", 400, "Missing required fields."],
-  ["PUBLIC_ORDER_INVALID_PHONE", 400, "Invalid phone number."],
-  ["PUBLIC_ORDER_INVALID_PRODUCT", 400, "Invalid product selection."],
-  ["PUBLIC_ORDER_STORE_VELOCITY_LIMIT", 429, "Too many orders for this store. Please try again later."],
-  ["PUBLIC_ORDER_PHONE_VELOCITY_LIMIT", 429, "Too many recent orders for this phone number."],
-  ["PUBLIC_ORDER_DUPLICATE_RECENT", 409, "A similar recent order already exists."],
-];
+const PUBLIC_ORDER_ERROR_STATUSES: Record<PublicOrderErrorCode, number> = {
+  PUBLIC_ORDER_INVALID_STORE: 404,
+  PUBLIC_ORDER_INVALID_IDEMPOTENCY_KEY: 400,
+  PUBLIC_ORDER_MISSING_FIELDS: 400,
+  PUBLIC_ORDER_INVALID_PHONE: 400,
+  PUBLIC_ORDER_INVALID_PRODUCT: 400,
+  PUBLIC_ORDER_STORE_VELOCITY_LIMIT: 429,
+  PUBLIC_ORDER_PHONE_VELOCITY_LIMIT: 429,
+  PUBLIC_ORDER_DUPLICATE_RECENT: 409,
+  PUBLIC_CHECKOUT_INVALID_ATTEMPT: 400,
+  PUBLIC_CHECKOUT_INVALID_ATTEMPT_KEY: 400,
+  PUBLIC_CHECKOUT_INVALID_STORE: 404,
+  PUBLIC_CHECKOUT_ATTEMPT_STORE_MISMATCH: 400,
+  PUBLIC_ORDER_MALFORMED_PAYLOAD: 400,
+  PUBLIC_ORDER_CONVEX_NOT_CONFIGURED: 500,
+  PUBLIC_ORDER_UNAVAILABLE: 503,
+};
 
 function getConvexClient() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -89,34 +103,10 @@ function getIdempotencyKey(request: NextRequest, body: PublicOrderBody) {
 }
 
 function toErrorResponse(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error);
-
-  if (message.includes("PUBLIC_ORDER_MALFORMED_PAYLOAD")) {
-    return NextResponse.json(
-      { success: false, error: "Malformed order payload." },
-      { status: 400 }
-    );
-  }
-
-  if (message.includes("PUBLIC_ORDER_CONVEX_NOT_CONFIGURED")) {
-    return NextResponse.json(
-      { success: false, error: "Order service is not configured." },
-      { status: 500 }
-    );
-  }
-
-  for (const [code, status, errorMessage] of PUBLIC_ORDER_ERROR_RESPONSES) {
-    if (message.includes(code)) {
-      return NextResponse.json(
-        { success: false, error: errorMessage },
-        { status }
-      );
-    }
-  }
-
+  const code = getPublicOrderCodeFromError(error);
   return NextResponse.json(
-    { success: false, error: "Failed to create order." },
-    { status: 500 }
+    { success: false, code, error: getPublicOrderErrorMessage(code) },
+    { status: PUBLIC_ORDER_ERROR_STATUSES[code] }
   );
 }
 
@@ -147,6 +137,8 @@ export async function POST(request: NextRequest) {
     const order = await convex.mutation(api.orders.createPublicOrder, {
       storeSlug,
       idempotencyKey: getIdempotencyKey(request, body),
+      checkoutAttemptId: readString(body.checkoutAttemptId, 80),
+      checkoutAttemptKey: readString(body.checkoutAttemptKey, 120),
       customerName,
       customerPhone,
       customerWilaya,
@@ -161,6 +153,7 @@ export async function POST(request: NextRequest) {
       success: true,
       orderId: order.orderId,
       orderNumber: order.orderNumber,
+      checkoutAttemptId: order.checkoutAttemptId,
       duplicate: order.duplicate,
       totals: order.totals,
     });

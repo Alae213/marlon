@@ -2,7 +2,7 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-16
+> **Last updated:** 2026-04-27
 
 ---
 
@@ -42,6 +42,7 @@ The store dashboard is the signed-in landing surface for creating and reopening 
 - `Canonical`: `context/project/OVERVIEW.md` and `context/project/SCOPE.md` define unlimited stores per account for v1.
 - `Current`: live limit is one store per user. `MAX_STORES_PER_USER = 1` in `convex/stores.ts`, and `app/page.tsx` blocks the second-store path with an `Agency Mode` coming-soon modal.
 - `Current`: slug availability is checked client-side before submit in `app/page.tsx`, then checked again in `convex/stores.ts` before insert.
+- `Current`: the dashboard create-store modal renders through the shared shadcn dialog primitives imported in `app/page.tsx`.
 - `Partial`: slug generation and validation do not fully agree. `generateSlug` allows Arabic characters while `validateSlug` only accepts `[a-z0-9-]`, and `handleNameChange` compares against `generateSlug(slug)` instead of the generated slug from the name.
 - `Current`: creation UI only surfaces a generic error on mutation failure, so backend-specific reasons are mostly hidden from merchants.
 - `Current`: store creation does not initialize default site-content rows, even though `convex/siteContent.ts` includes `initializeSiteContent`.
@@ -91,11 +92,11 @@ The store dashboard is the signed-in landing surface for creating and reopening 
 
 ## User Acceptance Tests
 
-**UAT Status:** `pending`
+**UAT Status:** `programmatic-pass`
 
-**Last tested:** -
+**Last tested:** 2026-04-27
 
-**Outcome:** Not recorded in repo-backed context yet.
+**Outcome:** Targeted lint for `app/page.tsx` passes, the shared dialog regression test passes, and a source scan found no other TSX files using `<Dialog>` without importing the shared dialog module.
 
 ## Open Questions
 
@@ -107,6 +108,7 @@ The store dashboard is the signed-in landing surface for creating and reopening 
 
 - Main implementation references: `app/page.tsx`, `convex/stores.ts`, `app/editor/[storeSlug]/page.tsx`.
 - Dashboard cards currently show minimal store metadata; the important documented gap is that runtime still behaves like a single-store workspace even though product truth is multi-store.
+- 2026-04-27: Fixed a runtime `Dialog is not defined` crash in `CreateStoreModal` by restoring the shared dialog imports in `app/page.tsx`.
 
 ---
 

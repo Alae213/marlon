@@ -1,18 +1,23 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
 // Define which routes require authentication
-const isProtectedRoute = createRouteMatcher([
+const isProtectedPageRoute = createRouteMatcher([
   "/dashboard(.*)",
+  "/editor(.*)",
+  "/orders(.*)",
   "/store(.*)",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
-  // Protect dashboard and store routes
-  if (isProtectedRoute(req)) {
+  // Protect merchant page routes; protected API routes return structured JSON from their handlers.
+  if (isProtectedPageRoute(req)) {
     await auth.protect();
   }
 });
 
 export const config = {
-  matcher: ["/((?!.*\\..*|_next|api|trpc).*)"],
+  matcher: [
+    "/api/delivery(.*)",
+    "/((?!.*\\..*|_next|api/orders/create|api/checkout-attempts|trpc).*)",
+  ],
 };

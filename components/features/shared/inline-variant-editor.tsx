@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Plus, Edit2, Check, GripVertical, Eye, EyeOff, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/primitives/core/inputs/input";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface VariantOption {
   name: string;
@@ -265,20 +265,20 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
         </div>
       ))}
 
-      <Menu open={showPrebuiltDropdown} onOpenChange={setShowPrebuiltDropdown}>
-        <MenuTrigger asChild>
+      <DropdownMenu open={showPrebuiltDropdown} onOpenChange={setShowPrebuiltDropdown}>
+        <DropdownMenuTrigger asChild>
           <Button variant="outline" className="w-full">
             <Plus className="w-4 h-4" />
             Add Option Group
             <ChevronDown className={`w-4 h-4 transition-transform ${showPrebuiltDropdown ? "rotate-180" : ""}`} />
           </Button>
-        </MenuTrigger>
-        <MenuContent
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
           align="start"
           sideOffset={8}
           className="w-[var(--radix-popper-anchor-width)] rounded-xl border border-[--system-200] bg-[--system-50] p-0 shadow-[var(--shadow-lg)] overflow-hidden"
         >
-          <MenuItem
+          <DropdownMenuItem
             onSelect={() => handleAddGroup("size")}
             className="px-4 py-3 hover:bg-[--system-100] transition-colors border-b border-[--system-100] rounded-none cursor-pointer"
           >
@@ -286,8 +286,8 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
               <span className="font-medium text-[--system-700]">Size</span>
               <p className="text-xs text-[--system-400] mt-0.5">Small, Medium, Large, XL</p>
             </div>
-          </MenuItem>
-          <MenuItem
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={() => handleAddGroup("color")}
             className="px-4 py-3 hover:bg-[--system-100] transition-colors border-b border-[--system-100] rounded-none cursor-pointer"
           >
@@ -295,8 +295,8 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
               <span className="font-medium text-[--system-700]">Color</span>
               <p className="text-xs text-[--system-400] mt-0.5">Red, Blue, Green, Black, White</p>
             </div>
-          </MenuItem>
-          <MenuItem
+          </DropdownMenuItem>
+          <DropdownMenuItem
             onSelect={() => handleAddGroup("custom")}
             className="px-4 py-3 hover:bg-[--system-100] transition-colors rounded-none cursor-pointer"
           >
@@ -304,9 +304,9 @@ export function InlineVariantEditor({ variants, onChange }: InlineVariantEditorP
               <span className="font-medium text-[--system-700]">Custom</span>
               <p className="text-xs text-[--system-400] mt-0.5">Add your own options</p>
             </div>
-          </MenuItem>
-        </MenuContent>
-      </Menu>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -9,7 +9,9 @@ import { ProductsContent } from "@/components/pages/editor";
 
 export default function EditorPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const storeSlug = params?.storeSlug as string;
+  const initialSettingsTab = searchParams.get("settings") ?? undefined;
 
   const store = useQuery(
     api.stores.getStoreBySlug,
@@ -36,5 +38,5 @@ export default function EditorPage() {
     );
   }
 
-  return <ProductsContent storeId={storeId} storeSlug={storeSlug} />;
+  return <ProductsContent storeId={storeId} storeSlug={storeSlug} initialSettingsTab={initialSettingsTab} />;
 }

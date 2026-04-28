@@ -1,5 +1,5 @@
 export type DeliveryProviderDisplay = {
-  key: "yalidine" | "zr-express" | "unknown";
+  key: "yalidine" | "zr-express" | "manual" | "unknown";
   label: string;
   trackingUrl?: string;
 };
@@ -35,6 +35,10 @@ export function getDeliveryProviderDisplay(
 
   if (!normalizedProvider) {
     return { key: "unknown", label: "Unknown" };
+  }
+
+  if (normalizedProvider === "manual") {
+    return { key: "manual", label: "Manual dispatch" };
   }
 
   if (normalizedProvider === "yalidine") {

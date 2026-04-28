@@ -12,8 +12,8 @@ describe("COD payment substates", () => {
     expect(getCodPaymentStatusForOrderStatus("in_transit")).toBe("pending_collection");
   });
 
-  it("marks delivered orders as pending reconciliation, not reconciled", () => {
-    expect(getCodPaymentStatusForOrderStatus("delivered")).toBe("reconciliation_pending");
+  it("treats delivered orders as collected from the merchant table perspective", () => {
+    expect(getCodPaymentStatusForOrderStatus("delivered")).toBe("collected");
   });
 
   it("leaves failed COD outcomes not collected", () => {
@@ -24,6 +24,7 @@ describe("COD payment substates", () => {
 
   it("requires collected COD before reconciliation", () => {
     expect(() => assertCanReconcileCodPayment("cod_collected", "collected")).not.toThrow();
+    expect(() => assertCanReconcileCodPayment("delivered", "collected")).not.toThrow();
     expect(() =>
       assertCanReconcileCodPayment("delivered", "reconciliation_pending"),
     ).toThrow("COD_RECONCILIATION_REQUIRES_COLLECTED_PAYMENT");

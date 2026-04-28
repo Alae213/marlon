@@ -2,6 +2,7 @@ import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { toDayKey } from "./performanceHelpers";
+import { assertStoreRole } from "./storeAccess";
 
 type DeliveryEventType = "attempted" | "dispatched" | "delivered" | "failed" | "rts";
 
@@ -153,6 +154,15 @@ export const recordDeliveryEvent = mutation({
     createdAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
+    await assertStoreRole(ctx, args.storeId, "owner");
+
+    if (args.orderId) {
+      const order = await ctx.db.get(args.orderId as Id<"orders">);
+      if (!order || order.storeId !== args.storeId) {
+        throw new Error("DELIVERY_ANALYTICS_ORDER_STORE_MISMATCH");
+      }
+    }
+
     const createdAt = args.createdAt ?? Date.now();
     const provider = normalizeDimension(args.provider) ?? "unknown";
     const region = normalizeDimension(args.region);

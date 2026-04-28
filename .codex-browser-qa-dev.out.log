@@ -1,0 +1,90 @@
+
+> marlon@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.3 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://172.20.10.7:3000
+- Environments: .env.local
+✓ Ready in 3.3s
+○ Compiling proxy ...
+- Experiments (use with caution):
+  · cpus: 1
+  ✓ optimizeCss
+  ✓ workerThreads
+
+ GET /orders/alaa 200 in 8.6s (next.js: 3.6s, proxy.ts: 58ms, application-code: 4.9s)
+ GET /orders/alaa 200 in 408ms (next.js: 27ms, proxy.ts: 123ms, application-code: 258ms)
+ POST /orders/alaa 200 in 128ms (next.js: 37ms, proxy.ts: 36ms, application-code: 55ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 6ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Finished filesystem cache database compaction in 23.1s
+✓ Compiled in 1122ms
+ GET /orders/alaa 200 in 3.4s (next.js: 381ms, proxy.ts: 2.9s, application-code: 174ms)
+✓ Compiled in 248ms
+ GET /orders/alaa 200 in 1010ms (next.js: 311ms, proxy.ts: 544ms, application-code: 155ms)
+✓ Compiled in 377ms
+ GET /orders/alaa 200 in 2.0s (next.js: 344ms, proxy.ts: 1596ms, application-code: 106ms)
+✓ Compiled in 385ms
+ GET /orders/alaa 200 in 1027ms (next.js: 409ms, proxy.ts: 456ms, application-code: 162ms)
+ POST /orders/alaa 200 in 2.6s (next.js: 28ms, proxy.ts: 2.6s, application-code: 51ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /orders/alaa 200 in 52ms (next.js: 17ms, proxy.ts: 18ms, application-code: 16ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Compiled in 542ms
+ GET /orders/alaa 200 in 1640ms (next.js: 178ms, proxy.ts: 477ms, application-code: 984ms)
+ POST /orders/alaa 200 in 47ms (next.js: 15ms, proxy.ts: 16ms, application-code: 16ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Compiled in 185ms
+ GET /orders/alaa 200 in 679ms (next.js: 222ms, proxy.ts: 370ms, application-code: 87ms)
+✓ Compiled in 168ms
+ GET /orders/alaa 200 in 719ms (next.js: 194ms, proxy.ts: 407ms, application-code: 118ms)
+✓ Compiled in 1300ms
+ GET /orders/alaa 200 in 1637ms (next.js: 144ms, proxy.ts: 1430ms, application-code: 63ms)
+ GET /orders/alaa 200 in 756ms (next.js: 16ms, proxy.ts: 25ms, application-code: 715ms)
+ POST /orders/alaa 200 in 39ms (next.js: 11ms, proxy.ts: 16ms, application-code: 12ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Compiled in 1185ms
+ GET /orders/alaa 200 in 6.8s (next.js: 166ms, proxy.ts: 6.5s, application-code: 118ms)
+ GET /orders/alaa 200 in 900ms (next.js: 12ms, proxy.ts: 20ms, application-code: 868ms)
+ POST /orders/alaa 200 in 49ms (next.js: 13ms, proxy.ts: 25ms, application-code: 12ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/delivery/create-order 400 in 18.8s (next.js: 449ms, proxy.ts: 27ms, application-code: 18.3s)
+✓ Compiled in 1348ms
+✓ Compiled in 3.4s
+Time 8.2443
+ GET /orders/alaa 500 in 2.2s (next.js: 538ms, proxy.ts: 1031ms, application-code: 593ms)
+Time 1.3256
+ GET /orders/alaa 500 in 112ms (next.js: 62ms, proxy.ts: 16ms, application-code: 34ms)
+Time 1.0969
+ GET /orders/alaa 500 in 136ms (next.js: 47ms, proxy.ts: 62ms, application-code: 27ms)
+Time 1.6496
+ GET /orders/alaa 500 in 120ms (next.js: 57ms, proxy.ts: 36ms, application-code: 27ms)
+✓ Compiled in 239ms
+ GET /orders/alaa 200 in 2.1s (next.js: 335ms, proxy.ts: 630ms, application-code: 1120ms)
+ POST /orders/alaa 200 in 52ms (next.js: 17ms, proxy.ts: 18ms, application-code: 17ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+✓ Compiled in 203ms
+ GET /orders/alaa 200 in 1079ms (next.js: 290ms, proxy.ts: 605ms, application-code: 184ms)
+ GET /orders/alaa 200 in 1396ms (next.js: 176ms, proxy.ts: 977ms, application-code: 243ms)
+ GET /orders/alaa 200 in 143ms (next.js: 18ms, proxy.ts: 23ms, application-code: 102ms)
+ GET /orders/alaa 200 in 64ms (next.js: 11ms, proxy.ts: 15ms, application-code: 37ms)
+✓ Compiled in 163ms
+ GET /orders/alaa 200 in 4.1s (next.js: 230ms, proxy.ts: 3.7s, application-code: 178ms)
+ GET /orders/alaa 200 in 711ms (next.js: 16ms, proxy.ts: 16ms, application-code: 679ms)
+ POST /orders/alaa 200 in 114ms (next.js: 22ms, proxy.ts: 59ms, application-code: 33ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 4ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /orders/alaa 200 in 166ms (next.js: 19ms, proxy.ts: 18ms, application-code: 129ms)
+ POST /orders/alaa 200 in 90ms (next.js: 22ms, proxy.ts: 49ms, application-code: 19ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 2ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /orders/alaa 200 in 3.0s (next.js: 19ms, proxy.ts: 2.9s, application-code: 97ms)
+ POST /orders/alaa 200 in 41ms (next.js: 12ms, proxy.ts: 17ms, application-code: 12ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /orders/alaa 200 in 132ms (next.js: 12ms, proxy.ts: 16ms, application-code: 104ms)
+ POST /orders/alaa 200 in 66ms (next.js: 21ms, proxy.ts: 24ms, application-code: 21ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 1ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ GET /orders/alaa 200 in 1601ms (next.js: 36ms, proxy.ts: 1307ms, application-code: 258ms)
+ POST /orders/alaa 200 in 113ms (next.js: 39ms, proxy.ts: 37ms, application-code: 37ms)
+  └─ ƒ detectKeylessEnvDriftAction() in 3ms node_modules/@clerk/nextjs/dist/esm/app-router/keyless-actions.js
+ POST /api/delivery/create-order 400 in 2.6s (next.js: 320ms, proxy.ts: 25ms, application-code: 2.3s)
+ POST /api/delivery/create-order 400 in 1137ms (next.js: 8ms, proxy.ts: 28ms, application-code: 1101ms)
+ POST /api/delivery/create-order 400 in 1240ms (next.js: 7ms, proxy.ts: 20ms, application-code: 1213ms)

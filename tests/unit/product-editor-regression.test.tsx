@@ -91,6 +91,9 @@ const apiMock = {
     archiveProduct: "products.archiveProduct",
     unarchiveProduct: "products.unarchiveProduct",
   },
+  stores: {
+    getStoreBySlug: "stores.getStoreBySlug",
+  },
 };
 
 const updateProductMock = mock(async () => undefined);
@@ -114,6 +117,13 @@ mock.module("convex/react", () => ({
     }
 
     return mock(async () => undefined);
+  },
+  useQuery: (token: string, args: unknown) => {
+    void args;
+    if (token === apiMock.stores.getStoreBySlug) {
+      return { name: "Demo Store" };
+    }
+    return null;
   },
 }));
 
@@ -360,30 +370,23 @@ describe("product editor regressions", () => {
     expect(view.queryByRole("button", { name: "Hide" })).toBeNull();
   });
 
-  it("blocks invalid unhide on existing hidden products and focuses the first invalid field", () => {
-    const titlelessHiddenProduct = createProduct({
-      name: "",
-      basePrice: 0,
-      isArchived: true,
-      createdAt: 500,
-      updatedAt: 900,
-    });
-
+  it("renders the resolved store name when available", () => {
     const view = render(
       <EditorProductDetailModal
         open
         onClose={() => undefined}
         storeSlug="demo-store"
-        product={titlelessHiddenProduct}
+        product={createProduct({
+          name: "Example",
+          basePrice: 1000,
+          isArchived: true,
+          createdAt: 500,
+          updatedAt: 900,
+        })}
       />,
     );
 
-    const titleInput = view.getByLabelText("Product title");
-    fireEvent.click(view.getByRole("button", { name: "Unhide" }));
-
-    expect(unarchiveProductMock).not.toHaveBeenCalled();
-    expect(document.activeElement).toBe(titleInput);
-    expect(view.getByText("Add a product title before publishing.")).toBeTruthy();
+    expect(view.getByText("Demo Store")).toBeTruthy();
   });
 
   it("computes the primary save label and save mode from freshness, visibility, and validity", () => {

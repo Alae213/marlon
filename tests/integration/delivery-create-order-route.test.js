@@ -133,7 +133,31 @@ describe("POST /api/delivery/create-order validation and auth", () => {
     const data = await response.json();
 
     expect(response.status).toBe(401);
-    expect(data.error).toBe("Unauthorized");
+    expect(data.error).toBe("Please sign in again before dispatching orders.");
+    expect(data.code).toBe("DELIVERY_AUTH_REQUIRED");
+  });
+
+  it("maps Clerk middleware runtime failures to auth-required feedback", async () => {
+    authMock.mockRejectedValue(
+      new Error("Clerk: auth() was called but Clerk can't detect usage of clerkMiddleware().")
+    );
+
+    const response = await POST(
+      createRequest({
+        ...validOrderBody,
+        storeSlug: "demo-store",
+      })
+    );
+    const data = await response.json();
+
+    expect(response.status).toBe(401);
+    expect(data).toEqual({
+      success: false,
+      error: "Please sign in again before dispatching orders.",
+      code: "DELIVERY_AUTH_REQUIRED",
+    });
+    expect(createDeliveryOrderMock).not.toHaveBeenCalled();
+    expect(convexQueryMock).not.toHaveBeenCalled();
   });
 
   it("returns 403 when authenticated user does not own store", async () => {
@@ -158,7 +182,8 @@ describe("POST /api/delivery/create-order validation and auth", () => {
     const data = await response.json();
 
     expect(response.status).toBe(403);
-    expect(data.error).toBe("You do not have access to this store.");
+    expect(data.error).toBe("You do not have access to dispatch this order.");
+    expect(data.code).toBe("DELIVERY_FORBIDDEN");
     expect(createDeliveryOrderMock).not.toHaveBeenCalled();
   });
 
@@ -179,6 +204,7 @@ describe("POST /api/delivery/create-order validation and auth", () => {
 
     expect(response.status).toBe(409);
     expect(data.error).toBe("Order must be confirmed before dispatch.");
+    expect(data.code).toBe("DELIVERY_NOT_CONFIRMED");
     expect(createDeliveryOrderMock).not.toHaveBeenCalled();
     expect(convexMutationMock).not.toHaveBeenCalled();
   });
@@ -255,7 +281,8 @@ describe("POST /api/delivery/create-order validation and auth", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Provider rejected the order");
+    expect(data.error).toBe("Delivery provider rejected the order: Provider rejected the order");
+    expect(data.code).toBe("DELIVERY_PROVIDER_REJECTED");
     expect(createDeliveryOrderMock).toHaveBeenCalledTimes(1);
     expect(convexMutationMock).toHaveBeenCalledTimes(1);
     expect(convexMutationMock.mock.calls[0][1]).toEqual(
@@ -358,8 +385,77 @@ describe("POST /api/delivery/create-order validation and auth", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("No supported delivery provider configured for this store.");
+    expect(data.error).toBe("This delivery provider is not integrated yet.");
+    expect(data.code).toBe("DELIVERY_PROVIDER_UNSUPPORTED");
     expect(createDeliveryOrderMock).not.toHaveBeenCalled();
     expect(convexMutationMock).not.toHaveBeenCalled();
+  });
+
+  it("returns setup feedback when delivery credentials are missing", async () => {
+    mockDispatchQueries({
+      integration: {
+        provider: "zr-express",
+        credentials: {},
+      },
+    });
+
+    const response = await POST(
+      createRequest({
+        ...validOrderBody,
+        storeSlug: "demo-store",
+      })
+    );
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data).toEqual({
+      success: false,
+      code: "DELIVERY_CREDENTIALS_MISSING",
+      error: "Delivery credentials are missing for this store.",
+      action: {
+        label: "Open Courier settings",
+        href: "/editor/demo-store?settings=integration",
+      },
+    });
+    expect(createDeliveryOrderMock).not.toHaveBeenCalled();
+  });
+
+  it("dispatches existing dispatch-ready orders through the provider path", async () => {
+    mockDispatchQueries({
+      integration: {
+        provider: "zr-express",
+        credentials: {
+          apiKey: "key",
+          apiSecret: "secret",
+        },
+      },
+      order: createConfirmedOrder({
+        status: "dispatch_ready",
+      }),
+    });
+    createDeliveryOrderMock.mockResolvedValue({
+      success: true,
+      trackingNumber: "TRK2",
+      deliveryFee: 300,
+    });
+    convexMutationMock.mockResolvedValue({
+      orderId: "order_1",
+      status: "dispatched",
+      trackingNumber: "TRK2",
+      provider: "zr_express",
+      duplicate: false,
+    });
+
+    const response = await POST(
+      createRequest({
+        ...validOrderBody,
+        storeSlug: "demo-store",
+      })
+    );
+    const data = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(data.status).toBe("dispatched");
+    expect(createDeliveryOrderMock).toHaveBeenCalledTimes(1);
   });
 });

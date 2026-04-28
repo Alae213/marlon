@@ -64,5 +64,5 @@ export function mapDeliveryProviderStatusToOrderStatus(status: unknown): OrderSt
     return null;
   }
 
-  return PROVIDER_STATUS_TO_ORDER_STATUS[key] ?? null;
+  return PROVIDER_STATUS_TO_ORDER_STATUS[key] ?? "in_transit";
 }

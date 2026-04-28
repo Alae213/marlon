@@ -67,6 +67,9 @@ export const backfillOrderEventsBatch = internalMutation({
             orderId: order._id,
             storeId: order.storeId,
             status: entry.status,
+            nextStatus: entry.status,
+            actorRole: "internal",
+            source: "performanceBackfill.backfillOrderEventsBatch",
             note: entry.note,
             createdAt: entry.timestamp,
           });

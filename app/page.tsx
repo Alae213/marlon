@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useUser, SignUp, SignedIn, SignedOut } from "@clerk/nextjs";
@@ -13,10 +13,16 @@ import {
   ExternalLink, 
   Loader2,
   Check,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { RealtimeProvider } from "@/contexts/realtime-context";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 // Types
 interface StoreData {
@@ -57,8 +63,11 @@ type PreSignupQuestion = {
 };
 
 type StoredPreSignupState = {
+  sessionId: string;
   step: number;
   completed: boolean;
+  completedAt?: number;
+  sheetSyncedAt?: number;
   answers: PreSignupAnswers;
   expiresAt: number;
 };
@@ -139,7 +148,16 @@ const safeTrack = (eventName: string, properties: Record<string, string | number
   }
 };
 
+const createPreSignupSessionId = () => {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+};
+
 const getDefaultPreSignupState = (): StoredPreSignupState => ({
+  sessionId: typeof window === "undefined" ? "" : createPreSignupSessionId(),
   step: 0,
   completed: false,
   answers: emptyPreSignupAnswers,
@@ -164,7 +182,19 @@ const readStoredPreSignupState = (): StoredPreSignupState => {
     return {
       answers: parsed.answers,
       completed: !!parsed.completed,
+      completedAt:
+        typeof parsed.completedAt === "number" && Number.isFinite(parsed.completedAt)
+          ? parsed.completedAt
+          : undefined,
       expiresAt: parsed.expiresAt,
+      sessionId:
+        typeof parsed.sessionId === "string" && parsed.sessionId.trim()
+          ? parsed.sessionId.trim().slice(0, 120)
+          : createPreSignupSessionId(),
+      sheetSyncedAt:
+        typeof parsed.sheetSyncedAt === "number" && Number.isFinite(parsed.sheetSyncedAt)
+          ? parsed.sheetSyncedAt
+          : undefined,
       step:
         typeof parsed.step === "number"
           ? Math.min(Math.max(parsed.step, 0), preSignupQuestions.length - 1)
@@ -174,6 +204,25 @@ const readStoredPreSignupState = (): StoredPreSignupState => {
     window.localStorage.removeItem(PRE_SIGNUP_STORAGE_KEY);
     return getDefaultPreSignupState();
   }
+};
+
+const syncPreSignupAnswersToSheet = async (state: StoredPreSignupState) => {
+  const response = await fetch("/api/pre-signup/google-sheet", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      sessionId: state.sessionId,
+      completedAt: state.completedAt,
+      answers: state.answers,
+    }),
+  });
+
+  if (!response.ok) return false;
+
+  const result = (await response.json().catch(() => null)) as { success?: unknown } | null;
+  return result?.success === true;
 };
 
 const getSelectedValues = (
@@ -515,17 +564,6 @@ function NewStorePreview({ isSignUpOpen, onContinue }: {
 
           <p className="body-base text-[var(--system-600)]">new store </p>
         </button>
-
-        {!isSignUpOpen && (
-          <Button
-            type="button"
-            size="lg"
-            onClick={onContinue}
-            className="h-12 min-w-[220px]"
-          >
-            Continue with Google
-          </Button>
-        )}
       </div>
 
       <p className="label-xs text-[var(--system-400)]">© 2026 Marlon. All rights reserved.</p>
@@ -642,6 +680,7 @@ function PreSignupQuestionScreen({
 function LandingPage() {
   const [preSignupState, setPreSignupState] = useState<StoredPreSignupState>(readStoredPreSignupState);
   const [isSignUpOpen, setIsSignUpOpen] = useState(preSignupState.completed);
+  const sheetSyncInFlight = useRef(false);
   const { answers, completed: showPreview, step: currentStep } = preSignupState;
 
   useEffect(() => {
@@ -655,6 +694,29 @@ function LandingPage() {
       // Local persistence is helpful, not required.
     }
   }, [preSignupState]);
+
+  useEffect(() => {
+    if (!showPreview || preSignupState.sheetSyncedAt || sheetSyncInFlight.current) return;
+
+    sheetSyncInFlight.current = true;
+
+    void syncPreSignupAnswersToSheet(preSignupState)
+      .then((didSync) => {
+        if (!didSync) return;
+
+        setPreSignupState((previousState) => {
+          if (previousState.sessionId !== preSignupState.sessionId) return previousState;
+
+          return {
+            ...previousState,
+            sheetSyncedAt: Date.now(),
+          };
+        });
+      })
+      .finally(() => {
+        sheetSyncInFlight.current = false;
+      });
+  }, [preSignupState, showPreview]);
 
   const handleSelect = (question: PreSignupQuestion, value: PreSignupOptionValue) => {
     setPreSignupState((previousState) => {
@@ -714,9 +776,12 @@ function LandingPage() {
     });
 
     if (currentStep === preSignupQuestions.length - 1) {
+      const completedAt = Date.now();
+
       setPreSignupState((previousState) => ({
         ...previousState,
         completed: true,
+        completedAt,
       }));
       setIsSignUpOpen(true);
       safeTrack("pre_signup_completed", {
@@ -739,14 +804,11 @@ function LandingPage() {
           onContinue={() => setIsSignUpOpen(true)}
         />
 
-        <Dialog open={isSignUpOpen} onOpenChange={setIsSignUpOpen}>
-          <DialogContent
-            className="max-w-[440px] border-0 bg-transparent p-0 shadow-none"
-            closeClassName="right-3 top-3 bg-white/92 text-[--system-500] shadow-[var(--shadow-md)] hover:bg-white hover:text-[--system-700]"
-          >
+        {isSignUpOpen ? (
+          <SignUpOverlay onClose={() => setIsSignUpOpen(false)}>
             <SignUp routing="virtual" fallbackRedirectUrl="/" />
-          </DialogContent>
-        </Dialog>
+          </SignUpOverlay>
+        ) : null}
       </>
     );
   }
@@ -759,6 +821,49 @@ function LandingPage() {
       onNext={handleNext}
       onSelect={handleSelect}
     />
+  );
+}
+
+function SignUpOverlay({
+  children,
+  onClose,
+}: {
+  children: React.ReactNode;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Create your account"
+    >
+      <button
+        type="button"
+        className="absolute inset-0 bg-black/50"
+        aria-label="Close"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-[440px]">
+        <button
+          type="button"
+          className="absolute right-3 top-3 inline-flex h-9 w-9 items-center justify-center rounded-md bg-white/92 text-[--system-500] shadow-[var(--shadow-md)] hover:bg-white hover:text-[--system-700]"
+          aria-label="Close"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+        {children}
+      </div>
+    </div>
   );
 }
 

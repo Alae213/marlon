@@ -48,11 +48,12 @@ interface StorefrontProduct {
   images?: string[];
 }
 
-const NAVBAR_PLACEHOLDER_LABELS = ["Shop", "FAQ", "Help"];
-
 export default function StorefrontPage() {
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
+
   return (
-    <CartProvider>
+    <CartProvider storageKey={slug ? `cart:${slug}` : "cart"}>
       <StorefrontContent />
     </CartProvider>
   );
@@ -71,6 +72,7 @@ function StorefrontContent() {
   const [heroContent, setHeroContent] = useState<{ content?: unknown } | null>(null);
   const [footerContent, setFooterContent] = useState<{ content?: unknown } | null>(null);
   const [productsData, setProductsData] = useState<StorefrontProduct[]>([]);
+  const [hasLoadedProducts, setHasLoadedProducts] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +90,7 @@ function StorefrontContent() {
       setHeroContent(hero);
       setFooterContent(footer);
       setProductsData((products ?? []) as StorefrontProduct[]);
+      setHasLoadedProducts(true);
     }
 
     void loadSnapshot();
@@ -111,6 +114,22 @@ function StorefrontContent() {
   const openCartWithInit = () => {
     setHasOpenedCart(true);
     openCart();
+  };
+
+  const hasContactInfo = Boolean(footerPhone || footerEmail);
+
+  const scrollToSection = (sectionId: string) => {
+    document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  const handleShopClick = () => {
+    scrollToSection("products");
+    setMobileMenuOpen(false);
+  };
+
+  const handleContactClick = () => {
+    scrollToSection("contact");
+    setMobileMenuOpen(false);
   };
 
   // Hero content
@@ -196,14 +215,22 @@ function StorefrontContent() {
           </div>
 
           <div className="hidden lg:flex flex-1 items-center justify-center gap-2">
-            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
-              <span
-                key={`desktop-${label}`}
+            <button
+              type="button"
+              onClick={handleShopClick}
+              className={`text-body-sm rounded-full px-3 py-2 ${navbarTextClass} transition-opacity hover:opacity-70`}
+            >
+              Shop
+            </button>
+            {hasContactInfo && (
+              <button
+                type="button"
+                onClick={handleContactClick}
                 className={`text-body-sm rounded-full px-3 py-2 ${navbarTextClass} transition-opacity hover:opacity-70`}
               >
-                {label}
-              </span>
-            ))}
+                Contact
+              </button>
+            )}
           </div>
 
           <div className="flex flex-1 items-center justify-end gap-2">
@@ -247,14 +274,22 @@ function StorefrontContent() {
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto p-4 space-y-2">
-            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
-              <span
-                key={`mobile-${label}`}
-                className="text-body block rounded-lg bg-[var(--system-700)] p-3 text-[var(--sheet-surface-fg)]"
+            <button
+              type="button"
+              onClick={handleShopClick}
+              className="text-body block w-full rounded-lg bg-[var(--system-700)] p-3 text-left text-[var(--sheet-surface-fg)]"
+            >
+              Shop
+            </button>
+            {hasContactInfo && (
+              <button
+                type="button"
+                onClick={handleContactClick}
+                className="text-body block w-full rounded-lg bg-[var(--system-700)] p-3 text-left text-[var(--sheet-surface-fg)]"
               >
-                {label}
-              </span>
-            ))}
+                Contact
+              </button>
+            )}
           </div>
         </SheetContent>
       </Sheet>
@@ -355,51 +390,50 @@ function StorefrontContent() {
           onClose={closeCart}
           storeId={store?._id as string}
           storeSlug={slug}
+          validProductIds={hasLoadedProducts ? productsData.map((product) => product._id) : undefined}
         />
       )}
 
-      <footer className="mt-16 p-8 pb-[180px]">
-        <div className="flex flex-col justify-between w-full md:flex-row max-w-6xl mx-auto">
-          <div>
-            {footerLogoUrl && (
-              <div className="w-16 h-16 mb-4 relative">
-                <Image
-                  src={footerLogoUrl}
-                  alt="Store logo"
-                  fill
-                  className="object-contain"
-                />
+      <footer id="contact" className="mt-16 p-8 pb-[180px]">
+        {footerLogoUrl || footerDescription || footerPhone || footerEmail ? (
+          <div className="flex flex-col justify-between w-full gap-10 md:flex-row max-w-6xl mx-auto">
+            <div className="max-w-md">
+              {footerLogoUrl && (
+                <div className="w-16 h-16 mb-4 relative">
+                  <Image
+                    src={footerLogoUrl}
+                    alt="Store logo"
+                    fill
+                    className="object-contain"
+                  />
+                </div>
+              )}
+              {footerDescription && (
+                <p className="text-body text-[var(--system-400)]">{footerDescription}</p>
+              )}
+            </div>
+
+            {(footerPhone || footerEmail) && (
+              <div className="flex flex-col items-start gap-3">
+                <p className="text-micro-label text-[var(--system-500)]">Contact</p>
+                {footerPhone && (
+                  <p className="text-body text-[var(--system-400)]">
+                    Phone: {footerPhone}
+                  </p>
+                )}
+                {footerEmail && (
+                  <p className="text-body text-[var(--system-400)]">
+                    Email: {footerEmail}
+                  </p>
+                )}
               </div>
             )}
-            {footerDescription && (
-              <p className="text-body text-[var(--system-400)]">{footerDescription}</p>
-            )}
           </div>
-
-          <div className="flex flex-col items-start gap-6">
-            {NAVBAR_PLACEHOLDER_LABELS.map((label) => (
-              <span
-                key={`footer-${label}`}
-                className="text-body text-[var(--system-400)]"
-              >
-                {label}
-              </span>
-            ))}
+        ) : (
+          <div className="max-w-6xl mx-auto text-body text-[var(--system-400)]">
+            Powered by Marlon
           </div>
-
-          <div className="flex flex-col items-start gap-6">
-            {footerPhone && (
-              <p className="text-body text-[var(--system-400)]">
-                Phone: {footerPhone}
-              </p>
-            )}
-            {footerEmail && (
-              <p className="text-body text-[var(--system-400)]">
-                Email: {footerEmail}
-              </p>
-            )}
-          </div>
-        </div>
+        )}
       </footer>
     </div>
   );

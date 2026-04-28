@@ -8,7 +8,7 @@ import {
   normalizeOrderStatus,
 } from "@/lib/orders-types";
 import { getStatusConfig } from "@/lib/status-icons";
-import { Menu, MenuContent, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface StatusDropdownProps {
   currentStatus: string;
@@ -31,8 +31,8 @@ export function StatusDropdown({
   const statuses = getMerchantTransitionsForOrder(currentStatus, order, "merchant");
 
   return (
-    <Menu open={isOpen} onOpenChange={setIsOpen}>
-      <MenuTrigger asChild>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
+      <DropdownMenuTrigger asChild>
         {trigger ?? (
           <button
             type="button"
@@ -40,24 +40,24 @@ export function StatusDropdown({
             aria-label="Open status menu"
           />
         )}
-      </MenuTrigger>
-      <MenuContent
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
         align="start"
         sideOffset={4}
         className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
       >
         {statuses.length === 0 ? (
-          <MenuItem
+          <DropdownMenuItem
             disabled
             className="px-3 py-2 text-sm text-[var(--system-400)] rounded-[12px]"
           >
             No merchant actions
-          </MenuItem>
+          </DropdownMenuItem>
         ) : statuses.map((status) => {
           const statusConfig = getStatusConfig(status);
 
           return (
-          <MenuItem
+          <DropdownMenuItem
             key={status}
             onSelect={() => {
               onStatusChange(status);
@@ -70,18 +70,18 @@ export function StatusDropdown({
               style={{ backgroundColor: statusConfig?.textColor || "var(--system-400)" }}
             />
             <span className="flex-1">{statusConfig?.label || getOrderStatusLabel(status)}</span>
-          </MenuItem>
+          </DropdownMenuItem>
           );
         })}
         {canonicalStatus === null ? (
-          <MenuItem
+          <DropdownMenuItem
             disabled
             className="px-3 py-2 text-sm text-[var(--system-400)] rounded-[12px]"
           >
             Unknown current status
-          </MenuItem>
+          </DropdownMenuItem>
         ) : null}
-      </MenuContent>
-    </Menu>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

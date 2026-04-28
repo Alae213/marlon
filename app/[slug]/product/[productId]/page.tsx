@@ -13,7 +13,12 @@ import { Id } from "@/convex/_generated/dataModel";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { ImageCarousel } from "@/components/features/shared/image-carousel";
 import { validateAlgerianPhone, formatPhoneInput } from "@/lib/phone-validation";
-import { createPublicCheckoutIdempotencyKey } from "@/lib/public-checkout-client";
+import {
+  abandonPublicCheckoutAttempt,
+  createPublicCheckoutIdempotencyKey,
+  startPublicCheckoutAttempt,
+} from "@/lib/public-checkout-client";
+import { getPublicOrderErrorMessage } from "@/lib/order-action-feedback";
 import { Button } from "@/components/ui/button";
 import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -26,15 +31,12 @@ const formatPrice = (price: number) => {
   }).format(price);
 };
 
-const FIXED_NAVBAR_LINKS = [
-  { id: "link-shop", text: "Shop", url: "#products" },
-  { id: "link-faq", text: "FAQ", url: "/" },
-  { id: "link-help", text: "Help", url: "/" },
-];
-
 export default function ProductDetailPage() {
+  const params = useParams();
+  const slug = params?.slug as string | undefined;
+
   return (
-    <CartProvider>
+    <CartProvider storageKey={slug ? `cart:${slug}` : "cart"}>
       <ProductDetailContent />
     </CartProvider>
   );
@@ -71,6 +73,7 @@ function ProductDetailContent() {
   const [navbarContent, setNavbarContent] = useState<{ content?: unknown } | null>(null);
   const [deliveryPricing, setDeliveryPricing] = useState<Array<{ wilaya: string; homeDelivery?: number; officeDelivery?: number }>>([]);
   const [products, setProducts] = useState<Array<{ _id: string; name: string; basePrice: number; oldPrice?: number; images?: string[]; description?: string; variants?: Array<{ name: string; options: Array<{ name: string; priceModifier?: number }> }>; isArchived?: boolean }>>([]);
+  const [hasLoadedProducts, setHasLoadedProducts] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -86,6 +89,7 @@ function ProductDetailContent() {
       setNavbarContent(navbar);
       setDeliveryPricing((pricing ?? []) as Array<{ wilaya: string; homeDelivery?: number; officeDelivery?: number }>);
       setProducts((productList ?? []) as Array<{ _id: string; name: string; basePrice: number; oldPrice?: number; images?: string[]; description?: string; variants?: Array<{ name: string; options: Array<{ name: string; priceModifier?: number }> }>; isArchived?: boolean }>);
+      setHasLoadedProducts(true);
     }
     void loadSnapshot();
     return () => {
@@ -214,6 +218,7 @@ function ProductDetailContent() {
         body: JSON.stringify({
           storeSlug: slug,
           idempotencyKey: checkoutIdempotencyKey,
+          checkoutAttemptKey: checkoutIdempotencyKey,
           customerName: orderData.name,
           customerPhone: orderData.phone,
           customerWilaya: orderData.wilaya,
@@ -230,14 +235,14 @@ function ProductDetailContent() {
 
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || "Failed to create order.");
+        throw new Error(data?.error || getPublicOrderErrorMessage("PUBLIC_ORDER_UNAVAILABLE"));
       }
       
       setOrderNumber(data.orderNumber);
       setOrderPlaced(true);
       setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
     } catch (error) {
-      setOrderError(error instanceof Error ? error.message : "Failed to create order.");
+      setOrderError(error instanceof Error ? error.message : getPublicOrderErrorMessage("PUBLIC_ORDER_UNAVAILABLE"));
     } finally {
       setIsSubmittingOrder(false);
     }
@@ -245,8 +250,30 @@ function ProductDetailContent() {
 
   const openOrderForm = () => {
     setOrderError("");
-    setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
+    const attemptKey = createPublicCheckoutIdempotencyKey();
+    setCheckoutIdempotencyKey(attemptKey);
     setShowOrderForm(true);
+    if (product) {
+      void startPublicCheckoutAttempt({
+        storeSlug: slug,
+        attemptKey,
+        products: [{
+          productId: product._id,
+          quantity,
+          variant: variantString || undefined,
+        }],
+      });
+    }
+  };
+
+  const closeOrderForm = () => {
+    if (showOrderForm && !orderPlaced) {
+      void abandonPublicCheckoutAttempt({
+        storeSlug: slug,
+        attemptKey: checkoutIdempotencyKey,
+      });
+    }
+    setShowOrderForm(false);
   };
 
   const handleAddToCart = () => {
@@ -325,15 +352,12 @@ function ProductDetailContent() {
           </div>
 
           <div className="flex flex-1 items-center justify-center gap-3 overflow-x-auto">
-            {FIXED_NAVBAR_LINKS.map((link) => (
-              <a
-                key={link.id}
-                href={link.url}
-                className={`rounded-full px-3 py-2 text-body-sm whitespace-nowrap ${navbarTextClass}`}
-              >
-                {link.text}
-              </a>
-            ))}
+            <Link
+              href={`/${slug}#products`}
+              className={`rounded-full px-3 py-2 text-body-sm whitespace-nowrap ${navbarTextClass}`}
+            >
+              Back to shop
+            </Link>
           </div>
 
           {showCart && (
@@ -501,7 +525,7 @@ function ProductDetailContent() {
       )}
 
       {/* Confirm Order Dialog */}
-      <Dialog open={showOrderForm} onOpenChange={(open) => !open && setShowOrderForm(false)}>
+      <Dialog open={showOrderForm} onOpenChange={(open) => !open && closeOrderForm()}>
         <DialogContent
           overlayClassName="bg-black/30"
           style={{ boxShadow: "var(--shadow-xl-shadow)" } as React.CSSProperties}
@@ -656,7 +680,7 @@ function ProductDetailContent() {
             <Button
               size="md"
               variant="outline"
-              onClick={() => setShowOrderForm(false)}
+              onClick={closeOrderForm}
               className="h-10 flex-1 border-[var(--system-700)] bg-[var(--system-800)] text-[var(--system-100)] hover:bg-[var(--system-700)] hover:text-[var(--system-100)]"
             >
               Cancel
@@ -680,6 +704,7 @@ function ProductDetailContent() {
           onClose={closeCart}
           storeId={store._id as string}
           storeSlug={slug}
+          validProductIds={hasLoadedProducts ? products.map((item) => item._id) : undefined}
         />
       )}
     </div>

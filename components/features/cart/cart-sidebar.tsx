@@ -11,13 +11,19 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetFooter, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { WilayaSelect, CommuneSelect } from "@/components/features/shared/wilaya-select";
 import { formatPhoneInput, validateAlgerianPhone } from "@/lib/phone-validation";
-import { createPublicCheckoutIdempotencyKey } from "@/lib/public-checkout-client";
+import {
+  abandonPublicCheckoutAttempt,
+  createPublicCheckoutIdempotencyKey,
+  startPublicCheckoutAttempt,
+} from "@/lib/public-checkout-client";
+import { getPublicOrderErrorMessage } from "@/lib/order-action-feedback";
 
 interface CartSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   storeId: string;
   storeSlug?: string;
+  validProductIds?: string[];
 }
 
 type DeliveryType = "stopdesk" | "domicile";
@@ -54,7 +60,7 @@ function getWilayaLookupParts(wilaya: string) {
   return new Set([wilaya.trim(), ...parts, numberMatch?.[1]].filter(Boolean) as string[]);
 }
 
-export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebarProps) {
+export function CartSidebar({ isOpen, onClose, storeId, storeSlug, validProductIds }: CartSidebarProps) {
   const { items, updateQuantity, removeItem, total, clearCart } = useCart();
   const [showCheckout, setShowCheckout] = useState(false);
   const [formData, setFormData] = useState<OrderFormData>(initialFormData);
@@ -84,6 +90,15 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
   }, [deliveryPricing, formData.deliveryType, formData.wilaya]);
 
   const orderTotal = total + deliveryCost;
+  const validProductIdSet = useMemo(
+    () => (validProductIds ? new Set(validProductIds) : null),
+    [validProductIds]
+  );
+
+  const unavailableItems = useMemo(() => {
+    if (!validProductIdSet) return [];
+    return items.filter((item) => !validProductIdSet.has(item.productId));
+  }, [items, validProductIdSet]);
 
   const handleInputChange = (field: keyof OrderFormData, value: string) => {
     if (field === "phone") {
@@ -97,6 +112,12 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
   };
 
   const resetCheckout = () => {
+    if (showCheckout && !orderPlaced) {
+      void abandonPublicCheckoutAttempt({
+        storeSlug,
+        attemptKey: checkoutIdempotencyKey,
+      });
+    }
     setShowCheckout(false);
     setFormData(initialFormData);
     setOrderPlaced(false);
@@ -110,14 +131,39 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
     onClose();
   };
 
+  const removeUnavailableCartItems = () => {
+    if (unavailableItems.length === 0) return true;
+
+    unavailableItems.forEach((item) => removeItem(item.id));
+    setOrderError("Some products are no longer available. They were removed from your cart.");
+    if (unavailableItems.length >= items.length) {
+      setShowCheckout(false);
+    }
+    return false;
+  };
+
   const openCheckout = () => {
     setOrderError("");
-    setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
+    if (!removeUnavailableCartItems()) return;
+
+    const attemptKey = createPublicCheckoutIdempotencyKey();
+    setCheckoutIdempotencyKey(attemptKey);
     setShowCheckout(true);
+    void startPublicCheckoutAttempt({
+      storeSlug,
+      attemptKey,
+      products: items.map((item: CartItem) => ({
+        productId: item.productId,
+        quantity: item.quantity,
+        variant: item.variant,
+      })),
+    });
   };
 
   const handleSubmitOrder = async () => {
     setOrderError("");
+    if (!removeUnavailableCartItems()) return;
+
     const phoneValidation = validateAlgerianPhone(formData.phone);
     if (!phoneValidation.isValid) {
       setPhoneError(phoneValidation.error || "Invalid phone number");
@@ -144,6 +190,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
         body: JSON.stringify({
           storeSlug,
           idempotencyKey: checkoutIdempotencyKey,
+          checkoutAttemptKey: checkoutIdempotencyKey,
           customerName: formData.name,
           customerPhone: formData.phone,
           customerWilaya: formData.wilaya,
@@ -160,7 +207,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
 
       const data = await response.json().catch(() => null);
       if (!response.ok || !data?.success) {
-        throw new Error(data?.error || "Failed to create order.");
+        throw new Error(data?.error || getPublicOrderErrorMessage("PUBLIC_ORDER_UNAVAILABLE"));
       }
 
       setOrderNumber(data.orderNumber);
@@ -168,7 +215,7 @@ export function CartSidebar({ isOpen, onClose, storeId, storeSlug }: CartSidebar
       setCheckoutIdempotencyKey(createPublicCheckoutIdempotencyKey());
       clearCart();
     } catch (error) {
-      setOrderError(error instanceof Error ? error.message : "Failed to create order.");
+      setOrderError(error instanceof Error ? error.message : getPublicOrderErrorMessage("PUBLIC_ORDER_UNAVAILABLE"));
     } finally {
       setIsSubmitting(false);
     }

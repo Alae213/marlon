@@ -40,12 +40,13 @@ function toProductId(id: string, context: string): Id<"products"> {
 interface ProductsContentProps {
   storeId: Id<"stores">;
   storeSlug: string;
+  initialSettingsTab?: string;
 }
 
-export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
+export function ProductsContent({ storeId, storeSlug, initialSettingsTab }: ProductsContentProps) {
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [deletingProductId, setDeletingProductId] = useState<string | null>(null);
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(() => Boolean(initialSettingsTab));
   const [copied, setCopied] = useState(false);
   const [highlightedProductId, setHighlightedProductId] = useState<string | null>(null);
   const router = useRouter();
@@ -319,7 +320,7 @@ export function ProductsContent({ storeId, storeSlug }: ProductsContentProps) {
         onClose={() => setIsSettingsOpen(false)}
         storeId={storeId}
         storeSlug={storeSlug}
-        initialTab="delivery"
+        initialTab={initialSettingsTab ?? "delivery"}
       />
     </div>
   );

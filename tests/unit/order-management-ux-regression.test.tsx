@@ -205,10 +205,10 @@ mock.module("@/components/ui/tooltip", () => ({
   TooltipContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
-mock.module("@/components/ui/menu", () => ({
-  Menu: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  MenuTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
-  MenuContent: ({
+mock.module("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+  DropdownMenuContent: ({
     children,
     sideOffset,
     align,
@@ -222,22 +222,32 @@ mock.module("@/components/ui/menu", () => ({
 
     return <div {...props}>{children}</div>;
   },
-  MenuItem: ({
+  DropdownMenuItem: ({
     children,
     onSelect,
     ...props
   }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
-    onSelect?: () => void;
+    onSelect?: (event: { preventDefault: () => void }) => void;
   }) => (
-    <button type="button" onClick={() => onSelect?.()} {...props}>
+    <button type="button" onClick={() => onSelect?.({ preventDefault: () => undefined })} {...props}>
       {children}
     </button>
   ),
-  MenuCheckboxItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  MenuLabel: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  MenuRadioGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  MenuRadioItem: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
-  MenuSeparator: (props: React.HTMLAttributes<HTMLHRElement>) => <hr {...props} />,
+  DropdownMenuCheckboxItem: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuLabel: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
+  DropdownMenuRadioGroup: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuRadioItem: ({
+    children,
+    onSelect,
+    ...props
+  }: React.ButtonHTMLAttributes<HTMLButtonElement> & {
+    onSelect?: (event: { preventDefault: () => void }) => void;
+  }) => (
+    <button type="button" onClick={() => onSelect?.({ preventDefault: () => undefined })} {...props}>
+      {children}
+    </button>
+  ),
+  DropdownMenuSeparator: (props: React.HTMLAttributes<HTMLHRElement>) => <hr {...props} />,
 }));
 
 mock.module("@/components/ui/dialog", () => ({
@@ -255,6 +265,7 @@ mock.module("@/components/ui/dialog", () => ({
   DialogFooter: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   DialogHeader: ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => <div {...props}>{children}</div>,
   DialogTitle: ({ children, ...props }: React.HTMLAttributes<HTMLHeadingElement>) => <h2 {...props}>{children}</h2>,
+  DialogClose: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
 
 mock.module("@/components/ui/table", () => ({
@@ -464,7 +475,7 @@ describe("order management UX regressions", () => {
     expect(view.queryByText("Mock kanban view")).toBeNull();
   });
 
-  it("renders the dispatch-ready action labels and an explicit close control in the order details sheet", () => {
+  it("renders the dispatch-ready delivery action and an explicit close control in the order details sheet", () => {
     const view = render(
       <OrderDetails
         order={createOrder()}
@@ -478,11 +489,50 @@ describe("order management UX regressions", () => {
     );
 
     expect(view.getByRole("button", { name: /close order details/i })).toBeTruthy();
-    expect(view.getByRole("button", { name: "Mark as dispatched" })).toBeTruthy();
+    expect(view.getByRole("button", { name: "Send to delivery company" })).toBeTruthy();
     expect(view.getByRole("button", { name: "Answered" })).toBeTruthy();
     expect(view.getByRole("button", { name: "No Answer" })).toBeTruthy();
     expect(view.getByRole("button", { name: "Wrong Number" })).toBeTruthy();
     expect(view.getByRole("button", { name: "Refused" })).toBeTruthy();
+  });
+
+  it("shows ordered lifecycle, call note, and admin note history in the order details sheet", () => {
+    const now = Date.now();
+    const view = render(
+      <OrderDetails
+        order={createOrder({
+          status: "delivered",
+          codPaymentStatus: "collected",
+          timeline: [
+            { status: "new", timestamp: now - 300000, note: "Public checkout order created" },
+            { status: "confirmed", timestamp: now - 200000, note: "Customer confirmed" },
+            { status: "delivered", timestamp: now - 100000, note: "Courier marked delivered" },
+          ],
+          callLog: [
+            {
+              id: "call_1",
+              timestamp: now - 220000,
+              outcome: "answered",
+              notes: "Asked to deliver after 5pm",
+            },
+          ],
+          adminNoteText: "VIP customer",
+          adminNoteUpdatedAt: now - 90000,
+        })}
+        isOpen
+        onClose={() => undefined}
+        onStatusChange={() => undefined}
+        onAddCallLog={async () => undefined}
+        onUpsertAdminNote={async () => undefined}
+        storeSlug="demo-store"
+      />,
+    );
+
+    expect(view.getByText("Activity")).toBeTruthy();
+    expect(view.getByText("Courier marked delivered")).toBeTruthy();
+    expect(view.getByText("Asked to deliver after 5pm")).toBeTruthy();
+    expect(view.getAllByText("VIP customer").length).toBeGreaterThan(1);
+    expect(view.getByText("Collected")).toBeTruthy();
   });
 
   it("keeps mobile-card selection and status controls from opening the details sheet", () => {
@@ -571,12 +621,12 @@ describe("order management UX regressions", () => {
 
     expect(statusCell).toBeTruthy();
 
-    const statusMenu = within(statusCell as HTMLElement);
-    expect(statusMenu.getByText("Awaiting Confirmation")).toBeTruthy();
-    expect(statusMenu.queryByText("Confirmed")).toBeNull();
-    expect(statusMenu.getByText("Cancelled")).toBeTruthy();
-    expect(statusMenu.getByText("Blocked")).toBeTruthy();
-    expect(statusMenu.queryByText("Delivered")).toBeNull();
+    const statusDropdownMenu = within(statusCell as HTMLElement);
+    expect(statusDropdownMenu.getByText("Awaiting Confirmation")).toBeTruthy();
+    expect(statusDropdownMenu.queryByText("Confirmed")).toBeNull();
+    expect(statusDropdownMenu.getByText("Cancelled")).toBeTruthy();
+    expect(statusDropdownMenu.getByText("Blocked")).toBeTruthy();
+    expect(statusDropdownMenu.queryByText("Delivered")).toBeNull();
 
     cleanup();
 
@@ -593,8 +643,90 @@ describe("order management UX regressions", () => {
     );
     const answeredDesktop = answeredView.container.querySelector('div.hidden.overflow-visible[class*="md:block"]');
     const answeredStatusCell = answeredDesktop?.querySelector("tbody td:nth-child(4)");
-    const answeredStatusMenu = within(answeredStatusCell as HTMLElement);
+    const answeredStatusDropdownMenu = within(answeredStatusCell as HTMLElement);
 
-    expect(answeredStatusMenu.getByText("Confirmed")).toBeTruthy();
+    expect(answeredStatusDropdownMenu.getByText("Confirmed")).toBeTruthy();
+  });
+
+  it("changes row status immediately without a confirmation modal or note prompt", () => {
+    const handleStatusChange = mock(() => undefined);
+    const order = createOrder({ status: "new" });
+    const view = render(
+      <ListView
+        {...createListViewProps({
+          orders: [order],
+          onStatusChange: handleStatusChange,
+          statusDropdownOpen: { order_1: true },
+        })}
+        viewMode="list"
+        onViewModeChange={() => undefined}
+        isStateViewEnabled={false}
+      />,
+    );
+
+    const desktopContainer = view.container.querySelector('div.hidden.overflow-visible[class*="md:block"]');
+    const statusCell = desktopContainer?.querySelector("tbody td:nth-child(4)");
+    expect(statusCell).toBeTruthy();
+
+    fireEvent.click(within(statusCell as HTMLElement).getByRole("button", { name: /Awaiting Confirmation/i }));
+
+    expect(handleStatusChange).toHaveBeenCalledWith("order_1", "awaiting_confirmation");
+    expect(view.queryByText("Confirm state change")).toBeNull();
+    expect(view.queryByPlaceholderText("Audit note (optional)...")).toBeNull();
+  });
+
+  it("keeps courier-owned dispatch states out of the row status dropdown", () => {
+    const confirmedOrder = createOrder({ status: "confirmed", lastCallOutcome: "answered" });
+    const view = render(
+      <ListView
+        {...createListViewProps({
+          orders: [confirmedOrder],
+        })}
+        viewMode="list"
+        onViewModeChange={() => undefined}
+        isStateViewEnabled={false}
+      />,
+    );
+
+    const desktopContainer = view.container.querySelector('div.hidden.overflow-visible[class*="md:block"]');
+    const statusCell = desktopContainer?.querySelector("tbody td:nth-child(4)");
+    const statusDropdownMenu = within(statusCell as HTMLElement);
+
+    expect(statusDropdownMenu.queryByText("Ready to Dispatch")).toBeNull();
+    expect(statusDropdownMenu.queryByText("Dispatched")).toBeNull();
+    expect(statusDropdownMenu.getByText("Cancelled")).toBeTruthy();
+  });
+
+  it("shows courier setup feedback and CTA in the drawer dispatch action", async () => {
+    globalThis.fetch = mock(async () => ({
+      ok: false,
+      json: async () => ({
+        success: false,
+        code: "DELIVERY_CREDENTIALS_MISSING",
+        error: "Delivery credentials are missing for this store.",
+        action: {
+          label: "Open Courier settings",
+          href: "/editor/demo-store?settings=integration",
+        },
+      }),
+    })) as typeof fetch;
+
+    const view = render(
+      <OrderDetails
+        order={createOrder({ status: "confirmed", lastCallOutcome: "answered" })}
+        isOpen
+        onClose={() => undefined}
+        onStatusChange={() => undefined}
+        onAddCallLog={async () => undefined}
+        onUpsertAdminNote={async () => undefined}
+        storeSlug="demo-store"
+      />,
+    );
+
+    fireEvent.click(view.getByRole("button", { name: "Send to delivery company" }));
+
+    expect(await view.findByText("Delivery credentials are missing for this store.")).toBeTruthy();
+    const link = view.getByRole("link", { name: "Open Courier settings" }) as HTMLAnchorElement;
+    expect(link.getAttribute("href")).toBe("/editor/demo-store?settings=integration");
   });
 });

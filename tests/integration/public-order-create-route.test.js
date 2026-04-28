@@ -50,6 +50,7 @@ function createRequest(body, headers = {}) {
 const validBody = {
   storeSlug: "demo-store",
   idempotencyKey: "checkout-key-123",
+  checkoutAttemptKey: "checkout-key-123",
   customerName: "Jane Doe",
   customerPhone: "0550123456",
   customerWilaya: "16 - Alger - الجزائر",
@@ -74,6 +75,7 @@ describe("POST /api/orders/create public checkout route", () => {
     convexMutationMock.mockResolvedValue({
       orderId: "order_1",
       orderNumber: "ORD-1",
+      checkoutAttemptId: "checkout_attempt_1",
       duplicate: false,
       totals: { subtotal: 2000, deliveryCost: 600, total: 2600 },
     });
@@ -86,6 +88,7 @@ describe("POST /api/orders/create public checkout route", () => {
       success: true,
       orderId: "order_1",
       orderNumber: "ORD-1",
+      checkoutAttemptId: "checkout_attempt_1",
       duplicate: false,
       totals: { subtotal: 2000, deliveryCost: 600, total: 2600 },
     });
@@ -96,6 +99,7 @@ describe("POST /api/orders/create public checkout route", () => {
       orderId: "order_1",
       orderNumber: "ORD-1",
       duplicate: false,
+      checkoutAttemptId: "checkout_attempt_1",
       totals: { subtotal: 2000, deliveryCost: 600, total: 2600 },
     });
 
@@ -105,6 +109,7 @@ describe("POST /api/orders/create public checkout route", () => {
     expect(args.subtotal).toBeUndefined();
     expect(args.deliveryCost).toBeUndefined();
     expect(args.total).toBeUndefined();
+    expect(args.checkoutAttemptKey).toBe("checkout-key-123");
     expect(args.products).toEqual([
       {
         productId: "prod_1",
@@ -134,7 +139,11 @@ describe("POST /api/orders/create public checkout route", () => {
     const data = await response.json();
 
     expect(response.status).toBe(400);
-    expect(data.error).toBe("Malformed order payload.");
+    expect(data).toEqual({
+      success: false,
+      code: "PUBLIC_ORDER_MALFORMED_PAYLOAD",
+      error: "Malformed order payload.",
+    });
     expect(convexMutationMock).not.toHaveBeenCalled();
   });
 
@@ -146,5 +155,50 @@ describe("POST /api/orders/create public checkout route", () => {
 
     expect(response.status).toBe(400);
     expect(data.error).toBe("Invalid phone number.");
+    expect(data.code).toBe("PUBLIC_ORDER_INVALID_PHONE");
+  });
+
+  it("maps Convex product id validation failures to invalid product feedback", async () => {
+    convexMutationMock.mockRejectedValue(
+      new Error('ArgumentValidationError: Object is missing the required field `products[0].productId` for table "products"')
+    );
+
+    const response = await POST(createRequest(validBody));
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data).toEqual({
+      success: false,
+      code: "PUBLIC_ORDER_INVALID_PRODUCT",
+      error: "Invalid product selection.",
+    });
+  });
+
+  it("maps checkout-attempt mismatch errors to safe shopper feedback", async () => {
+    convexMutationMock.mockRejectedValue(new Error("PUBLIC_CHECKOUT_ATTEMPT_STORE_MISMATCH"));
+
+    const response = await POST(createRequest(validBody));
+    const data = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(data).toEqual({
+      success: false,
+      code: "PUBLIC_CHECKOUT_ATTEMPT_STORE_MISMATCH",
+      error: "Checkout session does not match this store. Please try again.",
+    });
+  });
+
+  it("maps unknown checkout failures to a temporary-unavailable message", async () => {
+    convexMutationMock.mockRejectedValue(new Error("database unavailable"));
+
+    const response = await POST(createRequest(validBody));
+    const data = await response.json();
+
+    expect(response.status).toBe(503);
+    expect(data).toEqual({
+      success: false,
+      code: "PUBLIC_ORDER_UNAVAILABLE",
+      error: "Order service is temporarily unavailable. Please try again.",
+    });
   });
 });

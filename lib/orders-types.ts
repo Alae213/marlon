@@ -41,6 +41,7 @@ export {
   getMerchantTransitionsForOrder,
   hasAnsweredCallEvidence,
   normalizeOrderRiskFlags,
+  shouldPromptUnreachableAfterNoAnswer,
 } from "./order-confirmation";
 
 // Order item in an order

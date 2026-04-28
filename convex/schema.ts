@@ -241,6 +241,7 @@ export default defineSchema({
     deliveryProvider: v.optional(v.string()),
     deliveryDispatchedAt: v.optional(v.number()),
     publicIdempotencyKey: v.optional(v.string()),
+    checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
     riskFlags: v.optional(v.array(v.union(
       v.literal("duplicate_phone"),
       v.literal("repeated_cancelled_or_refused"),
@@ -279,7 +280,40 @@ export default defineSchema({
     .index("orderNumber", ["orderNumber"])
     .index("storeOrderNumber", ["storeId", "orderNumber"])
     .index("storeIdempotencyKey", ["storeId", "publicIdempotencyKey"])
+    .index("checkoutAttemptId", ["checkoutAttemptId"])
     .index("storeUpdatedAt", ["storeId", "updatedAt"]),
+
+  checkoutAttempts: defineTable({
+    storeId: v.string(),
+    attemptKey: v.string(),
+    lifecycle: v.union(
+      v.literal("started"),
+      v.literal("submitted"),
+      v.literal("converted"),
+      v.literal("abandoned"),
+      v.literal("recovered")
+    ),
+    productCount: v.number(),
+    products: v.optional(v.array(v.object({
+      productId: v.string(),
+      quantity: v.number(),
+      variant: v.optional(v.string()),
+    }))),
+    customerPhoneLast4: v.optional(v.string()),
+    customerWilaya: v.optional(v.string()),
+    convertedOrderId: v.optional(v.id("orders")),
+    recoverySource: v.optional(v.string()),
+    startedAt: v.number(),
+    submittedAt: v.optional(v.number()),
+    convertedAt: v.optional(v.number()),
+    abandonedAt: v.optional(v.number()),
+    recoveredAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("storeAttemptKey", ["storeId", "attemptKey"])
+    .index("storeLifecycleUpdatedAt", ["storeId", "lifecycle", "updatedAt"])
+    .index("convertedOrderId", ["convertedOrderId"]),
 
   orderDigests: defineTable({
     orderId: v.id("orders"),
@@ -322,6 +356,11 @@ export default defineSchema({
     orderId: v.id("orders"),
     storeId: v.string(),
     status: v.string(),
+    previousStatus: v.optional(v.string()),
+    nextStatus: v.optional(v.string()),
+    actorId: v.optional(v.string()),
+    actorRole: v.optional(v.string()),
+    source: v.optional(v.string()),
     note: v.optional(v.string()),
     createdAt: v.number(),
   })

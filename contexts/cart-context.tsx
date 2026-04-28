@@ -28,32 +28,43 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-export function CartProvider({ children }: { children: ReactNode }) {
+export function CartProvider({
+  children,
+  storageKey = "cart",
+}: {
+  children: ReactNode;
+  storageKey?: string;
+}) {
   // Initialize from localStorage on client side
   const [items, setItems] = useState<CartItem[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   // Load from localStorage on mount
+  /* eslint-disable react-hooks/set-state-in-effect -- Hydrating persisted cart state from localStorage is intentional. */
   useEffect(() => {
+    setIsLoaded(false);
     try {
-      const stored = localStorage.getItem("cart");
+      const stored = localStorage.getItem(storageKey);
       if (stored) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- Hydrating from localStorage on mount is intentional
         setItems(JSON.parse(stored));
+      } else {
+        setItems([]);
       }
     } catch {
       // Invalid JSON in localStorage, ignore
+      setItems([]);
     }
     setIsLoaded(true);
-  }, []);
+  }, [storageKey]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Persist to localStorage on changes
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem("cart", JSON.stringify(items));
+      localStorage.setItem(storageKey, JSON.stringify(items));
     }
-  }, [items, isLoaded]);
+  }, [items, isLoaded, storageKey]);
 
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);

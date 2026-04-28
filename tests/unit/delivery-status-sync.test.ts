@@ -28,8 +28,8 @@ describe("delivery provider status sync mapper", () => {
     expect(mapDeliveryProviderStatusToOrderStatus("echouee")).toBe("delivery_failed");
   });
 
-  it("returns null for unknown provider statuses", () => {
-    expect(mapDeliveryProviderStatusToOrderStatus("mystery")).toBeNull();
+  it("maps unknown provider statuses to in transit so sync stays conservative", () => {
+    expect(mapDeliveryProviderStatusToOrderStatus("mystery")).toBe("in_transit");
     expect(mapDeliveryProviderStatusToOrderStatus(null)).toBeNull();
   });
 });

@@ -2,6 +2,7 @@ import { describe, expect, it, mock } from "bun:test";
 
 import {
   addCallLog,
+  bulkUpdateOrderStatus,
   markOrderDispatchedFromDeliveryApi,
   reconcileCodPayment,
   syncDeliveryProviderStatus,
@@ -9,6 +10,7 @@ import {
 } from "@/convex/orders";
 
 const runUpdateOrderStatus = updateOrderStatus._handler;
+const runBulkUpdateOrderStatus = bulkUpdateOrderStatus._handler;
 const runAddCallLog = addCallLog._handler;
 const runMarkOrderDispatchedFromDeliveryApi = markOrderDispatchedFromDeliveryApi._handler;
 const runReconcileCodPayment = reconcileCodPayment._handler;
@@ -147,7 +149,7 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
 
   it("allows valid merchant confirmation and writes canonical status", async () => {
     const order = createOrder({ lastCallOutcome: "answered" });
-    const { ctx, patchMock } = createCtx({ order });
+    const { ctx, patchMock, timelineEvents } = createCtx({ order });
 
     await runUpdateOrderStatus(ctx, {
       orderId: "order_1",
@@ -162,6 +164,15 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
     );
     expect(order.status).toBe("confirmed");
     expect(order.codPaymentStatus).toBe("pending_collection");
+    expect(timelineEvents.at(-1)).toEqual(
+      expect.objectContaining({
+        previousStatus: "new",
+        nextStatus: "confirmed",
+        actorId: "owner_1",
+        actorRole: "merchant",
+        source: "orders.updateOrderStatus",
+      }),
+    );
   });
 
   it("requires answered-call evidence before merchant confirmation", async () => {
@@ -184,16 +195,16 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
 
     await runUpdateOrderStatus(ctx, {
       orderId: "order_1",
-      status: "dispatched",
+      status: "cancelled",
     });
 
     expect(patchMock).toHaveBeenCalledWith(
       "order_1",
       expect.objectContaining({
-        status: "dispatched",
+        status: "cancelled",
       }),
     );
-    expect(order.status).toBe("dispatched");
+    expect(order.status).toBe("cancelled");
   });
 
   it("treats answered calls as confirmation evidence and moves new orders to awaiting confirmation", async () => {
@@ -224,6 +235,13 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
     );
     expect(timelineEvents.some((event) => event.status === "call_log")).toBe(true);
     expect(timelineEvents.some((event) => event.status === "awaiting_confirmation")).toBe(true);
+    expect(timelineEvents.find((event) => event.status === "call_log")).toEqual(
+      expect.objectContaining({
+        actorId: "owner_1",
+        actorRole: "merchant",
+        source: "orders.addCallLog",
+      }),
+    );
   });
 
   it("maps refused calls to refused and prevents invalid delivery jumps", async () => {
@@ -251,7 +269,7 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
     ).rejects.toThrow("Invalid order status transition: refused -> delivered");
   });
 
-  it("maps wrong numbers to blocked and repeated no-answer calls to unreachable", async () => {
+  it("maps wrong numbers to blocked and keeps repeated no-answer calls awaiting merchant choice", async () => {
     const wrongNumberOrder = createOrder({ status: "awaiting_confirmation" });
     const wrongNumberCtx = createCtx({ order: wrongNumberOrder });
 
@@ -278,8 +296,43 @@ describe("orders.updateOrderStatus lifecycle validation", () => {
       outcome: "no_answer",
     });
 
-    expect(noAnswerOrder.status).toBe("unreachable");
+    expect(noAnswerOrder.status).toBe("awaiting_confirmation");
     expect(noAnswerOrder.callAttempts).toBe(3);
+  });
+});
+
+describe("orders.bulkUpdateOrderStatus audit and analytics parity", () => {
+  it("bulk status updates write normalized audit metadata and delivery analytics", async () => {
+    const order = createOrder({
+      status: "delivery_failed",
+      trackingNumber: "TRK9",
+      deliveryProvider: "zr_express",
+    });
+    const { ctx, timelineEvents, runMutationMock } = createCtx({ order });
+
+    const result = await runBulkUpdateOrderStatus(ctx, {
+      orderIds: ["order_1"],
+      status: "returned",
+    });
+
+    expect(result).toEqual({ updatedCount: 1 });
+    expect(order.status).toBe("returned");
+    expect(timelineEvents.at(-1)).toEqual(
+      expect.objectContaining({
+        previousStatus: "delivery_failed",
+        nextStatus: "returned",
+        actorId: "owner_1",
+        actorRole: "merchant",
+        source: "orders.bulkUpdateOrderStatus",
+      }),
+    );
+    expect(runMutationMock).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        eventType: "rts",
+        source: "orders.bulkUpdateOrderStatus",
+      }),
+    );
   });
 });
 
@@ -337,6 +390,26 @@ describe("orders delivery dispatch lifecycle", () => {
 
     expect(patchMock).not.toHaveBeenCalled();
     expect(runMutationMock).not.toHaveBeenCalled();
+  });
+
+  it("allows dispatch-ready recovery through the server-owned dispatch mutation", async () => {
+    const order = createOrder({ status: "dispatch_ready" });
+    const { ctx, patchMock } = createCtx({ order });
+
+    const result = await runMarkOrderDispatchedFromDeliveryApi(ctx, {
+      orderId: "order_1",
+      trackingNumber: "TRK2",
+      provider: "zr_express",
+    });
+
+    expect(result.status).toBe("dispatched");
+    expect(patchMock).toHaveBeenCalledWith(
+      "order_1",
+      expect.objectContaining({
+        status: "dispatched",
+        trackingNumber: "TRK2",
+      }),
+    );
   });
 
   it("treats duplicate dispatch metadata as idempotent", async () => {
@@ -408,7 +481,7 @@ describe("orders delivery dispatch lifecycle", () => {
     );
   });
 
-  it("sets delivered orders to reconciliation pending without marking COD reconciled", async () => {
+  it("sets delivered orders to collected without marking COD reconciled", async () => {
     const order = createOrder({
       status: "in_transit",
       trackingNumber: "TRK3",
@@ -422,35 +495,26 @@ describe("orders delivery dispatch lifecycle", () => {
     });
 
     expect(order.status).toBe("delivered");
-    expect(order.codPaymentStatus).toBe("reconciliation_pending");
+    expect(order.codPaymentStatus).toBe("collected");
     expect(order.codPaymentStatus).not.toBe("reconciled");
   });
 
-  it("moves delivered COD through collected and reconciled merchant settlement states", async () => {
+  it("reconciles delivered COD without changing the merchant-facing delivered state", async () => {
     const order = createOrder({
       status: "delivered",
-      codPaymentStatus: "reconciliation_pending",
+      codPaymentStatus: "collected",
     });
     const { ctx, patchMock, timelineEvents } = createCtx({ order });
-
-    await runUpdateOrderStatus(ctx, {
-      orderId: "order_1",
-      status: "cod_collected",
-    });
-
-    expect(order.status).toBe("cod_collected");
-    expect(order.codPaymentStatus).toBe("collected");
 
     await runReconcileCodPayment(ctx, {
       orderId: "order_1",
       note: "Courier cash settled",
     });
 
-    expect(order.status).toBe("cod_reconciled");
+    expect(order.status).toBe("delivered");
     expect(order.codPaymentStatus).toBe("reconciled");
     expect(patchMock.mock.calls.at(-1)?.[1]).toEqual(
       expect.objectContaining({
-        status: "cod_reconciled",
         codPaymentStatus: "reconciled",
       }),
     );

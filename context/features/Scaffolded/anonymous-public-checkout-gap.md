@@ -2,13 +2,13 @@
 
 > **Status:** `complete`
 > **Phase:** v1.1
-> **Last updated:** 2026-04-24
+> **Last updated:** 2026-04-25
 
 ---
 
 ## Summary
 
-Anonymous public checkout now has a real write path. Current: both the PDP flow in `app/[slug]/product/[productId]/page.tsx` and the cart checkout flow in `components/features/cart/cart-sidebar.tsx` call `POST /api/orders/create`, which delegates to `convex/orders.ts:createPublicOrder`. The owner-only `convex/orders.ts:createOrder` remains for merchant-created orders only.
+Anonymous public checkout now has a real write path and a separate pre-order checkout-attempt lifecycle. Current: both the PDP flow in `app/[slug]/product/[productId]/page.tsx` and the cart checkout flow in `components/features/cart/cart-sidebar.tsx` call `POST /api/checkout-attempts` when checkout starts, then `POST /api/orders/create` when the shopper submits. Order creation delegates to `convex/orders.ts:createPublicOrder`. The owner-only `convex/orders.ts:createOrder` remains for merchant-created orders only.
 
 ---
 
@@ -30,16 +30,22 @@ Anonymous public checkout now has a real write path. Current: both the PDP flow 
 
 ### Happy Path
 
-1. A shopper opens checkout from the PDP or cart sidebar and fills the public order form.
-2. The UI sends product IDs, quantities, variants, store slug, customer fields, delivery type, and an idempotency key to `POST /api/orders/create`.
-3. The route strips client-supplied prices/totals and calls `api.orders.createPublicOrder`.
-4. Convex resolves store/product data, validates phone and product ownership, computes totals, blocks recent duplicates/velocity abuse, and creates the order.
+1. A shopper opens checkout from the PDP or cart sidebar.
+2. The UI creates an anonymous attempt key and sends `action=start`, store slug, and a minimal product summary to `POST /api/checkout-attempts`.
+3. The shopper fills the public order form.
+4. The UI sends product IDs, quantities, variants, store slug, customer fields, delivery type, idempotency key, and checkout attempt key to `POST /api/orders/create`.
+5. The route strips client-supplied prices/totals and calls `api.orders.createPublicOrder`.
+6. Convex resolves store/product data, validates phone and product ownership, computes totals, blocks recent duplicates/velocity abuse, marks the checkout attempt `submitted`, creates the order, then marks the attempt `converted`.
 
 ### Edge Cases & Rules
 - `Current`: the live public UI calls `app/api/orders/create/route.ts`; that route is now real.
 - `Current`: public checkout UI no longer calls the owner-only mutation.
 - `Current`: `convex/orders.ts:createOrder` rejects missing auth with `Unauthorized` and rejects non-owners with `Forbidden`.
 - `Current`: both PDP and cart confirmation states use the server-returned order number.
+- `Current`: checkout attempts are stored separately from orders in `checkoutAttempts` with lifecycle `started`, `submitted`, `converted`, `abandoned`, and `recovered`.
+- `Current`: close/cancel paths mark unconverted checkout attempts `abandoned`.
+- `Current`: recovery hooks can mark an unconverted attempt `recovered` without creating a customer account or an order.
+- `Current`: converted attempts link both directions through `orders.checkoutAttemptId` and `checkoutAttempts.convertedOrderId`.
 - `Current`: T9 is complete.
 
 ---
@@ -60,6 +66,7 @@ This gap sits between public storefront UI and owner-scoped order creation.
 |--------|----------|--------------|
 | Public checkout UI | `Current`: PDP and cart checkout forms exist | `Current`: keep one intentional public checkout architecture |
 | Anonymous write path | `Current`: anonymous-safe server path with validation and abuse controls | `Current`: owner-only mutation remains separate |
+| Checkout attempts | `Current`: pre-order attempt lifecycle exists and links converted attempts to orders | `Current`: merchant-facing recovery UI is still future work |
 | Fallback route | `Current`: mock route replaced by real public route | `Current`: no mock success path remains |
 | Confirmation number | `Current`: confirmation uses the stored server order number | `Current`: same behavior for PDP and cart |
 
@@ -90,9 +97,9 @@ This gap sits between public storefront UI and owner-scoped order creation.
 
 **UAT Status:** `programmatic-pass`
 
-**Last tested:** 2026-04-24
+**Last tested:** 2026-04-25
 
-**Outcome:** Targeted public checkout route/mutation tests pass; no browser UAT was run.
+**Outcome:** Targeted public checkout-attempt route, public order route, public mutation, lifecycle, and checkout UI regression tests pass; no browser UAT was run.
 
 ## Open Questions
 
@@ -102,7 +109,7 @@ This gap sits between public storefront UI and owner-scoped order creation.
 
 ## Notes
 
-- Main implementation references: `app/[slug]/product/[productId]/page.tsx`, `components/features/cart/cart-sidebar.tsx`, `convex/orders.ts`, `convex/schema.ts`, `app/api/orders/create/route.ts`.
+- Main implementation references: `app/[slug]/product/[productId]/page.tsx`, `components/features/cart/cart-sidebar.tsx`, `convex/orders.ts`, `convex/schema.ts`, `app/api/orders/create/route.ts`, `app/api/checkout-attempts/route.ts`, and `lib/public-checkout-client.ts`.
 
 ---
 

@@ -6,26 +6,6 @@
     "auditLog": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\.5905c96f4c9345a5f9fa4ac36784293c636bb40c-audit.json",
     "files": [
         {
-            "date": 1775843459250,
-            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-10.log",
-            "hash": "3d7e9dd66e587e2f7889131c0dd63a659d010c9c92ccf5ab74b5e252faa90411"
-        },
-        {
-            "date": 1775931067755,
-            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-11.log",
-            "hash": "f23e57b774ab14636f1d3afad34e6b183510b4f65e6639ef7b02e173f1888ee7"
-        },
-        {
-            "date": 1776004969927,
-            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-12.log",
-            "hash": "ab21c94d1dc2aa2a79b0b4ce6e705b1a945fb6f8c874e6968959f40644efc75b"
-        },
-        {
-            "date": 1776102846412,
-            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-13.log",
-            "hash": "7d4bae98026cdac6110aed825581d939b4b1ec2ea9e04e20b812c20a8992c857"
-        },
-        {
             "date": 1776175719779,
             "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-14.log",
             "hash": "27294c727caa4c16bcd5c2a3233fafc4c7c7ad5e073b095bcc13d1a6a9837d96"
@@ -49,6 +29,11 @@
             "date": 1776518732034,
             "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-18.log",
             "hash": "dc49e040209327f128166f023eb65bf5fcec603d3ee94857a36893967b9b9375"
+        },
+        {
+            "date": 1777336567765,
+            "name": "C:\\Users\\zaki soft\\projects\\marlon\\logs\\mcp-puppeteer-2026-04-28.log",
+            "hash": "24c325bd18ddce9a4773ec4772a4a2fec4d811084433ef9bb1218ef82e977f9a"
         }
     ],
     "hashType": "sha256"

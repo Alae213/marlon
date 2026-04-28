@@ -60,6 +60,7 @@ const PUBLIC_ORDER_PHONE_WINDOW_MS = 15 * 60 * 1000;
 const PUBLIC_ORDER_PHONE_WINDOW_MAX = 3;
 const PUBLIC_ORDER_DUPLICATE_WINDOW_MS = 30 * 60 * 1000;
 const PUBLIC_ORDER_IDEMPOTENCY_PATTERN = /^[A-Za-z0-9._:-]{8,120}$/;
+const PUBLIC_CHECKOUT_ATTEMPT_KEY_PATTERN = /^[A-Za-z0-9._:-]{8,120}$/;
 const CANONICAL_DAILY_ORDER_LIMIT = 5;
 const ALGIERS_OFFSET_MS = 60 * 60 * 1000;
 
@@ -113,6 +114,14 @@ function getCodPaymentPatchForStatus(status: unknown) {
 const MAX_LEGACY_TIMELINE_ENTRIES = 30;
 const MAX_LEGACY_CALL_LOG_ENTRIES = 20;
 
+type TimelineEventMetadata = {
+  previousStatus?: string;
+  nextStatus?: string;
+  actorId?: string;
+  actorRole?: "merchant" | "provider" | "system" | "public" | "internal";
+  source?: string;
+};
+
 function clampTimeline(
   timeline: Array<{ status: string; timestamp: number; note?: string }>
 ) {
@@ -153,12 +162,18 @@ async function appendTimelineEvent(
   order: Doc<"orders">,
   status: string,
   note: string | undefined,
-  timestamp: number
+  timestamp: number,
+  metadata: TimelineEventMetadata = {}
 ) {
   await ctx.db.insert("orderTimelineEvents", {
     orderId: order._id,
     storeId: order.storeId,
     status,
+    previousStatus: metadata.previousStatus,
+    nextStatus: metadata.nextStatus ?? status,
+    actorId: metadata.actorId,
+    actorRole: metadata.actorRole,
+    source: metadata.source,
     note,
     createdAt: timestamp,
   });
@@ -196,6 +211,35 @@ function assertValidPublicIdempotencyKey(value?: string) {
     throw new Error("PUBLIC_ORDER_INVALID_IDEMPOTENCY_KEY");
   }
   return normalized;
+}
+
+function assertValidCheckoutAttemptKey(value?: string) {
+  if (!value) return undefined;
+  const normalized = value.trim();
+  if (!PUBLIC_CHECKOUT_ATTEMPT_KEY_PATTERN.test(normalized)) {
+    throw new Error("PUBLIC_CHECKOUT_INVALID_ATTEMPT_KEY");
+  }
+  return normalized;
+}
+
+function getPhoneLast4(value?: string) {
+  if (!value) return undefined;
+  const digits = normalizePhoneDigits(value);
+  return digits.length >= 4 ? digits.slice(-4) : undefined;
+}
+
+function summarizeCheckoutProducts(
+  products: Array<{ productId: string; quantity: number; variant?: string }>
+) {
+  const productCount = products.reduce((sum, product) => sum + product.quantity, 0);
+  return {
+    productCount,
+    products: products.map((product) => ({
+      productId: String(product.productId),
+      quantity: product.quantity,
+      variant: product.variant,
+    })),
+  };
 }
 
 function getAlgiersDayKey(timestamp: number = Date.now()): string {
@@ -567,7 +611,7 @@ export const createOrder = mutation({
   },
   handler: async (ctx, args) => {
     // Verify ownership of the store
-    const { store } = await assertStoreOwnership(ctx, args.storeId);
+    const { identity, store } = await assertStoreOwnership(ctx, args.storeId);
     
     const now = Date.now();
     const normalizedDeliveryType = normalizeDeliveryTypeForStorage(args.deliveryType);
@@ -618,7 +662,13 @@ const createdOrder = await ctx.db.get(orderId);
         createdOrder,
         firstTimeline?.status ?? "new",
         firstTimeline?.note,
-        firstTimeline?.timestamp ?? now
+        firstTimeline?.timestamp ?? now,
+        {
+          nextStatus: "new",
+          actorId: identity.subject,
+          actorRole: "merchant",
+          source: "orders.createOrder",
+        }
       );
 
       await ctx.runMutation(api.canonicalBilling.checkAndUpdateOverflowState, {
@@ -630,10 +680,199 @@ const createdOrder = await ctx.db.get(orderId);
   },
 });
 
+export const startPublicCheckoutAttempt = mutation({
+  args: {
+    storeSlug: v.string(),
+    attemptKey: v.string(),
+    products: v.optional(v.array(v.object({
+      productId: v.string(),
+      quantity: v.number(),
+      variant: v.optional(v.string()),
+    }))),
+    customerPhone: v.optional(v.string()),
+    customerWilaya: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const storeSlug = normalizePublicText(args.storeSlug, 120);
+    const attemptKey = assertValidCheckoutAttemptKey(args.attemptKey);
+    if (!storeSlug || !attemptKey) {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_ATTEMPT");
+    }
+
+    const store = await ctx.db
+      .query("stores")
+      .withIndex("slug", (q) => q.eq("slug", storeSlug))
+      .first();
+
+    if (!store || store.status === "archived") {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_STORE");
+    }
+
+    const now = Date.now();
+    const productSummary = summarizeCheckoutProducts(args.products ?? []);
+    const existingAttempt = await ctx.db
+      .query("checkoutAttempts")
+      .withIndex("storeAttemptKey", (q) =>
+        q.eq("storeId", store._id).eq("attemptKey", attemptKey)
+      )
+      .first();
+
+    if (existingAttempt) {
+      if (existingAttempt.lifecycle === "converted") {
+        return {
+          checkoutAttemptId: existingAttempt._id,
+          lifecycle: existingAttempt.lifecycle,
+          convertedOrderId: existingAttempt.convertedOrderId,
+          duplicate: true,
+        };
+      }
+
+      await ctx.db.patch(existingAttempt._id, {
+        lifecycle: existingAttempt.lifecycle === "abandoned" ? "recovered" : existingAttempt.lifecycle,
+        ...productSummary,
+        customerPhoneLast4: getPhoneLast4(args.customerPhone),
+        customerWilaya: args.customerWilaya ? normalizePublicText(args.customerWilaya, 120) : undefined,
+        recoveredAt: existingAttempt.lifecycle === "abandoned" ? now : existingAttempt.recoveredAt,
+        updatedAt: now,
+      });
+
+      return {
+        checkoutAttemptId: existingAttempt._id,
+        lifecycle: existingAttempt.lifecycle === "abandoned" ? "recovered" : existingAttempt.lifecycle,
+        duplicate: true,
+      };
+    }
+
+    const checkoutAttemptId = await ctx.db.insert("checkoutAttempts", {
+      storeId: store._id,
+      attemptKey,
+      lifecycle: "started",
+      ...productSummary,
+      customerPhoneLast4: getPhoneLast4(args.customerPhone),
+      customerWilaya: args.customerWilaya ? normalizePublicText(args.customerWilaya, 120) : undefined,
+      startedAt: now,
+      createdAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      checkoutAttemptId,
+      lifecycle: "started",
+      duplicate: false,
+    };
+  },
+});
+
+export const abandonPublicCheckoutAttempt = mutation({
+  args: {
+    storeSlug: v.string(),
+    attemptKey: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const storeSlug = normalizePublicText(args.storeSlug, 120);
+    const attemptKey = assertValidCheckoutAttemptKey(args.attemptKey);
+    if (!storeSlug || !attemptKey) {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_ATTEMPT");
+    }
+
+    const store = await ctx.db
+      .query("stores")
+      .withIndex("slug", (q) => q.eq("slug", storeSlug))
+      .first();
+
+    if (!store) {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_STORE");
+    }
+
+    const attempt = await ctx.db
+      .query("checkoutAttempts")
+      .withIndex("storeAttemptKey", (q) =>
+        q.eq("storeId", store._id).eq("attemptKey", attemptKey)
+      )
+      .first();
+
+    if (!attempt || attempt.lifecycle === "converted") {
+      return {
+        checkoutAttemptId: attempt?._id,
+        lifecycle: attempt?.lifecycle ?? "missing",
+        ignored: true,
+      };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(attempt._id, {
+      lifecycle: "abandoned",
+      abandonedAt: now,
+      updatedAt: now,
+    });
+
+    return {
+      checkoutAttemptId: attempt._id,
+      lifecycle: "abandoned",
+      ignored: false,
+    };
+  },
+});
+
+export const recoverPublicCheckoutAttempt = mutation({
+  args: {
+    storeSlug: v.string(),
+    attemptKey: v.string(),
+    recoverySource: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const storeSlug = normalizePublicText(args.storeSlug, 120);
+    const attemptKey = assertValidCheckoutAttemptKey(args.attemptKey);
+    if (!storeSlug || !attemptKey) {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_ATTEMPT");
+    }
+
+    const store = await ctx.db
+      .query("stores")
+      .withIndex("slug", (q) => q.eq("slug", storeSlug))
+      .first();
+
+    if (!store) {
+      throw new Error("PUBLIC_CHECKOUT_INVALID_STORE");
+    }
+
+    const attempt = await ctx.db
+      .query("checkoutAttempts")
+      .withIndex("storeAttemptKey", (q) =>
+        q.eq("storeId", store._id).eq("attemptKey", attemptKey)
+      )
+      .first();
+
+    if (!attempt || attempt.lifecycle === "converted") {
+      return {
+        checkoutAttemptId: attempt?._id,
+        lifecycle: attempt?.lifecycle ?? "missing",
+        ignored: true,
+      };
+    }
+
+    const now = Date.now();
+    await ctx.db.patch(attempt._id, {
+      lifecycle: "recovered",
+      recoveredAt: now,
+      recoverySource: args.recoverySource ? normalizePublicText(args.recoverySource, 120) : undefined,
+      updatedAt: now,
+    });
+
+    return {
+      checkoutAttemptId: attempt._id,
+      lifecycle: "recovered",
+      ignored: false,
+    };
+  },
+});
+
 export const createPublicOrder = mutation({
   args: {
     storeSlug: v.string(),
     idempotencyKey: v.optional(v.string()),
+    checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
+    checkoutAttemptKey: v.optional(v.string()),
     customerName: v.string(),
     customerPhone: v.string(),
     customerWilaya: v.string(),
@@ -665,6 +904,7 @@ export const createPublicOrder = mutation({
     }
 
     const idempotencyKey = assertValidPublicIdempotencyKey(args.idempotencyKey);
+    const checkoutAttemptKey = assertValidCheckoutAttemptKey(args.checkoutAttemptKey);
     if (idempotencyKey) {
       const existingOrder = await ctx.db
         .query("orders")
@@ -677,6 +917,7 @@ export const createPublicOrder = mutation({
         return {
           orderId: existingOrder._id,
           orderNumber: existingOrder.orderNumber,
+          checkoutAttemptId: existingOrder.checkoutAttemptId,
           duplicate: true,
           totals: {
             subtotal: existingOrder.subtotal,
@@ -718,6 +959,74 @@ export const createPublicOrder = mutation({
     );
 
     const now = Date.now();
+    const checkoutAttemptProducts = args.products.map((product) => ({
+      productId: String(product.productId),
+      quantity: product.quantity,
+      variant: product.variant,
+    }));
+    const checkoutAttemptSummary = summarizeCheckoutProducts(checkoutAttemptProducts);
+    let checkoutAttempt = args.checkoutAttemptId
+      ? await ctx.db.get(args.checkoutAttemptId)
+      : null;
+
+    if (checkoutAttempt && checkoutAttempt.storeId !== store._id) {
+      throw new Error("PUBLIC_CHECKOUT_ATTEMPT_STORE_MISMATCH");
+    }
+
+    if (!checkoutAttempt && checkoutAttemptKey) {
+      checkoutAttempt = await ctx.db
+        .query("checkoutAttempts")
+        .withIndex("storeAttemptKey", (q) =>
+          q.eq("storeId", store._id).eq("attemptKey", checkoutAttemptKey)
+        )
+        .first();
+    }
+
+    if (checkoutAttempt?.lifecycle === "converted" && checkoutAttempt.convertedOrderId) {
+      const convertedOrder = await ctx.db.get(checkoutAttempt.convertedOrderId);
+      if (convertedOrder) {
+        return {
+          orderId: convertedOrder._id,
+          orderNumber: convertedOrder.orderNumber,
+          checkoutAttemptId: checkoutAttempt._id,
+          duplicate: true,
+          totals: {
+            subtotal: convertedOrder.subtotal,
+            deliveryCost: convertedOrder.deliveryCost,
+            total: convertedOrder.total,
+          },
+        };
+      }
+    }
+
+    const effectiveAttemptKey =
+      checkoutAttempt?.attemptKey ?? checkoutAttemptKey ?? idempotencyKey ?? `checkout-${now}`;
+    let checkoutAttemptId = checkoutAttempt?._id;
+
+    if (!checkoutAttemptId) {
+      checkoutAttemptId = await ctx.db.insert("checkoutAttempts", {
+        storeId: store._id,
+        attemptKey: effectiveAttemptKey,
+        lifecycle: "submitted",
+        ...checkoutAttemptSummary,
+        customerPhoneLast4: getPhoneLast4(customerPhone),
+        customerWilaya,
+        startedAt: now,
+        submittedAt: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else if (checkoutAttempt?.lifecycle !== "converted") {
+      await ctx.db.patch(checkoutAttemptId, {
+        lifecycle: "submitted",
+        ...checkoutAttemptSummary,
+        customerPhoneLast4: getPhoneLast4(customerPhone),
+        customerWilaya,
+        submittedAt: now,
+        updatedAt: now,
+      });
+    }
+
     const normalizedPhone = normalizePhoneDigits(customerPhone);
     const recentOrders = await ctx.db
       .query("orders")
@@ -809,6 +1118,7 @@ export const createPublicOrder = mutation({
       codPaymentStatus: INITIAL_COD_PAYMENT_STATUS,
       callAttempts: 0,
       publicIdempotencyKey: idempotencyKey,
+      checkoutAttemptId,
       riskFlags: riskFlags.length > 0 ? riskFlags : undefined,
       timeline: initialTimeline,
       notes,
@@ -825,16 +1135,29 @@ export const createPublicOrder = mutation({
           createdOrder,
           timelineEvent.status,
           timelineEvent.note,
-          timelineEvent.timestamp
+          timelineEvent.timestamp,
+          {
+            nextStatus: timelineEvent.status === "new" ? "new" : undefined,
+            actorRole: "public",
+            source: "orders.createPublicOrder",
+          }
         );
       }
     }
+
+    await ctx.db.patch(checkoutAttemptId, {
+      lifecycle: "converted",
+      convertedOrderId: orderId,
+      convertedAt: now,
+      updatedAt: now,
+    });
 
     await updatePublicOrderBillingState(ctx, store, now);
 
     return {
       orderId,
       orderNumber,
+      checkoutAttemptId,
       duplicate: false,
       totals: {
         subtotal,
@@ -853,12 +1176,7 @@ export const updateOrderStatus = mutation({
     note: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await assertOrderOwnership(ctx, args.orderId);
-
-    const order = await ctx.db.get(args.orderId);
-    if (!order) {
-      throw new Error("Order not found");
-    }
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     if (order.status === args.status && !args.note) {
       return args.orderId;
@@ -873,6 +1191,7 @@ export const updateOrderStatus = mutation({
     }
 
     const now = Date.now();
+    const previousStatus = normalizeOrderStatus(order.status) ?? order.status;
     const timelineNote = args.note || `Status changed to ${args.status}`;
     const timeline = clampTimeline([
       ...(order.timeline || []),
@@ -892,7 +1211,13 @@ export const updateOrderStatus = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, args.status, timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, args.status, timelineNote, now, {
+        previousStatus,
+        nextStatus: args.status,
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: "orders.updateOrderStatus",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -925,9 +1250,11 @@ export const bulkUpdateOrderStatus = mutation({
 
     for (const orderId of args.orderIds) {
       let order: Doc<"orders"> | null = null;
+      let actorId: string | undefined;
       try {
         const owned = await assertOrderOwnership(ctx, orderId);
         order = owned.order;
+        actorId = owned.identity.subject;
       } catch {
         continue;
       }
@@ -949,6 +1276,7 @@ export const bulkUpdateOrderStatus = mutation({
       }
 
       const now = Date.now();
+      const previousStatus = normalizeOrderStatus(order.status) ?? order.status;
       const timelineNote = args.note || `Status changed to ${args.status}`;
       const timeline = clampTimeline([
         ...(order.timeline || []),
@@ -968,8 +1296,28 @@ export const bulkUpdateOrderStatus = mutation({
 
       const updatedOrder = await ctx.db.get(orderId);
       if (updatedOrder) {
-        await appendTimelineEvent(ctx, updatedOrder, args.status, timelineNote, now);
+        await appendTimelineEvent(ctx, updatedOrder, args.status, timelineNote, now, {
+          previousStatus,
+          nextStatus: args.status,
+          actorId,
+          actorRole: "merchant",
+          source: "orders.bulkUpdateOrderStatus",
+        });
         await upsertOrderDigest(ctx, updatedOrder);
+      }
+
+      const analyticsEventType = toDeliveryEventType(args.status);
+      if (analyticsEventType) {
+        await ctx.runMutation(api.deliveryAnalytics.recordDeliveryEvent, {
+          storeId: order.storeId as Id<"stores">,
+          orderId: String(orderId),
+          eventType: analyticsEventType,
+          provider: order.deliveryProvider ?? "unknown",
+          region: order.customerWilaya,
+          trackingNumber: order.trackingNumber,
+          source: "orders.bulkUpdateOrderStatus",
+          createdAt: now,
+        });
       }
 
       updatedCount += 1;
@@ -990,7 +1338,7 @@ export const addCallLog = mutation({
       throw new Error(`Unknown call outcome: ${String(args.outcome)}`);
     }
 
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     const now = Date.now();
     const notes = args.notes?.trim() ? args.notes.trim().slice(0, 500) : undefined;
@@ -1002,7 +1350,7 @@ export const addCallLog = mutation({
     };
 
     const callLog = clampCallLog([...(order.callLog || []), callEntry]);
-    const nextStatus = getCallOutcomeLifecycleTransition(order, args.outcome, callLog);
+    const nextStatus = getCallOutcomeLifecycleTransition(order, args.outcome);
     if (nextStatus) {
       assertOrderStatusTransition(order.status, nextStatus, "system");
     }
@@ -1055,7 +1403,13 @@ export const addCallLog = mutation({
     if (updatedOrder) {
       await appendCallEvent(ctx, updatedOrder, args.outcome, notes, now);
       for (const event of timelineEntries) {
-        await appendTimelineEvent(ctx, updatedOrder, event.status, event.note, event.timestamp);
+        await appendTimelineEvent(ctx, updatedOrder, event.status, event.note, event.timestamp, {
+          previousStatus: normalizeOrderStatus(order.status) ?? order.status,
+          nextStatus: event.status === "call_log" ? normalizeOrderStatus(order.status) ?? order.status : event.status,
+          actorId: identity.subject,
+          actorRole: "merchant",
+          source: "orders.addCallLog",
+        });
       }
       await upsertOrderDigest(ctx, updatedOrder);
     }
@@ -1075,7 +1429,7 @@ export const updateTrackingNumber = mutation({
     provider: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     const normalizedProvider = args.provider ?? order.deliveryProvider;
     const noTrackingChange =
@@ -1107,7 +1461,13 @@ export const updateTrackingNumber = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, "tracking", timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, "tracking", timelineNote, now, {
+        previousStatus: normalizeOrderStatus(order.status) ?? order.status,
+        nextStatus: normalizeOrderStatus(order.status) ?? order.status,
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: "orders.updateTrackingNumber",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1132,7 +1492,7 @@ export const markOrderDispatchedFromDeliveryApi = mutation({
     provider: v.string(),
   },
   handler: async (ctx, args) => {
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
     const currentStatus = normalizeOrderStatus(order.status);
 
     if (!currentStatus) {
@@ -1153,7 +1513,7 @@ export const markOrderDispatchedFromDeliveryApi = mutation({
       };
     }
 
-    if (currentStatus !== "confirmed") {
+    if (currentStatus !== "confirmed" && currentStatus !== "dispatch_ready") {
       throw new Error("Order must be confirmed before dispatch.");
     }
 
@@ -1182,7 +1542,13 @@ export const markOrderDispatchedFromDeliveryApi = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, "dispatched", timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, "dispatched", timelineNote, now, {
+        previousStatus: currentStatus,
+        nextStatus: "dispatched",
+        actorId: identity.subject,
+        actorRole: "system",
+        source: "orders.markOrderDispatchedFromDeliveryApi",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1204,6 +1570,134 @@ export const markOrderDispatchedFromDeliveryApi = mutation({
       provider: args.provider,
       duplicate: false,
     };
+  },
+});
+
+export const markOrderManuallyDispatched = mutation({
+  args: {
+    orderId: v.id("orders"),
+    provider: v.optional(v.string()),
+    trackingNumber: v.optional(v.string()),
+    note: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
+    const currentStatus = normalizeOrderStatus(order.status);
+
+    if (!currentStatus) {
+      throw new Error(`Unknown current order status: ${String(order.status)}`);
+    }
+
+    if (currentStatus !== "confirmed" && currentStatus !== "dispatch_ready") {
+      throw new Error("Order must be confirmed before manual dispatch.");
+    }
+
+    const now = Date.now();
+    const provider = args.provider?.trim() || "manual";
+    const trackingNumber = args.trackingNumber?.trim() || undefined;
+    const timelineNote =
+      args.note?.trim() ||
+      (trackingNumber
+        ? `Manual dispatch recorded with ${provider}. Tracking: ${trackingNumber}`
+        : `Manual dispatch recorded with ${provider}. No tracking number provided.`);
+    const timeline = clampTimeline([
+      ...(order.timeline || []),
+      {
+        status: "dispatched",
+        timestamp: now,
+        note: timelineNote,
+      },
+    ]);
+
+    assertOrderStatusTransition(currentStatus, "dispatched", "system");
+
+    await ctx.db.patch(args.orderId, {
+      status: "dispatched",
+      ...getCodPaymentPatchForStatus("dispatched"),
+      deliveryProvider: provider,
+      ...(trackingNumber ? { trackingNumber } : {}),
+      deliveryDispatchedAt: now,
+      timeline,
+      updatedAt: now,
+    });
+
+    const updatedOrder = await ctx.db.get(args.orderId);
+    if (updatedOrder) {
+      await appendTimelineEvent(ctx, updatedOrder, "dispatched", timelineNote, now, {
+        previousStatus: currentStatus,
+        nextStatus: "dispatched",
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: "orders.markOrderManuallyDispatched",
+      });
+      await upsertOrderDigest(ctx, updatedOrder);
+    }
+
+    await ctx.runMutation(api.deliveryAnalytics.recordDeliveryEvent, {
+      storeId: order.storeId as Id<"stores">,
+      orderId: String(args.orderId),
+      eventType: "dispatched",
+      provider,
+      region: order.customerWilaya,
+      trackingNumber,
+      source: "orders.markOrderManuallyDispatched",
+      createdAt: now,
+    });
+
+    return {
+      orderId: args.orderId,
+      status: "dispatched",
+      provider,
+      trackingNumber,
+      manual: true,
+    };
+  },
+});
+
+export const recordOrderSyncAttempt = mutation({
+  args: {
+    orderId: v.id("orders"),
+    outcome: v.union(
+      v.literal("attempted"),
+      v.literal("skipped"),
+      v.literal("failed")
+    ),
+    note: v.string(),
+    source: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
+    const now = Date.now();
+    const status = `delivery_sync_${args.outcome}`;
+    const note = args.note.trim().slice(0, 500) || `Delivery sync ${args.outcome}`;
+    const currentStatus = normalizeOrderStatus(order.status) ?? order.status;
+    const timeline = clampTimeline([
+      ...(order.timeline || []),
+      {
+        status,
+        timestamp: now,
+        note,
+      },
+    ]);
+
+    await ctx.db.patch(args.orderId, {
+      timeline,
+      updatedAt: now,
+    });
+
+    const updatedOrder = await ctx.db.get(args.orderId);
+    if (updatedOrder) {
+      await appendTimelineEvent(ctx, updatedOrder, status, note, now, {
+        previousStatus: currentStatus,
+        nextStatus: currentStatus,
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: args.source ?? "orders.recordOrderSyncAttempt",
+      });
+      await upsertOrderDigest(ctx, updatedOrder);
+    }
+
+    return args.orderId;
   },
 });
 
@@ -1296,7 +1790,13 @@ export const syncDeliveryProviderStatus = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, nextStatus, timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, nextStatus, timelineNote, now, {
+        previousStatus: currentStatus,
+        nextStatus,
+        actorId: provider,
+        actorRole: "provider",
+        source: args.source ?? "orders.syncDeliveryProviderStatus",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1329,9 +1829,8 @@ export const reconcileCodPayment = mutation({
     note: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
     assertCanReconcileCodPayment(order.status, order.codPaymentStatus);
-    assertOrderStatusTransition(order.status, "cod_reconciled", "merchant");
 
     const now = Date.now();
     const timelineNote = args.note?.trim() || "COD payment reconciled";
@@ -1345,7 +1844,6 @@ export const reconcileCodPayment = mutation({
     ]);
 
     await ctx.db.patch(args.orderId, {
-      status: "cod_reconciled",
       codPaymentStatus: "reconciled",
       timeline,
       updatedAt: now,
@@ -1353,7 +1851,13 @@ export const reconcileCodPayment = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, "cod_reconciled", timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, "cod_reconciled", timelineNote, now, {
+        previousStatus: normalizeOrderStatus(order.status) ?? order.status,
+        nextStatus: normalizeOrderStatus(order.status) ?? order.status,
+        actorId: identity.subject,
+        actorRole: "system",
+        source: "orders.reconcileCodPayment",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1367,20 +1871,38 @@ export const updateOrderNotes = mutation({
     notes: v.string(),
   },
   handler: async (ctx, args) => {
-    const { order } = await assertOrderOwnership(ctx, args.orderId);
+    const { identity, order } = await assertOrderOwnership(ctx, args.orderId);
 
     if ((order.notes ?? "") === args.notes) {
       return args.orderId;
     }
 
     const now = Date.now();
+    const timelineNote = "Order notes updated";
+    const timeline = clampTimeline([
+      ...(order.timeline || []),
+      {
+        status: "note",
+        timestamp: now,
+        note: timelineNote,
+      },
+    ]);
+
     await ctx.db.patch(args.orderId, {
       notes: args.notes,
+      timeline,
       updatedAt: now,
     });
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
+      await appendTimelineEvent(ctx, updatedOrder, "note", timelineNote, now, {
+        previousStatus: normalizeOrderStatus(order.status) ?? order.status,
+        nextStatus: normalizeOrderStatus(order.status) ?? order.status,
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: "orders.updateOrderNotes",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1429,7 +1951,13 @@ export const upsertAdminNote = mutation({
 
     const updatedOrder = await ctx.db.get(args.orderId);
     if (updatedOrder) {
-      await appendTimelineEvent(ctx, updatedOrder, "admin_note", timelineNote, now);
+      await appendTimelineEvent(ctx, updatedOrder, "admin_note", timelineNote, now, {
+        previousStatus: normalizeOrderStatus(order.status) ?? order.status,
+        nextStatus: normalizeOrderStatus(order.status) ?? order.status,
+        actorId: identity.subject,
+        actorRole: "merchant",
+        source: "orders.upsertAdminNote",
+      });
       await upsertOrderDigest(ctx, updatedOrder);
     }
 
@@ -1532,10 +2060,12 @@ export const bulkDeleteOrders = mutation({
   args: { orderIds: v.array(v.id("orders")) },
   handler: async (ctx, args) => {
     let deletedCount = 0;
+    const deletedByStore = new Map<string, number>();
 
     for (const orderId of args.orderIds) {
+      let order: Doc<"orders"> | null = null;
       try {
-        await assertOrderOwnership(ctx, orderId);
+        order = (await assertOrderOwnership(ctx, orderId)).order;
       } catch {
         continue;
       }
@@ -1566,6 +2096,17 @@ export const bulkDeleteOrders = mutation({
 
       await ctx.db.delete(orderId);
       deletedCount += 1;
+      deletedByStore.set(order.storeId, (deletedByStore.get(order.storeId) ?? 0) + 1);
+    }
+
+    for (const [storeId, count] of deletedByStore) {
+      const store = await ctx.db.get(storeId as Id<"stores">);
+      if (store && (store.orderCount ?? 0) > 0) {
+        await ctx.db.patch(store._id, {
+          orderCount: Math.max(0, (store.orderCount ?? 0) - count),
+          updatedAt: Date.now(),
+        });
+      }
     }
 
     return { deletedCount };

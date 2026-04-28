@@ -35,7 +35,8 @@ describe("canonical order lifecycle", () => {
   });
 
   it("maps legacy current statuses before checking transitions", () => {
-    expect(canTransitionOrderStatus("packaged", "dispatched", "merchant")).toBe(true);
+    expect(canTransitionOrderStatus("packaged", "cancelled", "merchant")).toBe(true);
+    expect(canTransitionOrderStatus("packaged", "dispatched", "system")).toBe(true);
   });
 
   it("keeps provider-owned delivery outcomes out of merchant next actions", () => {

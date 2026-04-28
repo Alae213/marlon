@@ -17,7 +17,6 @@ import {
   Truck,
   ExternalLink,
   Clipboard,
-  HandCoins,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { LockedData } from "@/components/pages/layout/locked-overlay";
@@ -31,6 +30,7 @@ import {
   ORDER_RISK_FLAG_LABELS,
   getMerchantTransitionsForOrder,
   getCodPaymentStatusForOrderStatus,
+  getOrderStatusLabel,
   normalizeOrderStatus,
   normalizeCodPaymentStatus,
   normalizeOrderRiskFlags,
@@ -39,6 +39,7 @@ import {
   getDeliveryProviderDisplay,
   getDeliveryTypeDisplay,
 } from "@/lib/order-delivery-display";
+import type { DeliveryActionResponse } from "@/lib/order-action-feedback";
 
 interface OrderProductItem {
   productId: string;
@@ -108,6 +109,7 @@ type NormalizedCallLogItem = {
   id: string;
   outcome?: string;
   timestamp?: number;
+  notes?: string;
 };
 
 function normalizeCallLog(callLog: unknown): NormalizedCallLogItem[] {
@@ -141,9 +143,38 @@ function normalizeCallLog(callLog: unknown): NormalizedCallLogItem[] {
         id: id ?? fallbackId,
         outcome,
         timestamp,
+        notes: typeof obj.notes === "string" ? obj.notes : undefined,
       };
     })
     .filter((item): item is NormalizedCallLogItem => Boolean(item));
+}
+
+type NormalizedTimelineItem = {
+  id: string;
+  status: string;
+  timestamp: number;
+  note?: string;
+};
+
+function normalizeTimeline(timeline: unknown): NormalizedTimelineItem[] {
+  if (!Array.isArray(timeline)) return [];
+
+  return timeline
+    .map((item, idx): NormalizedTimelineItem | null => {
+      if (!item || typeof item !== "object") return null;
+      const obj = item as Record<string, unknown>;
+      const status = typeof obj.status === "string" ? obj.status : undefined;
+      const timestamp = typeof obj.timestamp === "number" ? obj.timestamp : undefined;
+      if (!status || typeof timestamp !== "number") return null;
+
+      return {
+        id: `${status}-${timestamp}-${idx}`,
+        status,
+        timestamp,
+        note: typeof obj.note === "string" ? obj.note : undefined,
+      };
+    })
+    .filter((item): item is NormalizedTimelineItem => Boolean(item));
 }
 
 // ---------------------------------------------------------------------------
@@ -259,13 +290,14 @@ interface OrderDetailsProps {
   order: Doc<"orders"> | null;
   isOpen: boolean;
   onClose: () => void;
-  onStatusChange: (orderId: string, newStatus: string) => void;
+  onStatusChange: (orderId: string, newStatus: string, note?: string) => void;
   onAddCallLog: (
     orderId: string,
     outcome: CallLog["outcome"],
     notes?: string,
   ) => Promise<void>;
   onUpsertAdminNote: (orderId: string, text: string) => Promise<void>;
+  isStatusUpdating?: boolean;
   storeSlug?: string;
 }
 
@@ -280,6 +312,7 @@ export function OrderDetails({
   onStatusChange,
   onAddCallLog,
   onUpsertAdminNote,
+  isStatusUpdating = false,
   storeSlug,
 }: OrderDetailsProps) {
   // ── Data ────────────────────────────────────────────────────────────────
@@ -301,6 +334,7 @@ export function OrderDetails({
 
   const [isDispatching, setIsDispatching] = useState(false);
   const [dispatchError, setDispatchError] = useState<string | null>(null);
+  const [dispatchAction, setDispatchAction] = useState<DeliveryActionResponse["action"] | null>(null);
   const [copiedFeedback, setCopiedFeedback] = useState(false);
 
   const { showToast } = useToast();
@@ -316,6 +350,7 @@ export function OrderDetails({
   const handleDispatch = useCallback(async () => {
     if (!order || isDispatching) return;
     setDispatchError(null);
+    setDispatchAction(null);
     setIsDispatching(true);
 
     try {
@@ -337,15 +372,17 @@ export function OrderDetails({
         }),
       });
 
-      const data = await response.json();
+      const data = (await response.json().catch(() => null)) as DeliveryActionResponse | null;
 
-      if (data.success) {
+      if (data?.success) {
         showToast(data.duplicate ? "Order already dispatched" : "Order dispatched", "success");
       } else {
-        setDispatchError(data.error || "Failed to dispatch order");
+        setDispatchError(data?.error || "Delivery provider is temporarily unavailable. Please try again.");
+        setDispatchAction(data?.action ?? null);
       }
     } catch {
       setDispatchError("Failed to dispatch order. Please try again.");
+      setDispatchAction(null);
     } finally {
       setIsDispatching(false);
     }
@@ -430,6 +467,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
   }, [order?._id]);
 
   const normalizedCallLog = useMemo(() => normalizeCallLog(order?.callLog), [order?.callLog]);
+  const timelineItems = useMemo(() => normalizeTimeline(order?.timeline).reverse(), [order?.timeline]);
   const riskFlags = useMemo(() => normalizeOrderRiskFlags(order?.riskFlags), [order?.riskFlags]);
   const deliveryTypeDisplay = getDeliveryTypeDisplay(order?.deliveryType);
   const deliveryProviderDisplay = getDeliveryProviderDisplay(
@@ -628,7 +666,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               </div>
 
           {/* Tracking Info Section - shown after dispatch */}
-          {order.trackingNumber && (canonicalStatus === "dispatch_ready" || canonicalStatus === "dispatched" || canonicalStatus === "in_transit") && (
+          {order.deliveryProvider && (canonicalStatus === "dispatch_ready" || canonicalStatus === "dispatched" || canonicalStatus === "in_transit") && (
             <section className="p-3.5 rounded-2xl bg-[var(--primary)]/10 border border-[var(--primary)]/20 space-y-2">
               <div className="flex items-center gap-2 text-[var(--primary)]">
                 <Truck className="w-4 h-4" />
@@ -643,7 +681,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-caption text-white/50">Tracking #</span>
-                  <span className="text-body-sm text-white">{order.trackingNumber}</span>
+                  <span className="text-body-sm text-white">{order.trackingNumber || "No tracking provided"}</span>
                 </div>
                 {deliveryProviderDisplay.trackingUrl ? (
                   <a 
@@ -703,6 +741,60 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               </Button>
             </div>
           </section>
+
+          {(timelineItems.length > 0 || normalizedCallLog.length > 0 || currentAdminNoteText) && (
+            <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-3">
+              <h3 className="text-body text-white/80">Activity</h3>
+              <div className="space-y-2">
+                {timelineItems.map((item) => (
+                  <div key={item.id} className="rounded-lg bg-black/15 px-3 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-body-sm text-white">
+                        {getOrderStatusLabel(item.status)}
+                      </span>
+                      <span className="text-caption shrink-0 text-white/35">
+                        {formatDate(item.timestamp)}
+                      </span>
+                    </div>
+                    {item.note && (
+                      <p className="text-caption mt-1 text-white/50">{item.note}</p>
+                    )}
+                  </div>
+                ))}
+                {normalizedCallLog
+                  .filter((call) => call.notes)
+                  .reverse()
+                  .map((call) => (
+                    <div key={`note-${call.id}`} className="rounded-lg bg-black/15 px-3 py-2">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="text-body-sm text-white">
+                          {call.outcome
+                            ? CALL_OUTCOME_LABELS[call.outcome as CallLog["outcome"]]?.label || call.outcome
+                            : "Call"}
+                        </span>
+                        <span className="text-caption shrink-0 text-white/35">
+                          {typeof call.timestamp === "number" ? formatDate(call.timestamp) : ""}
+                        </span>
+                      </div>
+                      <p className="text-caption mt-1 text-white/50">{call.notes}</p>
+                    </div>
+                  ))}
+                {currentAdminNoteText && (
+                  <div className="rounded-lg bg-black/15 px-3 py-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="text-body-sm text-white">Admin note</span>
+                      {typeof currentAdminNoteUpdatedAt === "number" && (
+                        <span className="text-caption shrink-0 text-white/35">
+                          {formatDate(currentAdminNoteUpdatedAt)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-caption mt-1 text-white/50">{currentAdminNoteText}</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
         </div>
 
         {/* Footer - Sticky using Flex */}
@@ -792,7 +884,9 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
               onStatusChange={onStatusChange}
               onDispatch={handleDispatch}
               isDispatching={isDispatching}
+              isStatusUpdating={isStatusUpdating}
               dispatchError={dispatchError}
+              dispatchAction={dispatchAction}
             />
           </div>
         </footer>
@@ -841,8 +935,26 @@ function CallButton({
   );
 }
 
-function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatch, isDispatching, dispatchError }: {
-  status: string, order: Doc<"orders">, orderId: string, onStatusChange: (id: string, s: string) => void, onDispatch?: () => void, isDispatching?: boolean, dispatchError?: string | null
+function StatusActionButtons({
+  status,
+  order,
+  orderId,
+  onStatusChange,
+  onDispatch,
+  isDispatching,
+  isStatusUpdating,
+  dispatchError,
+  dispatchAction,
+}: {
+  status: string,
+  order: Doc<"orders">,
+  orderId: string,
+  onStatusChange: (id: string, s: string) => void,
+  onDispatch?: () => void,
+  isDispatching?: boolean,
+  isStatusUpdating?: boolean,
+  dispatchError?: string | null,
+  dispatchAction?: DeliveryActionResponse["action"] | null,
 }) {
   const canonicalStatus = normalizeOrderStatus(status);
   const allowedTransitions = getMerchantTransitionsForOrder(status, order, "merchant");
@@ -869,12 +981,14 @@ function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatc
             targetStatus: "confirmed",
             icon: <CheckCircle className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "confirmed"),
+            disabled: isStatusUpdating,
           })}
           {renderTransitionActionButton({
             label: "Cancel",
             targetStatus: "cancelled",
             icon: <X className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "cancelled"),
+            disabled: isStatusUpdating,
           })}
         </div>
       );
@@ -886,39 +1000,52 @@ function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatc
             targetStatus: "confirmed",
             icon: <CheckCircle className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "confirmed"),
+            disabled: isStatusUpdating,
           })}
           {renderTransitionActionButton({
             label: "Cancel",
             targetStatus: "cancelled",
             icon: <X className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "cancelled"),
+            disabled: isStatusUpdating,
           })}
         </div>
       );
     case "confirmed":
       return (
         <div className="flex flex-col gap-2 w-full">
-          {renderTransitionActionButton({
-            label: isDispatching ? "Dispatching..." : "Send to delivery company",
-            targetStatus: "dispatch_ready",
-            icon: <Package className="w-5 h-5" />,
-            onClick: () => onDispatch?.(),
-            disabled: isDispatching,
-          })}
+          <ActionButton
+            label={isDispatching ? "Dispatching..." : "Send to delivery company"}
+            targetStatus="dispatch_ready"
+            icon={<Package className="w-5 h-5" />}
+            onClick={() => onDispatch?.()}
+            disabled={isDispatching}
+          />
           {dispatchError && (
-            <p className="text-caption text-center text-destructive" role="alert">
-              {dispatchError}
-            </p>
+            <div className="space-y-2 text-center" role="alert">
+              <p className="text-caption text-destructive">{dispatchError}</p>
+              {dispatchAction && (
+                <a
+                  href={dispatchAction.href}
+                  className="text-caption inline-flex items-center justify-center rounded-lg bg-white/10 px-3 py-1.5 text-white transition-colors hover:bg-white/15"
+                >
+                  {dispatchAction.label}
+                </a>
+              )}
+            </div>
           )}
         </div>
       );
     case "dispatch_ready":
-      return renderTransitionActionButton({
-        label: "Mark as dispatched",
-        targetStatus: "dispatched",
-        icon: <Truck className="w-5 h-5" />,
-        onClick: () => onStatusChange(orderId, "dispatched"),
-      });
+      return (
+        <ActionButton
+          label={isDispatching ? "Dispatching..." : "Send to delivery company"}
+          targetStatus="dispatched"
+          icon={<Truck className="w-5 h-5" />}
+          onClick={() => onDispatch?.()}
+          disabled={isDispatching}
+        />
+      );
     case "dispatched":
     case "in_transit":
       return <p className="text-body-sm py-2 text-center text-white/40">Waiting for courier update</p>;
@@ -931,12 +1058,14 @@ function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatc
             targetStatus: "awaiting_confirmation",
             icon: <CheckCircle className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "awaiting_confirmation"),
+            disabled: isStatusUpdating,
           })}
           {renderTransitionActionButton({
             label: "Mark Returned",
             targetStatus: "returned",
             icon: <Package className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "returned"),
+            disabled: isStatusUpdating,
           })}
         </div>
       );
@@ -948,29 +1077,21 @@ function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatc
             targetStatus: "awaiting_confirmation",
             icon: <CheckCircle className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "awaiting_confirmation"),
+            disabled: isStatusUpdating,
           })}
           {renderTransitionActionButton({
             label: "Cancel Order",
             targetStatus: "cancelled",
             icon: <X className="w-5 h-5" />,
             onClick: () => onStatusChange(orderId, "cancelled"),
+            disabled: isStatusUpdating,
           })}
         </div>
       );
     case "delivered":
-      return renderTransitionActionButton({
-        label: "Mark COD Collected",
-        targetStatus: "cod_collected",
-        icon: <HandCoins className="w-5 h-5" />,
-        onClick: () => onStatusChange(orderId, "cod_collected"),
-      });
+      return <p className="text-body-sm py-2 text-center text-white/40">Delivered is final. Payment issues stay in this drawer.</p>;
     case "cod_collected":
-      return renderTransitionActionButton({
-        label: "Mark COD Reconciled",
-        targetStatus: "cod_reconciled",
-        icon: <CheckCircle className="w-5 h-5" />,
-        onClick: () => onStatusChange(orderId, "cod_reconciled"),
-      });
+      return <p className="text-body-sm py-2 text-center text-white/40">COD collected by courier sync</p>;
     case "cod_reconciled":
       return <p className="text-body-sm py-2 text-center text-white/40">COD reconciled</p>;
     case "cancelled":
@@ -980,6 +1101,7 @@ function StatusActionButtons({ status, order, orderId, onStatusChange, onDispatc
         targetStatus: "new",
         icon: <CheckCircle className="w-5 h-5" />,
         onClick: () => onStatusChange(orderId, "new"),
+        disabled: isStatusUpdating,
       });
     default:
       return null;

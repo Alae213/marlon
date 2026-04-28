@@ -12,12 +12,15 @@ import {
   Eye,
   EyeOff,
   Zap,
-  SlidersHorizontal,
   ChevronsUpDown,
   Truck,
   PackageCheck,
   Loader2,
   FileDown,
+  CheckCircle2,
+  Info,
+  RotateCw,
+  Settings,
 } from "lucide-react";
 import { Badge } from "@/components/primitives/core/feedback/badge";
 import { Button } from "@/components/ui/button";
@@ -28,16 +31,16 @@ import { Checkbox, CheckboxIndicator } from "@/components/ui/checkbox";
 import { Table, TableHeader, TableBody, TableRow, TableCell } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
-  Menu,
-  MenuCheckboxItem,
-  MenuContent,
-  MenuItem,
-  MenuLabel,
-  MenuRadioGroup,
-  MenuRadioItem,
-  MenuSeparator,
-  MenuTrigger,
-} from "@/components/ui/menu";
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { 
@@ -50,16 +53,20 @@ import {
   CALL_OUTCOME_LABELS,
   ORDER_STATUSES,
   STATUS_LABELS,
+  getAllowedOrderStatusTransitions,
   getMerchantTransitionsForOrder,
   getOrderStatusLabel,
+  hasAnsweredCallEvidence,
   normalizeOrderStatus,
   normalizeOrderRiskFlags,
+  shouldPromptUnreachableAfterNoAnswer,
 } from "@/lib/orders-types";
 import { getStatusConfig } from "@/lib/status-icons";
 import { ProductCell } from "../components/ProductCell";
 import { OrderMobileCard } from "../components/OrderMobileCard";
 import { OrderViewToggle } from "../components/OrderViewToggle";
 import { getDeliveryProviderDisplay } from "@/lib/order-delivery-display";
+import type { DeliveryActionResponse } from "@/lib/order-action-feedback";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/contexts/toast-context";
 
@@ -105,6 +112,7 @@ function highlightMatch(text: string, query: string): React.ReactNode {
 }
 
 const statuses: OrderStatus[] = [...ORDER_STATUSES];
+const ROW_STATUS_BLOCKLIST = new Set<OrderStatus>(["dispatch_ready", "dispatched"]);
 
 function getCanonicalOrderStatus(status: string): OrderStatus | null {
   return normalizeOrderStatus(status);
@@ -139,10 +147,45 @@ function getCallOutcomeBg(outcome?: string): string {
 }
 
 function isOrderReadyForDispatch(order: Doc<"orders">): boolean {
-  return (
-    getCanonicalOrderStatus(order.status) === "confirmed" &&
-    normalizeOrderRiskFlags(order.riskFlags).length === 0
-  );
+  return getCanonicalOrderStatus(order.status) === "confirmed";
+}
+
+function getLatestActivityHint(order: Doc<"orders">): string {
+  const timeline = Array.isArray(order.timeline) ? order.timeline : [];
+  const callLog = Array.isArray(order.callLog) ? (order.callLog as CallLog[]) : [];
+  const latestTimeline = timeline.at(-1);
+  const latestCall = callLog.at(-1);
+
+  if (latestCall && (!latestTimeline || latestCall.timestamp >= latestTimeline.timestamp)) {
+    const label = CALL_OUTCOME_LABELS[latestCall.outcome]?.label || latestCall.outcome;
+    return `Latest: ${label} call`;
+  }
+
+  if (latestTimeline?.note) {
+    return latestTimeline.note;
+  }
+
+  if (latestTimeline?.status) {
+    return `Latest: ${getOrderStatusLabel(latestTimeline.status)}`;
+  }
+
+  return "No activity yet";
+}
+
+function getDispatchBody(order: Doc<"orders">, storeSlug?: string) {
+  return {
+    orderId: order._id,
+    orderNumber: order.orderNumber,
+    customerName: order.customerName,
+    customerPhone: order.customerPhone,
+    customerWilaya: order.customerWilaya,
+    customerCommune: order.customerCommune,
+    customerAddress: order.customerAddress,
+    products: order.products,
+    total: order.total,
+    provider: order.deliveryProvider || "zr_express",
+    storeSlug,
+  };
 }
 
 // CallSlotsHover Component - same design as OrderDetails
@@ -220,10 +263,10 @@ interface ListViewProps {
   orders: Doc<"orders">[];
   selectedOrders: Set<string>;
   selectAll: boolean;
-  onSelectAll: (checked: boolean) => void;
+  onSelectAll: (checked: boolean, visibleOrderIds?: string[]) => void;
   onOrderSelect: (orderId: string) => void;
   onClearSelection: () => void;
-  onStatusChange: (orderId: string, newStatus: string) => void;
+  onStatusChange: (orderId: string, newStatus: string, note?: string) => void;
   onStatusDropdownToggle: (orderId: string, open: boolean) => void;
   statusDropdownOpen: { [key: string]: boolean };
   searchQuery: string;
@@ -238,6 +281,7 @@ interface ListViewProps {
   viewMode: "list" | "state";
   onViewModeChange: (mode: "list" | "state") => void;
   isStateViewEnabled: boolean;
+  updatingOrderIds?: Set<string>;
   storeSlug?: string;
 }
 
@@ -248,45 +292,99 @@ function StatusCell({
   isOpen, 
   onToggle, 
   onStatusChange,
+  onIntegratedDispatch,
+  onManualDispatch,
+  isUpdating = false,
   callLog,
   showCallSlots = true,
+  feedback,
 }: { 
   order?: Doc<"orders">;
   status: string; 
   isOpen: boolean; 
   onToggle: (open: boolean) => void;
   onStatusChange: (status: string) => void;
+  onIntegratedDispatch?: () => void;
+  onManualDispatch?: () => void;
+  isUpdating?: boolean;
   callLog?: CallLog[];
   showCallSlots?: boolean;
+  feedback?: { type: "success" | "error"; message: string } | null;
 }) {
   const canonicalStatus = getCanonicalOrderStatus(status);
   const statusConfig = getStatusConfig(status);
   const statusLabel = canonicalStatus ? STATUS_LABELS[canonicalStatus] : undefined;
-  const statusOptions = getMerchantTransitionsForOrder(status, order, "merchant");
+  const rawStatusOptions = getAllowedOrderStatusTransitions(status, "merchant").filter(
+    (nextStatus) => !ROW_STATUS_BLOCKLIST.has(nextStatus)
+  );
+  const statusOptions = getMerchantTransitionsForOrder(status, order, "merchant").filter(
+    (nextStatus) => !ROW_STATUS_BLOCKLIST.has(nextStatus)
+  );
+  const confirmDisabledReason =
+    rawStatusOptions.includes("confirmed") && !hasAnsweredCallEvidence(order)
+      ? "Confirm requires an answered call"
+      : null;
+  const riskFlags = normalizeOrderRiskFlags(order?.riskFlags);
+  const needsUnreachablePrompt = shouldPromptUnreachableAfterNoAnswer(order);
+  const activityHint = order ? getLatestActivityHint(order) : null;
+  const canDispatch = canonicalStatus === "confirmed" || canonicalStatus === "dispatch_ready";
+
+  const requestStatusChange = (nextStatus: OrderStatus) => {
+    onToggle(false);
+    onStatusChange(nextStatus);
+  };
 
   return (
-    <Menu open={isOpen} onOpenChange={onToggle}>
-      <div className="relative w-full">
+    <DropdownMenu open={isOpen} onOpenChange={onToggle}>
+      <div className="relative w-full min-w-0">
         <div
           className={cn(
-            "flex flex-row items-center gap-2",
+            "flex flex-row items-start gap-2",
             showCallSlots ? "justify-between" : "justify-start",
           )}
         >
-          <MenuTrigger asChild>
-            <button
-              type="button"
-              className="cursor-pointer flex flex-row items-center gap-2 p-1 hover:bg-black/5 rounded-[12px]"
-            >
-              <Badge
-                bgColor={statusConfig?.bgColor}
-                textColor={statusConfig?.textColor}
-                icon={statusConfig?.icon}
+          <div className="min-w-0">
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                disabled={isUpdating}
+                aria-busy={isUpdating}
+                className={cn(
+                  "group flex min-h-10 cursor-pointer flex-row items-center gap-2 rounded-[12px] p-1 text-left transition-[background-color,transform] hover:bg-black/5 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100",
+                  feedback?.type === "success" && "bg-emerald-50",
+                  feedback?.type === "error" && "bg-red-50",
+                )}
               >
-                {statusConfig?.label || statusLabel?.label || status}
-              </Badge>
-            </button>
-          </MenuTrigger>
+                <Badge
+                  bgColor={statusConfig?.bgColor}
+                  textColor={statusConfig?.textColor}
+                  icon={isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : statusConfig?.icon}
+                >
+                  {isUpdating ? "Updating..." : statusConfig?.label || statusLabel?.label || status}
+                </Badge>
+                <ChevronsUpDown className="h-3.5 w-3.5 text-[var(--system-300)] opacity-0 transition-opacity group-hover:opacity-100" />
+              </button>
+            </DropdownMenuTrigger>
+            <div className="mt-1 max-w-[180px] space-y-1">
+              {activityHint && (
+                <p className="truncate text-caption text-[var(--system-300)]">{activityHint}</p>
+              )}
+              {needsUnreachablePrompt && (
+                <p className="text-caption text-[#FC9239]">4 no-answer calls: keep trying or mark unreachable</p>
+              )}
+              {riskFlags.length > 0 && (
+                <p className="text-caption text-[#FC9239]">Risk warning: {riskFlags.length} flag{riskFlags.length === 1 ? "" : "s"}</p>
+              )}
+              {feedback && (
+                <p className={cn(
+                  "text-caption",
+                  feedback.type === "success" ? "text-emerald-600" : "text-red-600",
+                )}>
+                  {feedback.message}
+                </p>
+              )}
+            </div>
+          </div>
 
           {/* Call Log Slots */}
           {showCallSlots && callLog && callLog.length > -1 ? (
@@ -294,37 +392,78 @@ function StatusCell({
           ) : null}
         </div>
 
-        <MenuContent
+        <DropdownMenuContent
           align="start"
           sideOffset={-32}
           className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
         >
-          <MenuRadioGroup value={canonicalStatus ?? status} onValueChange={onStatusChange}>
+          <DropdownMenuRadioGroup value={canonicalStatus ?? status}>
             {statusOptions.length === 0 ? (
-              <MenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
-                No merchant actions
-              </MenuItem>
+              <DropdownMenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
+                {isUpdating ? "Updating..." : "No merchant actions"}
+              </DropdownMenuItem>
             ) : statusOptions.map((s) => {
               const sConfig = getStatusConfig(s)
               return (
-                <MenuRadioItem key={s} value={s} className="rounded-[12px] py-1.5 pl-8">
+                <DropdownMenuRadioItem
+                  key={s}
+                  value={s}
+                  onSelect={(event) => {
+                    event.preventDefault();
+                    if (!isUpdating) requestStatusChange(s);
+                  }}
+                  className="rounded-[12px] py-1.5 pl-8"
+                >
                   <span
                     className="text-caption overflow-hidden inline-flex items-center gap-1.5 rounded-[10px] px-2 py-1 shadow-[var(--shadow-badge)]"
                     style={{
                       backgroundColor: sConfig?.bgColor || "#6b728015",
-                      color: sConfig?.textColor || "#ffffff01",
+                      color: sConfig?.textColor || "#6b7280",
                     }}
                   >
                     {sConfig?.icon}
                     {sConfig?.label || getOrderStatusLabel(s)}
                   </span>
-                </MenuRadioItem>
+                </DropdownMenuRadioItem>
               )
             })}
-          </MenuRadioGroup>
-        </MenuContent>
+          </DropdownMenuRadioGroup>
+          {confirmDisabledReason && (
+            <DropdownMenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
+              <Info className="h-4 w-4" />
+              <span>{confirmDisabledReason}</span>
+            </DropdownMenuItem>
+          )}
+          {canDispatch && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                disabled={isUpdating}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onIntegratedDispatch?.();
+                }}
+                className="rounded-[12px]"
+              >
+                <Truck className="h-4 w-4 text-[var(--blue-300)]" />
+                <span>Send to courier</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={isUpdating}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  onManualDispatch?.();
+                }}
+                className="rounded-[12px]"
+              >
+                <PackageCheck className="h-4 w-4 text-[var(--system-500)]" />
+                <span>Manual dispatch</span>
+              </DropdownMenuItem>
+            </>
+          )}
+        </DropdownMenuContent>
       </div>
-    </Menu>
+    </DropdownMenu>
   );
 }
 
@@ -376,6 +515,7 @@ export function ListView({
   viewMode,
   onViewModeChange,
   isStateViewEnabled,
+  updatingOrderIds = new Set<string>(),
   storeSlug,
 }: ListViewProps) {
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -416,6 +556,8 @@ export function ListView({
   
   // Delete mutation
   const bulkDeleteOrders = useMutation(api.orders.bulkDeleteOrders);
+  const manualDispatchOrder = useMutation(api.orders.markOrderManuallyDispatched);
+  const recordSyncAttempt = useMutation(api.orders.recordOrderSyncAttempt);
 
   // Toast notifications
   const { showToast } = useToast();
@@ -425,6 +567,16 @@ export function ListView({
   
   // Bulk dispatch selected state
   const [isBulkDispatching, setIsBulkDispatching] = useState(false);
+  const [rowFeedback, setRowFeedback] = useState<Record<string, { type: "success" | "error"; message: string }>>({});
+  const [syncModalOpen, setSyncModalOpen] = useState(false);
+  const [syncProgress, setSyncProgress] = useState<{ current: number; total: number; retry: number } | null>(null);
+  const [syncResults, setSyncResults] = useState<Array<{
+    orderId: string;
+    orderNumber: string;
+    status: "success" | "failed" | "skipped";
+    message: string;
+    attempts: number;
+  }>>([]);
 
   // Delivery quick stats
   const readyToDispatchCount = useMemo(() => {
@@ -442,6 +594,20 @@ export function ListView({
     }
     return summary;
   }, [orders]);
+
+  const setTemporaryRowFeedback = useCallback((
+    orderId: string,
+    feedback: { type: "success" | "error"; message: string }
+  ) => {
+    setRowFeedback((prev) => ({ ...prev, [orderId]: feedback }));
+    window.setTimeout(() => {
+      setRowFeedback((prev) => {
+        const next = { ...prev };
+        delete next[orderId];
+        return next;
+      });
+    }, feedback.type === "success" ? 2500 : 6000);
+  }, []);
 
   // Update currentTime every minute
   useEffect(() => {
@@ -546,6 +712,26 @@ export function ListView({
     return filtered;
   }, [orders, searchQuery, sortField, sortDirection, activeFilter, hiddenStatuses, activeDateFilter]);
 
+  const visibleOrderIds = useMemo(() => filteredOrders.map((order) => order._id), [filteredOrders]);
+  const allVisibleSelected =
+    visibleOrderIds.length > 0 && visibleOrderIds.every((orderId) => selectedOrders.has(orderId));
+  const selectedVisibleCount = visibleOrderIds.filter((orderId) => selectedOrders.has(orderId)).length;
+  const hasActiveFilters =
+    activeFilter !== "all" ||
+    activeDateFilter !== "all" ||
+    searchQuery.trim().length > 0 ||
+    hiddenStatuses.size > 0;
+
+  const clearFilters = () => {
+    setActiveFilter("all");
+    setActiveDateFilter("all");
+    onSearchQueryChange("");
+    setHiddenStatuses(new Set());
+    if (typeof window !== "undefined") {
+      localStorage.setItem("marlon-hidden-statuses", JSON.stringify([]));
+    }
+  };
+
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -555,7 +741,7 @@ export function ListView({
   };
 
   const handleSelectAll = (checked: boolean) => {
-    onSelectAll(checked);
+    onSelectAll(checked, visibleOrderIds);
   };
 
   const handleBulkDelete = async (orderIds: string[]) => {
@@ -568,123 +754,167 @@ export function ListView({
     }
   };
 
-  const handleDispatchAll = useCallback(async () => {
-    if (isDispatchingAll) return;
-    
-    const confirmedOrders = orders.filter(isOrderReadyForDispatch);
-    if (confirmedOrders.length === 0) return;
-    
-    setIsDispatchingAll(true);
-    
-    let successCount = 0;
-    let failCount = 0;
-    
-    for (const order of confirmedOrders) {
-      try {
-        const response = await fetch("/api/delivery/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
+  const dispatchOrderToCourier = useCallback(async (order: Doc<"orders">) => {
+    const response = await fetch("/api/delivery/create-order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(getDispatchBody(order, storeSlug)),
+    });
+
+    const data = (await response.json().catch(() => null)) as DeliveryActionResponse | null;
+    if (!data?.success) {
+      throw new Error(data?.error || "Courier dispatch failed");
+    }
+
+    return data;
+  }, [storeSlug]);
+
+  const runCourierSync = useCallback(async (
+    targetOrders: Doc<"orders">[],
+    options: { mode: "all" | "selected" | "single"; title?: string }
+  ) => {
+    const eligibleOrders = targetOrders.filter(isOrderReadyForDispatch);
+    const skippedOrders = targetOrders.filter((order) => !isOrderReadyForDispatch(order));
+    const total = eligibleOrders.length;
+    const results: Array<{
+      orderId: string;
+      orderNumber: string;
+      status: "success" | "failed" | "skipped";
+      message: string;
+      attempts: number;
+    }> = skippedOrders.map((order) => ({
+      orderId: order._id,
+      orderNumber: order.orderNumber,
+      status: "skipped",
+      message: "Only confirmed orders can be sent to courier.",
+      attempts: 0,
+    }));
+
+    setSyncModalOpen(true);
+    setSyncResults(results);
+
+    for (const order of skippedOrders) {
+      await recordSyncAttempt({
+        orderId: order._id,
+        outcome: "skipped",
+        note: "Courier sync skipped: only confirmed orders can be dispatched.",
+        source: `orders.tableSync.${options.mode}`,
+      }).catch(() => undefined);
+    }
+
+    if (eligibleOrders.length === 0) {
+      setSyncProgress(null);
+      showToast("No confirmed orders ready for courier sync", "info");
+      return results;
+    }
+
+    const workingResults = [...results];
+    for (let index = 0; index < eligibleOrders.length; index += 1) {
+      const order = eligibleOrders[index];
+      let dispatched = false;
+      let lastMessage = "Courier dispatch failed";
+      let attempts = 0;
+
+      for (let retry = 0; retry < 3 && !dispatched; retry += 1) {
+        attempts = retry + 1;
+        setSyncProgress({ current: index + 1, total, retry });
+        await recordSyncAttempt({
+          orderId: order._id,
+          outcome: "attempted",
+          note: retry > 0 ? `Courier sync retry ${retry + 1}/3 started.` : "Courier sync started.",
+          source: `orders.tableSync.${options.mode}`,
+        }).catch(() => undefined);
+
+        try {
+          await dispatchOrderToCourier(order);
+          dispatched = true;
+          workingResults.push({
             orderId: order._id,
             orderNumber: order.orderNumber,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-            customerWilaya: order.customerWilaya,
-            customerCommune: order.customerCommune,
-            customerAddress: order.customerAddress,
-            products: order.products,
-            total: order.total,
-            provider: order.deliveryProvider || "zr_express",
-            storeSlug,
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          successCount++;
-        } else {
-          failCount++;
+            status: "success",
+            message: retry > 0 ? `Dispatched after retry ${retry}` : "Sent to courier",
+            attempts,
+          });
+          setTemporaryRowFeedback(order._id, { type: "success", message: "Sent to courier" });
+        } catch (error) {
+          lastMessage = error instanceof Error ? error.message : "Courier dispatch failed";
+          if (retry === 2) {
+            workingResults.push({
+              orderId: order._id,
+              orderNumber: order.orderNumber,
+              status: "failed",
+              message: lastMessage,
+              attempts,
+            });
+            setTemporaryRowFeedback(order._id, { type: "error", message: "Retry failed" });
+            await recordSyncAttempt({
+              orderId: order._id,
+              outcome: "failed",
+              note: `Courier sync failed after 3 attempts: ${lastMessage}`,
+              source: `orders.tableSync.${options.mode}`,
+            }).catch(() => undefined);
+          }
         }
-      } catch {
-        failCount++;
       }
+
+      setSyncResults([...workingResults]);
     }
-    
-    setIsDispatchingAll(false);
-    
-    if (successCount > 0 && failCount > 0) {
-      showToast(`${successCount} dispatched, ${failCount} failed`, "info");
-    } else if (successCount > 0) {
-      showToast(`${successCount} orders dispatched`, "success");
+
+    setSyncProgress(null);
+    const successCount = workingResults.filter((result) => result.status === "success").length;
+    const failCount = workingResults.filter((result) => result.status === "failed").length;
+    const skippedCount = workingResults.filter((result) => result.status === "skipped").length;
+
+    if (failCount > 0) {
+      showToast(`${successCount} synced, ${failCount} failed, ${skippedCount} skipped`, "error");
     } else {
-      showToast("Failed to dispatch orders", "error");
+      showToast(`${successCount} confirmed orders synced`, "success");
     }
-  }, [orders, isDispatchingAll, storeSlug, showToast]);
+
+    return workingResults;
+  }, [dispatchOrderToCourier, recordSyncAttempt, setTemporaryRowFeedback, showToast]);
+
+  const handleDispatchAll = useCallback(async () => {
+    if (isDispatchingAll) return;
+    setIsDispatchingAll(true);
+    try {
+      await runCourierSync(orders, { mode: "all" });
+    } finally {
+      setIsDispatchingAll(false);
+    }
+  }, [orders, isDispatchingAll, runCourierSync]);
+
+  const handleDispatchSingle = useCallback(async (order: Doc<"orders">) => {
+    await runCourierSync([order], { mode: "single" });
+  }, [runCourierSync]);
+
+  const handleManualDispatch = useCallback(async (order: Doc<"orders">) => {
+    try {
+      await manualDispatchOrder({
+        orderId: order._id,
+        note: "Manual dispatch recorded from orders table.",
+      });
+      setTemporaryRowFeedback(order._id, { type: "success", message: "Manual dispatch recorded" });
+      showToast("Manual dispatch recorded", "success");
+    } catch (error) {
+      setTemporaryRowFeedback(order._id, {
+        type: "error",
+        message: error instanceof Error ? error.message : "Manual dispatch failed",
+      });
+      showToast("Manual dispatch failed. The order state was preserved.", "error");
+    }
+  }, [manualDispatchOrder, setTemporaryRowFeedback, showToast]);
 
   const handleBulkDispatch = useCallback(async () => {
     if (isBulkDispatching) return;
-    
-    const confirmedSelectedIds = orders
-      .filter((o) => selectedOrders.has(o._id))
-      .filter(isOrderReadyForDispatch)
-      .map((o) => o._id);
-    
-    if (confirmedSelectedIds.length === 0) return;
-    
+    const selectedReadyOrders = orders.filter((order) => selectedOrders.has(order._id));
     setIsBulkDispatching(true);
-    
-    let successCount = 0;
-    let failCount = 0;
-    const failedIds: string[] = [];
-    
-    for (const orderId of confirmedSelectedIds) {
-      const order = orders.find((o) => o._id === orderId);
-      if (!order) continue;
-      
-      try {
-        const response = await fetch("/api/delivery/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            orderId: order._id,
-            orderNumber: order.orderNumber,
-            customerName: order.customerName,
-            customerPhone: order.customerPhone,
-            customerWilaya: order.customerWilaya,
-            customerCommune: order.customerCommune,
-            customerAddress: order.customerAddress,
-            products: order.products,
-            total: order.total,
-            provider: order.deliveryProvider || "zr_express",
-            storeSlug,
-          }),
-        });
-        
-        const data = await response.json();
-        
-        if (data.success) {
-          successCount++;
-        } else {
-          failCount++;
-          failedIds.push(orderId);
-        }
-      } catch {
-        failCount++;
-        failedIds.push(orderId);
-      }
+    try {
+      await runCourierSync(selectedReadyOrders, { mode: "selected" });
+    } finally {
+      setIsBulkDispatching(false);
     }
-    
-    setIsBulkDispatching(false);
-    
-    if (successCount > 0 && failCount > 0) {
-      showToast(`${successCount} dispatched, ${failCount} failed`, "info");
-    } else if (successCount > 0) {
-      showToast(`${successCount} orders dispatched`, "success");
-    } else {
-      showToast("Failed to dispatch orders", "error");
-    }
-  }, [orders, selectedOrders, isBulkDispatching, storeSlug, showToast]);
+  }, [orders, selectedOrders, isBulkDispatching, runCourierSync]);
 
   // Export to CSV
   const handleExportCSV = useCallback((exportAll: boolean) => {
@@ -789,9 +1019,9 @@ export function ListView({
       {/* Bulk Action Toolbar */}
       {selectedOrders.size > 0 && (
         <>
-          <div className="absolute -top-1 left-1 z-50 hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-2 py-1 text-[var(--system-600)]">
+          <div className="hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-2 text-[var(--system-600)] shadow-[var(--shadow-sm)]">
             <div className="flex items-center gap-1">
-              <span className="text-body mr-2 text-[var(--system-500)]">{selectedOrders.size} selected</span>
+              <span className="text-body mr-2 text-[var(--system-500)]">{selectedOrders.size} selected ({selectedVisibleCount} visible)</span>
               <SelectedStatusSummary counts={selectedOrdersByStatus} />
             </div>
             <div className="flex items-center gap-2">
@@ -806,7 +1036,7 @@ export function ListView({
                   ) : (
                     <PackageCheck className="w-3 h-3" />
                   )}
-                  {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
+                  {isBulkDispatching ? "Syncing..." : `Sync Selected (${selectedDispatchableCount})`}
                 </button>
               )}
               <button
@@ -831,7 +1061,7 @@ export function ListView({
                     disabled={isBulkDispatching}
                     className="text-caption flex-1 cursor-pointer rounded-md bg-[var(--blue-300)] px-3 py-2 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {isBulkDispatching ? "Dispatching..." : "Dispatch Selected"}
+                    {isBulkDispatching ? "Syncing..." : `Sync Selected (${selectedDispatchableCount})`}
                   </button>
                 )}
                 <button
@@ -858,8 +1088,8 @@ export function ListView({
         <div className="flex flex-wrap items-center gap-1">
         
         {/* Date Filter Dropdown */}
-        <Menu open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
-          <MenuTrigger asChild>
+        <DropdownMenu open={dateFilterOpen} onOpenChange={setDateFilterOpen}>
+          <DropdownMenuTrigger asChild>
             <button
               type="button"
               className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
@@ -879,15 +1109,15 @@ export function ListView({
               </span>
               <ChevronsUpDown className="w-4 h-4" />
             </button>
-          </MenuTrigger>
+          </DropdownMenuTrigger>
 
-          <MenuContent
+          <DropdownMenuContent
             align="end"
             sideOffset={-32}
             className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuLabel>Filter By Date</MenuLabel>
-            <MenuRadioGroup
+            <DropdownMenuLabel>Filter By Date</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
               value={activeDateFilter}
               onValueChange={(value) => setActiveDateFilter(value as typeof activeDateFilter)}
             >
@@ -897,23 +1127,23 @@ export function ListView({
                 { id: "week", label: "This Week (7 days)" },
                 { id: "month", label: "This Month" },
               ].map((option) => (
-                <MenuRadioItem
+                <DropdownMenuRadioItem
                   key={option.id}
                   value={option.id}
                   className="w-full justify-between rounded-[12px]"
                 >
                   <span className="text-[var(--system-600)]">{option.label}</span>
-                </MenuRadioItem>
+                </DropdownMenuRadioItem>
               ))}
-            </MenuRadioGroup>
-          </MenuContent>
-        </Menu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Filter Dropdown */}
-          <Menu open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
+          <DropdownMenu open={filterDropdownOpen} onOpenChange={setFilterDropdownOpen}>
             <Tooltip>
               <TooltipTrigger asChild>
-                <MenuTrigger asChild>
+                <DropdownMenuTrigger asChild>
                   <button
                     type="button"
                     className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
@@ -931,24 +1161,24 @@ export function ListView({
                           : getStatusConfig(activeFilter)?.label || activeFilter}
                     </span>
                   </button>
-                </MenuTrigger>
+                </DropdownMenuTrigger>
               </TooltipTrigger>
               <TooltipContent>Filter by status</TooltipContent>
             </Tooltip>
 
-          <MenuContent
+          <DropdownMenuContent
             align="end"
             sideOffset={-32}
             className="min-w-[240px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuLabel>Filter By State</MenuLabel>
-            <MenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
-              <MenuRadioItem value="all" className="w-full justify-between rounded-[12px]">
+            <DropdownMenuLabel>Filter By State</DropdownMenuLabel>
+            <DropdownMenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
+              <DropdownMenuRadioItem value="all" className="w-full justify-between rounded-[12px]">
                 <span className="text-[var(--system-600)]">All</span>
                 <span className="text-micro-label text-[var(--system-400)]">{orders.length}</span>
-              </MenuRadioItem>
+              </DropdownMenuRadioItem>
               {readyToDispatchCount > 0 && (
-                <MenuRadioItem 
+                <DropdownMenuRadioItem 
                   value="confirmed" 
                   className="w-full justify-between rounded-[12px]"
                 >
@@ -957,14 +1187,17 @@ export function ListView({
                     Ready to Dispatch
                   </span>
                   <span className="text-micro-label text-[var(--blue-300)]">{readyToDispatchCount}</span>
-                </MenuRadioItem>
+                </DropdownMenuRadioItem>
               )}
               {statuses.map((status) => {
                 const sConfig = getStatusConfig(status)
                 const count = orders.filter((o) => getCanonicalOrderStatus(o.status) === status).length
+                if (count === 0 || (status === "confirmed" && readyToDispatchCount > 0)) {
+                  return null;
+                }
 
                 return (
-                  <MenuRadioItem
+                  <DropdownMenuRadioItem
                     key={status}
                     value={status}
                     className="w-full justify-between rounded-[12px]"
@@ -980,42 +1213,18 @@ export function ListView({
                       {sConfig?.label || status}
                     </span>
                     <span className="text-micro-label text-[var(--system-400)]">{count}</span>
-                  </MenuRadioItem>
+                  </DropdownMenuRadioItem>
                 )
               })}
-            </MenuRadioGroup>
-
-            <MenuSeparator />
-            <MenuLabel>Hide States</MenuLabel>
-            {statuses.map((status) => {
-              const sConfig = getStatusConfig(status)
-              const isHidden = hiddenStatuses.has(status)
-
-              return (
-                <MenuCheckboxItem
-                  key={status}
-                  checked={isHidden}
-                  onCheckedChange={() => toggleHiddenStatus(status)}
-                  onSelect={(e) => e.preventDefault()}
-                  className="rounded-[12px]"
-                >
-                  {isHidden ? (
-                    <EyeOff className="h-4 w-4 text-[var(--system-400)]" />
-                  ) : (
-                    <Eye className="h-4 w-4 text-[var(--system-400)]" />
-                  )}
-                  <span className="text-[var(--system-600)]">{sConfig?.label || status}</span>
-                </MenuCheckboxItem>
-              )
-            })}
-          </MenuContent>
-        </Menu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Sort Dropdown */}
-        <Menu open={sortDropdownOpen} onOpenChange={setSortDropdownOpen}>
+        <DropdownMenu open={sortDropdownOpen} onOpenChange={setSortDropdownOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <MenuTrigger asChild>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   className={`cursor-pointer p-2 rounded-lg transition-colors ${
@@ -1026,18 +1235,18 @@ export function ListView({
                 >
                   <ArrowUpDown className="w-4 h-4" />
                 </button>
-              </MenuTrigger>
+              </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent>Sort orders</TooltipContent>
           </Tooltip>
 
-          <MenuContent
+          <DropdownMenuContent
             align="end"
             sideOffset={-32}
             className="min-w-[220px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuLabel>Sort By</MenuLabel>
-            <MenuRadioGroup
+            <DropdownMenuLabel>Sort By</DropdownMenuLabel>
+            <DropdownMenuRadioGroup
               value={`${sortField}:${sortDirection}`}
               onValueChange={(value) => {
                 const [field, direction] = value.split(":")
@@ -1051,17 +1260,17 @@ export function ListView({
                 { id: "total", direction: "desc", label: "Highest value first" },
                 { id: "total", direction: "asc", label: "Lowest value first" },
               ].map((option) => (
-                <MenuRadioItem
+                <DropdownMenuRadioItem
                   key={`${option.id}-${option.direction}`}
                   value={`${option.id}:${option.direction}`}
                   className="w-full justify-between rounded-[12px]"
                 >
                   <span className="text-[var(--system-600)]">{option.label}</span>
-                </MenuRadioItem>
+                </DropdownMenuRadioItem>
               ))}
-            </MenuRadioGroup>
-          </MenuContent>
-        </Menu>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
           {/* Search */}
           <div
@@ -1127,7 +1336,7 @@ export function ListView({
               ) : (
                 <PackageCheck className="w-3 h-3" />
               )}
-              {isDispatchingAll ? "Dispatching..." : "Dispatch All"}
+                  {isDispatchingAll ? "Syncing..." : "Sync Confirmed"}
             </button>
           </div>
         ) : courierStatusSummary.dispatched > 0 ? (
@@ -1159,30 +1368,30 @@ export function ListView({
           </Tooltip>
         )}
 
-        {/* Settings Dropdown (Placeholder) */}
-        <Menu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
+        {/* Settings Dropdown */}
+        <DropdownMenu open={settingsDropdownOpen} onOpenChange={setSettingsDropdownOpen}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <MenuTrigger asChild>
+              <DropdownMenuTrigger asChild>
                 <button
                   type="button"
                   className="cursor-pointer p-2 text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)] rounded-lg transition-colors"
                 >
-                  <SlidersHorizontal className="w-4 h-4" />
+                  <Settings className="w-4 h-4" />
                 </button>
-              </MenuTrigger>
+              </DropdownMenuTrigger>
             </TooltipTrigger>
             <TooltipContent>More</TooltipContent>
           </Tooltip>
 
-          <MenuContent
+          <DropdownMenuContent
             align="end"
             sideOffset={-32}
             className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
           >
-            <MenuLabel className="text-micro-label px-2 py-1 text-[var(--system-400)]">Export</MenuLabel>
+            <DropdownMenuLabel className="text-micro-label px-2 py-1 text-[var(--system-400)]">Export</DropdownMenuLabel>
             {selectedOrders.size > 0 ? (
-              <MenuItem 
+              <DropdownMenuItem 
                 onSelect={() => {
                   setSettingsDropdownOpen(false);
                   handleExportCSV(false);
@@ -1191,9 +1400,9 @@ export function ListView({
               >
                 <FileDown className="w-4 h-4 text-[var(--system-400)]" />
                 <span className="text-[var(--system-600)]">Export Selected ({selectedOrders.size})</span>
-              </MenuItem>
+              </DropdownMenuItem>
             ) : null}
-            <MenuItem 
+            <DropdownMenuItem 
               onSelect={() => {
                 setSettingsDropdownOpen(false);
                 handleExportCSV(true);
@@ -1202,12 +1411,66 @@ export function ListView({
             >
               <FileDown className="w-4 h-4 text-[var(--system-400)]" />
               <span className="text-[var(--system-600)]">Export All ({filteredOrders.length})</span>
-            </MenuItem>
-          </MenuContent>
-        </Menu>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuLabel className="text-micro-label px-2 py-1 text-[var(--system-400)]">Hidden States</DropdownMenuLabel>
+            {statuses.map((status) => {
+              const sConfig = getStatusConfig(status);
+              const isHidden = hiddenStatuses.has(status);
+
+              return (
+                <DropdownMenuCheckboxItem
+                  key={status}
+                  checked={isHidden}
+                  onCheckedChange={() => toggleHiddenStatus(status)}
+                  onSelect={(e) => e.preventDefault()}
+                  className="rounded-[12px]"
+                >
+                  {isHidden ? (
+                    <EyeOff className="h-4 w-4 text-[var(--system-400)]" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-[var(--system-400)]" />
+                  )}
+                  <span className="text-[var(--system-600)]">{sConfig?.label || status}</span>
+                </DropdownMenuCheckboxItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         
         </div>
+      </div>
+
+      <div className="flex flex-col gap-2 rounded-[14px] bg-white px-3 py-2 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
+        <div className="flex flex-wrap items-center gap-2 text-body-sm text-[var(--system-500)]">
+          <span className="font-medium text-[var(--system-700)]">{filteredOrders.length} visible</span>
+          <span>{orders.length} total</span>
+          {selectedOrders.size > 0 && <span>{selectedOrders.size} selected</span>}
+          {searchQuery.trim() && (
+            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Search: {searchQuery.trim()}</span>
+          )}
+          {activeFilter !== "all" && (
+            <span className="rounded-full bg-[var(--blue-300)]/10 px-2 py-0.5 text-caption text-[var(--blue-300)]">
+              State: {getOrderStatusLabel(activeFilter)}
+            </span>
+          )}
+          {activeDateFilter !== "all" && (
+            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Date: {activeDateFilter}</span>
+          )}
+          {hiddenStatuses.size > 0 && (
+            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Hidden: {hiddenStatuses.size}</span>
+          )}
+        </div>
+        {hasActiveFilters && (
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="text-caption inline-flex h-8 items-center justify-center rounded-lg px-3 text-[var(--system-500)] transition-colors hover:bg-[var(--system-100)]"
+          >
+            Clear filters
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -1228,7 +1491,11 @@ export function ListView({
                   isOpen={!!statusDropdownOpen[order._id]}
                   onToggle={(open) => onStatusDropdownToggle(order._id, open)}
                   onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                  onIntegratedDispatch={() => handleDispatchSingle(order)}
+                  onManualDispatch={() => handleManualDispatch(order)}
+                  isUpdating={updatingOrderIds.has(order._id)}
                   callLog={(order.callLog as CallLog[]) || []}
+                  feedback={rowFeedback[order._id] ?? null}
                 />
               }
             />
@@ -1251,7 +1518,7 @@ export function ListView({
             <tr className="bg-[var(--system-200)]/60 rounded-[12px]">
               <th className="rounded-l-[12px] px-3 py-[10px] text-left">
                 <Checkbox
-                  checked={selectAll}
+                  checked={allVisibleSelected || selectAll}
                   onChange={handleSelectAll}
                   className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] hover:border-[var(--system-400)]"
                 >
@@ -1310,8 +1577,12 @@ export function ListView({
                     isOpen={!!statusDropdownOpen[order._id]}
                     onToggle={(open) => onStatusDropdownToggle(order._id, open)}
                     onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                    onIntegratedDispatch={() => handleDispatchSingle(order)}
+                    onManualDispatch={() => handleManualDispatch(order)}
+                    isUpdating={updatingOrderIds.has(order._id)}
                     callLog={callLog}
                     showCallSlots={false}
+                    feedback={rowFeedback[order._id] ?? null}
                   />
                 </TableCell>
                 <TableCell className="py-3">
@@ -1348,11 +1619,91 @@ export function ListView({
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="p-12 text-center text-[var(--system-300)]">
-            No orders found
+          <div className="rounded-[14px] bg-white p-12 text-center shadow-[var(--shadow-sm)]">
+            <p className="text-body text-[var(--system-600)]">
+              {hasActiveFilters ? "No visible orders match these filters" : "No orders yet"}
+            </p>
+            <p className="mt-1 text-body-sm text-[var(--system-300)]">
+              {hasActiveFilters ? "Clear filters to return to the full order list." : "New checkout orders will appear here."}
+            </p>
+            {hasActiveFilters && (
+              <button
+                type="button"
+                onClick={clearFilters}
+                className="mt-4 inline-flex h-9 items-center justify-center rounded-lg bg-[var(--system-100)] px-3 text-caption text-[var(--system-600)] hover:bg-[var(--system-200)]"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         )}
       </div>
+
+      {/* Courier Sync Results Modal */}
+      <Dialog open={syncModalOpen} onOpenChange={setSyncModalOpen}>
+        <DialogContent className="max-w-[520px] border-[--system-200] bg-[--color-card] p-6 shadow-[var(--shadow-xl)]">
+          <DialogHeader>
+            <div className="mb-2 flex items-center gap-3">
+              <div className="rounded-full bg-[var(--blue-300)]/10 p-3">
+                <RotateCw className={cn("h-5 w-5 text-[var(--blue-300)]", syncProgress && "animate-spin")} />
+              </div>
+              <div>
+                <DialogTitle>Courier Sync</DialogTitle>
+                <DialogDescription>
+                  Confirmed orders are sent to the courier with up to 3 automatic retries.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+          {syncProgress && (
+            <div className="rounded-xl bg-[var(--system-100)] px-3 py-2 text-body-sm text-[var(--system-600)]">
+              Syncing {syncProgress.current}/{syncProgress.total}
+              {syncProgress.retry > 0 ? ` - retry ${syncProgress.retry + 1}/3` : ""}
+            </div>
+          )}
+          <div className="max-h-[320px] space-y-2 overflow-y-auto pr-1">
+            {syncResults.length === 0 ? (
+              <p className="py-6 text-center text-body-sm text-[var(--system-300)]">Preparing sync...</p>
+            ) : (
+              syncResults.map((result) => (
+                <div key={`${result.orderId}-${result.status}`} className="rounded-xl border border-[var(--system-100)] bg-white px-3 py-2">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-body-sm text-[var(--system-700)]">#{result.orderNumber}</p>
+                      <p className="truncate text-caption text-[var(--system-400)]">{result.message}</p>
+                    </div>
+                    <span
+                      className={cn(
+                        "inline-flex items-center gap-1 rounded-full px-2 py-1 text-caption",
+                        result.status === "success" && "bg-emerald-50 text-emerald-700",
+                        result.status === "failed" && "bg-red-50 text-red-700",
+                        result.status === "skipped" && "bg-[var(--system-100)] text-[var(--system-500)]",
+                      )}
+                    >
+                      {result.status === "success" ? <CheckCircle2 className="h-3.5 w-3.5" /> : null}
+                      {result.status}
+                    </span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSyncModalOpen(false)}>Close</Button>
+            {syncResults.some((result) => result.status === "failed") && (
+              <Button
+                onClick={() => {
+                  const failedIds = new Set(syncResults.filter((result) => result.status === "failed").map((result) => result.orderId));
+                  const failedOrders = orders.filter((order) => failedIds.has(order._id));
+                  void runCourierSync(failedOrders, { mode: "selected" });
+                }}
+              >
+                Retry failed
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Modal */}
       <Dialog open={showDeleteConfirm} onOpenChange={(open) => !open && setShowDeleteConfirm(false)}>

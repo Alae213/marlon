@@ -2,13 +2,13 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-25
+> **Last updated:** 2026-04-26
 
 ---
 
 ## Summary
 
-Delivery dispatch is live from the orders list and order details drawer. Both send a POST request to `app/api/delivery/create-order/route.ts`, which authenticates the caller, re-resolves store ownership, loads the confirmed order, loads per-store delivery credentials, creates the courier order synchronously, and then records tracking, provider, `dispatched` status, timeline, digest, and dispatch analytics through the server-owned `api.orders.markOrderDispatchedFromDeliveryApi` mutation. Current: owners can dispatch confirmed COD orders from Orders without a separate client-side status mutation.
+Delivery dispatch is live from the orders list and order details drawer. Both send a POST request to `app/api/delivery/create-order/route.ts`, which authenticates the caller, re-resolves store ownership, loads the confirmed or legacy `dispatch_ready` order, loads per-store delivery credentials, creates the courier order synchronously, and then records tracking, provider, `dispatched` status, timeline, digest, and dispatch analytics through the server-owned `api.orders.markOrderDispatchedFromDeliveryApi` mutation. Current: owners can dispatch confirmed COD orders from Orders without a separate client-side status mutation, and unauthenticated dispatch attempts return structured `DELIVERY_AUTH_REQUIRED` JSON instead of provider-failure feedback.
 
 ---
 
@@ -39,11 +39,14 @@ Delivery dispatch is live from the orders list and order details drawer. Both se
 ### Edge Cases & Rules
 
 - Current: only authenticated owners of the target store can dispatch; the route rejects mismatched `storeId`/`storeSlug` and non-owner access.
+- Current: Clerk middleware runs for `/api/delivery(.*)` so route-level auth can produce structured JSON errors, while merchant page routes such as `/orders(.*)` and `/editor(.*)` redirect to sign-in before unauthorized Convex reads.
 - Current: the route uses an in-memory rate limit per user and client IP.
 - Current: provider credentials are loaded server-side; if store credentials are missing, the route can only use emergency fallback secrets when `DELIVERY_ALLOW_GLOBAL_CREDENTIAL_FALLBACK=true`.
 - Current: successful dispatch is server-owned and no longer depends on a follow-up UI status mutation.
+- Current: delivery dispatch failures return structured safe feedback codes; missing setup/credentials includes an `Open Courier settings` action pointing to `/editor/{storeSlug}?settings=integration`.
 - Current: duplicate dispatch requests for already-dispatched orders with tracking are idempotent and do not call the courier again.
 - Current: confirmed orders that already have tracking/provider metadata from the old split flow are recovered to `dispatched` without creating another courier order.
+- Current: old `dispatch_ready` orders without tracking can be dispatched through the same server-owned provider path.
 - Current: provider failure leaves the order in its previous valid state.
 - Current: `lib/delivery-status-sync.ts` maps live provider statuses into canonical order states, including `refused`, `unreachable`, and `returned`.
 - Current: Andrson and Noest are hidden from the settings UI and gated in the dispatch route until live adapters exist.
@@ -99,9 +102,9 @@ This feature joins order management, delivery credentials, and analytics.
 
 **UAT Status:** `programmatic-partial`
 
-**Last tested:** 2026-04-25
+**Last tested:** 2026-04-26
 
-**Outcome:** Targeted dispatch route, order lifecycle, provider mapper, lifecycle unit, and delivery provider contract tests pass. The order-management UI regression file is still blocked by a Windows `EPERM` read on `node_modules/ansi-regex/index.js`.
+**Outcome:** Targeted dispatch route, public checkout route, proxy routing regression, and lint checks pass. Fallback browser smoke checks verified unauthenticated `/orders/alaa` and `/editor/alaa?settings=integration` redirect to Clerk sign-in, and unauthenticated delivery dispatch returns `DELIVERY_AUTH_REQUIRED`. Authenticated merchant row/dispatch browser testing still requires a browser session with the merchant logged in.
 
 ## Open Questions
 
@@ -113,6 +116,7 @@ This feature joins order management, delivery credentials, and analytics.
 
 - Successful dispatch returns `trackingNumber`, `deliveryFee`, and `status` to the caller; Convex is responsible for the lifecycle write and analytics event.
 - The drawer labels the confirmed-state action `Send to delivery company`; the list surfaces `Dispatch All` and `Dispatch Selected` shortcuts.
+- The row status dropdown intentionally does not expose manual `dispatch_ready` or `dispatched` transitions.
 
 ---
 

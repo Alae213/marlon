@@ -11,7 +11,7 @@ Status labels used here:
 
 ## 1) Live Schema Snapshot
 
-- `Current`: Live tables are `users`, `stores`, `storeBillingPeriods`, `paymentAttempts`, `paymentEvidence`, `storeMemberships`, `products`, `orders`, `orderDigests`, `orderTimelineEvents`, `orderCallEvents`, `productDigests`, `siteContent`, `deliveryPricing`, `deliveryCredentials`, `deliveryAnalyticsEvents`, and `deliveryAnalyticsRollups`.
+- `Current`: Live tables are `users`, `stores`, `storeBillingPeriods`, `paymentAttempts`, `paymentEvidence`, `storeMemberships`, `products`, `orders`, `checkoutAttempts`, `orderDigests`, `orderTimelineEvents`, `orderCallEvents`, `productDigests`, `siteContent`, `deliveryPricing`, `deliveryCredentials`, `deliveryAnalyticsEvents`, and `deliveryAnalyticsRollups`.
 - `Current`: The live model is mostly owner-centric. `stores.ownerId` is the main tenant/control link.
 - `Current`: `storeBillingPeriods`, `paymentAttempts`, `paymentEvidence`, and `storeMemberships` now exist as additive canonical-cutover scaffolding, but runtime billing/access still remains legacy-first.
 - `Current`: There is still no live `ownerTransferRequests`, `billingSubscriptions`, `unlockWindows`, `webhookReceipts`, `queueJobs`, `blocklistEntries`, or `reputationSignals` table.
@@ -28,6 +28,8 @@ erDiagram
     stores ||--o{ siteContent : configures
     stores ||--o{ deliveryPricing : prices
     stores ||--o{ orders : receives
+    stores ||--o{ checkoutAttempts : captures
+    checkoutAttempts ||--o| orders : converts
     stores ||--o{ orderDigests : derives
     orders ||--o{ orderTimelineEvents : appends
     orders ||--o{ orderCallEvents : appends
@@ -69,10 +71,10 @@ Purpose: catalog products with optional variants.
 Purpose: operational order record with customer, line items, delivery, notes, and some embedded history.
 
 - Key fields: `storeId`, `orderNumber`, customer fields (`customerName`, `customerPhone`, `customerWilaya`, optional commune/address), `products[]`, `subtotal`, `deliveryCost`, `total`, `status`
-- Optional operations fields: legacy/display `paymentStatus`, COD-specific `codPaymentStatus`, call metrics, delivery/tracking fields, public-checkout `riskFlags`, `notes`
+- Optional operations fields: legacy/display `paymentStatus`, COD-specific `codPaymentStatus`, call metrics, delivery/tracking fields, public-checkout `riskFlags`, optional `checkoutAttemptId`, `notes`
 - Current COD payment substates: `pending_collection`, `collected`, `not_collected`, `reconciliation_pending`, `reconciled`
 - Embedded history still present: optional `callLog[]`, `auditTrail[]`, `timeline[]`, admin-note fields
-- Indexes: `storeId`, `storeCreatedAt`, `status`, `orderNumber`, `storeOrderNumber`, `storeUpdatedAt`
+- Indexes: `storeId`, `storeCreatedAt`, `status`, `orderNumber`, `storeOrderNumber`, `storeUpdatedAt`, `checkoutAttemptId`
 - Reality note: live orders are not modeled with masked-overflow snapshots, retention markers, or normalized audit-only history yet
 
 ## 3) Current Supporting / Derived / Event Tables
@@ -80,7 +82,8 @@ Purpose: operational order record with customer, line items, delivery, notes, an
 ### Order-facing tables
 
 - `orderDigests` - `Current`: denormalized order list/read model with headline customer, total, status, COD payment status, provider, risk flags, and product-summary fields; indexed by `orderId`, store/update, store/status/update, and store/order number
-- `orderTimelineEvents` - `Current`: per-order timeline events with `status`, optional `note`, `createdAt`; indexed by order/date and store/date
+- `checkoutAttempts` - `Current`: anonymous pre-order checkout/lead capture records with `storeId`, `attemptKey`, lifecycle `started | submitted | converted | abandoned | recovered`, product summary, optional phone last 4/wilaya, optional `convertedOrderId`, optional `recoverySource`, and lifecycle timestamps; indexed by store/attempt key, store/lifecycle/update, and converted order
+- `orderTimelineEvents` - `Current`: per-order timeline events with `status`, optional `previousStatus`, `nextStatus`, `actorId`, `actorRole`, `source`, `note`, and `createdAt`; indexed by order/date and store/date
 - `orderCallEvents` - `Current`: per-order call outcomes with optional notes; indexed by order/date and store/date
 
 ### Product-facing tables
@@ -97,7 +100,7 @@ Purpose: operational order record with customer, line items, delivery, notes, an
 
 ### Delivery analytics tables
 
-- `deliveryAnalyticsEvents` - `Current`: event stream for delivery outcomes with `eventType`, `provider`, optional `region`, `trackingNumber`, `reason`, `source`, `createdAt`
+- `deliveryAnalyticsEvents` - `Current`: owner-scoped event stream for delivery outcomes with `eventType`, `provider`, optional `region`, `trackingNumber`, `reason`, `source`, `createdAt`; order-linked writes reject order/store mismatches before insertion
 - `deliveryAnalyticsRollups` - `Current`: daily aggregate counters by store/day/provider/region with `attempted`, `dispatched`, `delivered`, `failed`, `rts`, `completed`, `updatedAt`
 - `Partial`: these analytics tables are live even though the full async dispatch/queue architecture is not
 
@@ -198,6 +201,7 @@ These tables now exist in `convex/schema.ts`, but they remain migration/cutover 
 - `Gap`: Many previously documented tables were aspirational and do not exist in live Convex schema.
 - `Gap`: Live billing/lock behavior is trial/subscription + order-count based, not the full `5/day` `Africa/Algiers` overflow/unlock/delete model.
 - `Gap`: Live order history is split across `orders`, `orderDigests`, `orderTimelineEvents`, and `orderCallEvents`, with some history still embedded inside `orders`.
+- `Gap`: Checkout attempts are now captured before conversion, but merchant-facing recovery dashboards and richer lead analytics are still not built.
 - `Gap`: Delivery pricing is currently per-wilaya home/office pricing, not the broader planned zone-rule matrix.
 - `Gap`: Authorization data is still mostly owner-centric; do not assume live memberships, delegated roles, or governance workflows.
 - `Gap`: Field names in live schema differ from older docs in several important places, especially `users`, `stores`, `products`, and `orders`.

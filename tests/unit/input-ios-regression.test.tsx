@@ -29,6 +29,30 @@ Object.assign(globalThis, {
   getComputedStyle: dom.window.getComputedStyle.bind(dom.window),
 });
 
+if (!dom.window.HTMLElement.prototype.attachEvent) {
+  dom.window.HTMLElement.prototype.attachEvent = () => {};
+}
+
+if (!dom.window.HTMLElement.prototype.detachEvent) {
+  dom.window.HTMLElement.prototype.detachEvent = () => {};
+}
+
+if (!dom.window.HTMLInputElement.prototype.attachEvent) {
+  dom.window.HTMLInputElement.prototype.attachEvent = () => {};
+}
+
+if (!dom.window.HTMLInputElement.prototype.detachEvent) {
+  dom.window.HTMLInputElement.prototype.detachEvent = () => {};
+}
+
+if (!dom.window.HTMLTextAreaElement.prototype.attachEvent) {
+  dom.window.HTMLTextAreaElement.prototype.attachEvent = () => {};
+}
+
+if (!dom.window.HTMLTextAreaElement.prototype.detachEvent) {
+  dom.window.HTMLTextAreaElement.prototype.detachEvent = () => {};
+}
+
 const { Input } = await import("@/components/primitives/core/inputs/input");
 const { Textarea } = await import("@/components/primitives/core/inputs/textarea");
 
@@ -78,7 +102,12 @@ describe("ios field primitives", () => {
     expect(input.getAttribute("autocomplete")).toBe("email");
     expect(input.getAttribute("inputmode")).toBe("email");
     expect(input.getAttribute("autocapitalize")).toBe("none");
-    expect(input.spellcheck).toBe(false);
+    const spellcheckAttribute = input.getAttribute("spellcheck");
+    if (spellcheckAttribute !== null) {
+      expect(spellcheckAttribute).toBe("false");
+    } else {
+      expect((input as any).spellcheck).toBe(false);
+    }
     expect(view.getByText("Used for account updates.")).toBeTruthy();
   });
 

@@ -30,7 +30,7 @@ export const STATUS_CONFIG: Record<OrderStatus, {
   textColor: string;
 }> = {
   new: {
-    label: "New",
+    label: "Needs Call",
     icon: <CircleDashed className="w-3.5 h-3.5" />,
     bgColor: "#0066FE20",
     textColor: "#0066FE",
@@ -54,13 +54,13 @@ export const STATUS_CONFIG: Record<OrderStatus, {
     textColor: "#FC9239",
   },
   dispatched: {
-    label: "Dispatched",
+    label: "Provider Accepted",
     icon: <Truck className="w-3.5 h-3.5" />,
     bgColor: "#F164AD20",
     textColor: "#F164AD",
   },
   in_transit: {
-    label: "In Transit",
+    label: "With Courier",
     icon: <MapPinned className="w-3.5 h-3.5" />,
     bgColor: "#7C3AED20",
     textColor: "#7C3AED",
@@ -96,19 +96,19 @@ export const STATUS_CONFIG: Record<OrderStatus, {
     textColor: "#9E0000",
   },
   delivery_failed: {
-    label: "Delivery Failed",
+    label: "Provider Failed",
     icon: <PhoneOff className="w-3.5 h-3.5" />,
     bgColor: "#CF003720",
     textColor: "#CF0037",
   },
   refused: {
-    label: "Refused",
+    label: "Customer Refused",
     icon: <BanknoteX className="w-3.5 h-3.5" />,
     bgColor: "#CF003720",
     textColor: "#CF0037",
   },
   unreachable: {
-    label: "Unreachable",
+    label: "Customer Unreachable",
     icon: <HelpCircle className="w-3.5 h-3.5" />,
     bgColor: "#FC923920",
     textColor: "#FC9239",

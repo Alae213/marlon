@@ -52,6 +52,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={textareaId}
           data-slot="ios-textarea"
           data-variant={variant}
+          data-invalid={error ? "true" : undefined}
           aria-invalid={error ? true : undefined}
           aria-describedby={describedBy}
           rows={rows}
