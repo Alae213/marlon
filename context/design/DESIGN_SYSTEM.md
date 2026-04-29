@@ -66,8 +66,8 @@
 
 | Token | Font | Usage |
 |-------|------|-------|
-| `--font-sans` | Inter, Helvetica Neue, Arial, sans-serif fallback | All Latin UI copy |
-| `--font-arabic` | Inter, Helvetica Neue, Arial, sans-serif fallback | Arabic UI copy; same family for consistency |
+| `--font-sans` | Nunito, Helvetica Neue, Arial, sans-serif fallback | All Latin UI copy |
+| `--font-arabic` | Nunito, Helvetica Neue, Arial, sans-serif fallback | Arabic UI copy; same family for consistency |
 
 ### Locked Type Scale
 
@@ -83,7 +83,7 @@ Marlon now uses exactly five semantic scales across storefront and app surfaces.
 
 Rules:
 
-- Inter only everywhere, including hero/storefront and Arabic UI.
+- Nunito only everywhere, including hero/storefront and Arabic UI.
 - Only `title` and `display` use negative tracking.
 - Arabic `title` and `display` content must remove negative tracking.
 - `text-micro-label` is the only uppercase helper; it reuses the caption scale with quiet spacing.
@@ -254,3 +254,4 @@ These areas use dark gradients for attention. **Keep existing hardcoded values:*
 - v1.0 (2026): Apple-inspired color tokens + mixed Frosted UI typography
 - v1.1 (2026-04-18): Inter-only five-scale typography system shared across app and storefront
 - v1.2 (2026-04-18): Shared iOS-style field tokens, light/dark field variants, and field migration rules
+- v1.3 (2026-04-29): Nunito-only typography direction replaces the previous Inter-only rule

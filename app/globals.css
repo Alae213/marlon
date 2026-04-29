@@ -128,8 +128,8 @@
   /* ===========================================
        TYPOGRAPHY - Font Stack
        =========================================== */
-  --font-sans: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
-  --font-arabic: var(--font-inter), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-sans: var(--font-nunito), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-arabic: var(--font-nunito), -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, Arial, sans-serif;
 
   /* ===========================================
       TYPOGRAPHY - Type Scale
@@ -182,6 +182,22 @@
       =========================================== */
  
   --gradient-popup: linear-gradient(145deg, rgba(30, 31, 32, 0.98), rgba(21, 22, 23, 0.96));
+  --shadow-onboarding-cta:
+    inset 0 0 18px rgb(255 255 255 / 0.43),
+    0 3px 5px rgb(47 47 47 / 0.11),
+    0 0.71px 3.55px rgb(0 0 0 / 0.06),
+    inset 0 -2px 3px rgb(27 23 45 / 0.05),
+    inset 0 1px 1px 1px rgb(222 222 222 / 0.4),
+    inset 0 2px 2.71px rgb(255 255 255 / 0.5),
+    0 0 24px rgb(0 0 0 / 0.1);
+  --shadow-onboarding-cta-wrap:
+    0 9px 20px rgb(0 0 0 / 0.1),
+    0 37px 37px rgb(0 0 0 / 0.09),
+    0 83px 50px rgb(0 0 0 / 0.05),
+    0 147px 59px rgb(0 0 0 / 0.01);
+  --shadow-button-soft:
+    0 1px 2px rgb(0 0 0 / 0.06),
+    0 6px 18px rgb(0 0 0 / 0.06);
 
   /* ===========================================
       MENU TOKENS
@@ -300,6 +316,66 @@
   line-height: var(--leading-caption);
   letter-spacing: var(--tracking-micro-label);
   font-weight: var(--weight-micro-label);
+}
+
+.onboarding-title {
+  font-family: "Nunito", var(--font-sans);
+  font-size: 2rem;
+  line-height: 0.9;
+  letter-spacing: 0;
+  font-weight: 900;
+}
+
+.onboarding-option-text {
+  font-family: "Nunito", var(--font-sans);
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: 0;
+  font-weight: 900;
+}
+
+.onboarding-button-text {
+  font-family: "Nunito", var(--font-sans);
+  font-size: 1.0625rem;
+  line-height: 1.1764705882;
+  letter-spacing: 0;
+  font-weight: 800;
+}
+
+.onboarding-back-button {
+  display: inline-flex;
+  height: 44px;
+  width: 44px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #404040;
+  transition:
+    transform 150ms ease-out,
+    background-color 150ms ease-out,
+    color 150ms ease-out;
+}
+
+.onboarding-back-button:hover {
+  background: #f7f7f7;
+}
+
+.onboarding-back-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.shadow-onboarding-cta {
+  box-shadow: var(--shadow-onboarding-cta);
+}
+
+.shadow-button-soft {
+  box-shadow: var(--shadow-button-soft);
+}
+
+.shadow-onboarding-cta-wrap {
+  box-shadow: var(--shadow-onboarding-cta-wrap);
 }
 
 

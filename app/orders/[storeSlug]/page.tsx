@@ -62,9 +62,7 @@ function OrdersContent({
   const [selectAll, setSelectAll] = useState(false);
 
   // Status dropdown state
-  const [statusDropdownOpen, setStatusDropdownOpen] = useState<{
-    [key: string]: boolean;
-  }>({});
+  const [statusDropdownOpenKey, setStatusDropdownOpenKey] = useState<string | null>(null);
 
   const [selectedOrder, setSelectedOrder] = useState<Doc<"orders"> | null>(
     null,
@@ -83,6 +81,7 @@ function OrdersContent({
 
   const handleStatusChange = useCallback(
     async (orderId: string, newStatus: string, note?: string) => {
+      setStatusDropdownOpenKey(null);
       setUpdatingOrderIds((prev) => new Set(prev).add(orderId));
       try {
         await updateOrderStatus({
@@ -222,9 +221,15 @@ function OrdersContent({
     }
   };
 
-  const handleStatusDropdownToggle = (orderId: string, open: boolean) => {
-    setStatusDropdownOpen((prev) => ({ ...prev, [orderId]: open }));
-  };
+  const handleStatusDropdownToggle = useCallback((dropdownKey: string, open: boolean) => {
+    setStatusDropdownOpenKey((currentKey) => {
+      if (open) {
+        return dropdownKey;
+      }
+
+      return currentKey === dropdownKey ? null : currentKey;
+    });
+  }, []);
 
   const handleClearSelection = () => {
     setSelectedOrders(new Set());
@@ -366,7 +371,7 @@ function OrdersContent({
             onClearSelection: handleClearSelection,
             onStatusChange: handleStatusChange,
             onStatusDropdownToggle: handleStatusDropdownToggle,
-            statusDropdownOpen,
+            statusDropdownOpenKey,
             searchQuery,
             onSearchQueryChange: setSearchQuery,
             isSearchOpen,

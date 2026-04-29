@@ -2,7 +2,7 @@
 
 > **Status:** `in-progress`
 > **Phase:** v1
-> **Last updated:** 2026-04-27
+> **Last updated:** 2026-04-29
 
 ---
 
@@ -85,6 +85,9 @@ The store dashboard is the signed-in landing surface for creating and reopening 
 | Task # | Status | What needs to be done |
 |--------|--------|-----------------------|
 | T32 | `[x]` | Remove the single-store runtime cap and align dashboard/store creation flows with the canonical unlimited-store workspace policy in `OVERVIEW.md` and `SCOPE.md`. |
+| T60 | `[x]` | Redesign and refactor the signed-out onboarding questionnaire to match the Figma mobile flow while preserving current pre-signup behavior. |
+| T61 | `[x]` | Refactor the signed-in dashboard store card into a shared Figma-matched component with public storefront link, Paid/Free badge, and Nunito typography direction. |
+| T62 | `[x]` | Refactor the dashboard entrypoint into smaller components and surface store name/browser icon editing through the existing store settings modal. |
 
 ---
 
@@ -109,6 +112,9 @@ The store dashboard is the signed-in landing surface for creating and reopening 
 - Main implementation references: `app/page.tsx`, `convex/stores.ts`, `app/editor/[storeSlug]/page.tsx`.
 - Dashboard cards currently show minimal store metadata; the important documented gap is that runtime still behaves like a single-store workspace even though product truth is multi-store.
 - 2026-04-27: Fixed a runtime `Dialog is not defined` crash in `CreateStoreModal` by restoring the shared dialog imports in `app/page.tsx`.
+- 2026-04-29: Refactored signed-out onboarding out of `app/page.tsx` into `components/pages/onboarding`, applied the Figma mobile questionnaire structure, added icon-led option rows, and updated shared button styling.
+- 2026-04-29: Refactored the signed-in store card out of `app/page.tsx` into `components/features/shared/StoreCard.tsx`, applied the dark Figma card treatment, added storefront link behavior, and displays `Paid` only for active unexpired `paidUntil` unlocks.
+- 2026-04-29: Split the dashboard entrypoint into a dedicated dashboard component and create-store modal, added shared store-browser metadata branding for store-scoped pages, and moved favicon uploads into both the create-store flow and the existing store settings modal using the shared image cropper and storage upload flow.
 
 ---
 

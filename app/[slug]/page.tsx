@@ -14,6 +14,7 @@ import { CartSidebar } from "@/components/features/cart/cart-sidebar";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetHeader } from "@/components/ui/sheet";
 import { containsArabicText } from "@/components/primitives/core/typography";
+import { StoreBrowserBranding } from "@/components/pages/shared/store-browser-branding";
 import {
   resolveHeroAlignment,
   resolveHeroCta,
@@ -116,8 +117,6 @@ function StorefrontContent() {
     openCart();
   };
 
-  const hasContactInfo = Boolean(footerPhone || footerEmail);
-
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
@@ -174,6 +173,8 @@ function StorefrontContent() {
   const footerPhone = currentFooter?.contactPhone ?? "";
   const footerEmail = currentFooter?.contactEmail ?? "";
 
+  const hasContactInfo = Boolean(footerPhone || footerEmail);
+
   const navbarSurfaceClass =
     navbarBg === "dark"
       ? "border-white/12 bg-[color:rgb(23_23_23_/_0.72)]"
@@ -191,7 +192,9 @@ function StorefrontContent() {
       : "bg-transparent hover:bg-black/5";
 
   return (
-    <div className="w-full bg-[var(--system-50)]">
+    <>
+      <StoreBrowserBranding title={store?.name} iconUrl={navbarLogoUrl} />
+      <div className="w-full bg-[var(--system-50)]">
       {/* Navbar */}
       <div className="fixed inset-x-0 top-5 z-50 px-4">
         <div
@@ -435,6 +438,7 @@ function StorefrontContent() {
           </div>
         )}
       </footer>
-    </div>
+      </div>
+    </>
   );
 }

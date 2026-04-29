@@ -33,17 +33,17 @@ Status labels used here:
 
 ## 3) User Scenarios
 
-| Scenario | Main actor | User intent | Expected outcome |
-|---|---|---|---|
-| Create first store | Solo merchant | Start selling quickly | `Current`: merchant creates a store and enters the editor/workspace. |
-| Manage catalog | Merchant or agency operator | Add, edit, archive, and present products | `Current`: product create/update/archive exists; archived-product recovery UI is still partial. |
-| Customize storefront | Merchant | Configure public hero, content, delivery pricing, and store info | `Current`: editor/content flows exist; some public nav/footer affordances remain partial. |
-| Browse and buy | Anonymous shopper | Browse products and place a COD order | `Current`: public order route creates real orders with server-computed totals. |
-| Confirm order by phone | Merchant/operator | Validate shopper intent before fulfillment | `Current`: answered-call evidence gates confirmation; refusal, wrong number, and repeated no-answer outcomes can drive lifecycle states. |
-| Dispatch to courier | Merchant/operator | Send confirmed COD order to local delivery provider | `Current`: delivery dispatch is server-owned and records tracking, status, timeline, digest, and analytics. |
-| Unlock overflow orders | Owner/admin | Pay to restore access to masked overflow data | `Current`: canonical billing/payment tables and unlock flow exist; customer-facing lock notice remains forbidden. |
-| Invite agency or staff | Owner/admin, invited user | Share store operation with another account | `Current`: memberships, invitations, revocation, and ownership transfer foundations exist. |
-| Recover abandoned checkout | Merchant/platform | Understand unfinished shopper intent | `Partial`: checkout attempts are tracked, but merchant-facing recovery/analytics UX is not complete. |
+| Scenario                   | Main actor                  | User intent                                                      | Expected outcome                                                                                                                         |
+| -------------------------- | --------------------------- | ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| Create first store         | Solo merchant               | Start selling quickly                                            | `Current`: merchant creates a store and enters the editor/workspace.                                                                     |
+| Manage catalog             | Merchant or agency operator | Add, edit, archive, and present products                         | `Current`: product create/update/archive exists; archived-product recovery UI is still partial.                                          |
+| Customize storefront       | Merchant                    | Configure public hero, content, delivery pricing, and store info | `Current`: editor/content flows exist; some public nav/footer affordances remain partial.                                                |
+| Browse and buy             | Anonymous shopper           | Browse products and place a COD order                            | `Current`: public order route creates real orders with server-computed totals.                                                           |
+| Confirm order by phone     | Merchant/operator           | Validate shopper intent before fulfillment                       | `Current`: answered-call evidence gates confirmation; refusal, wrong number, and repeated no-answer outcomes can drive lifecycle states. |
+| Dispatch to courier        | Merchant/operator           | Send confirmed COD order to local delivery provider              | `Current`: delivery dispatch is server-owned and records tracking, status, timeline, digest, and analytics.                              |
+| Unlock overflow orders     | Owner/admin                 | Pay to restore access to masked overflow data                    | `Current`: canonical billing/payment tables and unlock flow exist; customer-facing lock notice remains forbidden.                        |
+| Invite agency or staff     | Owner/admin, invited user   | Share store operation with another account                       | `Current`: memberships, invitations, revocation, and ownership transfer foundations exist.                                               |
+| Recover abandoned checkout | Merchant/platform           | Understand unfinished shopper intent                             | `Partial`: checkout attempts are tracked, but merchant-facing recovery/analytics UX is not complete.                                     |
 
 ## 4) User Journeys
 

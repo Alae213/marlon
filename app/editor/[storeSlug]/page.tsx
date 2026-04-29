@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { Loader2 } from "lucide-react";
 import { ProductsContent } from "@/components/pages/editor";
+import { StoreBrowserBranding } from "@/components/pages/shared/store-browser-branding";
 
 export default function EditorPage() {
   const params = useParams();
@@ -17,8 +18,13 @@ export default function EditorPage() {
     api.stores.getStoreBySlug,
     storeSlug ? { slug: storeSlug } : "skip"
   );
+  const navbarContent = useQuery(
+    api.siteContent.getSiteContentResolved,
+    store?._id ? { storeId: store._id as Id<"stores">, section: "navbar" } : "skip"
+  );
 
   const storeId = store?._id as Id<"stores"> | undefined;
+  const navbarLogoUrl = (navbarContent?.content as { logoUrl?: string } | undefined)?.logoUrl;
 
   if (!store && storeSlug) {
     return (
@@ -38,5 +44,10 @@ export default function EditorPage() {
     );
   }
 
-  return <ProductsContent storeId={storeId} storeSlug={storeSlug} initialSettingsTab={initialSettingsTab} />;
+  return (
+    <>
+      <StoreBrowserBranding title={store.name} iconUrl={navbarLogoUrl} />
+      <ProductsContent storeId={storeId} storeSlug={storeSlug} initialSettingsTab={initialSettingsTab} />
+    </>
+  );
 }

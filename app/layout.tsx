@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import type { CSSProperties } from "react";
+import { Inter, Nunito } from "next/font/google";
 import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConvexClientProvider } from "@/components/pages/providers/convex-client-provider";
@@ -18,9 +18,17 @@ export const metadata: Metadata = {
 
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 const isClerkConfigured = publishableKey && !publishableKey.includes("placeholder");
-const fontVariables = {
-  "--font-inter": "Inter, -apple-system, BlinkMacSystemFont, \"Helvetica Neue\", Helvetica, Arial, sans-serif",
-} as CSSProperties;
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+const nunito = Nunito({
+  subsets: ["latin"],
+  weight: ["800", "900"],
+  variable: "--font-nunito",
+  display: "swap",
+});
 
 export default function RootLayout({
   children,
@@ -32,23 +40,21 @@ export default function RootLayout({
       <ClerkProvider publishableKey={publishableKey}>
         <ConvexClientProvider>
           <ToastProvider>
-            <html lang="en" dir="ltr">
-      <head>
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/react-grab/dist/index.global.js"
-            crossOrigin="anonymous"
-            strategy="beforeInteractive"
-          />
-        )}
-        {process.env.NODE_ENV === "development" && (
-          <Script
-            src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
-            strategy="lazyOnload"
-          />
-        )}
-      </head>
-<body className="antialiased" style={fontVariables}>
+            <html lang="en" dir="ltr" className={`${inter.variable} ${nunito.variable}`}>
+              {process.env.NODE_ENV === "development" && (
+                <Script
+                  src="//unpkg.com/react-grab/dist/index.global.js"
+                  crossOrigin="anonymous"
+                  strategy="lazyOnload"
+                />
+              )}
+              {process.env.NODE_ENV === "development" && (
+                <Script
+                  src="//unpkg.com/@react-grab/opencode/dist/client.global.js"
+                  strategy="lazyOnload"
+                />
+              )}
+              <body className="antialiased">
                   {children}
                   <Analytics />
                   <SpeedInsights />
@@ -61,8 +67,8 @@ export default function RootLayout({
   }
 
   return (
-    <html lang="en" dir="ltr">
-      <body className="antialiased" style={fontVariables}>
+    <html lang="en" dir="ltr" className={`${inter.variable} ${nunito.variable}`}>
+      <body className="antialiased">
         <ConvexClientProvider>
           <ToastProvider>
             {children}

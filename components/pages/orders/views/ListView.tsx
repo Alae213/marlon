@@ -204,7 +204,7 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
         <button
           type="button"
           aria-label={triggerLabel}
-          className="flex h-[18px] cursor-pointer items-end gap-0.5 rounded-md bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--blue-300)]/40"
+          className="flex h-[18px] cursor-pointer items-end gap-0.5 rounded-md bg-transparent p-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/40"
         >
           {slots.map((call, index) => (
             <div
@@ -230,12 +230,12 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
               background: "linear-gradient(0deg, #1D1E1F 0%, #353737 100%)",
             }}
           >
-            <div className="text-micro-label mb-1.5 text-[var(--system-200)]">
+            <div className="text-micro-label mb-1.5 font-medium text-[var(--system-200)]">
               Call History
             </div>
             {callLog.slice().map((call, idx) => (
               <div key={call.id} className="flex items-center gap-2 py-0.5">
-                <span className="text-caption w-4 text-[var(--system-300)]">
+                <span className="text-caption w-4 font-medium text-[var(--system-300)]">
                   #{idx + 1}
                 </span>
                 <span
@@ -244,10 +244,10 @@ function CallSlotsHover({ callLog }: { callLog: CallLog[] }) {
                     getCallOutcomeBg(call.outcome)
                   )}
                 />
-                <span className="text-body-sm text-white/90">
+                <span className="text-body-sm font-medium text-white/90">
                   {CALL_OUTCOME_LABELS[call.outcome]?.label || call.outcome}
                 </span>
-                <span className="text-caption text-white/40">
+                <span className="text-caption font-medium text-white/40">
                   {formatDate(call.timestamp)}
                 </span>
               </div>
@@ -267,8 +267,8 @@ interface ListViewProps {
   onOrderSelect: (orderId: string) => void;
   onClearSelection: () => void;
   onStatusChange: (orderId: string, newStatus: string, note?: string) => void;
-  onStatusDropdownToggle: (orderId: string, open: boolean) => void;
-  statusDropdownOpen: { [key: string]: boolean };
+  onStatusDropdownToggle: (dropdownKey: string, open: boolean) => void;
+  statusDropdownOpenKey: string | null;
   searchQuery: string;
   onSearchQueryChange: (query: string) => void;
   isSearchOpen: boolean;
@@ -318,10 +318,12 @@ function StatusCell({
     (nextStatus) => !ROW_STATUS_BLOCKLIST.has(nextStatus)
   );
   const statusOptions = getMerchantTransitionsForOrder(status, order, "merchant").filter(
-    (nextStatus) => !ROW_STATUS_BLOCKLIST.has(nextStatus)
+    (nextStatus) => !ROW_STATUS_BLOCKLIST.has(nextStatus) && nextStatus !== "blocked"
   );
   const confirmDisabledReason =
-    rawStatusOptions.includes("confirmed") && !hasAnsweredCallEvidence(order)
+    canonicalStatus === "awaiting_confirmation" || canonicalStatus === "new"
+      ? null 
+      : rawStatusOptions.includes("confirmed") && !hasAnsweredCallEvidence(order)
       ? "Confirm requires an answered call"
       : null;
   const riskFlags = normalizeOrderRiskFlags(order?.riskFlags);
@@ -334,8 +336,13 @@ function StatusCell({
     onStatusChange(nextStatus);
   };
 
+  const requestDispatchAction = (action?: () => void) => {
+    onToggle(false);
+    action?.();
+  };
+
   return (
-    <DropdownMenu open={isOpen} onOpenChange={onToggle}>
+    <DropdownMenu open={isOpen} onOpenChange={onToggle} modal={false}>
       <div className="relative w-full min-w-0">
         <div
           className={cn(
@@ -349,6 +356,8 @@ function StatusCell({
                 type="button"
                 disabled={isUpdating}
                 aria-busy={isUpdating}
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => event.stopPropagation()}
                 className={cn(
                   "group flex min-h-10 cursor-pointer flex-row items-center gap-2 rounded-[12px] p-1 text-left transition-[background-color,transform] hover:bg-black/5 active:scale-[0.96] disabled:cursor-not-allowed disabled:opacity-60 motion-reduce:transition-none motion-reduce:active:scale-100",
                   feedback?.type === "success" && "bg-emerald-50",
@@ -362,26 +371,11 @@ function StatusCell({
                 >
                   {isUpdating ? "Updating..." : statusConfig?.label || statusLabel?.label || status}
                 </Badge>
-                <ChevronsUpDown className="h-3.5 w-3.5 text-[var(--system-300)] opacity-0 transition-opacity group-hover:opacity-100" />
               </button>
             </DropdownMenuTrigger>
             <div className="mt-1 max-w-[180px] space-y-1">
-              {activityHint && (
-                <p className="truncate text-caption text-[var(--system-300)]">{activityHint}</p>
-              )}
-              {needsUnreachablePrompt && (
-                <p className="text-caption text-[#FC9239]">4 no-answer calls: keep trying or mark unreachable</p>
-              )}
               {riskFlags.length > 0 && (
-                <p className="text-caption text-[#FC9239]">Risk warning: {riskFlags.length} flag{riskFlags.length === 1 ? "" : "s"}</p>
-              )}
-              {feedback && (
-                <p className={cn(
-                  "text-caption",
-                  feedback.type === "success" ? "text-emerald-600" : "text-red-600",
-                )}>
-                  {feedback.message}
-                </p>
+                <p className="text-caption font-medium text-[#FC9239]">Risk warning: {riskFlags.length} flag{riskFlags.length === 1 ? "" : "s"}</p>
               )}
             </div>
           </div>
@@ -394,42 +388,40 @@ function StatusCell({
 
         <DropdownMenuContent
           align="start"
-          sideOffset={-32}
-          className="min-w-[180px] rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] p-1 text-[var(--system-600)] shadow-[var(--shadow-md)]"
+          sideOffset={8}
+          className="min-w-[180px] max-h-[300px] overflow-y-auto rounded-[14px] bg-[var(--system-600)]/80 p-1 text-[var(--system-100)] backdrop-blur-xl"
         >
-          <DropdownMenuRadioGroup value={canonicalStatus ?? status}>
-            {statusOptions.length === 0 ? (
-              <DropdownMenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
-                {isUpdating ? "Updating..." : "No merchant actions"}
-              </DropdownMenuItem>
-            ) : statusOptions.map((s) => {
-              const sConfig = getStatusConfig(s)
-              return (
-                <DropdownMenuRadioItem
-                  key={s}
-                  value={s}
-                  onSelect={(event) => {
-                    event.preventDefault();
-                    if (!isUpdating) requestStatusChange(s);
-                  }}
-                  className="rounded-[12px] py-1.5 pl-8"
-                >
-                  <span
-                    className="text-caption overflow-hidden inline-flex items-center gap-1.5 rounded-[10px] px-2 py-1 shadow-[var(--shadow-badge)]"
-                    style={{
-                      backgroundColor: sConfig?.bgColor || "#6b728015",
-                      color: sConfig?.textColor || "#6b7280",
-                    }}
-                  >
-                    {sConfig?.icon}
-                    {sConfig?.label || getOrderStatusLabel(s)}
-                  </span>
-                </DropdownMenuRadioItem>
-              )
-            })}
-          </DropdownMenuRadioGroup>
-          {confirmDisabledReason && (
+          {statusOptions.length === 0 ? (
             <DropdownMenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-400)]">
+              {isUpdating ? "Updating..." : "No merchant actions"}
+            </DropdownMenuItem>
+          ) : statusOptions.map((s) => {
+            const sConfig = getStatusConfig(s);
+            return (
+              <DropdownMenuItem
+                key={s}
+                disabled={isUpdating}
+                onSelect={(event) => {
+                  event.preventDefault();
+                  if (!isUpdating) requestStatusChange(s);
+                }}
+                className="rounded-[12px] py-1.5"
+              >
+                <span
+                  className="text-caption font-medium overflow-hidden inline-flex items-center gap-1.5 rounded-[10px] px-2 py-1 shadow-[var(--shadow-sm)]"
+                  style={{
+                    backgroundColor: sConfig?.bgColor || "#6b728015",
+                    color: sConfig?.textColor || "#6b7280",
+                  }}
+                >
+                  {sConfig?.icon}
+                  {sConfig?.label || getOrderStatusLabel(s)}
+                </span>
+              </DropdownMenuItem>
+            );
+          })}
+          {confirmDisabledReason && (
+            <DropdownMenuItem disabled className="rounded-[12px] py-1.5 text-[var(--system-100)]">
               <Info className="h-4 w-4" />
               <span>{confirmDisabledReason}</span>
             </DropdownMenuItem>
@@ -441,22 +433,22 @@ function StatusCell({
                 disabled={isUpdating}
                 onSelect={(event) => {
                   event.preventDefault();
-                  onIntegratedDispatch?.();
+                  requestDispatchAction(onIntegratedDispatch);
                 }}
                 className="rounded-[12px]"
               >
-                <Truck className="h-4 w-4 text-[var(--blue-300)]" />
+                <Truck className="h-4 w-4 text-[var(--color-primary)]" />
                 <span>Send to courier</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 disabled={isUpdating}
                 onSelect={(event) => {
                   event.preventDefault();
-                  onManualDispatch?.();
+                  requestDispatchAction(onManualDispatch);
                 }}
                 className="rounded-[12px]"
               >
-                <PackageCheck className="h-4 w-4 text-[var(--system-500)]" />
+                <PackageCheck className="h-4 w-4 text-[var(--system-100)]" />
                 <span>Manual dispatch</span>
               </DropdownMenuItem>
             </>
@@ -478,7 +470,7 @@ function SelectedStatusSummary({ counts }: { counts: Record<string, number> }) {
         return (
           <span
             key={status}
-            className="text-micro-label inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px]"
+            className="text-micro-label font-medium inline-flex items-center gap-1 px-2 py-0.5 rounded-[8px]"
             style={{
               backgroundColor: statusConfig?.bgColor || "#6b7280",
               color: statusConfig?.textColor || "#ffffff",
@@ -502,7 +494,7 @@ export function ListView({
   onClearSelection,
   onStatusChange,
   onStatusDropdownToggle,
-  statusDropdownOpen,
+  statusDropdownOpenKey,
   searchQuery,
   onSearchQueryChange,
   isSearchOpen,
@@ -651,6 +643,20 @@ export function ListView({
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isSearchOpen, onSearchOpenChange]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const mediaQuery = window.matchMedia("(min-width: 768px)");
+    const closeOpenStatusDropdown = () => {
+      if (statusDropdownOpenKey) {
+        onStatusDropdownToggle(statusDropdownOpenKey, false);
+      }
+    };
+
+    mediaQuery.addEventListener("change", closeOpenStatusDropdown);
+    return () => mediaQuery.removeEventListener("change", closeOpenStatusDropdown);
+  }, [onStatusDropdownToggle, statusDropdownOpenKey]);
 
   const filteredOrders = useMemo(() => {
     let filtered = [...orders];
@@ -1016,42 +1022,13 @@ export function ListView({
     <TooltipProvider>
     <div className="w-full h-full flex flex-col gap-3 relative">
 
-      {/* Bulk Action Toolbar */}
+      {/* Bulk Action Toolbar - Fixed Bottom */}
       {selectedOrders.size > 0 && (
-        <>
-          <div className="hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-2 text-[var(--system-600)] shadow-[var(--shadow-sm)]">
-            <div className="flex items-center gap-1">
-              <span className="text-body mr-2 text-[var(--system-500)]">{selectedOrders.size} selected ({selectedVisibleCount} visible)</span>
-              <SelectedStatusSummary counts={selectedOrdersByStatus} />
-            </div>
-            <div className="flex items-center gap-2">
-              {selectedDispatchableCount > 0 && (
-                <button
-                  onClick={handleBulkDispatch}
-                  disabled={isBulkDispatching}
-                  className="text-caption ml-2 flex cursor-pointer items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isBulkDispatching ? (
-                    <Loader2 className="w-3 h-3 animate-spin" />
-                  ) : (
-                    <PackageCheck className="w-3 h-3" />
-                  )}
-                  {isBulkDispatching ? "Syncing..." : `Sync Selected (${selectedDispatchableCount})`}
-                </button>
-              )}
-              <button
-                className="cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
-                onClick={() => setShowDeleteConfirm(true)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div className="rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-3 text-[var(--system-600)] md:hidden">
-            <div className="flex flex-col gap-3">
-              <div className="space-y-2">
-                <span className="text-body text-[var(--system-500)]">{selectedOrders.size} selected</span>
+        <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-[var(--system-200)] bg-white p-4 shadow-lg">
+          <div className="mx-auto max-w-7xl">
+            <div className="hidden md:flex items-center justify-between rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-2 text-[var(--system-600)] shadow-[var(--shadow-sm)] w-fit">
+              <div className="flex items-center gap-1">
+                <span className="text-body font-medium text-[var(--system-500)]">{selectedOrders.size} selected ({selectedVisibleCount} visible)</span>
                 <SelectedStatusSummary counts={selectedOrdersByStatus} />
               </div>
               <div className="flex items-center gap-2">
@@ -1059,22 +1036,53 @@ export function ListView({
                   <button
                     onClick={handleBulkDispatch}
                     disabled={isBulkDispatching}
-                    className="text-caption flex-1 cursor-pointer rounded-md bg-[var(--blue-300)] px-3 py-2 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
+                    className="text-caption font-medium ml-2 flex cursor-pointer items-center gap-1 rounded-md bg-[var(--color-primary)] px-2 py-1 text-white transition-colors hover:bg-[var(--color-primary-blue-dark)] disabled:cursor-not-allowed disabled:opacity-50"
                   >
+                    {isBulkDispatching ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <PackageCheck className="w-3 h-3" />
+                    )}
                     {isBulkDispatching ? "Syncing..." : `Sync Selected (${selectedDispatchableCount})`}
                   </button>
                 )}
                 <button
-                  className="cursor-pointer rounded-md p-2 text-red-500 transition-colors hover:bg-red-500/20"
+                  className="cursor-pointer p-2 rounded-md transition-colors text-red-500 hover:bg-red-500/20"
                   onClick={() => setShowDeleteConfirm(true)}
-                  aria-label="Delete selected orders"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
+
+            <div className="md:hidden rounded-[14px] border border-[var(--system-100)] bg-[var(--system-50)] px-3 py-3 text-[var(--system-600)] w-fit">
+              <div className="flex flex-col gap-3">
+                <div className="space-y-2">
+                  <span className="text-body font-medium text-[var(--system-500)]">{selectedOrders.size} selected</span>
+                  <SelectedStatusSummary counts={selectedOrdersByStatus} />
+                </div>
+                <div className="flex items-center gap-2">
+                  {selectedDispatchableCount > 0 && (
+                    <button
+                      onClick={handleBulkDispatch}
+                      disabled={isBulkDispatching}
+                      className="text-caption font-medium flex-1 cursor-pointer rounded-md bg-[var(--color-primary)] px-3 py-2 text-white transition-colors hover:bg-[var(--color-primary-blue-dark)] disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {isBulkDispatching ? "Syncing..." : `Sync Selected (${selectedDispatchableCount})`}
+                    </button>
+                  )}
+                  <button
+                    className="cursor-pointer rounded-md p-2 text-red-500 transition-colors hover:bg-red-500/20"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    aria-label="Delete selected orders"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* Toolbar */}
@@ -1092,9 +1100,9 @@ export function ListView({
           <DropdownMenuTrigger asChild>
             <button
               type="button"
-              className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
+              className={`text-body-sm font-medium flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
                 activeDateFilter !== "all"
-                  ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                  ? "bg-[var(--color-primary)]/20 text-[var(--color-primary)]"
                   : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
               }`}
             >
@@ -1146,9 +1154,9 @@ export function ListView({
                 <DropdownMenuTrigger asChild>
                   <button
                     type="button"
-                    className={`text-body-sm flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
+                    className={`text-body-sm font-medium flex h-8 cursor-pointer items-center gap-2 rounded-lg px-3 transition-colors ${
                       activeFilter !== "all"
-                        ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                        ? "bg-[var(--color-primary)]/20 text-[var(--color-primary)]"
                         : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
                     }`}
                   >
@@ -1175,18 +1183,18 @@ export function ListView({
             <DropdownMenuRadioGroup value={activeFilter} onValueChange={setActiveFilter}>
               <DropdownMenuRadioItem value="all" className="w-full justify-between rounded-[12px]">
                 <span className="text-[var(--system-600)]">All</span>
-                <span className="text-micro-label text-[var(--system-400)]">{orders.length}</span>
+                <span className="text-micro-label font-medium text-[var(--system-400)]">{orders.length}</span>
               </DropdownMenuRadioItem>
               {readyToDispatchCount > 0 && (
                 <DropdownMenuRadioItem 
                   value="confirmed" 
                   className="w-full justify-between rounded-[12px]"
                 >
-                  <span className="text-micro-label inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--blue-300)]/20 px-2 py-1 text-[var(--blue-300)]">
+                  <span className="text-micro-label font-medium inline-flex items-center gap-1.5 rounded-[8px] bg-[var(--color-primary)]/20 px-2 py-1 text-[var(--color-primary)]">
                     <PackageCheck className="w-3 h-3" />
                     Ready to Dispatch
                   </span>
-                  <span className="text-micro-label text-[var(--blue-300)]">{readyToDispatchCount}</span>
+                  <span className="text-micro-label font-medium text-[var(--color-primary)]">{readyToDispatchCount}</span>
                 </DropdownMenuRadioItem>
               )}
               {statuses.map((status) => {
@@ -1203,7 +1211,7 @@ export function ListView({
                     className="w-full justify-between rounded-[12px]"
                   >
                     <span
-                      className="text-micro-label overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 shadow-[var(--shadow-badge)]"
+                      className="text-micro-label font-medium overflow-hidden rounded-[8px] inline-flex items-center gap-1.5 px-2 py-1 shadow-[var(--shadow-sm)]"
                       style={{
                         backgroundColor: sConfig?.bgColor || "#6b7280",
                         color: sConfig?.textColor || "#ffffff",
@@ -1212,7 +1220,7 @@ export function ListView({
                       {sConfig?.icon}
                       {sConfig?.label || status}
                     </span>
-                    <span className="text-micro-label text-[var(--system-400)]">{count}</span>
+                    <span className="text-micro-label font-medium text-[var(--system-400)]">{count}</span>
                   </DropdownMenuRadioItem>
                 )
               })}
@@ -1229,7 +1237,7 @@ export function ListView({
                   type="button"
                   className={`cursor-pointer p-2 rounded-lg transition-colors ${
                     sortField !== "date" || sortDirection !== "desc"
-                      ? "bg-[var(--blue-300)]/20 text-[var(--blue-300)]"
+                      ? "bg-[var(--color-primary)]/20 text-[var(--color-primary)]"
                       : "text-[var(--system-300)] hover:text-[var(--system-600)] hover:bg-[var(--system-100)]"
                   }`}
                 >
@@ -1288,7 +1296,7 @@ export function ListView({
                 placeholder="Search orders..."
                 value={searchQuery}
                 onChange={(e) => onSearchQueryChange(e.target.value)}
-                className="text-body-sm h-8 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 pe-8 text-[var(--system-600)] placeholder:text-[var(--system-300)] focus:border-[var(--system-200)] focus:outline-none sm:w-48"
+                className="text-body-sm font-medium h-8 w-full rounded-lg border border-[#e5e5e5] bg-white px-3 pe-8 text-[var(--system-600)] placeholder:text-[var(--system-300)] focus:border-[var(--system-200)] focus:outline-none sm:w-48"
               />
               <button
                 onClick={() => onSearchOpenChange(false)}
@@ -1312,12 +1320,12 @@ export function ListView({
 
         {/* Delivery Integration Quick Actions */}
         {readyToDispatchCount > 0 ? (
-          <div className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--blue-300)]/30 bg-[var(--blue-300)]/10 px-2 py-1 sm:w-auto sm:justify-start">
+          <div className="flex w-full items-center justify-between gap-2 rounded-lg border border-[var(--color-primary)]/30 bg-[var(--color-primary)]/10 px-2 py-1 sm:w-auto sm:justify-start">
             <Tooltip>
               <TooltipTrigger asChild>
                 <div className="flex items-center gap-1.5">
-                  <Truck className="w-4 h-4 text-[var(--blue-300)]" />
-                  <span className="text-body-sm text-[var(--blue-300)]">
+                  <Truck className="w-4 h-4 text-[var(--color-primary)]" />
+                  <span className="text-body-sm font-medium text-[var(--color-primary)]">
                     {readyToDispatchCount} ready
                   </span>
                 </div>
@@ -1329,7 +1337,7 @@ export function ListView({
             <button
               onClick={handleDispatchAll}
               disabled={isDispatchingAll}
-              className="text-caption flex cursor-pointer items-center gap-1 rounded-md bg-[var(--blue-300)] px-2 py-1 text-white transition-colors hover:bg-[var(--blue-400)] disabled:cursor-not-allowed disabled:opacity-50"
+              className="text-caption font-medium flex cursor-pointer items-center gap-1 rounded-md bg-[var(--color-primary)] px-2 py-1 text-white transition-colors hover:bg-[var(--color-primary-blue-dark)] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isDispatchingAll ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -1442,102 +1450,75 @@ export function ListView({
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 rounded-[14px] bg-white px-3 py-2 shadow-[var(--shadow-sm)] md:flex-row md:items-center md:justify-between">
-        <div className="flex flex-wrap items-center gap-2 text-body-sm text-[var(--system-500)]">
-          <span className="font-medium text-[var(--system-700)]">{filteredOrders.length} visible</span>
-          <span>{orders.length} total</span>
-          {selectedOrders.size > 0 && <span>{selectedOrders.size} selected</span>}
-          {searchQuery.trim() && (
-            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Search: {searchQuery.trim()}</span>
-          )}
-          {activeFilter !== "all" && (
-            <span className="rounded-full bg-[var(--blue-300)]/10 px-2 py-0.5 text-caption text-[var(--blue-300)]">
-              State: {getOrderStatusLabel(activeFilter)}
-            </span>
-          )}
-          {activeDateFilter !== "all" && (
-            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Date: {activeDateFilter}</span>
-          )}
-          {hiddenStatuses.size > 0 && (
-            <span className="rounded-full bg-[var(--system-100)] px-2 py-0.5 text-caption">Hidden: {hiddenStatuses.size}</span>
-          )}
-        </div>
-        {hasActiveFilters && (
-          <button
-            type="button"
-            onClick={clearFilters}
-            className="text-caption inline-flex h-8 items-center justify-center rounded-lg px-3 text-[var(--system-500)] transition-colors hover:bg-[var(--system-100)]"
-          >
-            Clear filters
-          </button>
-        )}
-      </div>
-
       {/* Table */}
       <div className="space-y-3">
         <div className="grid gap-3 md:hidden">
-          {filteredOrders.map((order) => (
-            <OrderMobileCard
-              key={order._id}
-              order={order}
-              isSelected={selectedOrders.has(order._id)}
-              searchQuery={searchQuery}
-              onOrderClick={onOrderClick}
-              onOrderSelect={onOrderSelect}
-              statusControl={
-                <StatusCell
-                  order={order}
-                  status={order.status}
-                  isOpen={!!statusDropdownOpen[order._id]}
-                  onToggle={(open) => onStatusDropdownToggle(order._id, open)}
-                  onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
-                  onIntegratedDispatch={() => handleDispatchSingle(order)}
-                  onManualDispatch={() => handleManualDispatch(order)}
-                  isUpdating={updatingOrderIds.has(order._id)}
-                  callLog={(order.callLog as CallLog[]) || []}
-                  feedback={rowFeedback[order._id] ?? null}
-                />
-              }
-            />
-          ))}
+          {filteredOrders.map((order) => {
+            const statusDropdownKey = `mobile:${order._id}`;
+
+            return (
+              <OrderMobileCard
+                key={order._id}
+                order={order}
+                isSelected={selectedOrders.has(order._id)}
+                searchQuery={searchQuery}
+                onOrderClick={onOrderClick}
+                onOrderSelect={onOrderSelect}
+                statusControl={
+                  <StatusCell
+                    order={order}
+                    status={order.status}
+                    isOpen={statusDropdownOpenKey === statusDropdownKey}
+                    onToggle={(open) => onStatusDropdownToggle(statusDropdownKey, open)}
+                    onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
+                    onIntegratedDispatch={() => handleDispatchSingle(order)}
+                    onManualDispatch={() => handleManualDispatch(order)}
+                    isUpdating={updatingOrderIds.has(order._id)}
+                    callLog={(order.callLog as CallLog[]) || []}
+                    feedback={rowFeedback[order._id] ?? null}
+                  />
+                }
+              />
+            );
+          })}
         </div>
 
-        <div className="hidden overflow-visible md:block">
+        <div className="hidden overflow-visible md:block mb-[120px]">
           <Table className="table-fixed">
           <colgroup>
             <col style={{ width: "48px" }} />
-            <col style={{ width: "20%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "14%" }} />
+            <col style={{ width: "17%" }} />
+            <col style={{ width: "16%" }} />
+            <col style={{ width: "18%" }} />
             <col style={{ width: "10%" }} />
-            <col style={{ width: "12%" }} />
-            <col style={{ width: "13%" }} />
-            <col style={{ width: "14%" }} />
+            <col style={{ width: "10%" }} />
+            <col style={{ width: "15%" }} />
+            <col style={{ width: "10%" }} />
           </colgroup>
           <TableHeader>
-            <tr className="bg-[var(--system-200)]/60 rounded-[12px]">
+            <tr className="bg-[var(--system-200)]/50 rounded-[12px]">
               <th className="rounded-l-[12px] px-3 py-[10px] text-left">
                 <Checkbox
                   checked={allVisibleSelected || selectAll}
                   onChange={handleSelectAll}
-                  className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)] data-[checked]:bg-[var(--blue-300)] hover:border-[var(--system-400)]"
                 >
                   <CheckboxIndicator className="text-white w-3 h-3" />
                 </Checkbox>
               </th>
-              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Customer</th>
-              <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Product</th>
-              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">State</th>
-              <th className="px-3 py-[10px] text-center text-[var(--system-600)]">Call</th>
-              <th className="px-3 py-[10px] text-left  text-[var(--system-600)]">Total</th>
-              <th className="px-3 py-[10px] text-left text-[var(--system-600)]">Delivery</th>
-              <th className="rounded-r-[12px] px-3 py-[10px] text-left text-[var(--system-600)]">Date</th>
+              <th className="px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">Customer</th>
+              <th className="px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">Product</th>
+              <th className="px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">State</th>
+              <th className="px-3 py-[10px] text-center text-body-sm font-medium text-[var(--system-600)]">Call</th>
+              <th className="px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">Total</th>
+              <th className="px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">Delivery</th>
+              <th className="rounded-r-[12px] px-3 py-[10px] text-left text-body-sm font-medium text-[var(--system-600)]">Date</th>
             </tr>
           </TableHeader>
           <TableBody>
             {filteredOrders.map((order, index) => {
               const delivery = getDeliveryProviderDisplay(order.deliveryProvider, order.trackingNumber);
               const callLog = (order.callLog as CallLog[]) || [];
+              const statusDropdownKey = `desktop:${order._id}`;
 
               return (
                 <TableRow
@@ -1552,7 +1533,6 @@ export function ListView({
                   <Checkbox
                     checked={selectedOrders.has(order._id)}
                     onChange={() => onOrderSelect(order._id)}
-                    className="cursor-pointer w-4 h-4 rounded bg-[var(--system-200)]/40 hover:bg-[var(--system-300)] data-[checked]:bg-[var(--blue-300)] data-[checked]:border-[var(--blue-300)]"
                   >
                     <CheckboxIndicator className="text-white w-3 h-3" />
                   </Checkbox>
@@ -1574,8 +1554,8 @@ export function ListView({
                   <StatusCell
                     order={order}
                     status={order.status}
-                    isOpen={!!statusDropdownOpen[order._id]}
-                    onToggle={(open) => onStatusDropdownToggle(order._id, open)}
+                    isOpen={statusDropdownOpenKey === statusDropdownKey}
+                    onToggle={(open) => onStatusDropdownToggle(statusDropdownKey, open)}
                     onStatusChange={(newStatus) => onStatusChange(order._id, newStatus)}
                     onIntegratedDispatch={() => handleDispatchSingle(order)}
                     onManualDispatch={() => handleManualDispatch(order)}
@@ -1596,7 +1576,7 @@ export function ListView({
                 <TableCell className="py-3">
                   {order.deliveryProvider ? (
                     <div className="flex items-center gap-1.5">
-                      <Truck className="w-3.5 h-3.5 text-[var(--blue-300)]" />
+                      <Truck className="w-3.5 h-3.5 text-[var(--color-primary)]" />
                       <span className="text-caption text-[var(--system-600)]">
                         {delivery.label}
                       </span>
@@ -1619,7 +1599,7 @@ export function ListView({
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="rounded-[14px] bg-white p-12 text-center shadow-[var(--shadow-sm)]">
+          <div className="rounded-[14px] bg-white p-12 text-center">
             <p className="text-body text-[var(--system-600)]">
               {hasActiveFilters ? "No visible orders match these filters" : "No orders yet"}
             </p>
@@ -1644,8 +1624,8 @@ export function ListView({
         <DialogContent className="max-w-[520px] border-[--system-200] bg-[--color-card] p-6 shadow-[var(--shadow-xl)]">
           <DialogHeader>
             <div className="mb-2 flex items-center gap-3">
-              <div className="rounded-full bg-[var(--blue-300)]/10 p-3">
-                <RotateCw className={cn("h-5 w-5 text-[var(--blue-300)]", syncProgress && "animate-spin")} />
+              <div className="rounded-full bg-[var(--color-primary)]/10 p-3">
+                <RotateCw className={cn("h-5 w-5 text-[var(--color-primary)]", syncProgress && "animate-spin")} />
               </div>
               <div>
                 <DialogTitle>Courier Sync</DialogTitle>

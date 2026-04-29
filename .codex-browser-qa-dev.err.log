@@ -11105,3 +11105,2070 @@ Import traces:
 [browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
 [browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
 [browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Uncaught ReferenceError: DropdownMenuRadioGroup is not defined
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fcomponents%252Fpages%252Forders%252Fviews%252FListView.tsx+%255Bapp-client%255D+%2528ecmascript%2529:1449:252)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10200:106)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10274:158)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9698:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10462:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10652:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at flushSyncWork$1 (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9230:86)
+    at Object.scheduleRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:299:13)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:391:33)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:384:38)
+    at applyUpdate (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:878:31)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:886:13) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+[browser] Uncaught ReferenceError: DropdownMenuRadioGroup is not defined
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fcomponents%252Fpages%252Forders%252Fviews%252FListView.tsx+%255Bapp-client%255D+%2528ecmascript%2529:1449:252)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9698:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fapp%252Forders%252F%255BstoreSlug%255D%252Fpage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:515:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fapp%252Forders%252F%255BstoreSlug%255D%252Fpage.tsx+%255Bapp-client%255D+%2528ecmascript%2529:705:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+⨯ uncaughtException: Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+⨯ uncaughtException:  Error: aborted
+    at ignore-listed frames {
+  code: 'ECONNRESET'
+}
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: DropdownMenuRadioGroup is not defined
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:5604:252)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9695:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10470:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10660:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Uncaught ReferenceError: DropdownMenuRadioGroup is not defined
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:5604:252)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9695:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10471:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10661:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Uncaught TypeError: Cannot read properties of undefined (reading 'j975txhs5dyk2cghmk4e2smzqs85ngm9')
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:6539:69)
+    at Array.map (<anonymous>)
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:6530:54)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9703:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10465:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10655:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Uncaught ReferenceError: statusDropdownOpenId is not defined
+    at eval (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fcomponents%252Fpages%252Forders%252Fviews%252FListView.tsx+%255Bapp-client%255D+%2528ecmascript%2529:2381:49)
+    at Array.map (<anonymous>)
+    at ListView (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js?id=%255Bproject%255D%252Fcomponents%252Fpages%252Forders%252Fviews%252FListView.tsx+%255Bapp-client%255D+%2528ecmascript%2529:2372:54)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at processRootScheduleInMicrotask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10200:106)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10274:158)
+    at OrdersSurface (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:9679:214)
+    at OrdersContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10441:227)
+    at OrdersPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_03-.ppo._.js:10631:233)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at flushSyncWork$1 (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9230:86)
+    at Object.scheduleRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:299:13)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:391:33)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:384:38)
+    at applyUpdate (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:878:31)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:886:13) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+[browser] Uncaught Error: ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./components/pages/orders/views/ListView.tsx:1762:5)
+    at <unknown> (Error: (./components/pages/orders/views/ListView.tsx:1762:5)
+⨯ ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m     [31m[1m^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+
+./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  [90m1760 |[0m       </[33mDialog[0m>
+  [90m1761 |[0m     </div>
+[31m[1m>[0m [90m1762 |[0m     </[33mTooltipProvider[0m>
+  [90m     |[0m      [31m[1m^^^^^^^^^^^^^^^^^[0m
+  [90m1763 |[0m   );
+  [90m1764 |[0m }
+  [90m1765 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+[browser] Uncaught Error: ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./components/pages/orders/views/ListView.tsx:1762:5)
+    at <unknown> (Error: (./components/pages/orders/views/ListView.tsx:1762:5)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] Uncaught Error: ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./components/pages/orders/views/ListView.tsx:1762:5)
+    at <unknown> (Error: (./components/pages/orders/views/ListView.tsx:1762:5)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:5
+Expression expected
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |     ^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] ./components/pages/orders/views/ListView.tsx:1762:6
+Unterminated regexp literal
+  1760 |       </Dialog>
+  1761 |     </div>
+> 1762 |     </TooltipProvider>
+       |      ^^^^^^^^^^^^^^^^^
+  1763 |   );
+  1764 | }
+  1765 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./components/pages/orders/views/ListView.tsx [Client Component Browser]
+    ./components/pages/orders/views/index.ts [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Client Component Browser]
+    ./app/orders/[storeSlug]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./components/pages/orders/views/ListView.tsx [Client Component SSR]
+    ./components/pages/orders/views/index.ts [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Client Component SSR]
+    ./app/orders/[storeSlug]/page.tsx [Server Component] 
+    at handleErrors (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+    at processMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2834:28)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2679:13)
+    at WebSocket.handleMessage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2324:17) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_client_0pe1dg-._.js:2773:21)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Uncaught ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6303:36)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at StorefrontPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6215:221)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at flushSyncWork$1 (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9230:86)
+    at Object.scheduleRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:299:13)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:391:33)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:384:38)
+    at applyUpdate (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:878:31)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:886:13) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+[browser] Uncaught ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6303:36)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at flushSyncWork$1 (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9230:86)
+    at Object.scheduleRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:299:13)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:391:33)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:384:38)
+    at applyUpdate (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:878:31)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:886:13)
+    at StorefrontPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6215:221)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '2040047078'
+}
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/466d5f1f-a35e-445e-8fcf-7ef41ebabbf5" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Each child in a list should have a unique "key" prop.
+
+Check the render method of `StatusActionButtons`. See https://react.dev/link/warning-keys for more information. 
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15127:29)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at warnForMissingKey (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15126:17)
+    at warnOnInvalidKey (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4091:21)
+    at reconcileChildrenArray (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4120:29)
+    at reconcileChildFibersImpl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4236:51)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4261:39)
+    at reconcileChildren (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:5898:119)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6758:1573)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performSyncWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10263:9)
+    at flushSyncWorkAcrossRoots_impl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10179:316)
+    at flushSyncWork$1 (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9230:86)
+    at Object.scheduleRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:299:13)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:391:33)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:384:38)
+    at applyUpdate (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:878:31)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:886:13) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15127:29)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+[browser] Uncaught ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6293:36)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at StorefrontPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6205:221)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+[browser] Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag. 
+    at isHostHoistableType (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+    at createFiberFromTypeAndProps (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3114:84)
+    at createFiberFromElement (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3178:16)
+    at reconcileChildFibersImpl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4206:421)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4261:39)
+    at reconcileChildren (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:5898:51)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6086:9)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+[browser] In HTML, <script> cannot be a child of <html>.
+This will cause a hydration error.
+
+  ...
+    <SWRConfig value={undefined}>
+      <__experimental_CheckoutProvider value={undefined}>
+        <RouterTelemetry>
+        <ClerkJSScript>
+        <ConvexClientProvider>
+          <ConvexProviderWithClerk client={{address:"h...", ...}} useAuth={function usePromisifiedAuth}>
+            <ConvexProviderWithAuth client={{address:"h...", ...}} useAuth={function useAuthFromClerk}>
+              <ConvexAuthStateFirstEffect>
+              <ConvexProvider client={{address:"h...", ...}}>
+                <ToastProvider>
+>                 <html lang="en" dir="ltr">
+                    <Script src="//unpkg.co..." crossOrigin="anonymous" strategy="beforeInte...">
+>                     <script nonce={undefined} dangerouslySetInnerHTML={{__html:"(self.__ne..."}}>
+                    ...
+                  ...
+              ...
+ 
+    at validateDOMNesting (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1963:211)
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6925:25)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1963:211)
+[browser] Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag. 
+    at isHostHoistableType (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+    at createFiberFromTypeAndProps (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3114:84)
+    at createFiberFromElement (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3178:16)
+    at reconcileChildFibersImpl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4206:421)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4261:39)
+    at reconcileChildren (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:5898:51)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6086:9)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+[browser] Uncaught ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6293:36)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at StorefrontPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6205:221)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+[browser] <html> cannot contain a nested <script>.
+See this log for the ancestor stack trace. 
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1965:21)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at validateDOMNesting (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1964:178)
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6925:25)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1965:21)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:186)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+[browser] Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag. 
+    at isHostHoistableType (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+    at createFiberFromTypeAndProps (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3114:84)
+    at createFiberFromElement (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3178:16)
+    at reconcileChildFibersImpl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4206:421)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4261:39)
+    at reconcileChildren (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:5898:51)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6086:9)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+[browser] Uncaught ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6293:36)
+    at Object.react_stack_bottom_frame (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:15037:24)
+    at renderWithHooks (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4620:24)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6081:21)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6691:24)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9449:40)
+    at renderRootSync (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9433:13)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9098:47)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64)
+    at StorefrontPage (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/_012jder._.js:6205:221)
+    at ClientPageRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_0bgb_yd._.js:5781:50)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+⨯ ReferenceError: Cannot access 'footerPhone' before initialization
+    at StorefrontContent (app\[slug]\page.tsx:119:34)
+  117 |   };
+  118 |
+> 119 |   const hasContactInfo = Boolean(footerPhone || footerEmail);
+      |                                  ^
+  120 |
+  121 |   const scrollToSection = (sectionId: string) => {
+  122 |     document.getElementById(sectionId)?.scrollIntoView({ behavior: "smooth", block: "star... {
+  digest: '1843841988'
+}
+⚠ Fast Refresh had to perform a full reload due to a runtime error.
+⨯ ReferenceError: hasContactInfo is not defined
+    at StorefrontContent (app\[slug]\page.tsx:223:14)
+  221 |               Shop
+  222 |             </button>
+> 223 |             {hasContactInfo && (
+      |              ^
+  224 |               <button
+  225 |                 type="button"
+  226 |                 onClick={handleContactClick} {
+  digest: '2770077459'
+}
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Cannot render a sync or defer <script> outside the main document without knowing its order. Try adding async="" or moving it into the root <head> tag. 
+    at isHostHoistableType (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+    at createFiberFromTypeAndProps (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3114:84)
+    at createFiberFromElement (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:3178:16)
+    at reconcileChildFibersImpl (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4206:421)
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:4261:39)
+    at reconcileChildren (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:5898:51)
+    at updateFunctionComponent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6086:9)
+    at beginWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6665:639)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9555:97)
+    at workLoopConcurrentByScheduler (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:12752:562)
+[browser] In HTML, <script> cannot be a child of <html>.
+This will cause a hydration error.
+
+  ...
+    <SWRConfig value={undefined}>
+      <__experimental_CheckoutProvider value={undefined}>
+        <RouterTelemetry>
+        <ClerkJSScript>
+        <ConvexClientProvider>
+          <ConvexProviderWithClerk client={{address:"h...", ...}} useAuth={function usePromisifiedAuth}>
+            <ConvexProviderWithAuth client={{address:"h...", ...}} useAuth={function useAuthFromClerk}>
+              <ConvexAuthStateFirstEffect>
+              <ConvexProvider client={{address:"h...", ...}}>
+                <ToastProvider>
+>                 <html lang="en" dir="ltr">
+                    <Script src="//unpkg.co..." crossOrigin="anonymous" strategy="beforeInte...">
+>                     <script nonce={undefined} dangerouslySetInnerHTML={{__html:"(self.__ne..."}}>
+                    ...
+                  ...
+              ...
+ 
+    at validateDOMNesting (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1963:211)
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6925:25)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopConcurrentByScheduler (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1963:211)
+[browser] <html> cannot contain a nested <script>.
+See this log for the ancestor stack trace. 
+    at <unknown> (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1965:21)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at validateDOMNesting (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1964:178)
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6925:25)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopConcurrentByScheduler (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:1965:21)
+[browser] Encountered a script tag while rendering React component. Scripts inside React components are never executed when rendering on the client. Consider using template tag instead (https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template). 
+    at completeWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+    at runWithFiberInDEV (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:965:74)
+    at completeUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9622:23)
+    at performUnitOfWork (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9557:28)
+    at workLoopConcurrentByScheduler (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9551:58)
+    at renderRootConcurrent (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9534:71)
+    at performWorkOnRoot (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_0rpq4pf._.js:2647:64) (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_compiled_react-dom_058-ah~._.js:6945:102)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Failed to load the CAPTCHA script from Cloudflare. If you see a CSP error in your browser, please add the necessary CSP rules to your app. Visit https://clerk.com/docs/security/clerk-csp for more information. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "http://localhost:3000/favicon.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "http://localhost:3000/favicon.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Failed to load the CAPTCHA script from Cloudflare. If you see a CSP error in your browser, please add the necessary CSP rules to your app. Visit https://clerk.com/docs/security/clerk-csp for more information. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "http://localhost:3000/favicon.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "http://localhost:3000/favicon.svg" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/20aaf440-04b1-4b8c-a325-16a61ec6e486" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/20aaf440-04b1-4b8c-a325-16a61ec6e486" has either width or height modified, but not the other. If you use CSS to change the size of your image, also include the styles 'width: "auto"' or 'height: "auto"' to maintain the aspect ratio. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Image with src "https://youthful-starfish-778.convex.cloud/api/storage/4c9af254-1e74-47bc-88a9-acce008b9022" has "fill" but is missing "sizes" prop. Please add it to improve page performance. Read more: https://nextjs.org/docs/api-reference/next/image#sizes (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Uncaught SyntaxError: Unexpected end of input
+SyntaxError: Unexpected end of input
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)
+[browser] Clerk: Clerk has been loaded with development keys. Development instances have strict usage limits and should not be used when deploying your application to production. Learn more: https://clerk.com/docs/deployments/overview (file://C:/Users/zaki soft/projects/marlon/.next/dev/static/chunks/node_modules_next_dist_115brz8._.js:2431:13)

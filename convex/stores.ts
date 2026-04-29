@@ -4,6 +4,7 @@ import {
   assertInternalStorePaymentAccess,
   assertStoreRole,
 } from "./storeAccess";
+import { DEFAULT_NAVBAR } from "./siteContent";
 
 // Get store by slug
 export const getStoreBySlug = query({
@@ -123,6 +124,7 @@ export const createStore = mutation({
     name: v.string(),
     slug: v.string(),
     description: v.optional(v.string()),
+    logo: v.optional(v.string()),
     phone: v.optional(v.string()),
     wilaya: v.optional(v.string()),
   },
@@ -151,6 +153,7 @@ export const createStore = mutation({
       name: args.name,
       slug: args.slug,
       description: args.description,
+      logo: args.logo,
       phone: args.phone,
       wilaya: args.wilaya,
       status: "active",
@@ -161,6 +164,18 @@ export const createStore = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    if (args.logo) {
+      await ctx.db.insert("siteContent", {
+        storeId,
+        section: "navbar",
+        content: {
+          ...DEFAULT_NAVBAR,
+          logoStorageId: args.logo,
+        },
+        updatedAt: now,
+      });
+    }
 
     // Auto-bootstrap owner membership
     await ctx.db.insert("storeMemberships", {

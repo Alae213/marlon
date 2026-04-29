@@ -19,7 +19,22 @@ function Checkbox({ checked = false, onChange, className, children, ...props }: 
       data-checked={checked ? "true" : "false"}
       onClick={() => onChange?.(!checked)}
       className={cn(
-        "group inline-flex items-center justify-center border border-transparent transition-colors",
+        // Base styles
+        "relative inline-flex items-center justify-center cursor-pointer",
+        // Size
+        "w-4 h-4",
+        // Border and background
+        "rounded border-[1.8px] border-[var(--system-300)] bg-white/0",
+        // Transitions
+        "transition-all duration-150 ease-out",
+        // Hover states
+        "hover:border-[var(--color-primary)] hover:bg-[var(--color-primary)]/10",
+        // Focus states
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/40 focus-visible:ring-offset-1",
+        // Checked states
+        "data-[state=checked]:bg-[var(--color-primary)] data-[state=checked]:border-[var(--color-primary)]",
+        // Disabled states
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:border-[var(--system-200)]",
         className
       )}
       {...props}
@@ -30,7 +45,22 @@ function Checkbox({ checked = false, onChange, className, children, ...props }: 
 }
 
 function CheckboxIndicator({ className, ...props }: React.ComponentProps<typeof Check>) {
-  return <Check className={cn("opacity-0 transition-opacity group-data-[state=checked]:opacity-100", className)} {...props} />;
+  return (
+    <Check 
+      className={cn(
+        // Base styles
+        "absolute text-white",
+        // Size
+        "w-3 h-3",
+        // Transitions
+        "transition-all duration-150 ease-out",
+        // States
+        "opacity-0 scale-75 group-data-[state=checked]:opacity-100 group-data-[state=checked]:scale-100",
+        className
+      )} 
+      {...props} 
+    />
+  );
 }
 
 export { Checkbox, CheckboxIndicator };

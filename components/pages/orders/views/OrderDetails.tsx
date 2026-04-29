@@ -375,7 +375,7 @@ export function OrderDetails({
       const data = (await response.json().catch(() => null)) as DeliveryActionResponse | null;
 
       if (data?.success) {
-        showToast(data.duplicate ? "Order already dispatched" : "Order dispatched", "success");
+        showToast("Order dispatched", "success");
       } else {
         setDispatchError(data?.error || "Delivery provider is temporarily unavailable. Please try again.");
         setDispatchAction(data?.action ?? null);
@@ -487,10 +487,10 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
       <SheetContent 
         side="right"
         showCloseButton={false}
-        className="overflow-hidden bg-[var(--system-600)] w-full sm:max-w-[420px] h-[calc(100vh-1rem)] flex flex-col outline-none gap-0 rounded-2xl mx-2 my-2 p-0 border-none"
+        className="overflow-hidden bg-[var(--system-600)] w-full  sm:max-w-[420px] h-[calc(100vh-1rem)] flex flex-col outline-none gap-0 rounded-2xl mx-2 my-2 p-0 border-none shadow-[var(--shadow-xl-shadow)]"
       > 
         {/* Header - Sticky using Flex */}
-        <div className="flex items-center justify-between w-full p-4 bg-[var(--system-600)]/80 backdrop-blur-md border-b border-white/10 z-20">
+        <div className="flex items-center justify-between w-full p-4 bg-[var(--system-600)] border-b border-white/10">
           <SheetTitle className="text-body text-[var(--system-300)]">
             #{order.orderNumber}
           </SheetTitle>
@@ -510,39 +510,61 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                 </span>
               );
             })()}
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-[var(--system-200)] transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Close order details"
-            >
-              <X className="h-4 w-4" />
-            </button>
+            
           </div>
         </div>
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto scrollbar-hide flex flex-col gap-2 p-5">
+          {/* Products Section */}
+          <section className="flex flex-col gap-2 p-3 pr-5 rounded-2xl bg-white/5 border border-white/5">
+            <div className="space-y-3">
+              {(order.products ?? []).map((item: OrderProductItem, idx: number) => (
+                <div key={idx} className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/5 rounded-md p-1 flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10">
+                    {item.image ? (
+                      <Image src={item.image} alt={item.name} width={40} height={40} className="w-full h-full object-cover rounded-sm" />
+                    ) : (
+                      <Package className="w-5 h-5 text-white/30" />
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                     <h4 className="text-body truncate text-[var(--system-100)]">{item.name}</h4>
+                    <div className="flex items-center gap-1">
+                       <span className="text-caption rounded-md bg-white/10 px-2 py-0.5 text-white">
+                        Qty: {item.quantity}
+                      </span>
+                      {item.variant && (
+                         <span className="text-caption max-w-[100px] truncate rounded-md bg-white/10 px-2 py-0.5 text-white">
+                          {item.variant}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                   <div className="text-body text-white font-bold">
+                     {formatPrice(item.price * item.quantity)}
+                   </div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="h-px w-full px-[22px]">
+                <div className="h-px w-full shrink-0" style={{
+                        background: "rgba(242, 242, 242, 0.10)",
+                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
+                }} />
+              </div>
+
           {/* Customer Section */}
           <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
-            <div className="flex items-center justify-between">
-              <span className="text-micro-label text-[var(--system-200)]">Customer</span>
-              <button
-                type="button"
-                onClick={handleCopyOrderInfo}
-                className="text-caption flex items-center gap-1.5 rounded-lg bg-white/5 px-2 py-1 text-[var(--system-300)] transition-colors hover:bg-white/10"
-                aria-label="Copy order info"
-              >
-                <Clipboard className="w-3.5 h-3.5" />
-                {copiedFeedback ? "Copied!" : "Copy"}
-              </button>
-            </div>
+            
             <div className="space-y-3 text-body">
               {[
                 { label: "Full Name", value: order.customerName },
                 { label: "Wilaya", value: order.customerWilaya },
                 { label: "Commune", value: order.customerCommune },
-                { label: "Address", value: order.customerAddress },
+                ...(order.customerAddress ? [{ label: "Address", value: order.customerAddress }] : []),
                 { label: "Date", value: formatDate(order.createdAt) },
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center">
@@ -581,45 +603,9 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
             </section>
           )}
 
-          {/* Products Section */}
-          <section className="flex flex-col gap-2 p-3.5 rounded-2xl bg-white/5 border border-white/5">
-            <div className="space-y-3">
-              {(order.products ?? []).map((item: OrderProductItem, idx: number) => (
-                <div key={idx} className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-white/5 rounded-xl flex-shrink-0 flex items-center justify-center overflow-hidden border border-white/10">
-                    {item.image ? (
-                      <Image src={item.image} alt={item.name} width={40} height={40} className="w-full h-full object-cover" />
-                    ) : (
-                      <Package className="w-5 h-5 text-white/30" />
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                     <h4 className="text-body truncate text-[var(--system-100)]">{item.name}</h4>
-                    <div className="flex items-center gap-1 mt-1">
-                       <span className="text-caption rounded-md bg-white/10 px-2 py-0.5 text-white">
-                        Qty: {item.quantity}
-                      </span>
-                      {item.variant && (
-                         <span className="text-caption max-w-[100px] truncate rounded-md bg-white/10 px-2 py-0.5 text-white">
-                          {item.variant}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                   <div className="text-body text-white">
-                     {formatPrice(item.price * item.quantity)}
-                   </div>
-                </div>
-              ))}
-            </div>
-          </section>
+          
 
-          <div className="h-px w-full px-[22px]">
-                <div className="h-px w-full shrink-0" style={{
-                        background: "rgba(242, 242, 242, 0.10)",
-                        boxShadow: "0 1px 0 0 rgba(0, 0, 0, 0.40)",
-                }} />
-              </div>
+          
 
           {/* Totals Section */}
           <section className="p-3.5 rounded-2xl bg-white/5 border border-white/5 space-y-2">
@@ -798,7 +784,7 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
         </div>
 
         {/* Footer - Sticky using Flex */}
-        <footer className="p-5 flex flex-col gap-3 bg-[var(--system-600)]/80 backdrop-blur-md border-t border-white/10 z-20">
+        <footer className="p-5 flex flex-col gap-3 bg-[var(--system-600)] border-t border-white/10">
           {/* Phone Number Display */}
           <div className="flex items-center justify-center py-3 rounded-2xl bg-black/40 border border-white/5">
              <h2 className="text-title text-white tracking-title-arabic" lang="ar">
@@ -846,21 +832,6 @@ Address: ${order.customerAddress || ""}, ${order.customerCommune || ""}, ${order
                />
              </div>
            </div>
-
-           <label htmlFor={callNoteTextareaId} className="sr-only">
-             Call note
-           </label>
-           <textarea
-             id={callNoteTextareaId}
-             value={callNoteDraft}
-             onChange={(event) => {
-               setCallNoteDraft(event.target.value);
-               setCallLogError(null);
-             }}
-             placeholder="Call note..."
-             rows={2}
-             className="text-body-sm w-full resize-none rounded-xl border border-white/10 bg-black/20 px-3 py-2 text-white placeholder:text-white/35 transition-colors focus:border-white/30 focus:outline-none motion-reduce:transition-none"
-           />
 
            {callLogError && (
               <p className="text-caption text-center text-destructive" role="alert">
@@ -1120,7 +1091,7 @@ function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
         onClick={onClick}
         disabled={disabled}
         className={cn(
-          "text-body-sm flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-white/30 bg-white/10 py-3.5 text-white transition-all outline-none hover:bg-white/20 motion-reduce:transition-none",
+          "text-body-sm flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 rounded-2xl border-2 border-white/30 bg-white/10 py-3.5 text-white transition-all outline-none hover:bg-white/20 motion-reduce:transition-none w-full",
           disabled && "opacity-60 cursor-not-allowed"
         )}
       >
@@ -1136,7 +1107,7 @@ function ActionButton({ label, targetStatus, icon, onClick, disabled }: {
       onClick={onClick}
       disabled={disabled}
       className={cn(
-        "text-body-sm group relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-white/20",
+        "text-body-sm group relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1.5 overflow-hidden rounded-2xl py-3.5 outline-none focus-visible:ring-2 focus-visible:ring-white/20 w-full",
         disabled && "opacity-60 cursor-not-allowed"
       )}
       style={{

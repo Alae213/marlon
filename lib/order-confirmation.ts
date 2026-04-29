@@ -84,6 +84,13 @@ export function getMerchantTransitionsForOrder(
   actor: OrderTransitionActor = "merchant"
 ): OrderStatus[] {
   const transitions = getAllowedOrderStatusTransitions(status, actor);
+  const canonicalStatus = normalizeOrderStatus(status);
+  
+  // Always allow "confirmed" transition for "awaiting_confirmation" and "new" (Needs Call) status
+  if ((canonicalStatus === "awaiting_confirmation" || canonicalStatus === "new") && transitions.includes("confirmed")) {
+    return transitions;
+  }
+  
   if (!transitions.includes("confirmed")) {
     return transitions;
   }

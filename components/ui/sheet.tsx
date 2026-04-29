@@ -63,10 +63,9 @@ function SheetContent({
         data-slot="sheet-content"
         className={cn(
           "overflow-hidden scrollbar-hide fixed z-[var(--z-sheet)] flex flex-col gap-4 transition ease-in-out data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:animate-in data-[state=open]:duration-500",
-          "bg-[var(--sheet-surface-bg)] border-[var(--sheet-surface-border)] text-[var(--sheet-surface-fg)]",
-          "shadow-[var(--sheet-surface-shadow)]",
+          "bg-[var(--sheet-surface-bg)]  text-[var(--sheet-surface-fg)] ",
           side === "right" &&
-            "scrollbar-hide inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-[420px] lg:max-w-[480px] rounded-2xl mx-2 my-2",
+            "scrollbar-hide inset-y-0 right-0 h-full w-3/4 border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-[320px] lg:max-w-[380px] rounded-2xl mx-2 my-2",
           side === "left" &&
             "scrollbar-hide inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
           side === "top" &&
@@ -79,10 +78,9 @@ function SheetContent({
       >
         {children}
         {showCloseButton && (
-          <SheetPrimitive.Close className="absolute top-4 right-4 rounded-lg p-2 text-[var(--system-300)] hover:text-[var(--system-100)] hover:bg-[var(--system-700)] transition-colors focus:ring-2 focus:ring-[var(--system-500)] focus:outline-none disabled:opacity-50 disabled:pointer-events-none">
-            <XIcon className="size-5" />
-            <span className="sr-only">Close</span>
-          </SheetPrimitive.Close>
+          <SheetPrimitive.Close className="cursor-pointer absolute top-4 right-4 rounded-lg p-2 text-[var(--system-300)] hover:text-[var(--system-100)] hover:bg-[var(--system-700)] transition-colors focus:ring-2 focus:ring-[var(--system-500)] focus:outline-none disabled:opacity-50 disabled:pointer-events-none">
+            <XIcon className="size-5 stroke-1 " />
+          </SheetPrimitive.Close>   
         )}
       </SheetPrimitive.Content>
     </SheetPortal>
